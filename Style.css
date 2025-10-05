@@ -1,0 +1,146 @@
+:root {
+    --accent: #3b82f6; /* blue-500 */
+}
+body {
+    font-family: 'Inter', sans-serif;
+}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.tab-button.active { color: var(--accent); border-color: var(--accent); }
+.result-row:hover { background-color: #f3f4f6; }
+
+/* --- New Animations --- */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes slideInUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+}
+.animate-slide-in-up {
+    animation: slideInUp 0.5s ease-out forwards;
+}
+
+/* --- Improved Progress Bar Animation --- */
+@keyframes progress-indeterminate { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+.progress-bar-indeterminate div {
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    background-size: 200% 100%;
+    animation: progress-indeterminate 1.5s infinite linear;
+}
+
+/* --- Spinner Animation --- */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* --- Optimized Tab Transition Animations --- */
+.tab-pane {
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
+.tab-button {
+    transition: color 0.2s ease-out, border-color 0.2s ease-out;
+}
+
+.tab-button.active {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+}
+
+/* Simple hover effect */
+.tab-button:hover {
+    color: #3b82f6;
+}
+
+/* --- Welcome Popup Animations --- */
+@keyframes welcomeSlideIn {
+    0% { 
+        opacity: 0; 
+        transform: translateY(-50px) scale(0.8); 
+    }
+    50% { 
+        opacity: 0.8; 
+        transform: translateY(-10px) scale(1.05); 
+    }
+    100% { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
+}
+
+@keyframes welcomePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes welcomeGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.4); }
+}
+
+.welcome-popup {
+    animation: welcomeSlideIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.welcome-popup .welcome-icon {
+    animation: welcomePulse 2s ease-in-out infinite;
+}
+
+.welcome-popup .welcome-card {
+    animation: welcomeGlow 3s ease-in-out infinite;
+}
+
+/* --- Button Disabled States --- */
+.button-disabled {
+    opacity: 0.6;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+.button-loading {
+    position: relative;
+    color: transparent !important;
+}
+.button-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    color: inherit;
+}
+
+/* --- Dark Mode Overrides --- */
+.dark body { background-color: #0f172a; }
+.dark #sidebar { background-color: #0b1220; border-color: #1e293b; }
+.dark header { background-color: rgba(2,6,23,0.8); border-color: #1e293b; }
+.dark footer { background-color: rgba(2,6,23,0.8); border-color: #1e293b; }
+.dark .bg-white { background-color: #0b1220 !important; }
+.dark .border-slate-200 { border-color: #1e293b !important; }
+.dark .text-slate-800, .dark .text-slate-700 { color: #e5e7eb !important; }
+.dark .text-slate-600, .dark .text-slate-500 { color: #cbd5e1 !important; }
+.dark .result-row:hover { background-color: #111827; }
+.dark #progress-bar { background-color: #334155 !important; }
+.dark input, .dark select, .dark textarea { background-color: #0f172a; border-color: #334155; color: #e5e7eb; }
+.dark .tab-button { color: #94a3b8; }
+.dark .tab-button.active { color: var(--accent); border-color: var(--accent); }
+.dark .hover\:bg-slate-100:hover { background-color: #0f172a !important; }
+.dark .bg-slate-100 { background-color: #0f172a !important; }
+.dark .bg-slate-200 { background-color: #1e293b !important; }
+.dark .text-slate-700 { color: #e2e8f0 !important; }
+.dark .button-disabled { opacity: 0.4; }
+.dark .spinner { color: #3b82f6; }

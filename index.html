@@ -1,0 +1,186 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberGuard Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://unpkg.com/framer-motion@11.0.0/dist/framer-motion.js"></script>
+    <link rel="stylesheet" href="Style.css">
+</head>
+<body class="transition-colors duration-300 bg-slate-100">
+
+    <div id="app" class="flex h-screen overflow-hidden animate-fade-in">
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-30 hidden sm:hidden"></div>
+        
+        <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col transition-transform duration-300 -translate-x-full sm:translate-x-0 z-40">
+            <div class="p-5 flex items-center gap-3">
+                <svg class="h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" /></svg>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-800">CyberGuard</h1>
+                    <p class="text-xs text-slate-500">Security Toolkit</p>
+                </div>
+            </div>
+
+            <!-- User Profile Section -->
+            <div id="userProfileSection" class="px-5 py-3 border-b border-slate-200">
+                <div id="userInfo" class="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <span id="userInitials" class="text-sm font-bold text-white"></span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p id="userName" class="text-sm font-medium text-slate-800 truncate"></p>
+                        <p id="userEmail" class="text-xs text-slate-500 truncate"></p>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <button id="profileBtn" class="p-1 text-slate-400 hover:text-slate-600 transition-colors" title="Profile">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                            </svg>
+                        </button>
+                        <button id="logoutBtn" class="p-1 text-slate-400 hover:text-red-600 transition-colors" title="Logout">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Login Section (Hidden when authenticated) -->
+            <div id="loginSection" class="px-5 py-3 border-b border-slate-200 hidden">
+                <div class="text-center">
+                    <p class="text-sm text-slate-600 mb-3">Sign in to access all features</p>
+                    <div class="space-y-2">
+                        <a href="auth/login.html" class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-center">
+                            Sign In
+                        </a>
+                        <a href="auth/register.html" class="block w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg transition-colors text-center">
+                            Sign Up
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-slate-200 mx-5 my-2"></div>
+
+            <div class="px-5 py-2">
+                <label for="vt-api-key" class="block text-sm font-medium mb-1 text-slate-700">VirusTotal API Key</label>
+                <input type="password" id="vt-api-key" class="w-full bg-slate-100 border border-slate-200 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Enter your key...">
+                <button id="save-vt-key-btn" class="mt-2 w-full text-sm bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-1 px-2 rounded-lg transition-colors">Save Key</button>
+                <div class="mt-4">
+                    <label for="abuse-api-key" class="block text-sm font-medium mb-1 text-slate-700">AbuseIPDB API Key (optional)</label>
+                    <input type="password" id="abuse-api-key" class="w-full bg-slate-100 border border-slate-200 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Enter your key...">
+                    <button id="save-abuse-key-btn" class="mt-2 w-full text-sm bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-1 px-2 rounded-lg transition-colors">Save Key</button>
+                </div>
+                <div class="mt-4">
+                    <label for="whois-api-key" class="block text-sm font-medium mb-1 text-slate-700">WhoisXML API Key</label>
+                    <input type="password" id="whois-api-key" class="w-full bg-slate-100 border border-slate-200 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Enter your WhoisXML key...">
+                    <button id="save-whois-key-btn" class="mt-2 w-full text-sm bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-1 px-2 rounded-lg transition-colors">Save Key</button>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-200 mx-5 my-3"></div>
+
+            <div class="flex-grow flex flex-col px-5 overflow-y-auto scrollbar-hide">
+                <h2 class="text-sm font-semibold mb-3 text-slate-600">Recent Activity</h2>
+                <div id="history-list" class="text-sm text-slate-500 space-y-2 flex-grow"></div>
+            </div>
+
+            <div class="p-5"><button id="clear-history-btn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg transition-colors">Clear History</button></div>
+        </aside>
+
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white/80 backdrop-blur-sm border-b border-slate-200 p-4 flex items-center justify-between z-10">
+                <div class="flex items-center">
+                    <button id="sidebar-toggle" class="p-2 rounded-md hover:bg-slate-100 mr-2 sm:hidden"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg></button>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Security Dashboard</h2>
+                        <p class="text-sm text-slate-600">Comprehensive cybersecurity analysis</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="theme-toggle" class="px-3 py-1.5 rounded-md text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors" title="Toggle dark mode">🌙 Dark</button>
+                </div>
+            </header>
+            
+            <div class="flex-grow overflow-y-auto">
+                <div class="p-4 sm:p-6">
+                    <div class="flex border-b border-slate-200 mb-6">
+                        <button data-tab="network-tools" class="tab-button py-2 px-4 text-sm font-medium text-slate-500 hover:text-blue-500 border-b-2 border-transparent active flex items-center gap-2"><svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" /></svg>Network</button>
+                        <button data-tab="web-security" class="tab-button py-2 px-4 text-sm font-medium text-slate-500 hover:text-blue-500 border-b-2 border-transparent flex items-center gap-2"><svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" /></svg>Web</button>
+                        <button data-tab="hash-tools" class="tab-button py-2 px-4 text-sm font-medium text-slate-500 hover:text-blue-500 border-b-2 border-transparent flex items-center gap-2"><svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>Hash</button>
+                    </div>
+
+                    <div id="tab-content" class="space-y-6">
+                        <div id="network-tools" class="tab-pane active space-y-6">
+                            <div class="bg-white p-5 rounded-xl shadow-md border border-slate-200 transition-all hover:shadow-lg hover:-translate-y-1"><h3 class="text-md font-semibold text-blue-500 mb-4 flex items-center gap-2"><svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>Target Configuration</h3><div><label for="target-ip" class="block text-sm font-medium mb-1 text-slate-700">Target IP/Domain</label><input type="text" id="target-ip" class="w-full bg-slate-100 border border-slate-200 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="8.8.8.8"></div><div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4"><div><label for="port-scan-mode" class="block text-sm font-medium mb-1 text-slate-700">Port Scan Mode</label><select id="port-scan-mode" class="w-full bg-slate-100 border border-slate-200 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500 transition"><option value="common" selected>Common ports</option><option value="custom">Specific ports/range</option></select></div><div class="sm:col-span-2"><label for="port-scan-list" class="block text-sm font-medium mb-1 text-slate-700">Ports (comma/range)</label><input type="text" id="port-scan-list" class="w-full bg-slate-100 border border-slate-200 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="e.g., 22,80,443 or 1-1024" disabled></div></div><p class="text-xs text-slate-500 mt-2">Tip: Custom scan caps at ~256 ports for performance.</p></div>
+                            <div class="bg-white p-5 rounded-xl shadow-md border border-slate-200 transition-all hover:shadow-lg hover:-translate-y-1"><h3 class="text-md font-semibold text-blue-500 mb-4 flex items-center gap-2"><svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655-4.653a2.548 2.548 0 0 1-.766-1.205l-.33-1.242a2.548 2.548 0 0 1 .514-2.049l.927-.927A2.548 2.548 0 0 1 9.157 4.5l1.242.33c.433.113.828.342 1.205.766l4.653 4.653.33 1.242c.113.433.342.828.766 1.205l.927.927a2.548 2.548 0 0 1 .514 2.049l-.33 1.242a2.548 2.548 0 0 1-.766 1.205M11.42 15.17l2.496-3.03" /></svg>Network Analysis Tools</h3><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <button id="reverse-dns-btn" class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg class="w-6 h-6 transition-transform group-hover:rotate-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m-4.991 4.992" /></svg>Reverse DNS</button>
+                                <button id="ip-geo-btn" class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg class="w-6 h-6 transition-transform group-hover:rotate-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3s-4.5 4.03-4.5 9 2.015 9 4.5 9Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12c0 5.385 4.365 9.75 9.75 9.75s9.75-4.365 9.75-9.75S17.385 2.25 12 2.25 2.25 6.615 2.25 12Z" /></svg>IP Geolocation</button>
+                                <button id="whois-btn" class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg class="w-6 h-6 transition-transform group-hover:rotate-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" /></svg>WHOIS Lookup</button>
+                                <button id="port-scan-btn" class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg class="w-6 h-6 transition-transform group-hover:rotate-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788 3.807-3.808 9.98-3.808 13.788 0 3.808 3.807 3.808 9.98 0 13.788-3.807 3.808-9.98 3.808-13.788 0Z" /></svg>Port Scanner</button>
+                                <button id="tcp-scan-btn" class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg class="w-6 h-6 transition-transform group-hover:rotate-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" /></svg>TCP Port Scan</button>
+                                <button id="udp-scan-btn" class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg class="w-6 h-6 transition-transform group-hover:rotate-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" /></svg>UDP Port Scan</button>
+                                <button id="threat-intel-btn" class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg class="w-6 h-6 transition-transform group-hover:rotate-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>Threat Intelligence</button>
+                            </div></div>
+                        </div>
+
+                        <div id="web-security" class="tab-pane hidden space-y-6">
+                            <div class="bg-white p-5 rounded-xl shadow-md border border-slate-200 transition-all hover:shadow-lg hover:-translate-y-1"><h3 class="text-md font-semibold text-blue-500 mb-4 flex items-center gap-2"><svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3s-4.5 4.03-4.5 9 2.015 9 4.5 9Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3l1.5 1.5" /></svg>Web Target Configuration</h3><label for="target-url" class="block text-sm font-medium mb-1 text-slate-700">Website URL</label><input type="url" id="target-url" class="w-full bg-slate-100 border border-slate-200 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="https://example.com"></div>
+                            <div class="bg-white p-5 rounded-xl shadow-md border border-slate-200 transition-all hover:shadow-lg hover:-translate-y-1"><h3 class="text-md font-semibold text-blue-500 mb-4 flex items-center gap-2"><svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" /></svg>Security Analysis Tools</h3><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4"><button id="phishing-btn" class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg class="w-6 h-6 transition-transform group-hover:rotate-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>URL Phishing Analyzer</button><button id="xss-btn" class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg class="w-6 h-6 transition-transform group-hover:rotate-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" /></svg>XSS Test</button><button id="ssl-btn" class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg class="w-6 h-6 transition-transform group-hover:rotate-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>SSL/TLS Check</button><button id="dns-spoof-btn" class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg class="w-6 h-6 transition-transform group-hover:rotate-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" /></svg>DNS Spoofing</button></div></div>
+                            <div class="bg-white p-5 rounded-xl shadow-md border border-slate-200 transition-all hover:shadow-lg hover:-translate-y-1"><h3 class="text-md font-semibold text-red-500 mb-4 flex items-center gap-2"><svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>VirusTotal Intelligence</h3><div class="space-y-4"><div><label for="vt-hash-input" class="block text-sm font-medium mb-1 text-slate-700">File Hash (SHA256/MD5)</label><input type="text" id="vt-hash-input" class="w-full bg-slate-100 border border-slate-200 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Enter file hash..."></div><div><label class="block text-sm font-medium mb-1 text-slate-700">File for Scanning</label><input type="file" id="vt-file-input" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600 cursor-pointer transition"></div><div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2"><button id="vt-url-btn" class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700">Scan URL</button><button id="vt-hash-btn" class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700">Check Hash</button><button id="vt-file-btn" class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700">Scan File</button></div></div></div>
+                        </div>
+
+                        <div id="hash-tools" class="tab-pane hidden space-y-6"><div class="bg-white p-5 rounded-xl shadow-md border border-slate-200 transition-all hover:shadow-lg hover:-translate-y-1"><h3 class="text-md font-semibold text-blue-500 mb-4 flex items-center gap-2"><svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>Hash & Cryptography Tools</h3><div class="space-y-4"><div><label for="hash-string-input" class="block text-sm font-medium mb-1 text-slate-700">Text to Hash</label><input type="text" id="hash-string-input" class="w-full bg-slate-100 border border-slate-200 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Enter text..."><button id="hash-string-btn" class="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Generate Hashes</button></div><div class="border-t border-slate-200 my-4"></div><div><label class="block text-sm font-medium mb-2 text-slate-700">File to Hash</label><input type="file" id="hash-file-input" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600 cursor-pointer transition"></div><div class="border-t border-slate-200 my-4"></div><div><label for="pw-input" class="block text-sm font-medium mb-1 text-slate-700">Password Strength Analyzer</label><div class="flex gap-2"><input type="password" id="pw-input" class="flex-1 bg-slate-100 border border-slate-200 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Enter password..."><button type="button" id="pw-toggle" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 rounded-lg text-sm flex items-center gap-1"><svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>Show</button></div><button id="pw-analyze-btn" class="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Analyze Password</button><p class="text-xs text-slate-500 mt-1"></p></div></div></div></div>
+                    </div>
+
+                    <div class="mt-6"><div class="bg-white border border-slate-200 rounded-xl flex-grow flex flex-col overflow-hidden shadow-md"><h3 class="text-md font-semibold p-4 border-b border-slate-200 text-slate-800 flex items-center gap-2"><svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" /></svg>Analysis Results</h3><div class="overflow-y-auto flex-grow p-4 space-y-2 min-h-[200px]" id="results-container"><div class="grid grid-cols-12 gap-4 text-xs font-bold text-slate-700 px-4 py-2 border-b border-slate-200 sticky top-0 bg-white"><div class="col-span-4 sm:col-span-2 flex items-center gap-1"><svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>Time</div><div class="col-span-8 sm:col-span-3 flex items-center gap-1"><svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655-4.653a2.548 2.548 0 0 1-.766-1.205l-.33-1.242a2.548 2.548 0 0 1 .514-2.049l.927-.927A2.548 2.548 0 0 1 9.157 4.5l1.242.33c.433.113.828.342 1.205.766l4.653 4.653.33 1.242c.113.433.342.828.766 1.205l.927.927a2.548 2.548 0 0 1 .514 2.049l-.33 1.242a2.548 2.548 0 0 1-.766 1.205M11.42 15.17l2.496-3.03" /></svg>Tool</div><div class="hidden sm:block sm:col-span-7 flex items-center gap-1"><svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>Result</div></div></div></div></div>
+                </div>
+            </div>
+
+            <footer class="bg-white/80 backdrop-blur-sm border-t border-slate-200 p-2 text-sm text-slate-500 flex justify-between items-center flex-shrink-0"><div id="status-bar" class="pl-2"></div><div class="flex items-center gap-2"><div id="loading-indicator" class="flex items-center gap-2 hidden"><svg class="spinner w-4 h-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><div id="progress-bar" class="w-24 sm:w-40 h-1.5 bg-slate-200 rounded-full overflow-hidden progress-bar-indeterminate"><div></div></div></div><div class="flex items-center gap-2"><button id="save-session-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 rounded-md text-xs transition-colors flex items-center gap-1"><svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" /></svg>Save Session</button><button id="load-session-btn" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-1 px-3 rounded-md text-xs transition-colors flex items-center gap-1"><svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>Load Session</button><button id="clear-session-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded-md text-xs transition-colors flex items-center gap-1"><svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 3L10 3m4.788 3L10 3m0 0L5.5 3m4.5 0L5.5 3" /></svg>Clear Session</button><button id="export-csv-btn" class="bg-blue-500 hover:bg-slate-200 text-white font-bold py-1 px-3 rounded-md text-xs transition-colors">CSV</button><button id="export-pdf-btn" class="bg-blue-500 hover:bg-slate-200 text-white font-bold py-1 px-3 rounded-md text-xs transition-colors">PDF</button><button id="save-results-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-md text-xs transition-colors flex items-center gap-1"><svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>Save Results</button></div></div></footer>
+        </main>
+    </div>
+
+    <!-- Welcome Popup Modal -->
+    <div id="welcome-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="welcome-popup">
+            <div class="welcome-card bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center border-2 border-blue-500">
+                <div class="welcome-icon mb-6">
+                    <div class="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <svg class="w-10 h-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.623 0-1.31-.21-2.571-.598-3.751h-.152c-3.396 0-6.648-1.355-9.06-3.77z" />
+                        </svg>
+                    </div>
+                </div>
+                <h2 class="text-3xl font-bold text-slate-800 dark:text-white mb-4">
+                    🛡️ CyberGuard Pro
+                </h2>
+                <p class="text-lg text-slate-600 dark:text-slate-300 mb-6">
+                    Your comprehensive cybersecurity toolkit is ready!
+                </p>
+                <div class="space-y-2 text-sm text-slate-500 dark:text-slate-400 mb-6">
+                    <p>🔍 Advanced port scanning & network analysis</p>
+                    <p>🦠 VirusTotal integration for threat detection</p>
+                    <p>🌐 DNS & SSL/TLS security testing</p>
+                    <p>📊 Real-time vulnerability assessment</p>
+                </div>
+                <button id="welcome-close-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    Start Scanning 🚀
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication Integration -->
+    <script src="auth-integration.js"></script>
+    
+    <!-- Main JavaScript File -->
+    <script src="main.js"></script>
+</body>
+</html>

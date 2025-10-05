@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CyberGuard Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../Style.css">
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <!-- Logo and Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mb-4">
+                <svg class="w-8 h-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.623 0-1.31-.21-2.571-.598-3.751h-.152c-3.396 0-6.648-1.355-9.06-3.77z" />
+                </svg>
+            </div>
+            <h1 class="text-3xl font-bold text-white mb-2">CyberGuard Pro</h1>
+            <p class="text-slate-300">Sign in to your account</p>
+        </div>
+
+        <!-- Login Form -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20">
+            <form id="loginForm" class="space-y-6">
+                <!-- Email Field -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-white mb-2">Email Address</label>
+                    <input type="email" id="email" name="email" required
+                           class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                           placeholder="Enter your email">
+                    <div id="emailError" class="text-red-400 text-sm mt-1 hidden"></div>
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-white mb-2">Password</label>
+                    <div class="relative">
+                        <input type="password" id="password" name="password" required
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pr-12"
+                               placeholder="Enter your password">
+                        <button type="button" id="togglePassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-300 hover:text-white transition-colors">
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="passwordError" class="text-red-400 text-sm mt-1 hidden"></div>
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="rememberMe" name="rememberMe" class="rounded border-white/20 text-blue-600 focus:ring-blue-500 focus:ring-offset-0">
+                        <span class="ml-2 text-sm text-white">Remember me</span>
+                    </label>
+                    <a href="forgot-password.html" class="text-sm text-blue-400 hover:text-blue-300 transition-colors">Forgot password?</a>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="loginBtn" 
+                        class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                    <span id="loginBtnText">Sign In</span>
+                    <div id="loginSpinner" class="hidden inline-block ml-2">
+                        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </button>
+
+                <!-- Two-Factor Authentication Section (Hidden by default) -->
+                <div id="twoFactorSection" class="hidden">
+                    <div class="border-t border-white/20 pt-6">
+                        <h3 class="text-lg font-semibold text-white mb-4">Two-Factor Authentication</h3>
+                        <div>
+                            <label for="twoFactorCode" class="block text-sm font-medium text-white mb-2">Enter 6-digit code</label>
+                            <input type="text" id="twoFactorCode" name="twoFactorCode" maxlength="6" pattern="[0-9]{6}"
+                                   class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-center text-lg tracking-widest"
+                                   placeholder="000000">
+                            <div id="twoFactorError" class="text-red-400 text-sm mt-1 hidden"></div>
+                        </div>
+                        <button type="button" id="verifyTwoFactorBtn" 
+                                class="w-full mt-4 bg-gradient-to-r from-green-600 to-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-green-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                            Verify Code
+                        </button>
+                        <div class="mt-4 text-center">
+                            <button type="button" id="useBackupCodeBtn" class="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+                                Use backup code instead
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backup Code Section (Hidden by default) -->
+                <div id="backupCodeSection" class="hidden">
+                    <div class="border-t border-white/20 pt-6">
+                        <h3 class="text-lg font-semibold text-white mb-4">Backup Code</h3>
+                        <div>
+                            <label for="backupCode" class="block text-sm font-medium text-white mb-2">Enter backup code</label>
+                            <input type="text" id="backupCode" name="backupCode"
+                                   class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-center text-lg tracking-widest"
+                                   placeholder="Enter backup code">
+                            <div id="backupCodeError" class="text-red-400 text-sm mt-1 hidden"></div>
+                        </div>
+                        <button type="button" id="verifyBackupCodeBtn" 
+                                class="w-full mt-4 bg-gradient-to-r from-green-600 to-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-green-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                            Verify Backup Code
+                        </button>
+                        <div class="mt-4 text-center">
+                            <button type="button" id="backToTwoFactorBtn" class="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+                                Back to 2FA code
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Sign Up Link -->
+            <div class="mt-6 text-center">
+                <p class="text-slate-300">Don't have an account? 
+                    <a href="register.html" class="text-blue-400 hover:text-blue-300 font-medium transition-colors">Sign up</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+    </div>
+
+    <script src="auth.js"></script>
+</body>
+</html>
+
+
