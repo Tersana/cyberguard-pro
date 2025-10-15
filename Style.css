@@ -124,6 +124,209 @@ body {
     color: inherit;
 }
 
+/* --- API Keys Modal Styles --- */
+#api-keys-modal {
+  z-index: 9999 !important;
+  backdrop-filter: blur(4px);
+}
+
+#api-keys-modal:not(.hidden) {
+  display: flex !important;
+}
+
+#api-keys-modal.hidden {
+  display: none !important;
+}
+
+.api-keys-modal-content {
+  animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* --- Sidebar Animations --- */
+#sidebar {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 16rem; /* 256px */
+  min-width: 16rem;
+  transform: translateX(0);
+  opacity: 1;
+}
+
+#sidebar.hidden {
+  transform: translateX(-100%);
+  opacity: 0;
+  width: 0;
+  min-width: 0;
+}
+
+/* --- Main Content Responsive --- */
+main {
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 0;
+}
+
+main.sidebar-hidden {
+  margin-left: 0;
+}
+
+main.sidebar-visible {
+  margin-left: 0;
+}
+
+/* --- Floating Sidebar Toggle Button --- */
+#floating-sidebar-toggle {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(1);
+  z-index: 50;
+  max-width: 120px;
+  min-height: 40px;
+}
+
+#floating-sidebar-toggle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+}
+
+#floating-sidebar-toggle:active {
+  transform: scale(0.95);
+}
+
+/* Ensure the button doesn't interfere with content */
+#floating-sidebar-toggle svg {
+  flex-shrink: 0;
+}
+
+#floating-sidebar-toggle span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Floating button visibility is controlled by JavaScript */
+
+/* --- Welcome Modal Styles --- */
+#welcome-modal {
+  z-index: 99999 !important;
+  backdrop-filter: blur(4px);
+}
+
+#welcome-modal:not(.hidden) {
+  display: flex !important;
+}
+
+#welcome-modal.hidden {
+  display: none !important;
+}
+
+/* Add padding to main content to avoid floating button conflicts */
+main {
+  padding-top: 50px; /* Further reduced to allow more content space */
+  min-height: calc(100vh - 50px); /* Ensure full height minus padding */
+  overflow-y: auto; /* Allow scrolling if content is too tall */
+}
+
+/* Ensure sidebar content has proper spacing from floating button */
+#sidebar {
+  padding-top: 0;
+}
+
+#sidebar > div:first-child {
+  padding-top: 4rem; /* 64px - enough space for floating button */
+}
+
+/* --- Responsive Layout --- */
+@media (min-width: 768px) {
+  #sidebar {
+    width: 16rem;
+    min-width: 16rem;
+    transform: translateX(0);
+    opacity: 1;
+  }
+  
+  main {
+    margin-left: 0;
+    padding-top: 50px; /* Add space for floating button */
+  }
+}
+
+/* --- Enhanced Button Animations --- */
+#api-keys-toggle {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(1);
+}
+
+#api-keys-toggle:hover {
+  transform: scale(1.05);
+}
+
+#api-keys-toggle:active {
+  transform: scale(0.95);
+}
+
+/* --- Card Hover Effects --- */
+.api-key-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.api-key-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* --- Input Focus Animations --- */
+.api-key-input {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.api-key-input:focus {
+  transform: scale(1.02);
+}
+
+/* --- Save Button Animations --- */
+.api-save-btn {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.api-save-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+}
+
+.api-save-btn:active {
+  transform: translateY(0);
+}
+
+.api-save-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.api-save-btn:hover::before {
+  left: 100%;
+}
+
 /* --- Dark Mode Overrides --- */
 .dark body { background-color: #0f172a; }
 .dark #sidebar { background-color: #0b1220; border-color: #1e293b; }
@@ -144,3 +347,20 @@ body {
 .dark .text-slate-700 { color: #e2e8f0 !important; }
 .dark .button-disabled { opacity: 0.4; }
 .dark .spinner { color: #3b82f6; }
+
+/* --- Dark Mode API Keys Panel --- */
+.dark #api-keys-panel {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-color: #334155;
+}
+
+.dark .api-key-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+.dark .api-key-input {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #e5e7eb !important;
+}

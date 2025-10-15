@@ -636,4 +636,3 @@ document.getElementById("ssl-btn").click();
 5. **Restart the application if needed**
 
 **Happy Testing! 🎉**
-
