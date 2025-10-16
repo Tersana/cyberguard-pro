@@ -448,6 +448,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function toggleApiKeysModal() {
+    // Check if user is authenticated before allowing API keys access
+    if (typeof authManager !== "undefined" && !authManager.isAuthenticated()) {
+      // Show authentication prompt instead of opening modal
+      if (typeof authManager.showApiKeysRestriction === "function") {
+        authManager.showApiKeysRestriction();
+      }
+      return;
+    }
+
     if (apiKeysModal.classList.contains("hidden")) {
       showApiKeysModal();
     } else {
@@ -1161,37 +1170,600 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   setInterval(updateStatus, 5000);
 
-  function logResult(timestamp, feature, message, status = "info") {
-    const timeString = timestamp.toLocaleTimeString();
-    history.push({ timestamp: timeString, feature, message, status });
-    if (history.length > maxHistorySize) history.shift();
+  // Modern Results System
+  let resultsData = [];
+  let currentView = "list";
+  let currentFilter = "all";
+  let searchQuery = "";
 
-    const row = document.createElement("div");
-    row.className =
-      "grid grid-cols-12 gap-4 text-sm items-start px-4 py-2 rounded-lg result-row transition-colors";
+  // Initialize modern results system
+  function initializeModernResults() {
+    const resultsSearch = document.getElementById("results-search");
+    const resultsFilter = document.getElementById("results-filter");
+    const clearResultsBtn = document.getElementById("clear-results-btn");
+    const listViewBtn = document.getElementById("list-view-btn");
+    const gridViewBtn = document.getElementById("grid-view-btn");
 
-    // Simple fade-in animation
-    row.style.opacity = "0";
-    row.style.transform = "translateY(10px)";
-    row.style.transition = "opacity 0.3s ease-out, transform 0.3s ease-out";
+    // Initialize view toggle buttons with correct initial state
+    if (listViewBtn && gridViewBtn) {
+      // Set List as active by default
+      listViewBtn.classList.add("active");
+      gridViewBtn.classList.remove("active");
+    }
 
-    let statusColor = "text-slate-500";
-    if (status === "success") statusColor = "text-green-500";
-    else if (status === "warning") statusColor = "text-amber-500";
-    else if (status === "danger") statusColor = "text-red-500";
+    if (resultsSearch) {
+      resultsSearch.addEventListener("input", (e) => {
+        searchQuery = e.target.value.toLowerCase();
+        renderResults();
+        updateSearchResults();
+      });
+    }
 
-    row.innerHTML = `<div class="col-span-4 sm:col-span-2 text-slate-500 font-mono text-xs">${timeString}</div><div class="col-span-8 sm:col-span-3 font-semibold text-slate-700">${feature}</div><div class="col-span-12 sm:col-span-7 whitespace-pre-wrap text-xs sm:text-sm ${statusColor}">${message}</div>`;
-    resultsContainer.appendChild(row);
+    if (resultsFilter) {
+      resultsFilter.addEventListener("change", (e) => {
+        currentFilter = e.target.value;
+        renderResults();
+        updateFilterResults();
+      });
+    }
 
-    // Simple fade-in animation
-    setTimeout(() => {
-      row.style.opacity = "1";
-      row.style.transform = "translateY(0)";
-    }, 10);
+    if (clearResultsBtn) {
+      clearResultsBtn.addEventListener("click", () => {
+        if (confirm("Are you sure you want to clear all results?")) {
+          resultsData = [];
+          renderResults();
+          updateResultsStats();
+        }
+      });
+    }
 
-    resultsContainer.scrollTop = resultsContainer.scrollHeight;
-    updateHistoryList();
+    if (listViewBtn) {
+      listViewBtn.addEventListener("click", () => {
+        console.log("List button clicked!");
+        currentView = "list";
+        console.log("Current view set to:", currentView);
+
+        // Active state for list button
+        listViewBtn.classList.add("active");
+        gridViewBtn.classList.remove("active");
+        console.log("List button active, Grid button inactive");
+
+        renderResults();
+        console.log("Results rendered");
+      });
+    }
+
+    if (gridViewBtn) {
+      gridViewBtn.addEventListener("click", () => {
+        console.log("Grid button clicked!");
+        currentView = "grid";
+        console.log("Current view set to:", currentView);
+
+        // Active state for grid button
+        gridViewBtn.classList.add("active");
+        listViewBtn.classList.remove("active");
+        console.log("Grid button active, List button inactive");
+
+        renderResults();
+        console.log("Results rendered");
+      });
+    }
   }
+
+  function createResultCard(result) {
+    const card = document.createElement("div");
+    card.className = `result-card ${result.status} new`;
+
+    const statusIcon = getStatusIcon(result.status);
+    const statusText = getStatusText(result.status);
+    const statusColor = getStatusColor(result.status);
+
+    // Parse and format the message for better organization
+    const formattedMessage = formatResultMessage(result.message);
+    const hasDetails = result.details && result.details.trim() !== "";
+
+    card.innerHTML = `
+      <div class="result-header">
+        <div class="result-meta">
+          <div class="result-time">
+            <svg class="w-4 h-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            <span class="font-mono text-sm">${result.timestamp}</span>
+          </div>
+          <div class="result-tool">
+            <svg class="w-4 h-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655-4.653a2.548 2.548 0 0 1-.766-1.205l-.33-1.242a2.548 2.548 0 0 1 .514-2.049l.927-.927A2.548 2.548 0 0 1 9.157 4.5l1.242.33c.433.113.828.342 1.205.766l4.653 4.653.33 1.242c.113.433.342.828.766 1.205l.927.927a2.548 2.548 0 0 1 .514 2.049l-.33 1.242a2.548 2.548 0 0 1-.766 1.205M11.42 15.17l2.496-3.03" />
+            </svg>
+            <span class="font-semibold">${result.feature}</span>
+          </div>
+        </div>
+        <div class="result-status ${result.status}" style="background: ${
+      statusColor.background
+    }; color: ${statusColor.text}; border-color: ${statusColor.border};">
+          <span class="status-indicator ${result.status}"></span>
+          <span class="font-semibold">${statusText}</span>
+        </div>
+      </div>
+      <div class="result-content">
+        <div class="result-message text-slate-700 leading-relaxed">
+          ${formattedMessage}
+        </div>
+        ${
+          hasDetails
+            ? `<div class="result-details" style="display: none;">${result.details}</div>`
+            : ""
+        }
+      </div>
+      <div class="result-actions">
+        ${
+          hasDetails
+            ? `
+          <button class="result-expand-btn" onclick="toggleResultDetails(this)">
+            <svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+            Details
+          </button>
+        `
+            : ""
+        }
+        <button class="result-action-btn" onclick="copyResult('${result.id}')">
+          <svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 0 1-3.827-5.802.5.5 0 0 0-.585-.245.48.48 0 0 0-.436.314 16.81 16.81 0 0 0-2.666 3.257m-4.589 8.495a16.5 16.5 0 0 1-.585-2.25c0-1.03.693-1.9 1.638-2.166m7.332 0c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 0 1-3.827-5.802.5.5 0 0 0-.585-.245.48.48 0 0 0-.436.314 16.81 16.81 0 0 0-2.666 3.257m-4.589 8.495a16.5 16.5 0 0 1-.585-2.25c0-1.03.693-1.9 1.638-2.166" />
+          </svg>
+          Copy
+        </button>
+        <button class="result-action-btn" onclick="exportResult('${
+          result.id
+        }')">
+          <svg class="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          Export
+        </button>
+      </div>
+    `;
+
+    return card;
+  }
+
+  function getStatusIcon(status) {
+    const icons = {
+      safe: "🛡️",
+      warning: "⚠️",
+      threat: "🚨",
+      system: "⚙️",
+    };
+    return icons[status] || "ℹ️";
+  }
+
+  function getStatusText(status) {
+    const texts = {
+      safe: "Safe",
+      warning: "Warning",
+      threat: "Threat",
+      system: "System",
+    };
+    return texts[status] || "Info";
+  }
+
+  function getStatusColor(status) {
+    const colors = {
+      safe: {
+        background: "linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)",
+        text: "#166534",
+        border: "#bbf7d0",
+      },
+      warning: {
+        background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+        text: "#92400e",
+        border: "#fde68a",
+      },
+      threat: {
+        background: "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)",
+        text: "#991b1b",
+        border: "#fecaca",
+      },
+      system: {
+        background: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)",
+        text: "#3730a3",
+        border: "#c7d2fe",
+      },
+    };
+    return colors[status] || colors.system;
+  }
+
+  function formatResultMessage(message) {
+    if (!message) return "";
+
+    // Split message into lines and format each line
+    const lines = message.split("\n");
+    const formattedLines = lines
+      .map((line) => {
+        // Skip empty lines
+        if (line.trim() === "") return "";
+
+        // Format different types of information
+        if (
+          line.includes("Country:") ||
+          line.includes("Region:") ||
+          line.includes("City:")
+        ) {
+          return `<div class="location-info">${line}</div>`;
+        }
+        if (
+          line.includes("ISP:") ||
+          line.includes("ASN:") ||
+          line.includes("Organization:")
+        ) {
+          return `<div class="network-info">${line}</div>`;
+        }
+        if (line.includes("Threat Level:") || line.includes("Is EU Country:")) {
+          return `<div class="security-info">${line}</div>`;
+        }
+        if (
+          line.includes("Timezone:") ||
+          line.includes("UTC Offset:") ||
+          line.includes("Currency:")
+        ) {
+          return `<div class="regional-info">${line}</div>`;
+        }
+        if (line.includes("Coordinates:")) {
+          return `<div class="coordinates-info">${line}</div>`;
+        }
+        if (line.includes("Languages:")) {
+          return `<div class="language-info">${line}</div>`;
+        }
+
+        // Default formatting for other lines
+        return `<div class="info-line">${line}</div>`;
+      })
+      .filter((line) => line !== "");
+
+    return formattedLines.join("");
+  }
+
+  function renderResults() {
+    const container = document.getElementById("results-container");
+    if (!container) return;
+
+    // Enhanced filtering with better search capabilities
+    let filteredResults = resultsData;
+
+    // Apply status filter
+    if (currentFilter !== "all") {
+      filteredResults = filteredResults.filter(
+        (result) => result.status === currentFilter
+      );
+    }
+
+    // Enhanced search functionality
+    if (searchQuery) {
+      filteredResults = filteredResults.filter((result) => {
+        const searchLower = searchQuery.toLowerCase();
+        return (
+          result.feature.toLowerCase().includes(searchLower) ||
+          result.message.toLowerCase().includes(searchLower) ||
+          result.timestamp.toLowerCase().includes(searchLower) ||
+          (result.details && result.details.toLowerCase().includes(searchLower))
+        );
+      });
+    }
+
+    // Clear container
+    container.innerHTML = "";
+
+    if (filteredResults.length === 0) {
+      const emptyState = document.getElementById("empty-results");
+      if (emptyState) {
+        container.appendChild(emptyState.cloneNode(true));
+      }
+      return;
+    }
+
+    // Create results container based on view mode
+    const resultsWrapper = document.createElement("div");
+
+    if (currentView === "grid") {
+      // Grid view - organized layout with groups
+      resultsWrapper.className = "results-organized";
+
+      // Add result summary
+      const summary = createResultsSummary(filteredResults);
+      resultsWrapper.appendChild(summary);
+
+      // Group results by status for better organization
+      const groupedResults = groupResultsByStatus(filteredResults);
+
+      // Add grouped results
+      Object.keys(groupedResults).forEach((status) => {
+        if (groupedResults[status].length > 0) {
+          const groupSection = createResultGroup(
+            status,
+            groupedResults[status]
+          );
+          resultsWrapper.appendChild(groupSection);
+        }
+      });
+    } else {
+      // List view - traditional list layout
+      resultsWrapper.className =
+        currentView === "grid" ? "results-grid" : "results-list";
+
+      // Add result cards directly
+      filteredResults.forEach((result) => {
+        const card = createResultCard(result);
+        resultsWrapper.appendChild(card);
+      });
+    }
+
+    container.appendChild(resultsWrapper);
+  }
+
+  function groupResultsByStatus(results) {
+    const grouped = {
+      threat: [],
+      warning: [],
+      safe: [],
+      system: [],
+    };
+
+    results.forEach((result) => {
+      if (grouped[result.status]) {
+        grouped[result.status].push(result);
+      } else {
+        grouped.system.push(result);
+      }
+    });
+
+    return grouped;
+  }
+
+  function createResultsSummary(results) {
+    const summary = document.createElement("div");
+    summary.className = "results-summary";
+
+    const total = results.length;
+    const threatCount = results.filter((r) => r.status === "threat").length;
+    const warningCount = results.filter((r) => r.status === "warning").length;
+    const safeCount = results.filter((r) => r.status === "safe").length;
+    const systemCount = results.filter((r) => r.status === "system").length;
+
+    summary.innerHTML = `
+      <div class="summary-header">
+        <h4 class="summary-title">Analysis Summary</h4>
+        <div class="summary-stats">
+          <span class="stat-item total">Total: ${total}</span>
+          <span class="stat-item threat">Threats: ${threatCount}</span>
+          <span class="stat-item warning">Warnings: ${warningCount}</span>
+          <span class="stat-item safe">Safe: ${safeCount}</span>
+          <span class="stat-item system">System: ${systemCount}</span>
+        </div>
+      </div>
+    `;
+
+    return summary;
+  }
+
+  function createResultGroup(status, results) {
+    const group = document.createElement("div");
+    group.className = `result-group result-group-${status}`;
+
+    const statusInfo = {
+      threat: { title: "🚨 Security Threats", icon: "🚨", color: "#ef4444" },
+      warning: { title: "⚠️ Security Warnings", icon: "⚠️", color: "#f59e0b" },
+      safe: { title: "🛡️ Safe Results", icon: "🛡️", color: "#10b981" },
+      system: { title: "⚙️ System Information", icon: "⚙️", color: "#6366f1" },
+    };
+
+    const info = statusInfo[status] || statusInfo.system;
+
+    group.innerHTML = `
+      <div class="group-header" style="border-left-color: ${info.color}">
+        <div class="group-title">
+          <span class="group-icon">${info.icon}</span>
+          <span class="group-name">${info.title}</span>
+          <span class="group-count">${results.length}</span>
+        </div>
+        <div class="group-actions">
+          <button class="group-toggle" onclick="toggleGroup('${status}')">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="group-content" id="group-${status}">
+        ${results
+          .map((result) => {
+            const card = createResultCard(result);
+            return card.outerHTML;
+          })
+          .join("")}
+      </div>
+    `;
+
+    return group;
+  }
+
+  function updateSearchResults() {
+    const searchInput = document.getElementById("results-search");
+    if (searchInput) {
+      const hasResults = resultsData.some((result) => {
+        const searchLower = searchQuery.toLowerCase();
+        return (
+          result.feature.toLowerCase().includes(searchLower) ||
+          result.message.toLowerCase().includes(searchLower) ||
+          result.timestamp.toLowerCase().includes(searchLower) ||
+          (result.details && result.details.toLowerCase().includes(searchLower))
+        );
+      });
+
+      // Add visual feedback for search
+      if (searchQuery && !hasResults) {
+        searchInput.style.borderColor = "#f59e0b";
+        searchInput.style.backgroundColor = "#fef3c7";
+      } else {
+        searchInput.style.borderColor = "#e2e8f0";
+        searchInput.style.backgroundColor = "white";
+      }
+    }
+  }
+
+  function updateFilterResults() {
+    const filterSelect = document.getElementById("results-filter");
+    if (filterSelect) {
+      const selectedOption = filterSelect.options[filterSelect.selectedIndex];
+      const filterCount = resultsData.filter(
+        (result) => result.status === currentFilter
+      ).length;
+
+      // Update option text to show count
+      if (currentFilter !== "all") {
+        selectedOption.text = `${
+          selectedOption.text.split(" (")[0]
+        } (${filterCount})`;
+      }
+    }
+  }
+
+  function updateResultsStats() {
+    const safeCount = resultsData.filter((r) => r.status === "safe").length;
+    const warningCount = resultsData.filter(
+      (r) => r.status === "warning"
+    ).length;
+    const threatCount = resultsData.filter((r) => r.status === "threat").length;
+
+    const safeCountEl = document.getElementById("safe-count");
+    const warningCountEl = document.getElementById("warning-count");
+    const threatCountEl = document.getElementById("threat-count");
+
+    if (safeCountEl) safeCountEl.textContent = safeCount;
+    if (warningCountEl) warningCountEl.textContent = warningCount;
+    if (threatCountEl) threatCountEl.textContent = threatCount;
+  }
+
+  function logResult(
+    timestamp,
+    feature,
+    message,
+    status = "info",
+    details = null
+  ) {
+    // Map old status to new status system
+    let newStatus = status;
+    if (status === "success") newStatus = "safe";
+    else if (status === "warning") newStatus = "warning";
+    else if (status === "danger") newStatus = "threat";
+    else if (status === "info") newStatus = "system";
+
+    const result = {
+      id: Date.now().toString(),
+      timestamp: timestamp.toLocaleTimeString(),
+      feature: feature,
+      message: message,
+      status: newStatus,
+      details: details,
+      date: timestamp,
+    };
+
+    resultsData.push(result);
+    updateResultsStats();
+    renderResults();
+
+    // Also add to history for backward compatibility
+    history.push({ timestamp: result.timestamp, feature, message, status });
+    if (history.length > maxHistorySize) history.shift();
+    updateHistoryList();
+
+    // Scroll to bottom
+    const container = document.getElementById("results-container");
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+  }
+
+  // Global functions for result actions
+  window.toggleResultDetails = function (button) {
+    const card = button.closest(".result-card");
+    const details = card.querySelector(".result-details");
+    const isExpanded = details.style.display !== "none";
+
+    if (isExpanded) {
+      details.style.display = "none";
+      button.textContent = "Details";
+      button.classList.remove("expanded");
+    } else {
+      details.style.display = "block";
+      button.textContent = "Hide";
+      button.classList.add("expanded");
+    }
+  };
+
+  window.toggleGroup = function (status) {
+    const groupContent = document.getElementById(`group-${status}`);
+    const toggleButton = document.querySelector(
+      `[onclick="toggleGroup('${status}')"]`
+    );
+
+    if (groupContent && toggleButton) {
+      const isCollapsed = groupContent.style.display === "none";
+
+      if (isCollapsed) {
+        groupContent.style.display = "block";
+        toggleButton.style.transform = "rotate(0deg)";
+        toggleButton.setAttribute("aria-expanded", "true");
+      } else {
+        groupContent.style.display = "none";
+        toggleButton.style.transform = "rotate(-90deg)";
+        toggleButton.setAttribute("aria-expanded", "false");
+      }
+    }
+  };
+
+  window.copyResult = function (resultId) {
+    const result = resultsData.find((r) => r.id === resultId);
+    if (result) {
+      const text = `${result.timestamp} - ${result.feature}\n${result.message}`;
+      navigator.clipboard.writeText(text).then(() => {
+        // Show success feedback
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = "Copied!";
+        button.style.background = "#10b981";
+        button.style.color = "white";
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.style.background = "";
+          button.style.color = "";
+        }, 2000);
+      });
+    }
+  };
+
+  window.exportResult = function (resultId) {
+    const result = resultsData.find((r) => r.id === resultId);
+    if (result) {
+      const data = {
+        timestamp: result.timestamp,
+        feature: result.feature,
+        message: result.message,
+        status: result.status,
+        details: result.details,
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `result-${resultId}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
 
   function updateHistoryList() {
     historyList.innerHTML = "";
@@ -1210,12 +1782,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   clearHistoryBtn.addEventListener("click", () => {
-    history = [];
-    const header = resultsContainer.firstElementChild;
-    resultsContainer.innerHTML = "";
-    resultsContainer.appendChild(header);
-    updateHistoryList();
-    logResult(new Date(), "System", "🗑️ History cleared successfully.");
+    if (confirm("Are you sure you want to clear all results and history?")) {
+      history = [];
+      resultsData = [];
+      renderResults();
+      updateHistoryList();
+      updateResultsStats();
+      logResult(
+        new Date(),
+        "System",
+        "🗑️ History cleared successfully.",
+        "system"
+      );
+    }
   });
 
   saveResultsBtn.addEventListener("click", () => {
@@ -6703,6 +7282,9 @@ document.addEventListener("DOMContentLoaded", () => {
   loadWhoisKey();
   loadShodanKey();
   updateStatus();
+
+  // Initialize modern results system
+  initializeModernResults();
 
   // Show welcome popup first, then initialize sidebar
   setTimeout(() => {

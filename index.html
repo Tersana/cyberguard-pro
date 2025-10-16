@@ -76,8 +76,43 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button id="api-keys-toggle"
-                        class="px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors flex items-center gap-1"
+                    <!-- User Info (Authenticated) -->
+                    <div id="user-info" data-auth class="flex items-center gap-3 hidden">
+                        <div class="text-right">
+                            <div class="text-sm font-semibold text-slate-800" id="userName">User Name</div>
+                            <div class="text-xs text-slate-500" id="userEmail">user@example.com</div>
+                        </div>
+                        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                            </svg>
+                        </div>
+                        <button id="logoutBtn" class="px-3 py-1.5 rounded-md text-xs font-semibold bg-red-100 hover:bg-red-200 text-red-700 transition-colors flex items-center gap-1">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
+                            </svg>
+                            Logout
+                        </button>
+                    </div>
+
+                    <!-- Guest Actions (Not Authenticated) -->
+                    <div id="guest-actions" data-guest class="flex items-center gap-2">
+                        <a href="login.html" class="px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors flex items-center gap-1">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                            </svg>
+                            Login
+                        </a>
+                        <a href="signup.html" class="px-3 py-1.5 rounded-md text-xs font-semibold bg-green-100 hover:bg-green-200 text-green-700 transition-colors flex items-center gap-1">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+                            </svg>
+                            Sign Up
+                        </a>
+                    </div>
+
+                    <button id="api-keys-toggle" data-auth-required
+                        class="px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Toggle API Keys">
                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                             stroke-width="1.5" stroke="currentColor">
@@ -294,6 +329,28 @@
             </div>
 
             <div class="flex-grow overflow-y-auto">
+                <!-- Guest User Notice -->
+                <div id="guest-notice" data-guest class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 mx-4 mt-4 mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-sm font-semibold text-blue-800 mb-1">Welcome to CyberGuard Pro!</h3>
+                            <p class="text-sm text-blue-700 mb-2">You're browsing as a guest. API key configuration and advanced security tools require authentication.</p>
+                            <div class="flex gap-2">
+                                <a href="login.html" class="text-xs bg-blue-500 hover:bg-blue-600 text-white font-semibold py-1.5 px-3 rounded-lg transition-colors">
+                                    Login
+                                </a>
+                                <a href="signup.html" class="text-xs bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 rounded-lg transition-colors">
+                                    Sign Up
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="p-4 sm:p-6">
                     <div class="flex border-b border-slate-200 mb-6">
                         <button data-tab="network-tools"
@@ -320,6 +377,7 @@
                     </div>
 
                     <div id="tab-content" class="space-y-6">
+
                         <div id="network-tools" class="tab-pane active space-y-6">
                             <div
                                 class="bg-white p-5 rounded-xl shadow-md border border-slate-200 transition-all hover:shadow-lg hover:-translate-y-1">
@@ -348,16 +406,16 @@
                                             d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655-4.653a2.548 2.548 0 0 1-.766-1.205l-.33-1.242a2.548 2.548 0 0 1 .514-2.049l.927-.927A2.548 2.548 0 0 1 9.157 4.5l1.242.33c.433.113.828.342 1.205.766l4.653 4.653.33 1.242c.113.433.342.828.766 1.205l.927.927a2.548 2.548 0 0 1 .514 2.049l-.33 1.242a2.548 2.548 0 0 1-.766 1.205M11.42 15.17l2.496-3.03" />
                                     </svg>Network Analysis Tools</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    <button id="reverse-dns-btn"
-                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg
+                                    <button id="reverse-dns-btn" data-auth-required
+                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><svg
                                             class="w-6 h-6 transition-transform group-hover:rotate-12"
                                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                             stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m-4.991 4.992" />
                                         </svg>Reverse DNS</button>
-                                    <button id="ip-geo-btn"
-                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg
+                                    <button id="ip-geo-btn" data-auth-required
+                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><svg
                                             class="w-6 h-6 transition-transform group-hover:rotate-12"
                                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                             stroke-width="1.5" stroke="currentColor">
@@ -366,40 +424,40 @@
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="M2.25 12c0 5.385 4.365 9.75 9.75 9.75s9.75-4.365 9.75-9.75S17.385 2.25 12 2.25 2.25 6.615 2.25 12Z" />
                                         </svg>IP Geolocation</button>
-                                    <button id="whois-btn"
-                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg
+                                    <button id="whois-btn" data-auth-required
+                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><svg
                                             class="w-6 h-6 transition-transform group-hover:rotate-12"
                                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                             stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
                                         </svg>WHOIS Lookup</button>
-                                    <button id="port-scan-btn"
-                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg
+                                    <button id="port-scan-btn" data-auth-required
+                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><svg
                                             class="w-6 h-6 transition-transform group-hover:rotate-12"
                                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                             stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788 3.807-3.808 9.98-3.808 13.788 0 3.808 3.807 3.808 9.98 0 13.788-3.807 3.808-9.98 3.808-13.788 0Z" />
                                         </svg>Port Scanner</button>
-                                    <button id="tcp-scan-btn"
-                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg
+                                    <button id="tcp-scan-btn" data-auth-required
+                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><svg
                                             class="w-6 h-6 transition-transform group-hover:rotate-12"
                                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                             stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
                                         </svg>TCP Port Scan</button>
-                                    <button id="udp-scan-btn"
-                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg
+                                    <button id="udp-scan-btn" data-auth-required
+                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><svg
                                             class="w-6 h-6 transition-transform group-hover:rotate-12"
                                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                             stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" />
                                         </svg>UDP Port Scan</button>
-                                    <button id="threat-intel-btn"
-                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg
+                                    <button id="threat-intel-btn" data-auth-required
+                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><svg
                                             class="w-6 h-6 transition-transform group-hover:rotate-12"
                                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                             stroke-width="1.5" stroke="currentColor">
@@ -434,29 +492,29 @@
                                             d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
                                     </svg>Security Analysis Tools</h3>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4"><button
-                                        id="phishing-btn"
-                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg
+                                        id="phishing-btn" data-auth-required
+                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><svg
                                             class="w-6 h-6 transition-transform group-hover:rotate-12"
                                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                             stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                                        </svg>URL Phishing Analyzer</button><button id="xss-btn"
-                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg
+                                        </svg>URL Phishing Analyzer</button><button id="xss-btn" data-auth-required
+                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><svg
                                             class="w-6 h-6 transition-transform group-hover:rotate-12"
                                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                             stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
-                                        </svg>XSS Test</button><button id="ssl-btn"
-                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg
+                                        </svg>XSS Test</button><button id="ssl-btn" data-auth-required
+                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><svg
                                             class="w-6 h-6 transition-transform group-hover:rotate-12"
                                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                             stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                                        </svg>SSL/TLS Check</button><button id="dns-spoof-btn"
-                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2"><svg
+                                        </svg>SSL/TLS Check</button><button id="dns-spoof-btn" data-auth-required
+                                        class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 hover:ring-2 hover:ring-blue-500 flex flex-col items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><svg
                                             class="w-6 h-6 transition-transform group-hover:rotate-12"
                                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                             stroke-width="1.5" stroke="currentColor">
@@ -482,12 +540,12 @@
                                             Scanning</label><input type="file" id="vt-file-input"
                                             class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600 cursor-pointer transition">
                                     </div>
-                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2"><button id="vt-url-btn"
-                                            class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700">Scan
-                                            URL</button><button id="vt-hash-btn"
-                                            class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700">Check
-                                            Hash</button><button id="vt-file-btn"
-                                            class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700">Scan
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2"><button id="vt-url-btn" data-auth-required
+                                            class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">Scan
+                                            URL</button><button id="vt-hash-btn" data-auth-required
+                                            class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">Check
+                                            Hash</button><button id="vt-file-btn" data-auth-required
+                                            class="group bg-slate-100 hover:bg-slate-200 p-4 rounded-lg text-center transition-all font-semibold text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed">Scan
                                             File</button></div>
                                 </div>
                             </div>
@@ -507,8 +565,8 @@
                                             class="block text-sm font-medium mb-1 text-slate-700">Text to
                                             Hash</label><input type="text" id="hash-string-input"
                                             class="w-full bg-slate-100 border border-slate-200 rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500 transition"
-                                            placeholder="Enter text..."><button id="hash-string-btn"
-                                            class="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Generate
+                                            placeholder="Enter text..."><button id="hash-string-btn" data-auth-required
+                                            class="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Generate
                                             Hashes</button></div>
                                     <div class="border-t border-slate-200 my-4"></div>
                                     <div><label class="block text-sm font-medium mb-2 text-slate-700">File to
@@ -529,8 +587,8 @@
                                                         d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                                </svg>Show</button></div><button id="pw-analyze-btn"
-                                            class="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Analyze
+                                                </svg>Show</button></div><button id="pw-analyze-btn" data-auth-required
+                                            class="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Analyze
                                             Password</button>
                                         <p class="text-xs text-slate-500 mt-1"></p>
                                     </div>
@@ -541,36 +599,104 @@
                     </div>
 
                     <div class="mt-6">
-                        <div
-                            class="bg-white border border-slate-200 rounded-xl flex-grow flex flex-col overflow-hidden shadow-md">
-                            <h3
-                                class="text-md font-semibold p-4 border-b border-slate-200 text-slate-800 flex items-center gap-2">
-                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                    stroke-width="1.5" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
-                                </svg>Analysis Results</h3>
-                            <div class="overflow-y-auto flex-grow p-4 space-y-2 min-h-[200px]" id="results-container">
-                                <div
-                                    class="grid grid-cols-12 gap-4 text-xs font-bold text-slate-700 px-4 py-2 border-b border-slate-200 sticky top-0 bg-white">
-                                    <div class="col-span-4 sm:col-span-2 flex items-center gap-1"><svg class="w-3 h-3"
-                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                            stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>Time</div>
-                                    <div class="col-span-8 sm:col-span-3 flex items-center gap-1"><svg class="w-3 h-3"
-                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                            stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655-4.653a2.548 2.548 0 0 1-.766-1.205l-.33-1.242a2.548 2.548 0 0 1 .514-2.049l.927-.927A2.548 2.548 0 0 1 9.157 4.5l1.242.33c.433.113.828.342 1.205.766l4.653 4.653.33 1.242c.113.433.342.828.766 1.205l.927.927a2.548 2.548 0 0 1 .514 2.049l-.33 1.242a2.548 2.548 0 0 1-.766 1.205M11.42 15.17l2.496-3.03" />
-                                        </svg>Tool</div>
-                                    <div class="hidden sm:block sm:col-span-7 flex items-center gap-1"><svg
-                                            class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                            viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                                        </svg>Result</div>
+                        <!-- Modern Results Section -->
+                        <div class="bg-white border border-slate-200 rounded-2xl flex-grow flex flex-col overflow-hidden shadow-lg">
+                            <!-- Enhanced Header with Controls -->
+                            <div class="p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-xl">
+                                            <svg class="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Analysis Results</h3>
+                                            <p class="text-sm text-slate-500 font-medium">Real-time security analysis and threat intelligence</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-6">
+                                        <div id="results-stats" class="flex items-center gap-4 text-sm">
+                                            <div class="flex items-center gap-2 px-4 py-3 bg-white rounded-xl border-2 border-green-200 shadow-lg">
+                                                <div class="w-4 h-4 bg-green-500 rounded-full shadow-sm"></div>
+                                                <span class="text-green-700 font-bold text-base">Safe: <span id="safe-count" class="text-green-800">0</span></span>
+                                            </div>
+                                            <div class="flex items-center gap-2 px-4 py-3 bg-white rounded-xl border-2 border-orange-200 shadow-lg">
+                                                <div class="w-4 h-4 bg-orange-500 rounded-full shadow-sm"></div>
+                                                <span class="text-orange-700 font-bold text-base">Warning: <span id="warning-count" class="text-orange-800">0</span></span>
+                                            </div>
+                                            <div class="flex items-center gap-2 px-4 py-3 bg-white rounded-xl border-2 border-red-200 shadow-lg">
+                                                <div class="w-4 h-4 bg-red-500 rounded-full shadow-sm"></div>
+                                                <span class="text-red-700 font-bold text-base">Threat: <span id="threat-count" class="text-red-800">0</span></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Advanced Controls -->
+                                <div class="flex flex-wrap items-center gap-4">
+                                    <!-- Search and Filter -->
+                                    <div class="flex items-center gap-3 flex-1 min-w-64">
+                                        <div class="relative flex-1">
+                                            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                                            </svg>
+                                            <input type="text" id="results-search" placeholder="Search results..." class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white shadow-sm transition-all">
+                                        </div>
+                                        <select id="results-filter" class="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white shadow-sm transition-all min-w-32">
+                                            <option value="all">All Results</option>
+                                            <option value="safe">🛡️ Safe</option>
+                                            <option value="warning">⚠️ Warning</option>
+                                            <option value="threat">🚨 Threat</option>
+                                            <option value="system">⚙️ System</option>
+                                        </select>
+                                        <button id="clear-results-btn" class="px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl text-sm font-semibold transition-all flex items-center gap-2 shadow-lg hover:shadow-xl">
+                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 3L10 3m4.788 3L10 3m0 0L5.5 3m4.5 0L5.5 3" />
+                                            </svg>
+                                            Clear
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- View Toggle -->
+                                    <div class="flex items-center bg-slate-100 rounded-xl p-1 shadow-lg border border-slate-200">
+                                        <button id="list-view-btn" class="px-5 py-3 rounded-lg text-sm font-bold bg-blue-600 text-white shadow-lg transition-all flex items-center gap-2 border-2 border-blue-600">
+                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h7.5m-7.5 3h7.5m-7.5 3h7.5m-7.5 3h7.5" />
+                                            </svg>
+                                            List
+                                        </button>
+                                        <button id="grid-view-btn" class="px-5 py-3 rounded-lg text-sm font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-2 border-2 border-transparent hover:border-blue-200">
+                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 0 1-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5m0 0V5.625m0 0h7.5c.621 0 1.125.504 1.125 1.125v1.5m-9.75 0h7.5m-7.5 0V5.625m0 0h7.5m-7.5 0v1.5m7.5-1.5v1.5m0 0h7.5m-7.5 0V5.625m0 0h7.5m-7.5 0v1.5m7.5-1.5v1.5" />
+                                            </svg>
+                                            Grid
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Results Container -->
+                            <div class="flex-1 overflow-y-auto">
+                                <div id="results-container" class="p-6 space-y-4 min-h-[300px]">
+                                    <!-- Empty State -->
+                                    <div id="empty-results" class="flex flex-col items-center justify-center py-12 text-center">
+                                        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                                            <svg class="w-8 h-8 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+                                            </svg>
+                                        </div>
+                                        <h3 class="text-lg font-semibold text-slate-800 mb-2">No Analysis Results Yet</h3>
+                                        <p class="text-slate-600 mb-4">Start by running security analysis tools to see results here</p>
+                                        <div class="flex gap-2">
+                                            <button class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
+                                                Run Network Scan
+                                            </button>
+                                            <button class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors">
+                                                View Documentation
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -665,6 +791,9 @@
         </div>
     </div>
 
+    <!-- Authentication System -->
+    <script src="auth.js"></script>
+    
     <!-- Main JavaScript File -->
     <script src="main.js"></script>
 </body>

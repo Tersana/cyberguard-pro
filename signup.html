@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - CyberGuard Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .auth-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+        
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+        
+        .shape:nth-child(2) {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+        
+        .shape:nth-child(3) {
+            width: 60px;
+            height: 60px;
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        .input-group input {
+            transition: all 0.3s ease;
+        }
+        
+        .input-group input:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .input-group label {
+            transition: all 0.3s ease;
+        }
+        
+        .input-group input:focus + label,
+        .input-group input:not(:placeholder-shown) + label {
+            transform: translateY(-25px) scale(0.9);
+            color: #667eea;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+        
+        .password-strength {
+            height: 4px;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .strength-weak { background: #ef4444; }
+        .strength-fair { background: #f59e0b; }
+        .strength-good { background: #10b981; }
+        .strength-strong { background: #059669; }
+        
+        .slide-in {
+            animation: slideIn 0.8s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .error-message {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .success-message {
+            animation: bounce 0.6s ease-in-out;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        .form-step {
+            display: none;
+        }
+        
+        .form-step.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        .step {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            margin: 0 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active {
+            background: #667eea;
+            transform: scale(1.2);
+        }
+        
+        .step.completed {
+            background: #10b981;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <!-- Floating Background Shapes -->
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="w-full max-w-md">
+        <!-- Sign Up Form -->
+        <div class="auth-container rounded-3xl shadow-2xl p-8 slide-in">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 mx-auto bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-user-plus text-white text-2xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Join CyberGuard Pro</h1>
+                <p class="text-gray-600">Create your secure account today</p>
+            </div>
+
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step active" data-step="1"></div>
+                <div class="step" data-step="2"></div>
+                <div class="step" data-step="3"></div>
+            </div>
+
+            <!-- Sign Up Form -->
+            <form id="signupForm" class="space-y-6">
+                <!-- Step 1: Basic Information -->
+                <div class="form-step active" id="step1">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Basic Information</h3>
+                    
+                    <!-- Full Name -->
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            id="fullName" 
+                            name="fullName" 
+                            placeholder=" "
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300"
+                            required
+                        >
+                        <label for="fullName" class="absolute left-4 top-3 text-gray-500 pointer-events-none">
+                            <i class="fas fa-user mr-2"></i>Full Name
+                        </label>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="input-group">
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            placeholder=" "
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300"
+                            required
+                        >
+                        <label for="email" class="absolute left-4 top-3 text-gray-500 pointer-events-none">
+                            <i class="fas fa-envelope mr-2"></i>Email Address
+                        </label>
+                    </div>
+
+                    <!-- Company (Optional) -->
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            id="company" 
+                            name="company" 
+                            placeholder=" "
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300"
+                        >
+                        <label for="company" class="absolute left-4 top-3 text-gray-500 pointer-events-none">
+                            <i class="fas fa-building mr-2"></i>Company (Optional)
+                        </label>
+                    </div>
+
+                    <button type="button" class="btn-primary w-full py-3 px-4 text-white font-semibold rounded-xl" onclick="nextStep()">
+                        Continue <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+
+                <!-- Step 2: Security -->
+                <div class="form-step" id="step2">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Security Setup</h3>
+                    
+                    <!-- Password -->
+                    <div class="input-group">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            placeholder=" "
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300"
+                            required
+                        >
+                        <label for="password" class="absolute left-4 top-3 text-gray-500 pointer-events-none">
+                            <i class="fas fa-lock mr-2"></i>Password
+                        </label>
+                        <button type="button" id="togglePassword" class="absolute right-4 top-3 text-gray-500 hover:text-blue-500 transition-colors">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <!-- Password Strength Indicator -->
+                    <div class="mt-2">
+                        <div class="flex justify-between text-xs text-gray-500 mb-1">
+                            <span>Password Strength</span>
+                            <span id="strengthText">Weak</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="strengthBar" class="password-strength w-0"></div>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="input-group">
+                        <input 
+                            type="password" 
+                            id="confirmPassword" 
+                            name="confirmPassword" 
+                            placeholder=" "
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300"
+                            required
+                        >
+                        <label for="confirmPassword" class="absolute left-4 top-3 text-gray-500 pointer-events-none">
+                            <i class="fas fa-lock mr-2"></i>Confirm Password
+                        </label>
+                    </div>
+
+                    <!-- Security Questions -->
+                    <div class="space-y-4">
+                        <h4 class="text-sm font-semibold text-gray-700">Security Questions</h4>
+                        
+                        <div class="input-group">
+                            <select id="securityQuestion1" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300">
+                                <option value="">Select a security question</option>
+                                <option value="birthplace">What city were you born in?</option>
+                                <option value="pet">What was your first pet's name?</option>
+                                <option value="school">What was the name of your first school?</option>
+                                <option value="mother">What is your mother's maiden name?</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group">
+                            <input 
+                                type="text" 
+                                id="securityAnswer1" 
+                                placeholder="Your answer"
+                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button type="button" class="flex-1 py-3 px-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors" onclick="prevStep()">
+                            <i class="fas fa-arrow-left mr-2"></i>Back
+                        </button>
+                        <button type="button" class="flex-1 btn-primary py-3 px-4 text-white font-semibold rounded-xl" onclick="nextStep()">
+                            Continue <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Preferences & Terms -->
+                <div class="form-step" id="step3">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Preferences & Terms</h3>
+                    
+                    <!-- Notification Preferences -->
+                    <div class="space-y-3">
+                        <h4 class="text-sm font-semibold text-gray-700">Notification Preferences</h4>
+                        
+                        <label class="flex items-center">
+                            <input type="checkbox" class="rounded border-gray-300 text-blue-500 focus:ring-blue-500" checked>
+                            <span class="ml-2 text-sm text-gray-600">Email notifications for security alerts</span>
+                        </label>
+                        
+                        <label class="flex items-center">
+                            <input type="checkbox" class="rounded border-gray-300 text-blue-500 focus:ring-blue-500" checked>
+                            <span class="ml-2 text-sm text-gray-600">Weekly security reports</span>
+                        </label>
+                        
+                        <label class="flex items-center">
+                            <input type="checkbox" class="rounded border-gray-300 text-blue-500 focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-600">Product updates and news</span>
+                        </label>
+                    </div>
+
+                    <!-- Terms and Conditions -->
+                    <div class="space-y-3">
+                        <label class="flex items-start">
+                            <input type="checkbox" class="rounded border-gray-300 text-blue-500 focus:ring-blue-500 mt-1" required>
+                            <span class="ml-2 text-sm text-gray-600">
+                                I agree to the <a href="#" class="text-blue-500 hover:text-blue-700">Terms of Service</a> and <a href="#" class="text-blue-500 hover:text-blue-700">Privacy Policy</a>
+                            </span>
+                        </label>
+                        
+                        <label class="flex items-start">
+                            <input type="checkbox" class="rounded border-gray-300 text-blue-500 focus:ring-blue-500 mt-1" required>
+                            <span class="ml-2 text-sm text-gray-600">
+                                I consent to receive security alerts and important notifications via email
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button type="button" class="flex-1 py-3 px-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors" onclick="prevStep()">
+                            <i class="fas fa-arrow-left mr-2"></i>Back
+                        </button>
+                        <button type="submit" class="flex-1 btn-primary py-3 px-4 text-white font-semibold rounded-xl">
+                            <i class="fas fa-user-plus mr-2"></i>Create Account
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Sign In Link -->
+            <div class="text-center mt-8">
+                <p class="text-gray-600">
+                    Already have an account? 
+                    <a href="login.html" class="text-blue-500 hover:text-blue-700 font-semibold transition-colors">
+                        Sign in here
+                    </a>
+                </p>
+            </div>
+
+            <!-- Security Features -->
+            <div class="mt-8 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-shield-alt mr-2"></i>What you get with CyberGuard Pro
+                </h3>
+                <div class="text-xs text-gray-600 space-y-1">
+                    <p><i class="fas fa-check text-green-500 mr-2"></i>Advanced threat detection & analysis</p>
+                    <p><i class="fas fa-check text-green-500 mr-2"></i>Real-time security monitoring</p>
+                    <p><i class="fas fa-check text-green-500 mr-2"></i>Professional security reports</p>
+                    <p><i class="fas fa-check text-green-500 mr-2"></i>24/7 security support</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back to App Link -->
+        <div class="text-center mt-6">
+            <a href="index.html" class="text-white hover:text-gray-200 transition-colors flex items-center justify-center">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back to CyberGuard Pro
+            </a>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-8 text-center">
+            <div class="w-12 h-12 mx-auto mb-4 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-gray-700">Creating your account...</p>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div id="messageContainer" class="fixed top-4 right-4 z-50 hidden">
+        <div id="messageBox" class="bg-white rounded-xl shadow-lg p-4 max-w-sm">
+            <div class="flex items-center">
+                <div id="messageIcon" class="w-8 h-8 rounded-full flex items-center justify-center mr-3">
+                    <i id="messageIconClass" class="text-white"></i>
+                </div>
+                <div>
+                    <p id="messageTitle" class="font-semibold text-gray-800"></p>
+                    <p id="messageText" class="text-sm text-gray-600"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication System -->
+    <script src="auth.js"></script>
+    
+    <script>
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        // Step navigation functions
+        function nextStep() {
+            if (validateCurrentStep()) {
+                if (currentStep < totalSteps) {
+                    document.getElementById(`step${currentStep}`).classList.remove('active');
+                    document.querySelector(`[data-step="${currentStep}"]`).classList.remove('active');
+                    document.querySelector(`[data-step="${currentStep}"]`).classList.add('completed');
+                    
+                    currentStep++;
+                    
+                    document.getElementById(`step${currentStep}`).classList.add('active');
+                    document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+                }
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                document.querySelector(`[data-step="${currentStep}"]`).classList.remove('active');
+                
+                currentStep--;
+                
+                document.getElementById(`step${currentStep}`).classList.add('active');
+                document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+            }
+        }
+
+        // Form validation
+        function validateCurrentStep() {
+            const step = document.getElementById(`step${currentStep}`);
+            const requiredFields = step.querySelectorAll('input[required], select[required]');
+            
+            for (let field of requiredFields) {
+                if (!field.value.trim()) {
+                    showMessage('error', 'Required Field', 'Please fill in all required fields.');
+                    field.focus();
+                    return false;
+                }
+            }
+            
+            // Additional validation for step 2
+            if (currentStep === 2) {
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                if (password !== confirmPassword) {
+                    showMessage('error', 'Password Mismatch', 'Passwords do not match.');
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        // Password strength checker
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+            
+            let strength = 0;
+            let strengthClass = '';
+            let strengthLabel = '';
+            
+            if (password.length >= 8) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            switch (strength) {
+                case 0:
+                case 1:
+                    strengthClass = 'strength-weak';
+                    strengthLabel = 'Weak';
+                    break;
+                case 2:
+                    strengthClass = 'strength-fair';
+                    strengthLabel = 'Fair';
+                    break;
+                case 3:
+                    strengthClass = 'strength-good';
+                    strengthLabel = 'Good';
+                    break;
+                case 4:
+                case 5:
+                    strengthClass = 'strength-strong';
+                    strengthLabel = 'Strong';
+                    break;
+            }
+            
+            strengthBar.className = `password-strength ${strengthClass}`;
+            strengthBar.style.width = `${(strength / 5) * 100}%`;
+            strengthText.textContent = strengthLabel;
+        });
+
+        // Password toggle functionality
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordField = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+
+        // Form submission
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!validateCurrentStep()) return;
+            
+            // Show loading
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            
+            try {
+                // Collect form data
+                const userData = {
+                    fullName: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value,
+                    company: document.getElementById('company').value,
+                    password: document.getElementById('password').value,
+                    securityQuestion1: document.getElementById('securityQuestion1').value,
+                    securityAnswer1: document.getElementById('securityAnswer1').value
+                };
+                
+                // Use authentication manager
+                const result = await authManager.register(userData);
+                
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                
+                if (result.success) {
+                    showMessage('success', 'Account Created!', 'Welcome to CyberGuard Pro! Redirecting to dashboard...');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                } else {
+                    showMessage('error', 'Registration Failed', result.message);
+                }
+            } catch (error) {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                showMessage('error', 'Registration Error', 'An unexpected error occurred.');
+            }
+        });
+
+        // Show message function
+        function showMessage(type, title, text) {
+            const container = document.getElementById('messageContainer');
+            const box = document.getElementById('messageBox');
+            const icon = document.getElementById('messageIcon');
+            const iconClass = document.getElementById('messageIconClass');
+            const titleEl = document.getElementById('messageTitle');
+            const textEl = document.getElementById('messageText');
+            
+            // Set message content
+            titleEl.textContent = title;
+            textEl.textContent = text;
+            
+            // Set styling based on type
+            if (type === 'success') {
+                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-green-500';
+                iconClass.className = 'fas fa-check text-white';
+                box.classList.add('success-message');
+            } else {
+                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-red-500';
+                iconClass.className = 'fas fa-times text-white';
+                box.classList.add('error-message');
+            }
+            
+            // Show message
+            container.classList.remove('hidden');
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                container.classList.add('hidden');
+                box.classList.remove('success-message', 'error-message');
+            }, 5000);
+        }
+
+        // Add some interactive effects
+        document.querySelectorAll('input, select').forEach(field => {
+            field.addEventListener('focus', function() {
+                this.parentElement.classList.add('transform', 'scale-105');
+            });
+            
+            field.addEventListener('blur', function() {
+                this.parentElement.classList.remove('transform', 'scale-105');
+            });
+        });
+    </script>
+</body>
+</html>
