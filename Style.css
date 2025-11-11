@@ -1274,6 +1274,11 @@ main {
   contain: layout !important;
 }
 
+/* When authenticated, force-hide guest notice regardless of other rules */
+body.authenticated #guest-notice {
+  display: none !important;
+}
+
 /* Ensure guest notice doesn't become sticky */
 #guest-notice[data-guest] {
   position: static !important;
