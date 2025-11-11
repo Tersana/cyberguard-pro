@@ -166,9 +166,24 @@ class AuthManager {
     );
 
     if (this.isAuthenticated()) {
+      // Mark document state for CSS overrides
+      document.body.classList.add("authenticated");
+      document.body.classList.remove("guest");
       // Show authenticated elements
-      authElements.forEach((el) => (el.style.display = "block"));
-      guestElements.forEach((el) => (el.style.display = "none"));
+      authElements.forEach((el) => {
+        el.classList.remove("hidden");
+        el.style.removeProperty("display");
+      });
+      guestElements.forEach((el) => {
+        el.classList.add("hidden");
+        el.style.removeProperty("display");
+      });
+      // Explicitly hide guest notice if present
+      const guestNotice = document.getElementById("guest-notice");
+      if (guestNotice) {
+        guestNotice.classList.add("hidden");
+        guestNotice.style.display = "none";
+      }
 
       // Enable all auth-required elements
       authRequiredElements.forEach((el) => {
@@ -183,9 +198,24 @@ class AuthManager {
       if (userNameEl) userNameEl.textContent = this.currentUser.name;
       if (userEmailEl) userEmailEl.textContent = this.currentUser.email;
     } else {
+      // Mark document state for CSS overrides
+      document.body.classList.remove("authenticated");
+      document.body.classList.add("guest");
       // Show guest elements
-      authElements.forEach((el) => (el.style.display = "none"));
-      guestElements.forEach((el) => (el.style.display = "block"));
+      authElements.forEach((el) => {
+        el.classList.add("hidden");
+        el.style.removeProperty("display");
+      });
+      guestElements.forEach((el) => {
+        el.classList.remove("hidden");
+        el.style.removeProperty("display");
+      });
+      // Explicitly show guest notice if present
+      const guestNotice = document.getElementById("guest-notice");
+      if (guestNotice) {
+        guestNotice.classList.remove("hidden");
+        guestNotice.style.display = "";
+      }
 
       // Add visual indicators for auth-required elements but don't disable them completely
       authRequiredElements.forEach((el) => {
@@ -221,6 +251,14 @@ class AuthManager {
 
   // Setup event listeners
   setupEventListeners() {
+    // Ensure UI updates once DOM is fully ready
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => this.updateUI());
+    } else {
+      // DOM already parsed
+      this.updateUI();
+    }
+
     // Logout button
     const logoutBtn = document.getElementById("logoutBtn");
     if (logoutBtn) {
