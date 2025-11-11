@@ -11,6 +11,9 @@ class AuthManager {
   }
 
   init() {
+    // Initialize admin account on startup
+    this.initializeAdminAccount();
+
     this.loadUserSession();
     this.setupSessionTimeout();
     this.setupEventListeners();
@@ -417,19 +420,52 @@ class AuthManager {
       },
     ];
 
-    const user = demoUsers.find(
+    // Check demo users first
+    let user = demoUsers.find(
       (u) => u.email === email && u.password === password
     );
 
+    // If not found in demo users, check localStorage users
+    let storedUser = null;
+    if (!user) {
+      const existingUsers = JSON.parse(
+        localStorage.getItem("cyberguard_users") || "[]"
+      );
+      storedUser = existingUsers.find(
+        (u) => u.email === email && u.password === password
+      );
+
+      if (storedUser) {
+        user = {
+          id: storedUser.id,
+          email: storedUser.email,
+          password: storedUser.password,
+          name: storedUser.name,
+          company: storedUser.company || "",
+        };
+      }
+    }
+
     if (user) {
+      // Determine role - check if admin
+      let role = "user";
+      if (
+        email === "admin@cyberguard.com" ||
+        email.toLowerCase().includes("admin")
+      ) {
+        role = "admin";
+      } else if (storedUser && storedUser.role === "admin") {
+        role = "admin";
+      }
+
       return {
         success: true,
         user: {
-          id: Math.random().toString(36).substr(2, 9),
+          id: user.id || Math.random().toString(36).substr(2, 9),
           email: user.email,
           name: user.name,
           company: user.company,
-          role: email === "admin@cyberguard.com" ? "admin" : "user",
+          role: role,
         },
       };
     } else {
@@ -456,12 +492,13 @@ class AuthManager {
       };
     }
 
-    // Create new user
+    // Create new user (store password for authentication)
     const newUser = {
       id: Math.random().toString(36).substr(2, 9),
       email: userData.email,
       name: userData.fullName,
       company: userData.company || "",
+      password: userData.password, // Store password for authentication
       role: "user",
       preferences: {
         notifications: true,
@@ -478,6 +515,48 @@ class AuthManager {
       success: true,
       user: newUser,
     };
+  }
+
+  // Initialize admin account if it doesn't exist
+  initializeAdminAccount() {
+    const existingUsers = JSON.parse(
+      localStorage.getItem("cyberguard_users") || "[]"
+    );
+
+    // Check if admin account already exists
+    const adminExists = existingUsers.find(
+      (u) => u.email === "admin@test.com" || u.role === "admin"
+    );
+
+    if (!adminExists) {
+      // Create admin account
+      const adminUser = {
+        id: "admin_" + Math.random().toString(36).substr(2, 9),
+        email: "admin@test.com",
+        name: "Admin User",
+        company: "CyberGuard Pro",
+        password: "admin123", // Simple password for testing
+        role: "admin",
+        preferences: {
+          notifications: true,
+          reports: true,
+          updates: true,
+        },
+        createdAt: new Date().toISOString(),
+      };
+
+      existingUsers.push(adminUser);
+      localStorage.setItem("cyberguard_users", JSON.stringify(existingUsers));
+
+      console.log("✅ Admin account created!");
+      console.log("📧 Email: admin@test.com");
+      console.log("🔑 Password: admin123");
+      console.log("👤 Role: admin");
+
+      return adminUser;
+    }
+
+    return null;
   }
 
   // Track login attempts

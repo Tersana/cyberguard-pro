@@ -14,7 +14,7 @@ CyberGuard Pro is a comprehensive cybersecurity toolkit built with modern web te
 - **CSS3**: Advanced styling with Tailwind CSS framework
 - **JavaScript (ES6+)**: Modern JavaScript with async/await, classes, and modules
 - **Tailwind CSS**: Utility-first CSS framework for responsive design
-- **Framer Motion**: Animation library for smooth UI transitions
+
 
 ### Security & Cryptography Libraries
 
