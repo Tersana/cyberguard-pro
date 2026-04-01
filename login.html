@@ -3,315 +3,412 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - CyberGuard Pro</title>
+    <title>Login — CyberGuard Pro</title>
+    <meta name="description" content="Sign in to your CyberGuard Pro account and access enterprise-grade cybersecurity tools.">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cyber-dark': '#080B14',
+                        'cyber-mid': '#0F172A',
+                        'cyber-light': '#1a1033',
+                        'neon-cyan': '#06B6D4',
+                        'neon-purple': '#A855F7',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * { box-sizing: border-box; }
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
-        
-        .auth-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .floating-shapes {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: -1;
-        }
-        
-        .shape {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.1);
+
+        /* Animated radial glows */
+        .glow-orb {
+            position: fixed;
             border-radius: 50%;
-            animation: float 6s ease-in-out infinite;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: float 8s ease-in-out infinite;
         }
-        
-        .shape:nth-child(1) {
-            width: 80px;
-            height: 80px;
-            top: 20%;
-            left: 10%;
+
+        .glow-orb-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.4) 0%, transparent 70%);
+            top: -200px;
+            right: -100px;
             animation-delay: 0s;
         }
-        
-        .shape:nth-child(2) {
-            width: 120px;
-            height: 120px;
-            top: 60%;
-            right: 10%;
-            animation-delay: 2s;
-        }
-        
-        .shape:nth-child(3) {
-            width: 60px;
-            height: 60px;
-            bottom: 20%;
-            left: 20%;
+
+        .glow-orb-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, transparent 70%);
+            bottom: -150px;
+            left: -150px;
             animation-delay: 4s;
         }
-        
+
         @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -30px) scale(1.1); }
         }
-        
-        .input-group {
-            position: relative;
+
+        /* Glass card styles */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 60px rgba(168, 85, 247, 0.15);
         }
-        
-        .input-group input {
+
+        /* Feature icon containers */
+        .feature-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+        }
+
+        /* Input styles */
+        .cyber-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
         }
-        
-        .input-group input:focus {
+
+        .cyber-input:focus {
+            border-color: #06B6D4;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+            outline: none;
+        }
+
+        /* Neon button */
+        .btn-neon {
+            background: linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .btn-neon:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 40px rgba(6, 182, 212, 0.7);
         }
-        
-        .input-group label {
+
+        /* Social buttons */
+        .btn-social-glass {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             transition: all 0.3s ease;
         }
-        
-        .input-group input:focus + label,
-        .input-group input:not(:placeholder-shown) + label {
-            transform: translateY(-25px) scale(0.9);
-            color: #667eea;
+
+        .btn-social-glass:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.25);
         }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+
+        /* Security badges */
+        .security-box {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.3);
         }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
-        
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-        
-        .btn-primary::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .btn-primary:hover::before {
-            left: 100%;
-        }
-        
-        .security-features {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .pulse-animation {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        
-        .slide-in {
-            animation: slideIn 0.8s ease-out;
-        }
-        
+
+        /* Animations */
         @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
-        .error-message {
-            animation: shake 0.5s ease-in-out;
+
+        .animate-slide-in {
+            animation: slideIn 0.6s ease-out forwards;
         }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-        
-        .success-message {
-            animation: bounce 0.6s ease-in-out;
-        }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
-        }
+
+        .animate-delay-100 { animation-delay: 0.1s; }
+        .animate-delay-200 { animation-delay: 0.2s; }
+        .animate-delay-300 { animation-delay: 0.3s; }
+        .animate-delay-400 { animation-delay: 0.4s; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
-    <!-- Floating Background Shapes -->
-    <div class="floating-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-    </div>
+<body class="min-h-screen bg-gradient-to-br from-[#080B14] via-[#0F172A] to-[#1a1033] text-white overflow-x-hidden">
 
-    <div class="w-full max-w-md">
-        <!-- Login Form -->
-        <div class="auth-container rounded-3xl shadow-2xl p-8 slide-in">
-            <!-- Header -->
-            <div class="text-center mb-8">
-                <div class="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4 pulse-animation">
-                    <i class="fas fa-shield-alt text-white text-2xl"></i>
-                </div>
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
-                <p class="text-gray-600">Sign in to your CyberGuard Pro account</p>
-            </div>
+    <!-- Ambient Glow Effects -->
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
 
-            <!-- Login Form -->
-            <form id="loginForm" class="space-y-6">
-                <!-- Email Field -->
-                <div class="input-group">
-                    <input 
-                        type="email" 
-                        id="email" 
-                        name="email" 
-                        placeholder=" "
-                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300"
-                        required
-                    >
-                    <label for="email" class="absolute left-4 top-3 text-gray-500 pointer-events-none">
-                        <i class="fas fa-envelope mr-2"></i>Email Address
-                    </label>
-                </div>
+    <!-- Main Container -->
+    <div class="min-h-screen flex">
 
-                <!-- Password Field -->
-                <div class="input-group">
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        placeholder=" "
-                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-all duration-300"
-                        required
-                    >
-                    <label for="password" class="absolute left-4 top-3 text-gray-500 pointer-events-none">
-                        <i class="fas fa-lock mr-2"></i>Password
-                    </label>
-                    <button type="button" id="togglePassword" class="absolute right-4 top-3 text-gray-500 hover:text-blue-500 transition-colors">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
+        <!-- LEFT PANEL - Brand Showcase -->
+        <div class="hidden lg:flex lg:w-1/2 xl:w-[55%] relative p-12 xl:p-16 flex-col justify-between">
+            <!-- Dot grid overlay -->
+            <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 30px 30px;"></div>
 
-                <!-- Remember Me & Forgot Password -->
-                <div class="flex items-center justify-between">
-                    <label class="flex items-center">
-                        <input type="checkbox" class="rounded border-gray-300 text-blue-500 focus:ring-blue-500">
-                        <span class="ml-2 text-sm text-gray-600">Remember me</span>
-                    </label>
-                    <a href="#" class="text-sm text-blue-500 hover:text-blue-700 transition-colors">Forgot password?</a>
-                </div>
-
-                <!-- Login Button -->
-                <button type="submit" class="btn-primary w-full py-3 px-4 text-white font-semibold rounded-xl">
-                    <i class="fas fa-sign-in-alt mr-2"></i>Sign In
-                </button>
-
-                <!-- Divider -->
-                <div class="relative">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-gray-300"></div>
+            <div class="relative z-10">
+                <!-- Logo -->
+                <div class="flex items-center gap-3 mb-auto">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-neon-purple to-neon-cyan flex items-center justify-center shadow-lg shadow-neon-cyan/30">
+                        <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                        </svg>
                     </div>
-                    <div class="relative flex justify-center text-sm">
-                        <span class="px-2 bg-white text-gray-500">Or continue with</span>
+                    <div>
+                        <span class="text-xl font-bold">CyberGuard Pro</span>
+                        <p class="text-xs text-gray-400">Enterprise Security Platform</p>
                     </div>
                 </div>
 
-                <!-- Social Login -->
-                <div class="grid grid-cols-2 gap-4">
-                    <button type="button" class="flex items-center justify-center py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
-                        <i class="fab fa-google text-red-500 mr-2"></i>
-                        Google
-                    </button>
-                    <button type="button" class="flex items-center justify-center py-3 px-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
-                        <i class="fab fa-microsoft text-blue-500 mr-2"></i>
-                        Microsoft
-                    </button>
-                </div>
-            </form>
+                <!-- Hero Content -->
+                <div class="mt-20 xl:mt-24">
+                    <h1 class="text-4xl xl:text-5xl font-bold leading-tight mb-6">
+                        Secure Your <span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan to-blue-400">Digital</span><br>
+                        Infrastructure
+                    </h1>
+                    <p class="text-gray-400 text-base xl:text-lg max-w-md leading-relaxed">
+                        Professional-grade cybersecurity tools trusted by security engineers. Gather information, detect threats, analyze vulnerabilities, and protect your network.
+                    </p>
 
-            <!-- Sign Up Link -->
-            <div class="text-center mt-8">
-                <p class="text-gray-600">
-                    Don't have an account? 
-                    <a href="signup.html" class="text-blue-500 hover:text-blue-700 font-semibold transition-colors">
-                        Create one now
-                    </a>
-                </p>
+                    <!-- Feature List -->
+                    <div class="mt-10 space-y-4">
+                        <div class="flex items-center gap-4 animate-slide-in opacity-0">
+                            <div class="feature-icon text-cyan-400">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                                </svg>
+                            </div>
+                            <span class="text-gray-300 font-medium">Real-time threat intelligence</span>
+                        </div>
+
+                        <div class="flex items-center gap-4 animate-slide-in opacity-0 animate-delay-100">
+                            <div class="feature-icon text-purple-400">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 017.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 011.06 0z" />
+                                </svg>
+                            </div>
+                            <span class="text-gray-300 font-medium">Advanced network scanning</span>
+                        </div>
+
+                        <div class="flex items-center gap-4 animate-slide-in opacity-0 animate-delay-200">
+                            <div class="feature-icon text-pink-400">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                </svg>
+                            </div>
+                            <span class="text-gray-300 font-medium">AES-256 encrypted storage</span>
+                        </div>
+
+                        <div class="flex items-center gap-4 animate-slide-in opacity-0 animate-delay-300">
+                            <div class="feature-icon text-green-400">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.431 12 4 12c.612 0 1.189.183 1.698.515A3.697 3.697 0 009 12c.848 0 1.677.198 2.427.569a3.68 3.68 0 005.666-1.056 3.665 3.665 0 001.603-1.198V13.5A2.25 2.25 0 0115 15.75h-2.25m-3.75 0v1.5m0-1.5a2.25 2.25 0 012.25 2.25v1.5m-2.25-2.25H9m3 0h3" />
+                                </svg>
+                            </div>
+                            <span class="text-gray-300 font-medium">Comprehensive security analytics</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Security Features -->
-            <div class="mt-8 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl">
-                <h3 class="text-sm font-semibold text-gray-700 mb-2">
-                    <i class="fas fa-shield-alt mr-2"></i>Security Features
-                </h3>
-                <div class="text-xs text-gray-600 space-y-1">
-                    <p><i class="fas fa-check text-green-500 mr-2"></i>End-to-end encryption</p>
-                    <p><i class="fas fa-check text-green-500 mr-2"></i>Two-factor authentication</p>
-                    <p><i class="fas fa-check text-green-500 mr-2"></i>Advanced threat detection</p>
-                </div>
+            <!-- Footer -->
+            <div class="relative z-10 text-sm text-gray-500">
+                &copy; 2025 CyberGuard Pro — Built with security in mind
             </div>
         </div>
 
-        <!-- Back to App Link -->
-        <div class="text-center mt-6">
-            <a href="index.html" class="text-white hover:text-gray-200 transition-colors flex items-center justify-center">
-                <i class="fas fa-arrow-left mr-2"></i>
-                Back to CyberGuard Pro
-            </a>
+        <!-- RIGHT PANEL - Form -->
+        <div class="w-full lg:w-1/2 xl:w-[45%] flex items-center justify-center p-6 lg:p-12">
+            <div class="w-full max-w-md">
+                <!-- Glass Card -->
+                <div class="glass-card rounded-3xl p-8 lg:p-10">
+                    
+                    <!-- Card Header -->
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-neon-cyan to-blue-500 flex items-center justify-center shadow-lg shadow-neon-cyan/40">
+                            <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-white mb-2">Welcome Back</h2>
+                        <p class="text-gray-400 text-sm">Sign in to your CyberGuard Pro account</p>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form id="loginForm" class="space-y-5">
+                        
+                        <!-- Email Field -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                                    </svg>
+                                </span>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    placeholder="you@company.com"
+                                    class="cyber-input w-full pl-12 pr-4 py-3.5 rounded-xl text-white placeholder-gray-500"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Password Field -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                    </svg>
+                                </span>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    name="password"
+                                    placeholder="••••••••"
+                                    class="cyber-input w-full pl-12 pr-12 py-3.5 rounded-xl text-white placeholder-gray-500"
+                                    required
+                                >
+                                <button type="button" id="togglePassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-neon-cyan transition-colors">
+                                    <svg class="w-5 h-5" id="eyeIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Remember & Forgot -->
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" class="w-4 h-4 rounded border-gray-600 bg-gray-700 text-neon-cyan focus:ring-neon-cyan focus:ring-offset-0">
+                                <span class="text-sm text-gray-400">Remember me</span>
+                            </label>
+                            <a href="#" class="text-sm text-neon-cyan hover:text-cyan-300 transition-colors font-medium">Forgot password?</a>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn-neon w-full py-4 rounded-xl font-bold text-white flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                            </svg>
+                            Sign In to Dashboard
+                        </button>
+
+                        <!-- Divider -->
+                        <div class="relative py-2">
+                            <div class="absolute inset-0 flex items-center">
+                                <div class="w-full border-t border-white/10"></div>
+                            </div>
+                            <div class="relative flex justify-center">
+                                <span class="bg-[#0F172A] px-4 text-sm text-gray-500">Or continue with</span>
+                            </div>
+                        </div>
+
+                        <!-- Social Login -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <button type="button" class="btn-social-glass py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-sm font-medium">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                                </svg>
+                                Google
+                            </button>
+                            <button type="button" class="btn-social-glass py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-sm font-medium">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                                    <path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83C7.5 20.75 7.24 20.5 7 20.26L2.22 15.5C1.9 15.17 1.9 14.64 2.22 14.31L7 9.54C7.24 9.29 7.5 9.04 7.83 9.04H12.1V3.25M12.1 9.04V20.75M2.95 14.41H12.1" fill="#00A4EF"/>
+                                </svg>
+                                Microsoft
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Sign Up Link -->
+                    <p class="text-center mt-6 text-gray-400 text-sm">
+                        Don't have an account?
+                        <a href="signup.html" class="text-neon-cyan hover:text-cyan-300 font-semibold transition-colors ml-1">Create one now</a>
+                    </p>
+
+                    <!-- Security Features -->
+                    <div class="security-box rounded-xl p-4 mt-6">
+                        <h4 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-neon-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                            </svg>
+                            Security Features
+                        </h4>
+                        <div class="space-y-2 text-sm text-gray-400">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>End-to-end encryption</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Two-factor authentication</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Advanced threat detection</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Back to Home -->
+                <div class="text-center mt-6">
+                    <a href="index.html" class="inline-flex items-center gap-2 text-gray-500 hover:text-white transition-colors text-sm">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                        </svg>
+                        Back to CyberGuard Pro
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-xl p-8 text-center">
-            <div class="w-12 h-12 mx-auto mb-4 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-gray-700">Signing you in...</p>
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="glass-card rounded-2xl p-8 text-center">
+            <div class="w-12 h-12 mx-auto mb-4 border-4 border-neon-cyan/30 border-t-neon-cyan rounded-full animate-spin"></div>
+            <p class="text-white font-medium">Signing you in...</p>
         </div>
     </div>
 
-    <!-- Success/Error Messages -->
+    <!-- Toast Messages -->
     <div id="messageContainer" class="fixed top-4 right-4 z-50 hidden">
-        <div id="messageBox" class="bg-white rounded-xl shadow-lg p-4 max-w-sm">
-            <div class="flex items-center">
-                <div id="messageIcon" class="w-8 h-8 rounded-full flex items-center justify-center mr-3">
-                    <i id="messageIconClass" class="text-white"></i>
+        <div id="messageBox" class="glass-card rounded-xl p-4 max-w-sm">
+            <div class="flex items-center gap-3">
+                <div id="messageIcon" class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i id="messageIconClass"></i>
                 </div>
                 <div>
-                    <p id="messageTitle" class="font-semibold text-gray-800"></p>
-                    <p id="messageText" class="text-sm text-gray-600"></p>
+                    <p id="messageTitle" class="font-semibold text-white text-sm"></p>
+                    <p id="messageText" class="text-xs text-gray-400 mt-0.5"></p>
                 </div>
             </div>
         </div>
@@ -319,21 +416,19 @@
 
     <!-- Authentication System -->
     <script src="auth.js"></script>
-    
+
     <script>
         // Password toggle functionality
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordField = document.getElementById('password');
-            const icon = this.querySelector('i');
+            const eyeIcon = document.getElementById('eyeIcon');
             
             if (passwordField.type === 'password') {
                 passwordField.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
+                eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />';
             } else {
                 passwordField.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
+                eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />';
             }
         });
 
@@ -382,11 +477,11 @@
             
             // Set styling based on type
             if (type === 'success') {
-                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-green-500';
+                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-green-500';
                 iconClass.className = 'fas fa-check text-white';
                 box.classList.add('success-message');
             } else {
-                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center mr-3 bg-red-500';
+                icon.className = 'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-red-500';
                 iconClass.className = 'fas fa-times text-white';
                 box.classList.add('error-message');
             }
@@ -400,17 +495,6 @@
                 box.classList.remove('success-message', 'error-message');
             }, 5000);
         }
-
-        // Add some interactive effects
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.classList.add('transform', 'scale-105');
-            });
-            
-            input.addEventListener('blur', function() {
-                this.parentElement.classList.remove('transform', 'scale-105');
-            });
-        });
     </script>
 </body>
 </html>
