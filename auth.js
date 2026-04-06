@@ -197,6 +197,19 @@ class AuthManager {
 
       if (userNameEl) userNameEl.textContent = this.currentUser.name;
       if (userEmailEl) userEmailEl.textContent = this.currentUser.email;
+
+      // Update sidebar profile card
+      const sidebarName = document.getElementById("sidebarUserName");
+      const sidebarRole = document.getElementById("sidebarUserRole");
+      const sidebarInitials = document.getElementById("sidebarUserInitials");
+      if (sidebarName) sidebarName.textContent = this.currentUser.name;
+      if (sidebarRole) sidebarRole.textContent = this.currentUser.role || "Security Analyst";
+      if (sidebarInitials) {
+        const parts = this.currentUser.name.trim().split(" ");
+        sidebarInitials.textContent = parts.length >= 2
+          ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+          : this.currentUser.name.substring(0, 2).toUpperCase();
+      }
     } else {
       // Mark document state for CSS overrides
       document.body.classList.remove("authenticated");
