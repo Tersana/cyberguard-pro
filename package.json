@@ -5,16 +5,21 @@
   "main": "zap-proxy.js",
   "scripts": {
     "start": "node zap-proxy.js",
-    "dev": "nodemon zap-proxy.js"
+    "dev": "nodemon zap-proxy.js",
+    "test": "vitest --run",
+    "test:watch": "vitest"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "crypto-js": "^4.2.0",
     "express": "^4.18.2",
-    "http-proxy-middleware": "^2.0.6",
-    "cors": "^2.8.5"
+    "http-proxy-middleware": "^2.0.6"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "fast-check": "^4.6.0",
+    "happy-dom": "^20.8.9",
+    "jsdom": "^29.0.1",
+    "nodemon": "^3.0.1",
+    "vitest": "^4.1.2"
   }
 }
-
-

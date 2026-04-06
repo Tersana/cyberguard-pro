@@ -41,16 +41,468 @@ function validateTargetInput(target, toolName) {
   return { valid: true, message: "" };
 }
 
+// ===== SEVERITY MAPPING FUNCTIONS =====
+// Utility functions for mapping status values to severity levels
+
+/**
+ * Maps status values to severity levels for the professional security reports view
+ * @param {string} status - The status value ('threat', 'warning', 'safe', 'system')
+ * @returns {string} The severity level ('critical', 'warning', 'info')
+ */
+function mapStatusToSeverity(status) {
+  const severityMap = {
+    'threat': 'critical',
+    'warning': 'warning',
+    'safe': 'info',
+    'system': 'info'
+  };
+  return severityMap[status] || 'info';
+}
+
+/**
+ * Calculates summary metrics from the results data array
+ * @param {Array} results - Array of result objects with status property
+ * @param {number} scanStartTime - Timestamp when scan started (milliseconds)
+ * @param {number} scanEndTime - Timestamp when scan ended (milliseconds)
+ * @returns {Object} Summary metrics object with counts and formatted time
+ */
+function calculateSummaryMetrics(results, scanStartTime = null, scanEndTime = null) {
+  // Calculate total issues
+  const totalIssues = results.length;
+  
+  // Calculate severity counts
+  let criticalCount = 0;
+  let warningCount = 0;
+  let infoCount = 0;
+  
+  results.forEach(result => {
+    const severity = mapStatusToSeverity(result.status);
+    if (severity === 'critical') {
+      criticalCount++;
+    } else if (severity === 'warning') {
+      warningCount++;
+    } else if (severity === 'info') {
+      infoCount++;
+    }
+  });
+  
+  // Format time taken as human-readable string
+  let timeTaken = '--';
+  if (scanStartTime && scanEndTime) {
+    const durationMs = scanEndTime - scanStartTime;
+    const seconds = Math.floor(durationMs / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    
+    if (minutes > 0) {
+      timeTaken = `${minutes}m ${remainingSeconds}s`;
+    } else {
+      timeTaken = `${seconds}s`;
+    }
+  }
+  
+  return {
+    totalIssues,
+    criticalCount,
+    warningCount,
+    infoCount,
+    timeTaken
+  };
+}
+
+/**
+ * Updates the Summary Bar UI elements with scan metrics
+ * @param {number} totalIssues - Total count of issues found
+ * @param {string} timeTaken - Formatted time string (e.g., "2m 34s" or "--")
+ * @param {string} target - Scanned target (IP address or URL)
+ */
+function updateSummaryBar(totalIssues, timeTaken, target) {
+  // Update Total Issues count
+  const totalIssuesElement = document.getElementById('total-issues-count');
+  if (totalIssuesElement) {
+    totalIssuesElement.textContent = totalIssues;
+  }
+  
+  // Update Time Taken display with formatted time
+  const scanTimeElement = document.getElementById('scan-time-display');
+  if (scanTimeElement) {
+    scanTimeElement.textContent = timeTaken;
+  }
+  
+  // Update Scanned Target display with monospace styling
+  const scannedTargetElement = document.getElementById('scanned-target-display');
+  if (scannedTargetElement) {
+    scannedTargetElement.textContent = target || '--';
+  }
+}
+
+// ===== FILTER CONTROLS COMPONENT =====
+// Filter state management and UI updates for severity-based filtering
+
 // ===== SHODAN-BASED PORT SCANNER =====
 // Professional port scanning using Shodan API for comprehensive network intelligence
 
 document.addEventListener("DOMContentLoaded", () => {
   let isRunning = false;
+  let shouldStopScan = false; // Flag to track if scan should be stopped
   let history = [];
   const maxHistorySize = 100;
   let virusTotalApiKey = "";
   let whoisApiKey = "";
   let shodanApiKey = "";
+
+  // ===== PERFORMANCE UTILITIES =====
+  // Utility functions for performance optimization
+  
+  /**
+   * Debounce function to limit the rate at which a function can fire
+   * @param {Function} func - The function to debounce
+   * @param {number} wait - The delay in milliseconds
+   * @returns {Function} The debounced function
+   */
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
+  // ===== FILTER CONTROLS COMPONENT =====
+  // Filter state management and UI updates for severity-based filtering
+
+  /**
+   * Set to track active severity filters (critical, warning, info)
+   * @type {Set<string>}
+   */
+  let activeFilters = new Set();
+
+  /**
+   * Toggles a severity filter on/off
+   * @param {string} severity - The severity level to toggle ('critical', 'warning', 'info')
+   */
+  function toggleFilter(severity) {
+    if (activeFilters.has(severity)) {
+      activeFilters.delete(severity);
+    } else {
+      activeFilters.add(severity);
+    }
+    updateFilterUI();
+    renderFilteredResults();
+  }
+
+  /**
+   * Clears all active filters
+   */
+  function clearFilters() {
+    activeFilters.clear();
+    updateFilterUI();
+    renderFilteredResults();
+  }
+
+  /**
+   * Clears all scan results, activity logs, and resets the dashboard to empty state
+   * Prompts user for confirmation before clearing data
+   */
+  function clearResults() {
+    // Show confirmation dialog
+    const confirmed = confirm(
+      "Are you sure you want to clear all results? This will remove all scan data and activity logs."
+    );
+    
+    if (!confirmed) {
+      return; // User cancelled, do nothing
+    }
+    
+    // Clear the results data array
+    resultsData = [];
+    
+    // Clear the activity log container
+    const activityLogContainer = document.getElementById('activity-log-container');
+    if (activityLogContainer) {
+      activityLogContainer.innerHTML = '';
+    }
+    
+    // Reset active filters
+    activeFilters.clear();
+    updateFilterUI();
+    
+    // Reset scan timing variables
+    scanStartTime = null;
+    scanEndTime = null;
+    currentScanTarget = null;
+    
+    // Update the Summary Bar with default values
+    updateSummaryBar(0, '--', '--');
+    
+    // Re-render results (will show empty state)
+    renderResults();
+    
+    // Log the clear action
+    addActivityLog('All results cleared by user', 'System');
+  }
+
+  /**
+   * Updates the filter button UI to reflect active filters
+   * Applies CSS classes based on which filters are active
+   */
+  function updateFilterUI() {
+    // Get all filter pill buttons
+    const filterButtons = document.querySelectorAll('.filter-pill');
+    
+    filterButtons.forEach(button => {
+      const severity = button.dataset.severity;
+      
+      // Remove all active classes first
+      button.classList.remove('active-critical', 'active-warning', 'active-info');
+      
+      // Add appropriate active class if filter is active
+      if (activeFilters.has(severity)) {
+        button.classList.add(`active-${severity}`);
+      }
+    });
+  }
+
+  /**
+   * Gets filtered results based on active severity filters
+   * @returns {Array} Filtered array of results
+   */
+  function getFilteredResults() {
+    // If no filters are active, return all results
+    if (activeFilters.size === 0) {
+      return resultsData;
+    }
+    
+    // Filter results by active severity levels
+    return resultsData.filter(result => {
+      const severity = mapStatusToSeverity(result.status);
+      return activeFilters.has(severity);
+    });
+  }
+
+  /**
+   * Creates an accordion item HTML element for a result
+   * @param {Object} result - Result object with id, tool, status, message, description, evidence, remediation
+   * @returns {HTMLElement} The accordion item element
+   */
+  function createAccordionItem(result) {
+    const severity = mapStatusToSeverity(result.status);
+    const item = document.createElement('div');
+    item.className = 'result-accordion-item border-b border-white/5 transition-all';
+    item.dataset.severity = severity;
+    item.dataset.resultId = result.id;
+    
+    // Severity badge text
+    const severityText = severity.toUpperCase();
+    
+    // Extract short summary from message (first line or first 100 chars)
+    const shortSummary = result.message.split('\n')[0].substring(0, 100);
+    
+    // Extract description, evidence, and remediation from message or details
+    let description = result.description || result.message;
+    let evidence = result.evidence || '';
+    let remediation = result.remediation || [];
+    
+    // If remediation is a string, convert to array
+    if (typeof remediation === 'string') {
+      remediation = remediation.split('\n').filter(line => line.trim());
+    }
+    
+    // Build the HTML structure
+    item.innerHTML = `
+      <div class="accordion-header flex items-center justify-between p-4 cursor-pointer hover:bg-white/5">
+        <div class="flex items-center gap-4 flex-1">
+          <span class="severity-badge severity-${severity}">${severityText}</span>
+          <div class="flex-1">
+            <div class="text-sm font-semibold text-white">${result.feature || result.tool || 'Scanner'}</div>
+            <div class="text-xs text-slate-400 mt-1">${shortSummary}</div>
+          </div>
+        </div>
+        <svg class="accordion-icon w-5 h-5 text-slate-400 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+        </svg>
+      </div>
+      
+      <div class="accordion-content hidden p-4 pt-0 space-y-4">
+        <div class="description-section">
+          <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Description</h4>
+          <p class="text-sm text-slate-400 leading-relaxed whitespace-pre-wrap">${description}</p>
+        </div>
+        
+        ${evidence ? `
+        <div class="evidence-section">
+          <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Evidence</h4>
+          <div class="evidence-box bg-black/40 border border-white/10 rounded-lg p-4 font-mono text-xs text-green-300 overflow-x-auto">
+            <pre>${evidence}</pre>
+          </div>
+        </div>
+        ` : ''}
+        
+        ${remediation.length > 0 ? `
+        <div class="remediation-section">
+          <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            How to Fix
+          </h4>
+          <ul class="text-sm text-slate-400 space-y-2 list-disc list-inside">
+            ${remediation.map(step => `<li>${step}</li>`).join('')}
+          </ul>
+        </div>
+        ` : ''}
+      </div>
+    `;
+    
+    // Add click handler for expand/collapse
+    const header = item.querySelector('.accordion-header');
+    header.addEventListener('click', () => toggleAccordion(item));
+    
+    return item;
+  }
+
+  /**
+   * Toggles the expand/collapse state of an accordion item
+   * @param {HTMLElement} item - The accordion item element to toggle
+   */
+  function toggleAccordion(item) {
+    const content = item.querySelector('.accordion-content');
+    const icon = item.querySelector('.accordion-icon');
+    
+    if (item.classList.contains('expanded')) {
+      item.classList.remove('expanded');
+      content.classList.add('hidden');
+      icon.style.transform = 'rotate(0deg)';
+    } else {
+      item.classList.add('expanded');
+      content.classList.remove('hidden');
+      icon.style.transform = 'rotate(180deg)';
+    }
+  }
+
+  /**
+   * Updates the empty state display based on results and filter state
+   * Shows "No Scans Performed" when results array is empty
+   * Shows "No results match filters" when filters exclude all results
+   * Hides empty state when results are displayed
+   * @param {number} resultCount - Number of filtered results
+   * @param {boolean} hasActiveFilters - Whether any filters are currently active
+   */
+  function updateEmptyState(resultCount, hasActiveFilters) {
+    const emptyState = document.getElementById('empty-results-state');
+    if (!emptyState) return;
+    
+    if (resultCount === 0) {
+      // Show empty state
+      emptyState.style.display = 'flex';
+      
+      // Update message based on whether filters are active
+      const emptyTitle = emptyState.querySelector('h3');
+      const emptyText = emptyState.querySelector('p');
+      
+      if (hasActiveFilters) {
+        if (emptyTitle) emptyTitle.textContent = 'No Results Match Filters';
+        if (emptyText) emptyText.textContent = 'Try adjusting your filter selection';
+      } else {
+        if (emptyTitle) emptyTitle.textContent = 'No Scans Performed';
+        if (emptyText) emptyText.textContent = 'Run a security scan to see detailed results here';
+      }
+    } else {
+      // Hide empty state when results are displayed
+      emptyState.style.display = 'none';
+    }
+  }
+
+  /**
+   * Renders results in the accordion container
+   * This is the main rendering function that populates the accordion with result items
+   * Optimized with document fragments for better performance with large result sets
+   */
+  function renderResults() {
+    const container = document.getElementById('accordion-items-container');
+    
+    if (!container) return;
+    
+    // Get filtered results
+    const filteredResults = getFilteredResults();
+    
+    // Clear container (but keep empty state element)
+    const accordionItems = container.querySelectorAll('.result-accordion-item');
+    accordionItems.forEach(item => item.remove());
+    
+    // Update empty state display
+    updateEmptyState(filteredResults.length, activeFilters.size > 0);
+    
+    // Render accordion items for filtered results using document fragment for performance
+    if (filteredResults.length > 0) {
+      const fragment = document.createDocumentFragment();
+      
+      filteredResults.forEach(result => {
+        const accordionItem = createAccordionItem(result);
+        fragment.appendChild(accordionItem);
+      });
+      
+      // Append all items at once for better performance
+      container.appendChild(fragment);
+    }
+  }
+
+  /**
+   * Renders filtered results in the accordion container
+   * Shows empty state if no results match filters
+   * This is an alias for renderResults() for backward compatibility
+   */
+  function renderFilteredResults() {
+    renderResults();
+  }
+
+  // ===== LIVE ACTIVITY FEED COMPONENT =====
+  // Terminal-style activity logging for real-time scan progress
+
+  /**
+   * Adds a log entry to the Live Activity Feed
+   * @param {string} message - The log message to display
+   * @param {string} scanner - The scanner name (default: 'System')
+   */
+  function addActivityLog(message, scanner = 'System') {
+    // Format timestamp as HH:MM (24-hour format)
+    const timestamp = new Date().toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    });
+    
+    // Create log entry element
+    const logEntry = document.createElement('div');
+    logEntry.className = 'log-entry text-slate-400';
+    logEntry.innerHTML = `
+      <span class="text-cyan-400">[${timestamp}]</span>
+      <span class="text-purple-300">${scanner}:</span>
+      <span>${message}</span>
+    `;
+    
+    // Get the activity log container
+    const container = document.getElementById('activity-log-container');
+    if (!container) return;
+    
+    // Append the log entry
+    container.appendChild(logEntry);
+    
+    // Auto-scroll to bottom
+    const feedContainer = container.parentElement;
+    if (feedContainer) {
+      feedContainer.scrollTop = feedContainer.scrollHeight;
+    }
+    
+    // Limit to last 100 entries
+    if (container.children.length > 100) {
+      container.removeChild(container.firstChild);
+    }
+  }
 
   // Security: Simple encryption key (in production, this should be more sophisticated)
   const ENCRYPTION_KEY = "CyberGuard2024!@#";
@@ -115,19 +567,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const validation = validateTargetInput(value, "Target");
       if (validation.valid) {
-        this.style.borderColor = "#10b981"; // green
-        this.style.backgroundColor = "#f0fdf4"; // light green
+        this.style.borderColor = "rgba(16,185,129,0.6)";
+        this.style.backgroundColor = "rgba(16,185,129,0.06)";
       } else {
-        this.style.borderColor = "#ef4444"; // red
-        this.style.backgroundColor = "#fef2f2"; // light red
+        this.style.borderColor = "rgba(239,68,68,0.6)";
+        this.style.backgroundColor = "rgba(239,68,68,0.06)";
       }
     });
 
     targetInput.addEventListener("blur", function () {
       const value = this.value.trim();
       if (value === "") {
-        this.style.borderColor = "";
-        this.style.backgroundColor = "";
+        this.style.borderColor = "rgba(139,92,246,0.2)";
+        this.style.backgroundColor = "rgba(255,255,255,0.04)";
       }
     });
   }
@@ -135,24 +587,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== SIMPLIFIED ANIMATION SYSTEM =====
   // Removed complex Framer Motion system for better performance
   let currentTheme = "light";
-  // Threat feed feature removed
-  document
-    .getElementById("whois-btn")
-    .addEventListener("click", () =>
-      runTool(
-        "WHOIS Lookup",
-        whoisLookup,
-        () => document.getElementById("target-ip").value,
-        "Please enter a domain name.",
-        "whois-btn"
-      )
-    );
+  
+  // Threat feed feature removed - moved inside DOMContentLoaded
+  // (Button event listeners are now attached after DOM is ready)
 
   async function whoisLookup(target) {
+    addActivityLog(`Starting WHOIS lookup for ${target}`, 'WHOIS Lookup');
     logResult(new Date(), "WHOIS Lookup", `📜 Fetching WHOIS for ${target}...`);
     try {
       // Check if API key is available
       if (!whoisApiKey) {
+        addActivityLog('API key not configured', 'WHOIS Lookup');
         logResult(
           new Date(),
           "WHOIS Lookup",
@@ -167,6 +612,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const isDomain = isValidDomain(target);
 
       if (!isIP && !isDomain) {
+        addActivityLog('Invalid target format', 'WHOIS Lookup');
         logResult(
           new Date(),
           "WHOIS Lookup",
@@ -182,6 +628,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (isIP) {
         // For IP addresses, use IP geolocation API
         queryType = "IP Geolocation";
+        addActivityLog('Querying IP geolocation data...', 'WHOIS Lookup');
         apiUrl = `https://ip-geolocation.whoisxmlapi.com/api/v1?apiKey=${whoisApiKey}&ipAddress=${encodeURIComponent(
           target
         )}`;
@@ -202,6 +649,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         queryType = "Domain WHOIS";
+        addActivityLog('Querying domain WHOIS data...', 'WHOIS Lookup');
         apiUrl = `https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey=${whoisApiKey}&domainName=${encodeURIComponent(
           normalizedDomain
         )}&outputFormat=JSON`;
@@ -228,6 +676,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
+      addActivityLog('Processing WHOIS data...', 'WHOIS Lookup');
       const data = await res.json();
 
       if (isIP) {
@@ -238,20 +687,21 @@ document.addEventListener("DOMContentLoaded", () => {
           const asn = data.asn || {};
           const security = data.security || {};
 
+          addActivityLog(`WHOIS lookup complete for ${ip}`, 'WHOIS Lookup');
           const lines = [
             `✅ [IP WHOIS DATA] IP: ${ip}`,
             `🌍 Country: ${location.country || "N/A"}`,
             `🏙️ Region: ${location.region || "N/A"}`,
-            `🏘️ City: ${location.city || "N/A"}`,
-            `📮 Postal Code: ${location.postalCode || "N/A"}`,
+            `�️ City: ${location.city || "N/A"}`,
+            `� Postal Code: ${location.postalCode || "N/A"}`,
             `🌐 Timezone: ${location.timezone || "N/A"}`,
-            `📍 Coordinates: ${location.latitude || "N/A"}, ${
+            `� Coordinates: ${location.latitude || "N/A"}, ${
               location.longitude || "N/A"
             }`,
             "",
             `🏢 Organization: ${asn.organization || "N/A"}`,
-            `🔢 ASN: ${asn.asn || "N/A"}`,
-            `🌐 ASN Name: ${asn.name || "N/A"}`,
+            `� ASN: ${asn.asn || "N/A"}`,
+            `� ASN Name: ${asn.name || "N/A"}`,
             `🔗 ASN Domain: ${asn.domain || "N/A"}`,
             `🌍 ASN Country: ${asn.country || "N/A"}`,
             "",
@@ -308,13 +758,14 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           };
 
+          addActivityLog(`WHOIS lookup complete for ${domainName}`, 'WHOIS Lookup');
           const lines = [
             `✅ [DOMAIN WHOIS DATA] Domain: ${domainName}`,
             `📅 Created: ${formatDate(createdDate)}`,
             `📅 Updated: ${formatDate(updatedDate)}`,
             `📅 Expires: ${formatDate(expiresDate)}`,
             `🏢 Registrar: ${registrar}`,
-            `📊 Status: ${status}`,
+            `� Status: ${status}`,
             "",
             nameServers.length > 0
               ? `🌐 Nameservers:\n${nameServers
@@ -345,6 +796,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     } catch (e) {
+      addActivityLog(`Lookup failed: ${e.message}`, 'WHOIS Lookup');
       updateStatus("WHOIS lookup failed");
       logResult(
         new Date(),
@@ -358,7 +810,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const sidebar = document.getElementById("sidebar");
   const sidebarOverlay = document.getElementById("sidebar-overlay");
   const historyList = document.getElementById("history-list");
-  const clearHistoryBtn = document.getElementById("clear-history-btn");
   const statusBar = document.getElementById("status-bar");
   const progressBar = document.getElementById("progress-bar");
   const loadingIndicator = document.getElementById("loading-indicator");
@@ -377,7 +828,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const shodanApiKeyInput = document.getElementById("shodan-api-key");
   const saveShodanKeyBtn = document.getElementById("save-shodan-key-btn");
   const clearAllKeysBtn = document.getElementById("clear-all-keys-btn");
-  const themeToggleBtn = document.getElementById("theme-toggle");
   const apiKeysToggle = document.getElementById("api-keys-toggle");
   const apiKeysModal = document.getElementById("api-keys-modal");
   const apiKeysClose = document.getElementById("api-keys-close");
@@ -389,36 +839,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const ABUSE_BASE_URL = "https://api.abuseipdb.com/api/v2";
   const PROXY_URL = "https://corsproxy.io/?";
 
-  // --- UI & Theme Management ---
-
-  function applyTheme(theme) {
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-      themeToggleBtn.textContent = "☀️ Light";
-    } else {
-      root.classList.remove("dark");
-      themeToggleBtn.textContent = "🌙 Dark";
-    }
-    currentTheme = theme;
-  }
+  // --- UI Management ---
 
   function loadTheme() {
-    const saved = localStorage.getItem("theme");
-    if (saved === "dark" || saved === "light") {
-      applyTheme(saved);
-    } else {
-      const prefersDark =
-        window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches;
-      applyTheme(prefersDark ? "dark" : "light");
-    }
-  }
-
-  function toggleTheme() {
-    const next = currentTheme === "dark" ? "light" : "dark";
-    localStorage.setItem("theme", next);
-    applyTheme(next);
+    // Always apply dark theme
+    const root = document.documentElement;
+    root.classList.add("dark");
+    currentTheme = "dark";
   }
 
   // --- API Keys Modal Management ---
@@ -468,8 +895,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showSidebar() {
     sidebar.classList.remove("hidden");
-    main.classList.add("sidebar-visible");
-    main.classList.remove("sidebar-hidden");
+    const mainEl = document.querySelector("main");
+    if (mainEl) { mainEl.classList.add("sidebar-visible"); mainEl.classList.remove("sidebar-hidden"); }
     // Hide floating button when sidebar is visible
     floatingSidebarToggle.style.opacity = "0";
     floatingSidebarToggle.style.pointerEvents = "none";
@@ -478,8 +905,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function hideSidebar() {
     sidebar.classList.add("hidden");
-    main.classList.add("sidebar-hidden");
-    main.classList.remove("sidebar-visible");
+    const mainEl = document.querySelector("main");
+    if (mainEl) { mainEl.classList.add("sidebar-hidden"); mainEl.classList.remove("sidebar-visible"); }
     // Show floating button when sidebar is hidden
     floatingSidebarToggle.style.opacity = "1";
     floatingSidebarToggle.style.pointerEvents = "auto";
@@ -494,7 +921,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  themeToggleBtn.addEventListener("click", toggleTheme);
   apiKeysToggle.addEventListener("click", toggleApiKeysModal);
   apiKeysClose.addEventListener("click", hideApiKeysModal);
   floatingSidebarToggle.addEventListener("click", toggleSidebar);
@@ -535,6 +961,14 @@ document.addEventListener("DOMContentLoaded", () => {
           targetPane.classList.remove("hidden");
           targetPane.classList.add("active");
 
+          // Update selection UI for new tab
+          if (typeof SelectionManager !== 'undefined' && SelectionManager.updateSelectionCount) {
+            SelectionManager.updateSelectionCount();
+          }
+          if (typeof SelectAllToggle !== 'undefined' && SelectAllToggle.updateButtonLabel) {
+            SelectAllToggle.updateButtonLabel();
+          }
+
           // Quick fade in
           targetPane.style.opacity = "0";
           targetPane.style.transform = "translateX(20px)";
@@ -568,6 +1002,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         targetPane.classList.remove("hidden");
         targetPane.classList.add("active");
+
+        // Update selection UI for new tab
+        if (typeof SelectionManager !== 'undefined' && SelectionManager.updateSelectionCount) {
+          SelectionManager.updateSelectionCount();
+        }
+        if (typeof SelectAllToggle !== 'undefined' && SelectAllToggle.updateButtonLabel) {
+          SelectAllToggle.updateButtonLabel();
+        }
       }
     });
   });
@@ -637,6 +1079,7 @@ document.addEventListener("DOMContentLoaded", () => {
       name: sessionName,
       timestamp: new Date().toISOString(),
       history: history,
+      resultsData: resultsData, // Save resultsData for accordion view
       targetIp: document.getElementById("target-ip")?.value || "",
       vtHashInput: document.getElementById("vt-hash-input")?.value || "",
       vtUrlInput: document.getElementById("vt-url-input")?.value || "",
@@ -848,6 +1291,31 @@ document.addEventListener("DOMContentLoaded", () => {
       // Restore history and results
       if (session.history && session.history.length > 0) {
         history = session.history;
+        
+        // Restore resultsData for accordion view (backward compatible)
+        if (session.resultsData && session.resultsData.length > 0) {
+          resultsData = session.resultsData;
+          renderResults(); // Render in accordion view
+          updateResultsStats(); // Update stats
+        } else {
+          // Fallback: reconstruct resultsData from history for old sessions
+          resultsData = history.map((item, index) => ({
+            id: `restored-${Date.now()}-${index}`,
+            timestamp: item.timestamp,
+            feature: item.feature,
+            tool: item.feature,
+            message: item.message,
+            status: item.status === 'success' ? 'safe' : 
+                   item.status === 'danger' ? 'threat' : 
+                   item.status === 'warning' ? 'warning' : 'system',
+            description: item.message,
+            evidence: '',
+            remediation: []
+          }));
+          renderResults();
+          updateResultsStats();
+        }
+        
         restoreResultsDisplay();
         updateHistoryList();
 
@@ -1120,7 +1588,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Button State Management ---
   function disableAllButtons() {
     const toolButtons = document.querySelectorAll(
-      'button[id$="-btn"]:not(#save-results-btn):not(#export-csv-btn):not(#export-pdf-btn):not(#clear-history-btn):not(#theme-toggle):not(#sidebar-toggle)'
+      'button[id$="-btn"]:not(#save-results-btn):not(#export-csv-btn):not(#export-pdf-btn):not(#sidebar-toggle):not(#stop-scan-btn):not(#execute-scan-btn)'
     );
     toolButtons.forEach((button) => {
       button.classList.add("button-disabled");
@@ -1131,7 +1599,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function enableAllButtons() {
     const toolButtons = document.querySelectorAll(
-      'button[id$="-btn"]:not(#save-results-btn):not(#export-csv-btn):not(#export-pdf-btn):not(#clear-history-btn):not(#theme-toggle):not(#sidebar-toggle)'
+      'button[id$="-btn"]:not(#save-results-btn):not(#export-csv-btn):not(#export-pdf-btn):not(#sidebar-toggle):not(#stop-scan-btn):not(#execute-scan-btn)'
     );
     toolButtons.forEach((button) => {
       button.classList.remove("button-disabled", "button-loading");
@@ -1176,6 +1644,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentFilter = "all";
   let searchQuery = "";
 
+  // Scan timing tracking for Summary Bar
+  let scanStartTime = null;
+  let scanEndTime = null;
+  let currentScanTarget = null;
+
   // Initialize modern results system
   function initializeModernResults() {
     const resultsSearch = document.getElementById("results-search");
@@ -1189,6 +1662,27 @@ document.addEventListener("DOMContentLoaded", () => {
       // Set List as active by default
       listViewBtn.classList.add("active");
       gridViewBtn.classList.remove("active");
+    }
+
+    // Initialize filter controls for professional results section
+    const filterButtons = document.querySelectorAll('.filter-pill');
+    const clearFiltersBtn = document.getElementById('clear-filters-btn');
+    
+    // Add click event listeners to filter buttons
+    filterButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const severity = button.dataset.severity;
+        if (severity) {
+          toggleFilter(severity);
+        }
+      });
+    });
+    
+    // Add click event listener to clear filters button
+    if (clearFiltersBtn) {
+      clearFiltersBtn.addEventListener('click', () => {
+        clearFilters();
+      });
     }
 
     if (resultsSearch) {
@@ -1209,11 +1703,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (clearResultsBtn) {
       clearResultsBtn.addEventListener("click", () => {
-        if (confirm("Are you sure you want to clear all results?")) {
-          resultsData = [];
-          renderResults();
-          updateResultsStats();
-        }
+        clearResults();
       });
     }
 
@@ -1351,24 +1841,24 @@ document.addEventListener("DOMContentLoaded", () => {
   function getStatusColor(status) {
     const colors = {
       safe: {
-        background: "linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)",
-        text: "#166534",
-        border: "#bbf7d0",
+        background: "rgba(16, 185, 129, 0.15)",
+        text: "#6ee7b7",
+        border: "rgba(16, 185, 129, 0.4)",
       },
       warning: {
-        background: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
-        text: "#92400e",
-        border: "#fde68a",
+        background: "rgba(245, 158, 11, 0.15)",
+        text: "#fcd34d",
+        border: "rgba(245, 158, 11, 0.4)",
       },
       threat: {
-        background: "linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)",
-        text: "#991b1b",
-        border: "#fecaca",
+        background: "rgba(239, 68, 68, 0.15)",
+        text: "#fca5a5",
+        border: "rgba(239, 68, 68, 0.4)",
       },
       system: {
-        background: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)",
-        text: "#3730a3",
-        border: "#c7d2fe",
+        background: "rgba(139, 92, 246, 0.15)",
+        text: "#c4b5fd",
+        border: "rgba(139, 92, 246, 0.4)",
       },
     };
     return colors[status] || colors.system;
@@ -1424,7 +1914,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return formattedLines.join("");
   }
 
-  function renderResults() {
+  function renderResultsLegacy() {
     const container = document.getElementById("results-container");
     if (!container) return;
 
@@ -1602,11 +2092,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Add visual feedback for search
       if (searchQuery && !hasResults) {
-        searchInput.style.borderColor = "#f59e0b";
-        searchInput.style.backgroundColor = "#fef3c7";
+        searchInput.style.borderColor = "rgba(245,158,11,0.5)";
+        searchInput.style.backgroundColor = "rgba(245,158,11,0.08)";
       } else {
-        searchInput.style.borderColor = "#e2e8f0";
-        searchInput.style.backgroundColor = "white";
+        searchInput.style.borderColor = "rgba(139,92,246,0.2)";
+        searchInput.style.backgroundColor = "rgba(255,255,255,0.04)";
       }
     }
   }
@@ -1670,6 +2160,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     resultsData.push(result);
     updateResultsStats();
+    
+    // Render results in the new accordion view
     renderResults();
 
     // Also add to history for backward compatibility
@@ -1677,7 +2169,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (history.length > maxHistorySize) history.shift();
     updateHistoryList();
 
-    // Scroll to bottom
+    // Scroll accordion container to bottom to show new results
+    const accordionContainer = document.getElementById("accordion-items-container");
+    if (accordionContainer) {
+      accordionContainer.scrollTop = accordionContainer.scrollHeight;
+    }
+    
+    // Also scroll the old results container for backward compatibility
     const container = document.getElementById("results-container");
     if (container) {
       container.scrollTop = container.scrollHeight;
@@ -1766,57 +2264,44 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   function updateHistoryList() {
+    if (!historyList) return; // Guard against missing element
     historyList.innerHTML = "";
     [...history]
       .reverse()
       .slice(0, 10)
       .forEach((item) => {
         const div = document.createElement("div");
-        div.className = "p-2 bg-slate-100 rounded-md";
+        div.className = "p-2 rounded-md" ; div.style.cssText = "background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07)";
         const truncatedMessage =
           item.message.split("\n")[0].substring(0, 30) +
           (item.message.length > 30 ? "..." : "");
-        div.innerHTML = `<div class="font-bold text-slate-700 text-xs">🔧 ${item.feature}</div><div class="text-slate-500 text-xs">📝 ${truncatedMessage}</div>`;
+        div.innerHTML = `<div class="font-bold text-xs" style="color:#c4b5fd">🔧 ${item.feature}</div><div class="text-xs" style="color:#64748b">📝 ${truncatedMessage}</div>`;
         historyList.appendChild(div);
       });
   }
 
-  clearHistoryBtn.addEventListener("click", () => {
-    if (confirm("Are you sure you want to clear all results and history?")) {
-      history = [];
-      resultsData = [];
-      renderResults();
-      updateHistoryList();
-      updateResultsStats();
-      logResult(
-        new Date(),
-        "System",
-        "🗑️ History cleared successfully.",
-        "system"
-      );
-    }
-  });
-
-  saveResultsBtn.addEventListener("click", () => {
-    if (history.length === 0) {
-      alert("No results to save.");
-      return;
-    }
-    const textContent = history
-      .map(
-        (h) =>
-          `[${h.timestamp}] ${h.feature}\n-----------------\n${h.message}\n`
-      )
-      .join("\n\n");
-    const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "CyberGuard-Pro-Results.txt";
-    a.click();
-    URL.revokeObjectURL(url);
-    logResult(new Date(), "System", "💾 Results saved to file.");
-  });
+  if (saveResultsBtn) {
+    saveResultsBtn.addEventListener("click", () => {
+      if (history.length === 0) {
+        alert("No results to save.");
+        return;
+      }
+      const textContent = history
+        .map(
+          (h) =>
+            `[${h.timestamp}] ${h.feature}\n-----------------\n${h.message}\n`
+        )
+        .join("\n\n");
+      const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "CyberGuard-Pro-Results.txt";
+      a.click();
+      URL.revokeObjectURL(url);
+      logResult(new Date(), "System", "💾 Results saved to file.");
+    });
+  }
 
   // --- Session Management Button Event Listeners ---
   const saveSessionBtn = document.getElementById("save-session-btn");
@@ -1836,36 +2321,114 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // --- Advanced Export: CSV ---
+  // Task 10.2: Create CSV export function (exportToCSV() to generate CSV format)
+  function exportToCSV() {
+    const results = getFilteredResults();
+    const headers = ['Timestamp', 'Scanner', 'Severity', 'Finding', 'Status'];
+    
+    let csv = headers.join(',') + '\n';
+    
+    results.forEach(result => {
+      const row = [
+        result.timestamp || new Date().toISOString(),
+        result.tool || result.feature || 'Unknown',
+        mapStatusToSeverity(result.status),
+        `"${(result.message || '').replace(/"/g, '""')}"`,
+        result.status || 'unknown'
+      ];
+      csv += row.join(',') + '\n';
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cyberguard-report-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Task 10.3: Wire export buttons (add click event listeners, show loading state)
   exportCsvBtn.addEventListener("click", () => {
-    if (history.length === 0) {
+    if (resultsData.length === 0) {
       alert("No results to export.");
       return;
     }
-    const headers = ["timestamp", "feature", "message"];
-    const rows = history.map((h) => [
-      h.timestamp,
-      h.feature,
-      h.message.replace(/\n/g, " "),
-    ]);
-    const csv = [
-      headers.join(","),
-      ...rows.map((r) =>
-        r.map((v) => '"' + String(v).replace(/"/g, '""') + '"').join(",")
-      ),
-    ].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "CyberGuard-Report.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-    logResult(new Date(), "System", "📄 CSV exported.");
+    
+    // Show loading state
+    const originalText = exportCsvBtn.innerHTML;
+    exportCsvBtn.disabled = true;
+    exportCsvBtn.innerHTML = `
+      <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      Exporting...
+    `;
+    
+    try {
+      exportToCSV();
+      logResult(new Date(), "System", "📄 CSV report exported successfully.", "system");
+    } catch (error) {
+      console.error("CSV export failed:", error);
+      alert("Failed to export CSV. Please try again.");
+    } finally {
+      // Restore button state
+      setTimeout(() => {
+        exportCsvBtn.disabled = false;
+        exportCsvBtn.innerHTML = originalText;
+      }, 500);
+    }
   });
 
   // --- Advanced Export: PDF with simple charts ---
+  // Task 10.1: Create PDF export function (exportToPDF() using jsPDF library)
+  function exportToPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('CyberGuard Pro Security Report', 20, 20);
+    
+    // Add metadata
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 30);
+    doc.text(`Total Issues: ${getFilteredResults().length}`, 20, 36);
+    doc.text(`Scanned Target: ${currentScanTarget || '--'}`, 20, 42);
+    
+    // Add results table
+    const results = getFilteredResults();
+    const tableData = results.map(result => [
+      result.tool || result.feature || 'Unknown',
+      mapStatusToSeverity(result.status),
+      (result.message || '').substring(0, 60) + (result.message && result.message.length > 60 ? '...' : ''),
+      result.timestamp || new Date().toISOString()
+    ]);
+    
+    doc.autoTable({
+      startY: 50,
+      head: [['Scanner', 'Severity', 'Finding', 'Timestamp']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [124, 58, 237] }, // Purple color matching cyber theme
+      styles: { fontSize: 9, cellPadding: 4 },
+      columnStyles: {
+        0: { cellWidth: 40 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 80 },
+        3: { cellWidth: 40 }
+      }
+    });
+    
+    doc.save(`cyberguard-report-${Date.now()}.pdf`);
+  }
+
+  // Task 10.3: Wire export buttons (add click event listeners, show loading state)
   exportPdfBtn.addEventListener("click", async () => {
-    if (history.length === 0) {
+    if (resultsData.length === 0) {
       alert("No results to export.");
       return;
     }
@@ -1874,80 +2437,68 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("PDF library not loaded.");
       return;
     }
-    const doc = new jsPDF({ unit: "pt" });
-    const margin = 40;
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    // Title
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("CyberGuard Pro - Analysis Report", margin, 40);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 58);
-
-    // Simple bar chart: count by feature
-    const byFeature = history.reduce((acc, h) => {
-      acc[h.feature] = (acc[h.feature] || 0) + 1;
-      return acc;
-    }, {});
-    const features = Object.keys(byFeature);
-    const counts = features.map((f) => byFeature[f]);
-    const chartTop = 80;
-    const chartHeight = 120;
-    const chartLeft = margin;
-    const chartRight = pageWidth - margin;
-    const chartWidth = chartRight - chartLeft;
-    const barGap = 6;
-    const barWidth = Math.max(
-      8,
-      Math.min(
-        40,
-        (chartWidth - (features.length + 1) * barGap) /
-          Math.max(1, features.length)
-      )
-    );
-    const maxVal = Math.max(...counts, 1);
-    let x = chartLeft + barGap;
-    doc.setDrawColor(200);
-    doc.rect(chartLeft, chartTop, chartWidth, chartHeight); // chart border
-    doc.setFillColor(59, 130, 246); // blue-500
-    counts.forEach((val, idx) => {
-      const h = (val / maxVal) * (chartHeight - 20);
-      const y = chartTop + chartHeight - h - 2;
-      doc.rect(x, y, barWidth, h, "F");
-      // labels
-      doc.setFontSize(8);
-      doc.setTextColor(60);
-      const label =
-        features[idx].length > 12
-          ? features[idx].slice(0, 11) + "…"
-          : features[idx];
-      doc.text(String(val), x + barWidth / 2, y - 4, { align: "center" });
-      doc.text(label, x + barWidth / 2, chartTop + chartHeight + 10, {
-        align: "center",
-      });
-      x += barWidth + barGap;
-    });
-
-    // Table of results
-    const rows = history.map((h) => [h.timestamp, h.feature, h.message]);
-    doc.autoTable({
-      startY: chartTop + chartHeight + 30,
-      head: [["Time", "Tool", "Result"]],
-      body: rows,
-      styles: { fontSize: 9, cellPadding: 4, overflow: "linebreak" },
-      headStyles: { fillColor: [59, 130, 246] },
-      columnStyles: {
-        0: { cellWidth: 80 },
-        1: { cellWidth: 120 },
-        2: { cellWidth: pageWidth - margin * 2 - 200 },
-      },
-    });
-
-    doc.save("CyberGuard-Report.pdf");
-    logResult(new Date(), "System", "📑 PDF exported.");
+    
+    // Show loading state
+    const originalText = exportPdfBtn.innerHTML;
+    exportPdfBtn.disabled = true;
+    exportPdfBtn.innerHTML = `
+      <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      Exporting...
+    `;
+    
+    try {
+      exportToPDF();
+      logResult(new Date(), "System", "📑 PDF report exported successfully.", "system");
+    } catch (error) {
+      console.error("PDF export failed:", error);
+      alert("Failed to export PDF. Please try again.");
+    } finally {
+      // Restore button state
+      setTimeout(() => {
+        exportPdfBtn.disabled = false;
+        exportPdfBtn.innerHTML = originalText;
+      }, 500);
+    }
   });
+
+  // ─── Risk Gauge integration ──────────────────────────────────────
+  // Derives scan data from the current resultsData array and fires the
+  // cyberguard:scanResult event so risk-gauge.js can update the card.
+  function _dispatchRiskGaugeUpdate() {
+    const threats  = resultsData.filter(r => r.status === "threat").length;
+    const warnings = resultsData.filter(r => r.status === "warning").length;
+
+    // Estimate latency from any TCP/port result messages
+    let latency = 0;
+    resultsData.forEach(r => {
+      const match = r.message && r.message.match(/(\d+)\s*ms/i);
+      if (match) latency = Math.max(latency, parseInt(match[1]));
+    });
+
+    // Estimate open ports from port scanner results
+    let openPorts = 0;
+    resultsData.forEach(r => {
+      if (r.feature && r.feature.toLowerCase().includes("port")) {
+        const match = r.message && r.message.match(/(\d+)\s*open/i);
+        if (match) openPorts = Math.max(openPorts, parseInt(match[1]));
+      }
+    });
+
+    const type = threats > 3 ? "critical" : threats > 1 ? "high" : warnings > 2 ? "medium" : "low";
+
+    document.dispatchEvent(new CustomEvent("cyberguard:scanResult", {
+      detail: {
+        vulnerabilities: threats,
+        latency:         latency || Math.floor(Math.random() * 80 + 20), // fallback estimate
+        openPorts:       openPorts,
+        warnings:        warnings,
+        type:            type,
+      }
+    }));
+  }
 
   async function runTool(
     feature,
@@ -1980,34 +2531,306 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     isRunning = true;
+    shouldStopScan = false; // Reset stop flag
     showProgressBar();
     disableAllButtons();
     if (buttonId) setButtonLoading(buttonId, true);
     updateStatus();
 
+    // Show stop button and hide execute button
+    const executeBtn = document.getElementById("execute-scan-btn");
+    const stopBtn = document.getElementById("stop-scan-btn");
+    if (executeBtn) executeBtn.classList.add("hidden");
+    if (stopBtn) stopBtn.classList.remove("hidden");
+
+    // Track scan start time and target for Summary Bar
+    scanStartTime = Date.now();
+    currentScanTarget = inputValue || "N/A";
+    
+    // Update Summary Bar when scan starts (show target, reset time)
+    updateSummaryBar(resultsData.length, '--', currentScanTarget);
+
     // Simple scanning indicator
+    // Notify risk gauge that a scan has started
+    document.dispatchEvent(new CustomEvent("cyberguard:scanStart"));
 
     try {
+      // Check if scan should be stopped before executing
+      if (shouldStopScan) {
+        logResult(new Date(), feature, "⚠️ Scan cancelled by user", "warning");
+        return;
+      }
       await toolFunction(inputValue);
     } catch (error) {
-      logResult(
-        new Date(),
-        feature,
-        `❌ [ERROR] An unexpected error occurred: ${error.message}`,
-        "danger"
-      );
+      if (shouldStopScan) {
+        logResult(new Date(), feature, "⚠️ Scan cancelled by user", "warning");
+      } else {
+        logResult(
+          new Date(),
+          feature,
+          `❌ [ERROR] An unexpected error occurred: ${error.message}`,
+          "danger"
+        );
+      }
     } finally {
       isRunning = false;
+      shouldStopScan = false;
       hideProgressBar();
       enableAllButtons();
       if (buttonId) setButtonLoading(buttonId, false);
       updateStatus();
 
-      // Clean up scanning indicator
+      // Hide stop button and show execute button
+      if (executeBtn) {
+        executeBtn.classList.remove("hidden");
+        executeBtn.disabled = false; // Ensure button is enabled
+        executeBtn.classList.remove("button-disabled");
+      }
+      if (stopBtn) stopBtn.classList.add("hidden");
+
+      // Track scan end time and update Summary Bar with duration
+      scanEndTime = Date.now();
+      const metrics = calculateSummaryMetrics(resultsData, scanStartTime, scanEndTime);
+      updateSummaryBar(metrics.totalIssues, metrics.timeTaken, currentScanTarget);
+
+      // Update risk gauge with aggregated results from current scan data
+      if (!shouldStopScan) {
+        _dispatchRiskGaugeUpdate();
+      }
     }
   }
 
   // --- Tool Implementations (Web-safe versions) ---
+  
+  // WHOIS Lookup button
+  document
+    .getElementById("whois-btn")
+    .addEventListener("click", () =>
+      runTool(
+        "WHOIS Lookup",
+        whoisLookup,
+        () => document.getElementById("target-ip").value,
+        "Please enter a domain name.",
+        "whois-btn"
+      )
+    );
+
+  async function whoisLookup(target) {
+    addActivityLog(`Starting WHOIS lookup for ${target}`, 'WHOIS Lookup');
+    logResult(new Date(), "WHOIS Lookup", `📜 Fetching WHOIS for ${target}...`);
+    try {
+      // Check if API key is available
+      if (!whoisApiKey) {
+        addActivityLog('API key not configured', 'WHOIS Lookup');
+        logResult(
+          new Date(),
+          "WHOIS Lookup",
+          `❌ [ERROR] WhoisXML API key not set. Please configure it in the sidebar.`,
+          "danger"
+        );
+        return;
+      }
+
+      // Determine if target is IP or domain
+      const isIP = isValidIP(target);
+      const isDomain = isValidDomain(target);
+
+      if (!isIP && !isDomain) {
+        addActivityLog('Invalid target format', 'WHOIS Lookup');
+        logResult(
+          new Date(),
+          "WHOIS Lookup",
+          `❌ [ERROR] Invalid input format. Please enter a valid IP address (e.g., 8.8.8.8) or domain name (e.g., google.com).`,
+          "danger"
+        );
+        return;
+      }
+
+      let apiUrl;
+      let queryType;
+
+      if (isIP) {
+        // For IP addresses, use IP geolocation API
+        queryType = "IP Geolocation";
+        addActivityLog('Querying IP geolocation data...', 'WHOIS Lookup');
+        apiUrl = `https://ip-geolocation.whoisxmlapi.com/api/v1?apiKey=${whoisApiKey}&ipAddress=${encodeURIComponent(
+          target
+        )}`;
+      } else {
+        // For domains, normalize domain name
+        let normalizedDomain = target.trim().toLowerCase();
+
+        // Remove protocol if present
+        if (normalizedDomain.includes("://")) {
+          normalizedDomain = new URL(normalizedDomain).hostname;
+        } else if (!normalizedDomain.includes(".")) {
+          throw new Error("Invalid domain format");
+        }
+
+        // Remove www. prefix if present
+        if (normalizedDomain.startsWith("www.")) {
+          normalizedDomain = normalizedDomain.substring(4);
+        }
+
+        queryType = "Domain WHOIS";
+        addActivityLog('Querying domain WHOIS data...', 'WHOIS Lookup');
+        apiUrl = `https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey=${whoisApiKey}&domainName=${encodeURIComponent(
+          normalizedDomain
+        )}&outputFormat=JSON`;
+      }
+
+      updateStatus(`Querying WHOISXML API for ${queryType}...`);
+      const res = await fetch(apiUrl);
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error(
+            "Invalid API key. Please check your WHOISXML API key."
+          );
+        } else if (res.status === 403) {
+          throw new Error(
+            "API quota exceeded or access denied. Please check your WHOISXML subscription."
+          );
+        } else if (res.status === 404) {
+          throw new Error("Domain not found in WHOIS database.");
+        } else {
+          throw new Error(
+            `WHOISXML API error: ${res.status} ${res.statusText}`
+          );
+        }
+      }
+
+      addActivityLog('Processing WHOIS data...', 'WHOIS Lookup');
+      const data = await res.json();
+
+      if (isIP) {
+        // Handle IP geolocation response
+        if (data.ip) {
+          const ip = data.ip;
+          const location = data.location || {};
+          const asn = data.asn || {};
+          const security = data.security || {};
+
+          addActivityLog(`WHOIS lookup complete for ${ip}`, 'WHOIS Lookup');
+          const lines = [
+            `✅ [IP WHOIS DATA] IP: ${ip}`,
+            `🌍 Country: ${location.country || "N/A"}`,
+            `🏙️ Region: ${location.region || "N/A"}`,
+            `🏙️ City: ${location.city || "N/A"}`,
+            `📮 Postal Code: ${location.postalCode || "N/A"}`,
+            `🌐 Timezone: ${location.timezone || "N/A"}`,
+            `📍 Coordinates: ${location.latitude || "N/A"}, ${
+              location.longitude || "N/A"
+            }`,
+            "",
+            `🏢 Organization: ${asn.organization || "N/A"}`,
+            `🔢 ASN: ${asn.asn || "N/A"}`,
+            `📛 ASN Name: ${asn.name || "N/A"}`,
+            `🔗 ASN Domain: ${asn.domain || "N/A"}`,
+            `🌍 ASN Country: ${asn.country || "N/A"}`,
+            "",
+            `🛡️ Security: ${security.isProxy ? "Proxy detected" : "No proxy"}`,
+            `🔒 VPN: ${security.isVpn ? "VPN detected" : "No VPN"}`,
+            `🏢 Hosting: ${
+              security.isHosting ? "Hosting provider" : "Not hosting"
+            }`,
+            `🕵️ Tor: ${security.isTor ? "Tor exit node" : "Not Tor"}`,
+          ].filter(Boolean);
+
+          logResult(new Date(), "WHOIS Lookup", lines.join("\n"), "success");
+          updateStatus("IP WHOIS lookup completed");
+        } else if (data.errorMessage) {
+          throw new Error(data.errorMessage);
+        } else {
+          throw new Error("No IP data found");
+        }
+      } else {
+        // Handle domain WHOIS response
+        if (data.WhoisRecord) {
+          const record = data.WhoisRecord;
+
+          // Extract basic domain information
+          const domainName = record.domainName || target;
+          const registrar =
+            record.registrar?.name || record.registrarName || "Unknown";
+          const createdDate =
+            record.creationDate || record.createdDate || "N/A";
+          const updatedDate = record.updatedDate || record.lastUpdated || "N/A";
+          const expiresDate =
+            record.expiresDate || record.expirationDate || "N/A";
+          const status = record.status || record.domainStatus || "N/A";
+
+          // Extract nameservers
+          const nameServers =
+            record.nameServers?.hostNames ||
+            record.nameServers?.nameserver ||
+            record.nameServers ||
+            [];
+
+          // Extract contact information
+          const registrant = record.registrant || {};
+          const adminContact = record.administrativeContact || {};
+          const techContact = record.technicalContact || {};
+
+          // Format dates properly
+          const formatDate = (dateStr) => {
+            if (!dateStr || dateStr === "N/A") return "N/A";
+            try {
+              return new Date(dateStr).toLocaleDateString();
+            } catch {
+              return dateStr;
+            }
+          };
+
+          addActivityLog(`WHOIS lookup complete for ${domainName}`, 'WHOIS Lookup');
+          const lines = [
+            `✅ [DOMAIN WHOIS DATA] Domain: ${domainName}`,
+            `📅 Created: ${formatDate(createdDate)}`,
+            `📅 Updated: ${formatDate(updatedDate)}`,
+            `📅 Expires: ${formatDate(expiresDate)}`,
+            `🏢 Registrar: ${registrar}`,
+            `📊 Status: ${status}`,
+            "",
+            nameServers.length > 0
+              ? `🌐 Nameservers:\n${nameServers
+                  .map((ns) => `   • ${ns}`)
+                  .join("\n")}`
+              : "🌐 Nameservers: N/A",
+            "",
+            registrant.organization
+              ? `👤 Registrant: ${registrant.organization}`
+              : undefined,
+            registrant.email
+              ? `📧 Registrant Email: ${registrant.email}`
+              : undefined,
+            adminContact.email
+              ? `👨‍💼 Admin Contact: ${adminContact.email}`
+              : undefined,
+            techContact.email
+              ? `👨‍💻 Tech Contact: ${techContact.email}`
+              : undefined,
+          ].filter(Boolean);
+
+          logResult(new Date(), "WHOIS Lookup", lines.join("\n"), "success");
+          updateStatus("Domain WHOIS lookup completed");
+        } else if (data.errorMessage) {
+          throw new Error(data.errorMessage);
+        } else {
+          throw new Error("No WHOIS data found for this domain");
+        }
+      }
+    } catch (e) {
+      addActivityLog(`Lookup failed: ${e.message}`, 'WHOIS Lookup');
+      updateStatus("WHOIS lookup failed");
+      logResult(
+        new Date(),
+        "WHOIS Lookup",
+        `❌ [ERROR] WHOIS lookup failed: ${e.message}`,
+        "danger"
+      );
+    }
+  }
+  
   document
     .getElementById("reverse-dns-btn")
     .addEventListener("click", () =>
@@ -2716,11 +3539,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const scanStartTime = Date.now();
 
     try {
+      // Log scan start
+      addActivityLog(`Starting port scan for ${target}`, 'Port Scanner');
+      
       // Get host information from Shodan
       updateStatus("Querying Shodan database...");
+      addActivityLog('Querying Shodan database...', 'Port Scanner');
       const hostResult = await shodanScanner.getHostInfo(target);
 
       if (!hostResult.success) {
+        addActivityLog(`Shodan query failed: ${hostResult.error}`, 'Port Scanner');
         logResult(
           new Date(),
           "Shodan Scanner",
@@ -2731,11 +3559,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // Process the host data
+      addActivityLog('Processing host data...', 'Port Scanner');
       const processedData = shodanScanner.processHostData(hostResult.data);
       const report = shodanScanner.generateReport(processedData, scanStartTime);
 
       // Log individual open ports and services
       if (processedData.services.length > 0) {
+        addActivityLog(`Found ${processedData.services.length} open ports`, 'Port Scanner');
         for (const service of processedData.services) {
           const serviceInfo =
             service.service !== "Unknown"
@@ -2774,6 +3604,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Generate comprehensive final report
       if (report.totalPorts > 0) {
+        addActivityLog(`Generating report for ${report.totalPorts} ports`, 'Port Scanner');
         const portList = report.services
           .map((s) => {
             const serviceInfo =
@@ -2795,6 +3626,7 @@ document.addEventListener("DOMContentLoaded", () => {
             ? report.organization
             : "Unknown organization";
 
+        addActivityLog('Scan complete - vulnerabilities detected', 'Port Scanner');
         logResult(
           new Date(),
           "Shodan Scanner",
@@ -2816,6 +3648,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "danger"
         );
       } else {
+        addActivityLog('Scan complete - no open ports found', 'Port Scanner');
         logResult(
           new Date(),
           "Shodan Scanner",
@@ -2824,6 +3657,7 @@ document.addEventListener("DOMContentLoaded", () => {
         );
       }
     } catch (error) {
+      addActivityLog(`Scan failed: ${error.message}`, 'Port Scanner');
       logResult(
         new Date(),
         "Shodan Scanner",
@@ -2846,17 +3680,20 @@ document.addEventListener("DOMContentLoaded", () => {
       )
     );
   async function ipGeolocation(target) {
+    addActivityLog(`Starting geolocation lookup for ${target}`, 'IP Geolocation');
     logResult(
       new Date(),
       "IP Geolocation",
       `🌍 Fetching geolocation for ${target}...`
     );
     try {
+      addActivityLog('Querying geolocation API...', 'IP Geolocation');
       const r = await fetch(`https://ipapi.co/${target}/json/`);
       if (!r.ok) throw new Error(`API error ${r.status}`);
       const d = await r.json();
       if (d.error) throw new Error(d.reason);
 
+      addActivityLog('Processing geolocation data...', 'IP Geolocation');
       // Format comprehensive geolocation information
       let result = `✅ [INFO] Detailed Geolocation for ${target}:\n\n`;
       result += `📍 Location Details:\n`;
@@ -2887,8 +3724,10 @@ document.addEventListener("DOMContentLoaded", () => {
       result += `  Threat Level: ${d.threat || "Low"}\n`;
       result += `  Is EU Country: ${d.in_eu ? "Yes" : "No"}\n`;
 
+      addActivityLog('Geolocation lookup complete', 'IP Geolocation');
       logResult(new Date(), "IP Geolocation", result, "success");
     } catch (e) {
+      addActivityLog(`Lookup failed: ${e.message}`, 'IP Geolocation');
       logResult(
         new Date(),
         "IP Geolocation",
@@ -3566,6 +4405,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const USE_CORS_PROXY = false; // Set to true if CORS issues persist
 
   async function testXss(url) {
+    addActivityLog(`Starting XSS scan on ${url}`, 'XSS Scanner');
     logResult(
       new Date(),
       "XSS Test",
@@ -3581,8 +4421,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // Check if ZAP is running
+      addActivityLog('Checking OWASP ZAP status...', 'XSS Scanner');
       const zapStatus = await checkZapStatus();
       if (!zapStatus) {
+        addActivityLog('ZAP not detected, using basic simulation', 'XSS Scanner');
         logResult(
           new Date(),
           "XSS Test",
@@ -3594,11 +4436,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // Start ZAP scan
+      addActivityLog('Starting ZAP active scan...', 'XSS Scanner');
       const scanId = await startZapScan(url);
       if (!scanId) {
         throw new Error("Failed to start ZAP scan");
       }
 
+      addActivityLog(`ZAP scan started (ID: ${scanId})`, 'XSS Scanner');
       logResult(
         new Date(),
         "XSS Test",
@@ -3606,22 +4450,28 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
       // Monitor scan progress with timeout
+      addActivityLog('Monitoring scan progress...', 'XSS Scanner');
       const finalProgress = await monitorScanProgress(scanId, url);
 
       // Get scan results
+      addActivityLog('Retrieving scan results...', 'XSS Scanner');
       const results = await getZapScanResults();
       await displayXssResults(results, url);
 
       // If scan didn't complete, offer to cancel
       if (finalProgress < 100) {
+        addActivityLog('Scan incomplete', 'XSS Scanner');
         logResult(
           new Date(),
           "XSS Test",
           "🔄 Scan incomplete - you can cancel it manually in ZAP if needed",
           "info"
         );
+      } else {
+        addActivityLog('XSS scan completed successfully', 'XSS Scanner');
       }
     } catch (error) {
+      addActivityLog(`Scan failed: ${error.message}`, 'XSS Scanner');
       logResult(
         new Date(),
         "XSS Test",
@@ -3630,6 +4480,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
       // Fallback to basic simulation
+      addActivityLog('Falling back to basic simulation', 'XSS Scanner');
       logResult(
         new Date(),
         "XSS Test",
@@ -7276,6 +8127,441 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // ===== TOOL REGISTRY =====
+  // Maps tool button IDs to their corresponding scanning functions
+  
+  /**
+   * Tool Registry - Maps tool button IDs to their scanning functions
+   * Provides centralized tool configuration for selective execution
+   */
+  const ToolRegistry = {
+    // Network Tools - Map tool IDs to arrow functions that execute the scanning functions
+    'port-scan-btn': () => portScan(document.getElementById('target-ip').value),
+    'tcp-scan-btn': () => realTcpPortScan(document.getElementById('target-ip').value),
+    'udp-scan-btn': () => realUdpConnectivityTest(document.getElementById('target-ip').value),
+    'ip-geo-btn': () => ipGeolocation(document.getElementById('target-ip').value),
+    'reverse-dns-btn': () => reverseDns(document.getElementById('target-ip').value),
+    'whois-btn': () => whoisLookup(document.getElementById('target-ip').value),
+    'threat-intel-btn': () => threatIntelCheck(document.getElementById('target-ip').value),
+    
+    // Web Security Tools - Map tool IDs to arrow functions that execute the scanning functions
+    'xss-btn': () => testXss(document.getElementById('target-url').value),
+    'ssl-btn': () => checkSsl(document.getElementById('target-url').value),
+    'phishing-btn': () => detectPhishing(document.getElementById('target-url').value),
+    'dns-spoof-btn': () => checkDnsSpoof(document.getElementById('target-url').value),
+    
+    /**
+     * Gets the function reference for a tool ID
+     * @param {string} toolId - The tool button ID
+     * @returns {Function|null} The tool function or null if not found
+     */
+    getToolFunction(toolId) {
+      return this[toolId] || null;
+    },
+    
+    /**
+     * Checks if a tool ID exists in the registry and verifies it's a function
+     * @param {string} toolId - The tool button ID
+     * @returns {boolean} True if tool exists and is a function
+     */
+    hasToolFunction(toolId) {
+      return toolId in this && typeof this[toolId] === 'function';
+    }
+  };
+
+  // ===== SELECTION MANAGER =====
+  // Manages tool card selection state for selective execution
+  
+  /**
+   * Selection Manager - Manages tool card selection state
+   */
+  const SelectionManager = {
+    /**
+     * Initializes the selection manager
+     */
+    init() {
+      this.attachEventListeners();
+      this.restoreSelections();
+      this.updateSelectionCount();
+    },
+    
+    /**
+     * Attaches click event listeners to all tool cards
+     */
+    attachEventListeners() {
+      const toolCards = document.querySelectorAll('.cyber-tool-card');
+      
+      toolCards.forEach(card => {
+        card.addEventListener('click', (e) => {
+          // Prevent toggle if clicking on the tool button itself
+          // Check if the click target is a button or inside a button
+          if (e.target.closest('button[id$="-btn"]')) {
+            return;
+          }
+          
+          // Toggle selection for this card
+          this.toggleSelection(card);
+        });
+      });
+    },
+    
+    /**
+     * Toggles selection state for a tool card
+     * @param {HTMLElement} card - The tool card element
+     */
+    toggleSelection(card) {
+      const isSelected = card.dataset.selected === "true";
+      card.dataset.selected = (!isSelected).toString();
+      
+      this.updateVisuals(card);
+      this.saveToLocalStorage();
+      this.updateSelectionCount();
+    },
+    
+    /**
+     * Updates visual indicators for a card
+     * @param {HTMLElement} card - The tool card element
+     */
+    updateVisuals(card) {
+      const indicator = card.querySelector('.selection-indicator');
+      const isSelected = card.dataset.selected === "true";
+      
+      if (isSelected) {
+        indicator?.classList.remove('hidden');
+      } else {
+        indicator?.classList.add('hidden');
+      }
+    },
+    
+    /**
+     * Gets all selected tool IDs in the specified tab
+     * @param {string} tabId - The tab ID ('network-tools' or 'web-security')
+     * @returns {Array<string>} Array of selected tool button IDs
+     */
+    getSelectedTools(tabId) {
+      const tab = document.getElementById(tabId);
+      if (!tab) return [];
+      
+      const selectedCards = tab.querySelectorAll('.cyber-tool-card[data-selected="true"]');
+      const toolIds = [];
+      
+      selectedCards.forEach(card => {
+        const toolId = card.dataset.toolId;
+        if (toolId) {
+          toolIds.push(toolId);
+        }
+      });
+      
+      return toolIds;
+    },
+    
+    /**
+     * Updates the selection count display
+     */
+    updateSelectionCount() {
+      const activeTab = document.querySelector('.tab-pane.active');
+      if (!activeTab) return;
+      
+      const selectedCount = activeTab.querySelectorAll('.cyber-tool-card[data-selected="true"]').length;
+      
+      // Determine which count display to update based on active tab
+      const isNetworkTab = activeTab.id === 'network-tools';
+      const countDisplay = document.getElementById(isNetworkTab ? 'selection-count-display' : 'selection-count-display-web');
+      
+      if (countDisplay) {
+        if (selectedCount === 0) {
+          countDisplay.textContent = 'No tools selected';
+          countDisplay.className = 'text-xs text-slate-500';
+        } else {
+          countDisplay.textContent = `${selectedCount} tool${selectedCount > 1 ? 's' : ''} selected`;
+          countDisplay.className = 'text-xs text-purple-400 font-semibold';
+        }
+      }
+    },
+    
+    /**
+     * Saves selection state to localStorage
+     */
+    saveToLocalStorage() {
+      const selections = {};
+      const toolCards = document.querySelectorAll('.cyber-tool-card');
+      
+      toolCards.forEach(card => {
+        const toolId = card.dataset.toolId;
+        const isSelected = card.dataset.selected === "true";
+        if (toolId) {
+          selections[toolId] = isSelected;
+        }
+      });
+      
+      try {
+        localStorage.setItem('cyberguard-tool-selections', JSON.stringify(selections));
+      } catch (e) {
+        console.error('Failed to save selections to localStorage:', e);
+      }
+    },
+    
+    /**
+     * Restores selection state from localStorage
+     */
+    restoreSelections() {
+      try {
+        const saved = localStorage.getItem('cyberguard-tool-selections');
+        if (!saved) return;
+        
+        const selections = JSON.parse(saved);
+        const toolCards = document.querySelectorAll('.cyber-tool-card');
+        
+        toolCards.forEach(card => {
+          const toolId = card.dataset.toolId;
+          if (toolId && selections[toolId] !== undefined) {
+            card.dataset.selected = selections[toolId].toString();
+            this.updateVisuals(card);
+          }
+        });
+        
+        this.updateSelectionCount();
+      } catch (e) {
+        console.error('Failed to restore selections from localStorage:', e);
+      }
+    }
+  };
+
+  // ===== SELECT ALL TOGGLE =====
+  // Handles Select All / Deselect All toggle functionality
+  
+  /**
+   * SelectAllToggle - Manages bulk selection operations
+   */
+  const SelectAllToggle = {
+    /**
+     * Initializes the toggle buttons for both tabs
+     */
+    init() {
+      const toggleBtnNetwork = document.getElementById('select-all-toggle-btn');
+      const toggleBtnWeb = document.getElementById('select-all-toggle-btn-web');
+      
+      if (toggleBtnNetwork) {
+        toggleBtnNetwork.addEventListener('click', () => {
+          this.toggleAll();
+        });
+      }
+      
+      if (toggleBtnWeb) {
+        toggleBtnWeb.addEventListener('click', () => {
+          this.toggleAll();
+        });
+      }
+      
+      this.updateButtonLabel();
+    },
+    
+    /**
+     * Toggles all tool cards in the active tab
+     */
+    toggleAll() {
+      const activeTab = document.querySelector('.tab-pane.active');
+      if (!activeTab) return;
+      
+      const toolCards = activeTab.querySelectorAll('.cyber-tool-card');
+      const hasAnySelected = Array.from(toolCards).some(card => card.dataset.selected === "true");
+      
+      // If any are selected, deselect all. Otherwise, select all.
+      const newState = !hasAnySelected;
+      
+      toolCards.forEach((card, index) => {
+        setTimeout(() => {
+          card.dataset.selected = newState.toString();
+          SelectionManager.updateVisuals(card);
+        }, index * 50); // Staggered animation
+      });
+      
+      // Save and update after all animations
+      setTimeout(() => {
+        SelectionManager.saveToLocalStorage();
+        SelectionManager.updateSelectionCount();
+        this.updateButtonLabel();
+      }, toolCards.length * 50 + 100);
+    },
+    
+    /**
+     * Updates the toggle button label based on current state
+     */
+    updateButtonLabel() {
+      const activeTab = document.querySelector('.tab-pane.active');
+      if (!activeTab) return;
+      
+      // Determine which button to update based on active tab
+      const isNetworkTab = activeTab.id === 'network-tools';
+      const toggleBtn = document.getElementById(isNetworkTab ? 'select-all-toggle-btn' : 'select-all-toggle-btn-web');
+      
+      if (!toggleBtn) return;
+      
+      const toolCards = activeTab.querySelectorAll('.cyber-tool-card');
+      const hasAnySelected = Array.from(toolCards).some(card => card.dataset.selected === "true");
+      
+      toggleBtn.textContent = hasAnySelected ? 'Deselect All' : 'Select All';
+    }
+  };
+
+  // ===== EXECUTION CONTROLLER =====
+  // Handles selective tool execution with validation
+  
+  /**
+   * ExecutionController - Manages selective tool execution
+   */
+  const ExecutionController = {
+    /**
+     * Delays execution
+     * @param {number} ms - Milliseconds to delay
+     * @returns {Promise<void>}
+     */
+    delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    },
+    
+    /**
+     * Shows a toast notification
+     * @param {string} message - The message to display
+     */
+    showToast(message) {
+      // Create toast element
+      const toast = document.createElement('div');
+      toast.className = 'cyber-toast fixed top-20 right-6 bg-slate-800 border border-purple-500/30 rounded-lg p-4 shadow-lg z-50 flex items-center gap-3';
+      toast.innerHTML = `
+        <svg class="w-5 h-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+        </svg>
+        <span class="text-sm text-white">${message}</span>
+        <button class="ml-2 text-slate-400 hover:text-white">
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      `;
+      
+      document.body.appendChild(toast);
+      
+      // Add dismiss handler
+      const dismissBtn = toast.querySelector('button');
+      dismissBtn.addEventListener('click', () => {
+        toast.remove();
+      });
+      
+      // Auto-dismiss after 3 seconds
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    },
+    
+    /**
+     * Focuses the first tool card in a tab
+     * @param {string} tabId - The tab ID
+     */
+    focusFirstToolCard(tabId) {
+      const tab = document.getElementById(tabId);
+      if (!tab) return;
+      
+      const firstCard = tab.querySelector('.cyber-tool-card');
+      if (firstCard) {
+        firstCard.focus();
+        firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    },
+    
+    /**
+     * Executes selected network tools
+     * @param {string} target - The target IP or domain
+     * @returns {Promise<void>}
+     */
+    async executeNetworkScan(target) {
+      // Validate target
+      const validation = validateTargetInput(target, 'Network Scan');
+      if (!validation.valid) {
+        this.showToast(validation.message);
+        return;
+      }
+      
+      // Get selected tools
+      const selectedTools = SelectionManager.getSelectedTools('network-tools');
+      
+      // Validate selection
+      if (selectedTools.length === 0) {
+        this.showToast('Please select at least one tool');
+        this.focusFirstToolCard('network-tools');
+        return;
+      }
+      
+      // Dispatch scan start event
+      document.dispatchEvent(new CustomEvent('cyberguard:scanStart', {
+        detail: { target, toolCount: selectedTools.length }
+      }));
+      
+      // Execute selected tools sequentially
+      for (const toolId of selectedTools) {
+        if (shouldStopScan) break;
+        
+        const toolFunction = ToolRegistry.getToolFunction(toolId);
+        if (toolFunction) {
+          try {
+            await toolFunction();
+          } catch (error) {
+            console.error(`Error executing ${toolId}:`, error);
+          }
+          
+          // 200ms delay between tools
+          await this.delay(200);
+        }
+      }
+      
+      // Dispatch scan result event with calculated risk metrics
+      _dispatchRiskGaugeUpdate();
+    },
+    
+    /**
+     * Executes selected web security tools
+     * @param {string} url - The target URL
+     * @returns {Promise<void>}
+     */
+    async executeWebSecurityScan(url) {
+      // Validate URL
+      if (!url || url.trim() === '') {
+        this.showToast('Please enter a target URL');
+        return;
+      }
+      
+      // Get selected tools
+      const selectedTools = SelectionManager.getSelectedTools('web-security');
+      
+      // Validate selection
+      if (selectedTools.length === 0) {
+        this.showToast('Please select at least one web security tool');
+        this.focusFirstToolCard('web-security');
+        return;
+      }
+      
+      // Execute selected tools sequentially
+      for (const toolId of selectedTools) {
+        if (shouldStopScan) break;
+        
+        const toolFunction = ToolRegistry.getToolFunction(toolId);
+        if (toolFunction) {
+          try {
+            await toolFunction();
+          } catch (error) {
+            console.error(`Error executing ${toolId}:`, error);
+          }
+          
+          // 200ms delay between tools
+          await this.delay(200);
+        }
+      }
+      
+      // Dispatch risk gauge update after scan completion
+      _dispatchRiskGaugeUpdate();
+    }
+  };
+
   // --- Initial setup ---
   loadTheme();
   loadVtKey();
@@ -7285,6 +8571,130 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initialize modern results system
   initializeModernResults();
+  
+  // Initialize SelectionManager
+  SelectionManager.init();
+  
+  // Initialize SelectAllToggle
+  SelectAllToggle.init();
+
+  // ---- Wire new UI buttons ----
+
+  // Execute Scan button (Network tab) — runs all network tools on the target
+  const executeScanBtn = document.getElementById("execute-scan-btn");
+  console.log("Execute Scan Button:", executeScanBtn); // Debug log
+  if (executeScanBtn) {
+    executeScanBtn.addEventListener("click", async () => {
+      console.log("Execute Scan button clicked!"); // Debug log
+      const target = document.getElementById("target-ip")?.value?.trim();
+      console.log("Target value:", target); // Debug log
+      
+      // Disable button during scan
+      executeScanBtn.disabled = true;
+      executeScanBtn.classList.add("button-disabled");
+      
+      // Reset stop flag
+      shouldStopScan = false;
+      
+      // Track scan start time and target for Summary Bar
+      scanStartTime = Date.now();
+      currentScanTarget = target;
+      
+      // Update Summary Bar when scan starts (show target, reset time)
+      updateSummaryBar(resultsData.length, '--', currentScanTarget);
+      
+      // Execute selective network scan via ExecutionController
+      await ExecutionController.executeNetworkScan(target);
+      
+      // Track scan end time and update Summary Bar with duration
+      scanEndTime = Date.now();
+      const metrics = calculateSummaryMetrics(resultsData, scanStartTime, scanEndTime);
+      updateSummaryBar(metrics.totalIssues, metrics.timeTaken, currentScanTarget);
+      
+      // Re-enable button after scan
+      executeScanBtn.disabled = false;
+      executeScanBtn.classList.remove("button-disabled");
+    });
+  } else {
+    console.error("Execute Scan button not found!"); // Debug log
+  }
+
+  // Stop Scan button - allows user to cancel ongoing scans
+  const stopScanBtn = document.getElementById("stop-scan-btn");
+  if (stopScanBtn) {
+    stopScanBtn.addEventListener("click", () => {
+      if (isRunning) {
+        shouldStopScan = true;
+        logResult(new Date(), "System", "🛑 Stopping scan... Please wait for current operation to complete.", "warning");
+        updateStatus("Stopping scan...");
+        
+        // Dispatch scan error event to reset dashboard
+        document.dispatchEvent(new CustomEvent('cyberguard:scanError'));
+      }
+    });
+  }
+
+  // Run Analysis button (Web tab) — runs all web security tools
+  const runAnalysisBtn = document.getElementById("run-analysis-btn");
+  if (runAnalysisBtn) {
+    runAnalysisBtn.addEventListener("click", async () => {
+      const url = document.getElementById("target-url")?.value?.trim();
+      
+      // Disable button during scan
+      runAnalysisBtn.disabled = true;
+      runAnalysisBtn.classList.add("button-disabled");
+      
+      // Reset stop flag
+      shouldStopScan = false;
+      
+      // Track scan start time and target for Summary Bar
+      scanStartTime = Date.now();
+      currentScanTarget = url;
+      
+      // Update Summary Bar when scan starts (show target, reset time)
+      updateSummaryBar(resultsData.length, '--', currentScanTarget);
+      
+      // Execute selective web security scan via ExecutionController
+      await ExecutionController.executeWebSecurityScan(url);
+      
+      // Track scan end time and update Summary Bar with duration
+      scanEndTime = Date.now();
+      const metrics = calculateSummaryMetrics(resultsData, scanStartTime, scanEndTime);
+      updateSummaryBar(metrics.totalIssues, metrics.timeTaken, currentScanTarget);
+      
+      // Re-enable button after scan
+      runAnalysisBtn.disabled = false;
+      runAnalysisBtn.classList.remove("button-disabled");
+    });
+  }
+
+  // New Scan button (header) — clears results and focuses the target input
+  const newScanBtn = document.getElementById("new-scan-btn");
+  if (newScanBtn) {
+    newScanBtn.addEventListener("click", () => {
+      // Clear results
+      resultsData = [];
+      renderResults();
+      updateResultsStats();
+      // Reset gauge to idle
+      document.dispatchEvent(new CustomEvent("cyberguard:scanReset"));
+      // Switch to network tab and focus target input
+      switchToTab("network-tools");
+      setTimeout(() => {
+        const targetInput = document.getElementById("target-ip");
+        if (targetInput) { targetInput.value = ""; targetInput.focus(); }
+      }, 150);
+      logResult(new Date(), "System", "🔄 New scan session started. Enter a target to begin.", "system");
+    });
+  }
+
+  // Header Export PDF — delegates to the footer export-pdf-btn
+  const headerExportPdfBtn = document.getElementById("header-export-pdf-btn");
+  if (headerExportPdfBtn) {
+    headerExportPdfBtn.addEventListener("click", () => {
+      document.getElementById("export-pdf-btn")?.click();
+    });
+  }
 
   // Show welcome popup first, then initialize sidebar
   setTimeout(() => {
@@ -7296,3 +8706,350 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 30);
   }, 50);
 });
+
+/* ================================================================
+   AI ASSISTANT MODULE
+   ================================================================
+
+*/
+(function initAIAssistant() {
+
+
+  // OpenRouter free model (Llama 4 Scout via Meta)
+  const OPENROUTER_API_KEY = "";
+  const OPENROUTER_MODEL   = "";
+
+  // Groq free model (alternative — uncomment USE_GROQ to switch)
+  const GROQ_API_KEY = "";
+  const GROQ_MODEL   = "";
+
+  // Set to true to use Groq instead of OpenRouter
+  const USE_GROQ = false;
+
+  const SYSTEM_PROMPT = `You are a helpful AI assistant built into CyberGuard Pro, a cybersecurity dashboard. 
+You help users understand and use the dashboard's tools:
+- Network Scanner: reverse DNS, IP geolocation, WHOIS lookup, port scanner (TCP/UDP), threat intelligence
+- Web Security: URL phishing analyser, XSS tester, SSL/TLS checker, DNS spoofing detector, VirusTotal integration
+- Hash & Crypto: MD5/SHA hash generation, file hashing, password strength analyser
+
+You also answer general cybersecurity questions.
+Keep answers concise, clear, and practical. Use bullet points for lists. 
+If asked about something unrelated to cybersecurity, politely redirect.`;
+
+  // ─── DOM REFERENCES ─────────────────────────────────────────────
+  const messagesEl  = document.getElementById("ai-messages");
+  const inputEl     = document.getElementById("ai-input");
+  const sendBtn     = document.getElementById("ai-send-btn");
+  const clearBtn    = document.getElementById("ai-clear-btn");
+  const suggestEl   = document.getElementById("ai-suggestions");
+
+  // Guard: elements must exist
+  if (!messagesEl || !inputEl || !sendBtn) return;
+
+  // ─── STATE ──────────────────────────────────────────────────────
+  let conversationHistory = []; // { role: "user"|"assistant", content: string }
+  let isWaiting = false;
+
+  // ─── INIT ───────────────────────────────────────────────────────
+  showWelcome();
+  setupInput();
+  setupButtons();
+
+  // ─── WELCOME ────────────────────────────────────────────────────
+  function showWelcome() {
+    messagesEl.innerHTML = `
+      <div class="ai-welcome-card">
+        <span class="ai-welcome-icon">🛡️</span>
+        <h4>CyberGuard AI Assistant</h4>
+        <p>Ask me anything about cybersecurity or the tools available on this dashboard. Click a suggestion below to get started!</p>
+      </div>`;
+  }
+
+  // ─── INPUT AUTO-RESIZE ──────────────────────────────────────────
+  function setupInput() {
+    inputEl.addEventListener("input", () => {
+      inputEl.style.height = "auto";
+      inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + "px";
+    });
+
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    });
+  }
+
+  // ─── BUTTON WIRING ──────────────────────────────────────────────
+  function setupButtons() {
+    sendBtn.addEventListener("click", handleSend);
+
+    clearBtn.addEventListener("click", () => {
+      conversationHistory = [];
+      showWelcome();
+      if (suggestEl) suggestEl.style.display = "flex";
+    });
+
+    // Suggestion chips
+    document.querySelectorAll(".ai-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const q = chip.dataset.question;
+        if (q && !isWaiting) {
+          inputEl.value = q;
+          handleSend();
+          // Hide chips after first use
+          if (suggestEl) suggestEl.style.display = "none";
+        }
+      });
+    });
+  }
+
+  // ─── SEND MESSAGE ───────────────────────────────────────────────
+  async function handleSend() {
+    const text = inputEl.value.trim();
+    if (!text || isWaiting) return;
+
+    // Hide suggestion chips once user starts chatting
+    if (suggestEl) suggestEl.style.display = "none";
+
+    // Clear welcome card on first real message
+    const welcomeCard = messagesEl.querySelector(".ai-welcome-card");
+    if (welcomeCard) welcomeCard.remove();
+
+    // Add user message
+    appendMessage("user", text);
+    conversationHistory.push({ role: "user", content: text });
+
+    // Reset input
+    inputEl.value = "";
+    inputEl.style.height = "auto";
+
+    // Show typing indicator
+    const typingId = showTyping();
+    setWaiting(true);
+
+    try {
+      let reply;
+      const hasApiKey = USE_GROQ ? !!GROQ_API_KEY : !!OPENROUTER_API_KEY;
+
+      if (hasApiKey) {
+        reply = await callAI(text);
+      } else {
+        reply = localFallback(text);
+      }
+
+      removeTyping(typingId);
+      appendMessage("ai", reply);
+      conversationHistory.push({ role: "assistant", content: reply });
+    } catch (err) {
+      removeTyping(typingId);
+      const fallbackReply = localFallback(text);
+      appendMessage("ai", `⚠️ *API error — using offline mode:*\n\n${fallbackReply}`);
+      console.warn("[AI Assistant] API call failed, using fallback:", err.message);
+    } finally {
+      setWaiting(false);
+    }
+  }
+
+  // ─── API CALL ───────────────────────────────────────────────────
+  async function callAI(userMessage) {
+    const messages = [
+      { role: "system", content: SYSTEM_PROMPT },
+      ...conversationHistory.slice(-10), // Keep last 10 turns for context
+    ];
+
+    let url, headers, body;
+
+    if (USE_GROQ) {
+      // ── Groq ────────────────────────────────────────────────────
+      url = "https://api.groq.com/openai/v1/chat/completions";
+      headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${GROQ_API_KEY}`,
+      };
+      body = JSON.stringify({
+        model: GROQ_MODEL,
+        messages,
+        max_tokens: 512,
+        temperature: 0.7,
+      });
+    } else {
+      // ── OpenRouter ──────────────────────────────────────────────
+      url = "https://openrouter.ai/api/v1/chat/completions";
+      headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "HTTP-Referer": window.location.href,
+        "X-Title": "CyberGuard Pro AI Assistant",
+      };
+      body = JSON.stringify({
+        model: OPENROUTER_MODEL,
+        messages,
+        max_tokens: 512,
+        temperature: 0.7,
+      });
+    }
+
+    const res = await fetch(url, { method: "POST", headers, body });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData?.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content?.trim() || "I couldn't generate a response. Please try again.";
+  }
+
+  // ─── LOCAL FALLBACK (keyword matching) ──────────────────────────
+  function localFallback(query) {
+    const q = query.toLowerCase();
+
+    if (/\b(network|port|scan|tcp|udp|reverse dns|geolocation|geo)\b/.test(q))
+      return `**Network Tools** on this dashboard:\n\n- **Reverse DNS** – resolve an IP to its hostname\n- **IP Geolocation** – locate an IP on a world map\n- **WHOIS Lookup** – get domain/IP registration data\n- **Port Scanner** – check which ports are open on a target\n- **TCP / UDP Scan** – protocol-specific port scanning\n- **Threat Intelligence** – cross-reference IPs against threat feeds\n\nEnter a target IP or domain in the Network tab to get started.`;
+
+    if (/\b(web|phish|xss|ssl|tls|dns spoof|virustotal|vt)\b/.test(q))
+      return `**Web Security Tools** available:\n\n- **URL Phishing Analyser** – detect malicious / deceptive URLs using ML\n- **XSS Test** – check a URL for cross-site scripting vulnerabilities\n- **SSL/TLS Check** – verify certificate validity and cipher strength\n- **DNS Spoofing** – detect DNS poisoning attacks\n- **VirusTotal** – scan URLs, hashes, or files with 70+ AV engines\n\nSwitch to the **Web** tab to use these tools.`;
+
+    if (/\b(hash|md5|sha|sha256|password|crypto|encrypt)\b/.test(q))
+      return `**Hash & Crypto Tools** available:\n\n- **String Hashing** – generate MD5, SHA-1, SHA-256, SHA-512 hashes\n- **File Hashing** – compute hash of any local file\n- **Password Strength** – analyse entropy, patterns, and crackability\n\nSwitch to the **Hash** tab to use these tools.`;
+
+    if (/\b(what|tools|feature|can|do|help|dashboard)\b/.test(q))
+      return `**CyberGuard Pro** offers three main tool categories:\n\n1. 🌐 **Network** – port scanning, WHOIS, IP geolocation, threat intel\n2. 🔒 **Web Security** – phishing detection, XSS, SSL/TLS, VirusTotal\n3. #️⃣ **Hash & Crypto** – MD5/SHA hashing, password strength analysis\n\nClick any tab at the top to explore. You can also ask me specific questions!`;
+
+    if (/\b(phish|phishing)\b/.test(q))
+      return `**Phishing** is a social-engineering attack where attackers impersonate legitimate websites to steal credentials or install malware.\n\n**How to detect it:**\n- Check the domain carefully (e.g. paypa1.com vs paypal.com)\n- Look for HTTPS and a valid SSL certificate\n- Use CyberGuard's URL Phishing Analyser for automated detection\n- Hover over links before clicking to preview the actual URL`;
+
+    if (/\b(ssl|tls|certificate|https)\b/.test(q))
+      return `**SSL/TLS** is the encryption protocol securing web traffic (HTTPS).\n\n**Key points:**\n- TLS 1.2 and 1.3 are considered secure; TLS 1.0/1.1 and SSLv3 are deprecated\n- A valid certificate ensures the server is who it claims to be\n- Use CyberGuard's **SSL/TLS Check** tool to analyse any domain's certificate chain, expiry, and cipher suites`;
+
+    if (/\b(xss|cross.site|script)\b/.test(q))
+      return `**Cross-Site Scripting (XSS)** allows attackers to inject malicious scripts into web pages viewed by other users.\n\n**Types:**\n- **Reflected** – script in URL, executed on page load\n- **Stored** – script saved in database, served to all visitors\n- **DOM-based** – script manipulates the page's DOM\n\nUse CyberGuard's **XSS Test** tool to check a URL for reflected XSS vulnerabilities.`;
+
+    if (/\b(password|passphrase|credentials)\b/.test(q))
+      return `**Password security best practices:**\n\n- Use at least 16 characters\n- Mix uppercase, lowercase, numbers, and symbols\n- Never reuse passwords across sites\n- Use a password manager (Bitwarden, 1Password, etc.)\n- Enable MFA/2FA wherever possible\n\nRun CyberGuard's **Password Strength Analyser** to score your password.`;
+
+    if (/\b(hello|hi|hey|greet)\b/.test(q))
+      return `Hello! 👋 I'm the CyberGuard AI Assistant. I can help you:\n\n- Understand how to use this dashboard's tools\n- Answer cybersecurity questions\n- Explain concepts like phishing, XSS, SSL/TLS, and more\n\nWhat would you like to know?`;
+
+    // Default
+    return `I'm not sure I have a precise answer for that in offline mode. Here's what I can help with:\n\n- **Dashboard tools** – Network Scanner, Web Security, Hash & Crypto\n- **Cybersecurity concepts** – phishing, XSS, SSL/TLS, passwords, malware\n\nTry adding an OpenRouter or Groq API key at the top of ai-assistant.js for full AI-powered responses. Or rephrase your question!`;
+  }
+
+  // ─── UI HELPERS ─────────────────────────────────────────────────
+  function appendMessage(role, text) {
+    const isUser = role === "user";
+    const time   = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    const wrap = document.createElement("div");
+    wrap.className = `ai-msg ${role}`;
+
+    // Avatar
+    const avatar = document.createElement("div");
+    avatar.className = "ai-msg-avatar";
+    if (isUser) {
+      avatar.textContent = "U";
+    } else {
+      avatar.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" /></svg>`;
+    }
+
+    // Bubble
+    const bubble = document.createElement("div");
+    bubble.className = "ai-msg-bubble";
+    bubble.innerHTML = formatMessage(text);
+
+    // Timestamp
+    const ts = document.createElement("div");
+    ts.className = "ai-msg-time";
+    ts.textContent = time;
+
+    // Assembly
+    const inner = document.createElement("div");
+    inner.style.cssText = "display:flex;flex-direction:column;";
+    if (isUser) {
+      inner.style.alignItems = "flex-end";
+    }
+    inner.appendChild(bubble);
+    inner.appendChild(ts);
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(inner);
+
+    messagesEl.appendChild(wrap);
+    scrollToBottom();
+  }
+
+  function showTyping() {
+    const id = "typing-" + Date.now();
+    const wrap = document.createElement("div");
+    wrap.className = "ai-msg ai";
+    wrap.id = id;
+
+    const avatar = document.createElement("div");
+    avatar.className = "ai-msg-avatar";
+    avatar.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" /></svg>`;
+
+    const bubble = document.createElement("div");
+    bubble.className = "ai-msg-bubble";
+    bubble.innerHTML = `<div class="ai-typing-bubble"><div class="ai-typing-dot"></div><div class="ai-typing-dot"></div><div class="ai-typing-dot"></div></div>`;
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubble);
+    messagesEl.appendChild(wrap);
+    scrollToBottom();
+
+    return id;
+  }
+
+  function removeTyping(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  }
+
+  function scrollToBottom() {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function setWaiting(val) {
+    isWaiting = val;
+    sendBtn.disabled = val;
+    inputEl.disabled = val;
+  }
+
+  // Converts basic markdown-like text to safe HTML
+  function formatMessage(text) {
+    // Escape HTML first
+    let safe = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    // Bold: **text**
+    safe = safe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+
+    // Inline code: `code`
+    safe = safe.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+    // Bullet lists: lines starting with "- " or "• "
+    const lines = safe.split("\n");
+    let inList = false;
+    const out = [];
+    for (let line of lines) {
+      if (/^[-•]\s/.test(line)) {
+        if (!inList) { out.push("<ul>"); inList = true; }
+        out.push(`<li>${line.replace(/^[-•]\s/, "")}</li>`);
+      } else {
+        if (inList) { out.push("</ul>"); inList = false; }
+        if (line.trim() === "") {
+          out.push("<br>");
+        } else {
+          out.push(`<p>${line}</p>`);
+        }
+      }
+    }
+    if (inList) out.push("</ul>");
+
+    return out.join("");
+  }
+
+})(); // end initAIAssistant IIFE

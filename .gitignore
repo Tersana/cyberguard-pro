@@ -1,1 +1,31 @@
-node_modules
+# --- Security & Sensitive Data ---
+
+ADMIN_CREDENTIALS.txt
+CyberGuardWeb.rar
+phishing_dataset.csv
+SECURITY_TEST_DATA.md
+
+# --- Dependencies ---
+
+node_modules/
+.vscode/
+.kiro/
+
+# --- Backups & Temp Files ---
+
+*.backup
+main-original.js
+main.js.backup
+
+# --- Testing Artifacts ---
+
+test-accordion-styles.html
+test-color-function.html
+test-dashboard-integration.html
+test-filter-pills.html
+test-state-manager.html
+test-stop-scan.html
+
+# --- System Files ---
+.DS_Store
+Thumbs.db
