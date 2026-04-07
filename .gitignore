@@ -17,6 +17,8 @@ node_modules/
 main-original.js
 main.js.backup
 docs/
+*.md
+!README.md
 # --- Testing Artifacts ---
 
 test-accordion-styles.html

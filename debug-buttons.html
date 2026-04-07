@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Debug Test</title>
+</head>
+<body>
+    <h1>Button Event Listener Test</h1>
+    <button id="execute-scan-btn">Execute Scan</button>
+    <button id="test-btn">Test Button</button>
+    <div id="output"></div>
+
+    <script src="dashboard-tab-manager.js"></script>
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message) {
+            const p = document.createElement('p');
+            p.textContent = message;
+            output.appendChild(p);
+            console.log(message);
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            log('DOMContentLoaded fired');
+            
+            const executeBtn = document.getElementById('execute-scan-btn');
+            const testBtn = document.getElementById('test-btn');
+            
+            log('Execute button found: ' + (executeBtn ? 'YES' : 'NO'));
+            log('Test button found: ' + (testBtn ? 'YES' : 'NO'));
+            
+            if (executeBtn) {
+                executeBtn.addEventListener('click', () => {
+                    log('Execute button clicked!');
+                });
+            }
+            
+            if (testBtn) {
+                testBtn.addEventListener('click', () => {
+                    log('Test button clicked!');
+                });
+            }
+            
+            // Test if tab manager is interfering
+            document.addEventListener('click', (e) => {
+                log('Document click detected on: ' + e.target.id);
+            }, true); // Capture phase
+        });
+    </script>
+</body>
+</html>
