@@ -139,6 +139,642 @@ function updateSummaryBar(totalIssues, timeTaken, target) {
 // ===== FILTER CONTROLS COMPONENT =====
 // Filter state management and UI updates for severity-based filtering
 
+// ===== CYBERGUARD HASH TOOLS MODULE =====
+// Cryptographic tools module for hash generation, password analysis, hash identification, and file integrity checking
+
+const CyberGuardHashTools = {
+  // Track initialization state
+  _initialized: false,
+  _eventListenersAttached: false,
+  
+  /**
+   * Initialize the Hash Tools module
+   * Sets up event listeners and prepares all four tool components
+   * Safe to call multiple times - will only initialize once
+   */
+  init() {
+    // Prevent multiple initializations
+    if (this._initialized) {
+      console.log('CyberGuardHashTools: Already initialized, skipping');
+      return;
+    }
+    
+    console.log('CyberGuardHashTools: Initializing...');
+    
+    // Check if CryptoJS is available (Requirement 14.1)
+    if (typeof CryptoJS === 'undefined') {
+      console.error('CyberGuardHashTools: CryptoJS library not loaded');
+      this.displayCryptoJSError();
+      return;
+    }
+    
+    try {
+      this.setupHashGenerator();
+      this.setupPasswordAnalyzer();
+      this.setupHashIdentifier();
+      this.setupFileChecker();
+      
+      this._initialized = true;
+      console.log('CyberGuardHashTools: Initialization complete');
+    } catch (error) {
+      console.error('CyberGuardHashTools: Initialization error:', error);
+      this.displayInitializationError(error);
+    }
+  },
+  
+  /**
+   * Display error when CryptoJS library is unavailable (Requirement 14.1)
+   */
+  displayCryptoJSError() {
+    const container = document.getElementById('hash-tools');
+    if (!container) return;
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400';
+    errorDiv.innerHTML = `
+      <div class="flex items-center gap-2 mb-2">
+        <span class="material-symbols-outlined">error</span>
+        <strong>CryptoJS Library Unavailable</strong>
+      </div>
+      <p class="text-sm">The cryptographic library required for Hash Tools is not loaded. Please refresh the page or check your internet connection.</p>
+    `;
+    container.insertBefore(errorDiv, container.firstChild);
+  },
+  
+  /**
+   * Display initialization error
+   */
+  displayInitializationError(error) {
+    console.error('Initialization error details:', error);
+    const container = document.getElementById('hash-tools');
+    if (!container) return;
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400';
+    errorDiv.innerHTML = `
+      <div class="flex items-center gap-2 mb-2">
+        <span class="material-symbols-outlined">error</span>
+        <strong>Initialization Error</strong>
+      </div>
+      <p class="text-sm">Failed to initialize Hash Tools. Please refresh the page.</p>
+    `;
+    container.insertBefore(errorDiv, container.firstChild);
+  },
+  
+  /**
+   * Setup Multi-Hash Generator component
+   */
+  setupHashGenerator() {
+    const input = document.getElementById('ht-hash-input');
+    if (!input) return;
+    
+    // Debounced hash calculation
+    const calculateHashes = this.debounce(() => {
+      const text = input.value;
+      
+      if (!text) {
+        // Clear all hash fields
+        document.getElementById('ht-hash-md5').textContent = '';
+        document.getElementById('ht-hash-sha1').textContent = '';
+        document.getElementById('ht-hash-sha256').textContent = '';
+        document.getElementById('ht-hash-sha512').textContent = '';
+        return;
+      }
+      
+      try {
+        // Calculate all hashes (Requirement 14.2)
+        const md5 = CryptoJS.MD5(text).toString();
+        const sha1 = CryptoJS.SHA1(text).toString();
+        const sha256 = CryptoJS.SHA256(text).toString();
+        const sha512 = CryptoJS.SHA512(text).toString();
+        
+        // Display hashes
+        document.getElementById('ht-hash-md5').textContent = md5;
+        document.getElementById('ht-hash-sha1').textContent = sha1;
+        document.getElementById('ht-hash-sha256').textContent = sha256;
+        document.getElementById('ht-hash-sha512').textContent = sha512;
+      } catch (error) {
+        console.error('Hash calculation error:', error);
+        // Display error in hash fields (Requirement 14.2, 14.5)
+        const errorMsg = 'Error calculating hash';
+        document.getElementById('ht-hash-md5').textContent = errorMsg;
+        document.getElementById('ht-hash-sha1').textContent = errorMsg;
+        document.getElementById('ht-hash-sha256').textContent = errorMsg;
+        document.getElementById('ht-hash-sha512').textContent = errorMsg;
+        
+        // Apply error styling
+        ['ht-hash-md5', 'ht-hash-sha1', 'ht-hash-sha256', 'ht-hash-sha512'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.className = 'font-mono text-xs bg-slate-950/50 p-2.5 rounded-lg border border-red-500/30 text-red-400';
+        });
+      }
+    }, 150);
+    
+    input.addEventListener('input', calculateHashes);
+    
+    // Setup copy buttons
+    this.setupCopyButton('ht-copy-md5', 'ht-hash-md5');
+    this.setupCopyButton('ht-copy-sha1', 'ht-hash-sha1');
+    this.setupCopyButton('ht-copy-sha256', 'ht-hash-sha256');
+    this.setupCopyButton('ht-copy-sha512', 'ht-hash-sha512');
+  },
+  
+  /**
+   * Setup copy button functionality
+   */
+  setupCopyButton(buttonId, targetId) {
+    const button = document.getElementById(buttonId);
+    const target = document.getElementById(targetId);
+    
+    if (!button || !target) return;
+    
+    button.addEventListener('click', async () => {
+      const text = target.textContent;
+      if (!text) return;
+      
+      try {
+        await navigator.clipboard.writeText(text);
+        
+        // Visual feedback
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<span class="material-symbols-outlined text-[14px]">check</span> Copied!';
+        button.classList.add('text-green-400');
+        
+        setTimeout(() => {
+          button.innerHTML = originalHTML;
+          button.classList.remove('text-green-400');
+        }, 2000);
+      } catch (error) {
+        console.error('Clipboard error:', error);
+        // Display error feedback (Requirement 14.4, 14.5, 14.6)
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<span class="material-symbols-outlined text-[14px]">error</span> Failed';
+        button.classList.add('text-red-400');
+        
+        setTimeout(() => {
+          button.innerHTML = originalHTML;
+          button.classList.remove('text-red-400');
+        }, 2000);
+        
+        // Show user-friendly message
+        alert('Failed to copy to clipboard. Clipboard access may be denied. Please copy manually or check browser permissions.');
+      }
+    });
+  },
+  
+  /**
+   * Setup Password Analyzer component
+   */
+  setupPasswordAnalyzer() {
+    const input = document.getElementById('ht-password-input');
+    const toggle = document.getElementById('ht-password-toggle');
+    
+    if (!input) return;
+    
+    // Password visibility toggle
+    if (toggle) {
+      toggle.addEventListener('click', () => {
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        toggle.querySelector('.material-symbols-outlined').textContent = isPassword ? 'visibility_off' : 'visibility';
+      });
+    }
+    
+    // Debounced password analysis
+    const analyzePassword = this.debounce(() => {
+      const password = input.value;
+      
+      if (!password) {
+        this.resetPasswordAnalysis();
+        return;
+      }
+      
+      // Calculate entropy
+      const entropy = this.calculateEntropy(password);
+      
+      // Determine strength and bar color based on entropy ranges
+      // Requirements 3.8, 3.9, 3.10: red (0-35), yellow (36-59), green (60+)
+      let strength = 'WEAK';
+      let strengthColor = 'text-red-500';
+      let barColor = 'bg-red-500';
+      let barWidth = 0;
+      
+      if (entropy >= 80) {
+        strength = 'EXCELLENT';
+        strengthColor = 'text-green-400';
+        barColor = 'bg-green-400';
+        barWidth = 100;
+      } else if (entropy >= 60) {
+        strength = 'GOOD';
+        strengthColor = 'text-green-400';
+        barColor = 'bg-green-400';
+        barWidth = (entropy / 128) * 100;
+      } else if (entropy >= 36) {
+        strength = 'FAIR';
+        strengthColor = 'text-yellow-500';
+        barColor = 'bg-yellow-500';
+        barWidth = (entropy / 128) * 100;
+      } else {
+        strength = 'WEAK';
+        strengthColor = 'text-red-500';
+        barColor = 'bg-red-500';
+        barWidth = (entropy / 128) * 100;
+      }
+      
+      // Update UI
+      const progressBar = document.getElementById('ht-password-bar');
+      document.getElementById('ht-password-strength').textContent = strength;
+      document.getElementById('ht-password-strength').className = `text-xl font-bold ${strengthColor}`;
+      document.getElementById('ht-password-entropy').textContent = `${Math.round(entropy)} bits`;
+      
+      // Update progress bar width and color (Requirements 3.7, 3.8, 3.9, 3.10)
+      progressBar.style.width = `${barWidth}%`;
+      progressBar.className = `${barColor} h-full rounded-full transition-all duration-300`;
+      
+      // Update composition checks
+      this.updatePasswordChecks(password);
+    }, 150);
+    
+    input.addEventListener('input', analyzePassword);
+  },
+  
+  /**
+   * Calculate password entropy using Hartley formula
+   */
+  calculateEntropy(password) {
+    if (!password) return 0;
+    
+    const length = password.length;
+    let poolSize = 0;
+    
+    // Check character composition
+    if (/[a-z]/.test(password)) poolSize += 26; // lowercase
+    if (/[A-Z]/.test(password)) poolSize += 26; // uppercase
+    if (/[0-9]/.test(password)) poolSize += 10; // numbers
+    if (/[^a-zA-Z0-9]/.test(password)) poolSize += 32; // special symbols
+    
+    if (poolSize === 0) return 0;
+    
+    // E = log2(PoolSize^Length)
+    return length * Math.log2(poolSize);
+  },
+  
+  /**
+   * Update password composition checks
+   */
+  updatePasswordChecks(password) {
+    const hasNumbers = /[0-9]/.test(password);
+    const hasSpecial = /[^a-zA-Z0-9]/.test(password);
+    const hasMixed = /[a-z]/.test(password) && /[A-Z]/.test(password);
+    const isCommon = this.isCommonPassword(password);
+    
+    this.updateCheck('ht-check-numbers', hasNumbers);
+    this.updateCheck('ht-check-special', hasSpecial);
+    this.updateCheck('ht-check-mixed', hasMixed);
+    this.updateCheck('ht-check-common', !isCommon); // Inverted: good if NOT common
+  },
+  
+  /**
+   * Update individual check indicator
+   */
+  updateCheck(elementId, isPassing) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    const icon = element.querySelector('.material-symbols-outlined');
+    
+    if (isPassing) {
+      icon.textContent = 'check_circle';
+      element.className = 'flex items-center gap-1.5 text-green-400/80';
+    } else {
+      icon.textContent = 'cancel';
+      element.className = 'flex items-center gap-1.5 text-red-400/60';
+    }
+  },
+  
+  /**
+   * Check if password is in common passwords list
+   */
+  isCommonPassword(password) {
+    const commonPasswords = [
+      'password', '123456', '12345678', 'qwerty', 'abc123', 'monkey', '1234567', 'letmein',
+      'trustno1', 'dragon', 'baseball', 'iloveyou', 'master', 'sunshine', 'ashley', 'bailey',
+      'passw0rd', 'shadow', '123123', '654321', 'superman', 'qazwsx', 'michael', 'football',
+      'welcome', 'jesus', 'ninja', 'mustang', 'password1', '123456789', 'adobe123', 'admin',
+      'azerty', 'loveme', 'whatever', 'donald', 'batman', 'zaq1zaq1', 'Password', 'princess',
+      'starwars', 'solo', 'hello', 'freedom', 'charlie', 'aa123456', 'qwertyuiop', 'access',
+      'login', 'passw0rd', 'admin123', 'root', 'toor', 'pass', 'test', 'guest', 'oracle',
+      'changeme', 'welcome1', 'password123', '1q2w3e4r', 'qwerty123', 'abc123456', 'letmein123',
+      'password!', 'P@ssw0rd', 'P@ssword', 'Password1', 'Password123', 'Welcome1', 'Welcome123',
+      '1234', '12345', '123456', '1234567', '12345678', '123456789', '1234567890', 'password1234',
+      'qwerty12345', 'abc12345', 'password12345', 'admin1234', 'root1234', 'test1234', 'user1234',
+      'demo', 'demo123', 'sample', 'sample123', 'temp', 'temp123', 'default', 'default123',
+      'secret', 'secret123', 'private', 'private123', 'public', 'public123', 'system', 'system123'
+    ];
+    
+    return commonPasswords.includes(password.toLowerCase());
+  },
+  
+  /**
+   * Reset password analysis UI
+   */
+  resetPasswordAnalysis() {
+    const progressBar = document.getElementById('ht-password-bar');
+    document.getElementById('ht-password-strength').textContent = '--';
+    document.getElementById('ht-password-strength').className = 'text-xl font-bold text-slate-500';
+    document.getElementById('ht-password-entropy').textContent = '-- bits';
+    progressBar.style.width = '0%';
+    progressBar.className = 'bg-red-500 h-full rounded-full transition-all duration-300';
+    
+    // Reset all checks
+    ['ht-check-numbers', 'ht-check-special', 'ht-check-mixed', 'ht-check-common'].forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.querySelector('.material-symbols-outlined').textContent = 'cancel';
+        element.className = 'flex items-center gap-1.5 text-slate-500';
+      }
+    });
+  },
+  
+  /**
+   * Setup Smart Hash Identifier component
+   */
+  setupHashIdentifier() {
+    const input = document.getElementById('ht-identifier-input');
+    if (!input) return;
+    
+    // Use 50ms debounce for hash identifier (Requirement 13.3)
+    const identifyHash = this.debounce(() => {
+      const hash = input.value.trim();
+      
+      if (!hash) {
+        this.resetHashIdentifier();
+        return;
+      }
+      
+      // Validate hexadecimal
+      if (!/^[0-9a-fA-F]+$/.test(hash)) {
+        this.displayHashIdentification('Invalid Format', 'Hash must contain only hexadecimal characters (0-9, a-f, A-F).', 0);
+        return;
+      }
+      
+      // Identify based on length
+      const length = hash.length;
+      let algorithm = 'Unknown Algorithm';
+      let confidence = 0;
+      let reasoning = 'Hash length does not match known algorithms.';
+      
+      if (length === 32) {
+        algorithm = 'MD5';
+        confidence = 98;
+        reasoning = 'Confidence: 98% based on 32-character hexadecimal format.';
+      } else if (length === 40) {
+        algorithm = 'SHA-1';
+        confidence = 98;
+        reasoning = 'Confidence: 98% based on 40-character hexadecimal format.';
+      } else if (length === 64) {
+        algorithm = 'SHA-256';
+        confidence = 98;
+        reasoning = 'Confidence: 98% based on 64-character hexadecimal format.';
+      } else if (length === 128) {
+        algorithm = 'SHA-512';
+        confidence = 98;
+        reasoning = 'Confidence: 98% based on 128-character hexadecimal format.';
+      } else {
+        confidence = 10;
+      }
+      
+      this.displayHashIdentification(algorithm, reasoning, confidence);
+    }, 50); // 50ms for hash identifier (Requirement 13.3)
+    
+    input.addEventListener('input', identifyHash);
+  },
+  
+  /**
+   * Display hash identification result
+   */
+  displayHashIdentification(algorithm, reasoning, confidence) {
+    const resultEl = document.getElementById('ht-identifier-result');
+    const reasoningEl = document.getElementById('ht-identifier-reasoning');
+    
+    if (!resultEl || !reasoningEl) return;
+    
+    resultEl.textContent = algorithm;
+    reasoningEl.textContent = reasoning;
+    
+    // Update styling based on confidence
+    if (confidence >= 90) {
+      resultEl.className = 'px-6 py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-white font-bold text-sm shadow-[0_0_15px_rgba(124,58,237,0.4)]';
+    } else if (confidence >= 50) {
+      resultEl.className = 'px-6 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 font-bold text-sm';
+    } else {
+      resultEl.className = 'px-6 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-400 font-bold text-sm';
+    }
+  },
+  
+  /**
+   * Reset hash identifier UI
+   */
+  resetHashIdentifier() {
+    const resultEl = document.getElementById('ht-identifier-result');
+    const reasoningEl = document.getElementById('ht-identifier-reasoning');
+    
+    if (resultEl) {
+      resultEl.textContent = 'Awaiting Input';
+      resultEl.className = 'px-6 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-500 font-bold text-sm';
+    }
+    
+    if (reasoningEl) {
+      reasoningEl.textContent = 'Enter a hash to identify its algorithm type.';
+    }
+  },
+  
+  /**
+   * Setup File Integrity Checker component
+   */
+  setupFileChecker() {
+    const dropzone = document.getElementById('ht-file-dropzone');
+    const fileInput = document.getElementById('ht-file-input');
+    const expectedInput = document.getElementById('ht-file-expected');
+    
+    if (!dropzone || !fileInput) return;
+    
+    // Click to browse
+    dropzone.addEventListener('click', () => fileInput.click());
+    
+    // Keyboard navigation support (Requirement 15.1)
+    dropzone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+    
+    // Drag and drop
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('border-cyan-500/60', 'bg-slate-950');
+    });
+    
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('border-cyan-500/60', 'bg-slate-950');
+    });
+    
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('border-cyan-500/60', 'bg-slate-950');
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        this.processFile(files[0]);
+      }
+    });
+    
+    // File input change
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        this.processFile(e.target.files[0]);
+      }
+    });
+    
+    // Expected hash comparison
+    if (expectedInput) {
+      expectedInput.addEventListener('input', () => {
+        this.compareHashes();
+      });
+    }
+  },
+  
+  /**
+   * Process uploaded file
+   */
+  processFile(file) {
+    const maxSize = 100 * 1024 * 1024; // 100MB
+    const largeFileThreshold = 10 * 1024 * 1024; // 10MB (Requirement 13.4)
+    
+    if (file.size > maxSize) {
+      this.displayFileStatus('error', 'File too large. Maximum size is 100MB.');
+      return;
+    }
+    
+    // Show progress feedback for large files (Requirement 13.4)
+    if (file.size > largeFileThreshold) {
+      this.displayFileStatus('loading', `Processing large file (${(file.size / 1024 / 1024).toFixed(1)}MB)...`);
+    } else {
+      this.displayFileStatus('loading', 'Processing file...');
+    }
+    
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      try {
+        const wordArray = CryptoJS.lib.WordArray.create(e.target.result);
+        const hash = CryptoJS.SHA256(wordArray).toString();
+        
+        document.getElementById('ht-file-hash').textContent = hash;
+        document.getElementById('ht-file-hash').className = 'font-mono text-[10px] bg-slate-950/50 p-2.5 rounded-lg border border-white/5 text-cyan-400';
+        
+        this.compareHashes();
+      } catch (error) {
+        console.error('File hashing error:', error);
+        // Display specific error message (Requirement 14.3, 14.5, 14.6)
+        this.displayFileStatus('error', `Failed to calculate hash: ${error.message || 'Unknown error'}`);
+        document.getElementById('ht-file-hash').textContent = 'Error processing file';
+        document.getElementById('ht-file-hash').className = 'font-mono text-[10px] bg-slate-950/50 p-2.5 rounded-lg border border-red-500/30 text-red-400';
+      }
+    };
+    
+    // Progress monitoring for large files (Requirement 13.4)
+    if (file.size > largeFileThreshold) {
+      reader.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = Math.round((e.loaded / e.total) * 100);
+          this.displayFileStatus('loading', `Processing: ${percentComplete}%`);
+        }
+      };
+    }
+    
+    reader.onerror = () => {
+      // Display specific error message (Requirement 14.3, 14.5, 14.6)
+      console.error('File reading error:', reader.error);
+      this.displayFileStatus('error', `Failed to read file: ${reader.error?.message || 'Unknown error'}`);
+    };
+    
+    reader.readAsArrayBuffer(file);
+  },
+  
+  /**
+   * Compare calculated and expected hashes
+   */
+  compareHashes() {
+    const calculated = document.getElementById('ht-file-hash').textContent.trim();
+    const expected = document.getElementById('ht-file-expected').value.trim();
+    
+    if (!calculated || calculated === 'Select a file to compute hash...') {
+      this.displayFileStatus('info', 'Awaiting Input');
+      return;
+    }
+    
+    if (!expected) {
+      this.displayFileStatus('info', 'Enter expected hash to compare');
+      return;
+    }
+    
+    // Case-insensitive comparison
+    if (calculated.toLowerCase() === expected.toLowerCase()) {
+      this.displayFileStatus('success', 'Hashes Match - File Integrity Verified');
+    } else {
+      this.displayFileStatus('error', 'Hashes Do Not Match - File May Be Corrupted');
+    }
+  },
+  
+  /**
+   * Display file status message
+   */
+  displayFileStatus(type, message) {
+    const statusEl = document.getElementById('ht-file-status');
+    if (!statusEl) return;
+    
+    let icon = 'info';
+    let className = 'flex items-center gap-1.5 mt-1 text-[10px] font-bold text-slate-500 uppercase tracking-wide';
+    
+    switch (type) {
+      case 'success':
+        icon = 'check_circle';
+        className = 'flex items-center gap-1.5 mt-1 text-[10px] font-bold text-green-400 uppercase tracking-wide';
+        break;
+      case 'error':
+        icon = 'cancel';
+        className = 'flex items-center gap-1.5 mt-1 text-[10px] font-bold text-red-400 uppercase tracking-wide';
+        break;
+      case 'loading':
+        icon = 'progress_activity';
+        className = 'flex items-center gap-1.5 mt-1 text-[10px] font-bold text-cyan-400 uppercase tracking-wide';
+        break;
+      default:
+        icon = 'info';
+    }
+    
+    statusEl.innerHTML = `<span class="material-symbols-outlined text-[14px]">${icon}</span> ${message}`;
+    statusEl.className = className;
+  },
+  
+  /**
+   * Debounce utility function
+   */
+  debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func.apply(this, args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+};
+
 // ===== SHODAN-BASED PORT SCANNER =====
 // Professional port scanning using Shodan API for comprehensive network intelligence
 
@@ -932,87 +1568,9 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   sidebarOverlay.addEventListener("click", toggleMobileSidebar);
 
-  // Optimized Tab Switching - Simple and Smooth
-  tabButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const tabId = button.dataset.tab;
-      const currentPane = document.querySelector(".tab-pane.active");
-      const targetPane = document.getElementById(tabId);
-
-      // Don't animate if clicking the same tab
-      if (currentPane === targetPane) return;
-
-      // Simple, fast transition
-      if (currentPane && targetPane) {
-        // Quick fade out
-        currentPane.style.opacity = "0";
-        currentPane.style.transform = "translateX(-20px)";
-
-        // Switch after short delay
-        setTimeout(() => {
-          // Update states
-          tabButtons.forEach((btn) => btn.classList.remove("active"));
-          button.classList.add("active");
-
-          tabPanes.forEach((pane) => {
-            pane.classList.add("hidden");
-            pane.classList.remove("active");
-          });
-          targetPane.classList.remove("hidden");
-          targetPane.classList.add("active");
-
-          // Update selection UI for new tab
-          if (typeof SelectionManager !== 'undefined' && SelectionManager.updateSelectionCount) {
-            SelectionManager.updateSelectionCount();
-          }
-          if (typeof SelectAllToggle !== 'undefined' && SelectAllToggle.updateButtonLabel) {
-            SelectAllToggle.updateButtonLabel();
-          }
-
-          // Quick fade in
-          targetPane.style.opacity = "0";
-          targetPane.style.transform = "translateX(20px)";
-
-          // Force reflow
-          targetPane.offsetHeight;
-
-          // Animate in
-          targetPane.style.transition = "all 0.2s ease-out";
-          targetPane.style.opacity = "1";
-          targetPane.style.transform = "translateX(0)";
-
-          // Clean up after animation
-          setTimeout(() => {
-            targetPane.style.transition = "";
-            currentPane.style.transition = "";
-            currentPane.style.opacity = "";
-            currentPane.style.transform = "";
-            targetPane.style.opacity = "";
-            targetPane.style.transform = "";
-          }, 200);
-        }, 100);
-      } else {
-        // Simple fallback
-        tabButtons.forEach((btn) => btn.classList.remove("active"));
-        button.classList.add("active");
-
-        tabPanes.forEach((pane) => {
-          pane.classList.add("hidden");
-          pane.classList.remove("active");
-        });
-        targetPane.classList.remove("hidden");
-        targetPane.classList.add("active");
-
-        // Update selection UI for new tab
-        if (typeof SelectionManager !== 'undefined' && SelectionManager.updateSelectionCount) {
-          SelectionManager.updateSelectionCount();
-        }
-        if (typeof SelectAllToggle !== 'undefined' && SelectAllToggle.updateButtonLabel) {
-          SelectAllToggle.updateButtonLabel();
-        }
-      }
-    });
-  });
+  // NOTE: Tab switching is now handled by DashboardTabManager (dashboard-tab-manager.js)
+  // The old tab switching code has been removed to prevent conflicts
+  // All tab switching logic is centralized in the tab manager for better maintainability
 
   // --- API Key Management ---
   saveVtKeyBtn.addEventListener("click", () => {
@@ -7611,189 +8169,6 @@ document.addEventListener("DOMContentLoaded", () => {
         "danger"
       );
     }
-  }
-
-  document.getElementById("hash-string-btn").addEventListener("click", () => {
-    if (isRunning) return;
-    const i = document.getElementById("hash-string-input").value;
-    if (!i) {
-      alert("Please enter text.");
-      return;
-    }
-
-    isRunning = true;
-    showProgressBar();
-    disableAllButtons();
-    setButtonLoading("hash-string-btn", true);
-    updateStatus();
-
-    setTimeout(() => {
-      logResult(
-        new Date(),
-        "Hash Generator",
-        `✅ Hashes for "${i}":\n  MD5:    ${CryptoJS.MD5(
-          i
-        )}\n  SHA-256: ${CryptoJS.SHA256(i)}`,
-        "success"
-      );
-
-      isRunning = false;
-      hideProgressBar();
-      enableAllButtons();
-      setButtonLoading("hash-string-btn", false);
-      updateStatus();
-    }, 500);
-  });
-  document.getElementById("hash-file-input").addEventListener("change", (e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-    if (isRunning) return;
-
-    isRunning = true;
-    showProgressBar();
-    disableAllButtons();
-    updateStatus();
-
-    const r = new FileReader();
-    r.onload = (ev) => {
-      setTimeout(() => {
-        const d = CryptoJS.lib.WordArray.create(ev.target.result);
-        logResult(
-          new Date(),
-          "File Hasher",
-          `✅ Hashes for "${f.name}":\n  MD5:    ${CryptoJS.MD5(
-            d
-          )}\n  SHA-256: ${CryptoJS.SHA256(d)}`,
-          "success"
-        );
-
-        isRunning = false;
-        hideProgressBar();
-        enableAllButtons();
-        updateStatus();
-      }, 500);
-    };
-    r.readAsArrayBuffer(f);
-  });
-  document.getElementById("pw-analyze-btn").addEventListener("click", () => {
-    if (isRunning) return;
-    const pwd = document.getElementById("pw-input").value || "";
-    if (!pwd) {
-      alert("Please enter a password.");
-      return;
-    }
-
-    isRunning = true;
-    showProgressBar();
-    disableAllButtons();
-    setButtonLoading("pw-analyze-btn", true);
-    updateStatus();
-
-    setTimeout(() => {
-      const report = analyzePassword(pwd);
-      const lines = [
-        `Strength: ${report.strength} (${report.score}/4)`,
-        `Length: ${pwd.length}`,
-        `Estimated entropy: ${report.entropyBits.toFixed(1)} bits`,
-        report.flags.length
-          ? `Issues:\n - ${report.flags.join("\n - ")}`
-          : "No major issues detected.",
-      ];
-      const status =
-        report.score >= 3
-          ? report.score === 4
-            ? "success"
-            : "warning"
-          : "danger";
-      logResult(
-        new Date(),
-        "Password Analyzer",
-        (report.unsafe ? "🚨 " : "🔎 ") + lines.join("\n"),
-        status
-      );
-
-      isRunning = false;
-      hideProgressBar();
-      enableAllButtons();
-      setButtonLoading("pw-analyze-btn", false);
-      updateStatus();
-    }, 500);
-  });
-
-  const pwToggleBtn = document.getElementById("pw-toggle");
-  if (pwToggleBtn) {
-    pwToggleBtn.addEventListener("click", () => {
-      const input = document.getElementById("pw-input");
-      if (!input) return;
-      const isHidden = input.type === "password";
-      input.type = isHidden ? "text" : "password";
-      pwToggleBtn.textContent = isHidden ? " Hide" : " Show";
-    });
-  }
-
-  function analyzePassword(pwd) {
-    const flags = [];
-    const lower = /[a-z]/.test(pwd);
-    const upper = /[A-Z]/.test(pwd);
-    const digit = /[0-9]/.test(pwd);
-    const symbol = /[^A-Za-z0-9]/.test(pwd);
-
-    // Common patterns and weak choices
-    const common = [
-      "password",
-      "123456",
-      "qwerty",
-      "letmein",
-      "admin",
-      "welcome",
-      "iloveyou",
-      "monkey",
-      "dragon",
-      "football",
-    ];
-    const lowerPwd = pwd.toLowerCase();
-    const isCommon = common.some((c) => lowerPwd.includes(c));
-    if (isCommon) flags.push("Contains common word/pattern");
-
-    if (/(0123|1234|2345|3456|4567|5678|6789)/.test(pwd))
-      flags.push("Sequential numbers");
-    if (/(abcd|qwer|asdf|zxcv)/i.test(pwd)) flags.push("Keyboard sequence");
-    if (/^(.)\1{3,}$/.test(pwd)) flags.push("Repeated single character");
-    if (/(.)\1{2,}/.test(pwd)) flags.push("Repeated characters");
-
-    // Character set size estimate for entropy
-    let charset = 0;
-    if (lower) charset += 26;
-    if (upper) charset += 26;
-    if (digit) charset += 10;
-    if (symbol) charset += 33; // rough printable symbols count
-    if (charset === 0) charset = 1;
-    const entropyBits = Math.log2(charset) * pwd.length;
-
-    // Score 0-4
-    let score = 0;
-    if (pwd.length >= 8) score++;
-    if (pwd.length >= 12) score++;
-    if ((lower && upper) || (digit && symbol)) score++;
-    if (lower && upper && digit && symbol && pwd.length >= 14) score++;
-    if (isCommon || entropyBits < 35) score = Math.max(0, score - 1);
-
-    if (pwd.length < 8) flags.push("Too short (min 8 recommended)");
-    if (!(lower && upper)) flags.push("Use both uppercase and lowercase");
-    if (!digit) flags.push("Add numbers");
-    if (!symbol) flags.push("Add symbols");
-    if (pwd.length < 14) flags.push("Increase length (14+ recommended)");
-
-    const strength =
-      score >= 4
-        ? "Strong"
-        : score >= 3
-        ? "Good"
-        : score >= 2
-        ? "Weak"
-        : "Very Weak";
-    const unsafe = isCommon || entropyBits < 28 || pwd.length < 8;
-    return { score, strength, entropyBits, flags, unsafe };
   }
 
   // --- VirusTotal Tool Implementations ---

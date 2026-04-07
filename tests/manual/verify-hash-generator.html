@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hash Generator Manual Verification - Task 2.1</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+        h1 {
+            color: #7c3aed;
+            border-bottom: 2px solid #7c3aed;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            background: #16213e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #06b6d4;
+        }
+        .test-title {
+            color: #06b6d4;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            background: #0f1419;
+            border: 1px solid #333;
+            color: #eee;
+            font-family: 'Courier New', monospace;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .hash-output {
+            background: #0f1419;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            border: 1px solid #333;
+        }
+        .hash-label {
+            color: #7c3aed;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .status.pass {
+            background: #10b981;
+            color: white;
+        }
+        .status.info {
+            background: #3b82f6;
+            color: white;
+        }
+        .metric {
+            color: #06b6d4;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔐 Hash Generator Manual Verification</h1>
+    <p><strong>Task:</strong> 2.1 Create hash generation function using CryptoJS library</p>
+    <p><strong>Spec:</strong> professional-hash-tools</p>
+
+    <div class="test-section">
+        <div class="test-title">Test 1: Real-time Hash Calculation</div>
+        <p>Type in the textarea below. Hashes will update after 150ms (debounced).</p>
+        <textarea id="test-input" placeholder="Enter text to generate cryptographic hashes..."></textarea>
+        
+        <div class="hash-label">MD5 (32 hex chars):</div>
+        <div class="hash-output" id="md5-output">--</div>
+        
+        <div class="hash-label">SHA-1 (40 hex chars):</div>
+        <div class="hash-output" id="sha1-output">--</div>
+        
+        <div class="hash-label">SHA-256 (64 hex chars):</div>
+        <div class="hash-output" id="sha256-output">--</div>
+        
+        <div class="hash-label">SHA-512 (128 hex chars):</div>
+        <div class="hash-output" id="sha512-output">--</div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">Test 2: Performance Verification</div>
+        <p>Click the button to test hash calculation performance with 10KB input.</p>
+        <button onclick="testPerformance()" style="padding: 10px 20px; background: #7c3aed; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Run Performance Test
+        </button>
+        <div id="performance-result" style="margin-top: 10px;"></div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">Test 3: Empty Input Handling</div>
+        <p>Clear the input above and verify that hash fields clear (show "--").</p>
+        <div id="empty-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">Test 4: Known Hash Values</div>
+        <p>Verify these known hash values:</p>
+        <ul>
+            <li><strong>Input:</strong> "test"</li>
+            <li><strong>MD5:</strong> <code>098f6bcd4621d373cade4e832627b4f6</code></li>
+            <li><strong>SHA-256:</strong> <code>9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08</code></li>
+        </ul>
+        <button onclick="testKnownValues()" style="padding: 10px 20px; background: #06b6d4; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Verify Known Values
+        </button>
+        <div id="known-values-result" style="margin-top: 10px;"></div>
+    </div>
+
+    <script>
+        // Debounce utility
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func.apply(this, args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Hash calculation function
+        function calculateHashes() {
+            const input = document.getElementById('test-input');
+            const text = input.value;
+
+            if (!text) {
+                // Clear all hash fields
+                document.getElementById('md5-output').textContent = '--';
+                document.getElementById('sha1-output').textContent = '--';
+                document.getElementById('sha256-output').textContent = '--';
+                document.getElementById('sha512-output').textContent = '--';
+                document.getElementById('empty-test-result').innerHTML = '<span class="status pass">✓ Empty input handling works correctly</span>';
+                return;
+            }
+
+            try {
+                // Calculate all hashes
+                const md5 = CryptoJS.MD5(text).toString();
+                const sha1 = CryptoJS.SHA1(text).toString();
+                const sha256 = CryptoJS.SHA256(text).toString();
+                const sha512 = CryptoJS.SHA512(text).toString();
+
+                // Display hashes
+                document.getElementById('md5-output').textContent = md5;
+                document.getElementById('sha1-output').textContent = sha1;
+                document.getElementById('sha256-output').textContent = sha256;
+                document.getElementById('sha512-output').textContent = sha512;
+
+                // Verify hexadecimal format
+                const hexRegex = /^[0-9a-f]+$/;
+                const md5Valid = hexRegex.test(md5) && md5.length === 32;
+                const sha1Valid = hexRegex.test(sha1) && sha1.length === 40;
+                const sha256Valid = hexRegex.test(sha256) && sha256.length === 64;
+                const sha512Valid = hexRegex.test(sha512) && sha512.length === 128;
+
+                if (md5Valid && sha1Valid && sha256Valid && sha512Valid) {
+                    document.getElementById('empty-test-result').innerHTML = '<span class="status pass">✓ All hashes in correct hexadecimal format</span>';
+                }
+            } catch (error) {
+                console.error('Hash calculation error:', error);
+            }
+        }
+
+        // Setup debounced input listener
+        const debouncedCalculate = debounce(calculateHashes, 150);
+        document.getElementById('test-input').addEventListener('input', debouncedCalculate);
+
+        // Performance test
+        function testPerformance() {
+            const input = 'a'.repeat(10000); // 10KB
+            const startTime = performance.now();
+
+            CryptoJS.MD5(input).toString();
+            CryptoJS.SHA1(input).toString();
+            CryptoJS.SHA256(input).toString();
+            CryptoJS.SHA512(input).toString();
+
+            const endTime = performance.now();
+            const duration = endTime - startTime;
+
+            const resultDiv = document.getElementById('performance-result');
+            if (duration < 100) {
+                resultDiv.innerHTML = `<span class="status pass">✓ PASS</span> <span class="metric">Duration: ${duration.toFixed(2)}ms</span> (Target: < 100ms)`;
+            } else {
+                resultDiv.innerHTML = `<span class="status" style="background: #ef4444;">✗ FAIL</span> <span class="metric">Duration: ${duration.toFixed(2)}ms</span> (Target: < 100ms)`;
+            }
+        }
+
+        // Known values test
+        function testKnownValues() {
+            const input = 'test';
+            const md5 = CryptoJS.MD5(input).toString();
+            const sha256 = CryptoJS.SHA256(input).toString();
+
+            const expectedMd5 = '098f6bcd4621d373cade4e832627b4f6';
+            const expectedSha256 = '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08';
+
+            const resultDiv = document.getElementById('known-values-result');
+            let html = '';
+
+            if (md5 === expectedMd5) {
+                html += '<span class="status pass">✓ MD5 matches expected value</span><br>';
+            } else {
+                html += '<span class="status" style="background: #ef4444;">✗ MD5 mismatch</span><br>';
+            }
+
+            if (sha256 === expectedSha256) {
+                html += '<span class="status pass">✓ SHA-256 matches expected value</span>';
+            } else {
+                html += '<span class="status" style="background: #ef4444;">✗ SHA-256 mismatch</span>';
+            }
+
+            resultDiv.innerHTML = html;
+        }
+
+        // Auto-run known values test on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('performance-result').innerHTML = '<span class="status info">Click button to run test</span>';
+            }, 100);
+        });
+    </script>
+</body>
+</html>

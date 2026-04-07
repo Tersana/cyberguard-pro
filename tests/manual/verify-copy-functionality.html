@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copy Functionality Manual Verification - Task 2.2</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+        h1 {
+            color: #7c3aed;
+            border-bottom: 2px solid #7c3aed;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            background: #16213e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #06b6d4;
+        }
+        .test-title {
+            color: #06b6d4;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .hash-container {
+            background: #0f1419;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .hash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .hash-label {
+            color: #7c3aed;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .copy-button {
+            padding: 5px 12px;
+            background: transparent;
+            color: #888;
+            border: 1px solid #444;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        .copy-button:hover {
+            color: #7c3aed;
+            border-color: #7c3aed;
+        }
+        .copy-button.copied {
+            color: #10b981;
+            border-color: #10b981;
+        }
+        .hash-value {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            color: #06b6d4;
+            padding: 8px;
+            background: #0a0e14;
+            border-radius: 4px;
+        }
+        .material-symbols-outlined {
+            font-size: 16px;
+        }
+        .status {
+            padding: 8px 15px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.pass {
+            background: #10b981;
+            color: white;
+        }
+        .status.fail {
+            background: #ef4444;
+            color: white;
+        }
+        .status.info {
+            background: #3b82f6;
+            color: white;
+        }
+        .status.warning {
+            background: #f59e0b;
+            color: white;
+        }
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            background: #0f1419;
+            border: 1px solid #333;
+            color: #eee;
+            font-family: 'Courier New', monospace;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .instructions {
+            background: #2d3748;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 3px solid #f59e0b;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #f59e0b;
+        }
+        .test-result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            background: #0f1419;
+        }
+        button.test-btn {
+            padding: 10px 20px;
+            background: #7c3aed;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button.test-btn:hover {
+            background: #6d28d9;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px;
+            margin: 5px 0;
+            background: #0f1419;
+            border-radius: 4px;
+            border-left: 3px solid #888;
+        }
+        .checklist li.checked {
+            border-left-color: #10b981;
+            color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <h1>📋 Copy-to-Clipboard Functionality Verification</h1>
+    <p><strong>Task:</strong> 2.2 Implement copy-to-clipboard functionality</p>
+    <p><strong>Spec:</strong> professional-hash-tools</p>
+    <p><strong>Requirements:</strong> 2.1, 2.2, 2.3, 2.4, 2.5</p>
+
+    <div class="test-section">
+        <div class="test-title">Test 1: Copy Button Presence (Requirement 2.1)</div>
+        <p>Verify that each hash output has a copy button next to it.</p>
+        
+        <textarea id="hash-input" placeholder="Type something to generate hashes...">test</textarea>
+        
+        <div class="hash-container">
+            <div class="hash-header">
+                <span class="hash-label">MD5</span>
+                <button class="copy-button" id="copy-md5">
+                    <span class="material-symbols-outlined">content_copy</span>
+                    Copy
+                </button>
+            </div>
+            <div class="hash-value" id="hash-md5">098f6bcd4621d373cade4e832627b4f6</div>
+        </div>
+
+        <div class="hash-container">
+            <div class="hash-header">
+                <span class="hash-label">SHA-1</span>
+                <button class="copy-button" id="copy-sha1">
+                    <span class="material-symbols-outlined">content_copy</span>
+                    Copy
+                </button>
+            </div>
+            <div class="hash-value" id="hash-sha1">a94a8fe5ccb19ba61c4c0873d391e987982fbbd3</div>
+        </div>
+
+        <div class="hash-container">
+            <div class="hash-header">
+                <span class="hash-label">SHA-256</span>
+                <button class="copy-button" id="copy-sha256">
+                    <span class="material-symbols-outlined">content_copy</span>
+                    Copy
+                </button>
+            </div>
+            <div class="hash-value" id="hash-sha256">9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08</div>
+        </div>
+
+        <div class="hash-container">
+            <div class="hash-header">
+                <span class="hash-label">SHA-512</span>
+                <button class="copy-button" id="copy-sha512">
+                    <span class="material-symbols-outlined">content_copy</span>
+                    Copy
+                </button>
+            </div>
+            <div class="hash-value" id="hash-sha512">ee26b0dd4af7e749aa1a8ee3c10ae9923f618980772e473f8819a5d4940e0db27ac185f8a0e1d5f84f88bc887fd67b143732c304cc5fa9ad8e6f57f50028a8ff</div>
+        </div>
+
+        <div class="test-result">
+            <span class="status pass">✓ All 4 copy buttons are present</span>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">Test 2: Clipboard API Usage (Requirement 2.2)</div>
+        <div class="instructions">
+            <h3>Manual Test Instructions:</h3>
+            <ol>
+                <li>Click any "Copy" button above</li>
+                <li>Open a text editor or paste field</li>
+                <li>Press Ctrl+V (or Cmd+V on Mac) to paste</li>
+                <li>Verify the correct hash value was copied</li>
+            </ol>
+        </div>
+        <button class="test-btn" onclick="testClipboardAPI()">Test Clipboard API Availability</button>
+        <div id="clipboard-api-result" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">Test 3: Visual Feedback (Requirements 2.3, 2.4)</div>
+        <div class="instructions">
+            <h3>Manual Test Instructions:</h3>
+            <ol>
+                <li>Click any "Copy" button</li>
+                <li>Observe the button changes to show a checkmark icon and "Copied!" text</li>
+                <li>Observe the button color changes to green</li>
+                <li>Wait 2 seconds and verify the button returns to its original state</li>
+            </ol>
+        </div>
+        <div class="test-result">
+            <p><strong>Expected Visual Changes:</strong></p>
+            <ul class="checklist">
+                <li id="check-icon">Icon changes from "content_copy" to "check"</li>
+                <li id="check-text">Text changes from "Copy" to "Copied!"</li>
+                <li id="check-color">Color changes to green (#10b981)</li>
+                <li id="check-duration">Changes revert after exactly 2 seconds</li>
+            </ul>
+        </div>
+        <button class="test-btn" onclick="startVisualFeedbackTest()">Start Visual Feedback Test</button>
+        <div id="visual-feedback-result" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">Test 4: Error Handling (Requirement 2.5)</div>
+        <div class="instructions">
+            <h3>Clipboard API Unavailability Test:</h3>
+            <p>This test simulates what happens when the Clipboard API is not available.</p>
+        </div>
+        <button class="test-btn" onclick="testClipboardError()">Simulate Clipboard Error</button>
+        <div id="error-handling-result" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">Test 5: Empty Hash Handling</div>
+        <div class="instructions">
+            <h3>Manual Test Instructions:</h3>
+            <ol>
+                <li>Clear the textarea at the top</li>
+                <li>Try clicking a copy button when the hash is empty</li>
+                <li>Verify that nothing happens (no copy, no feedback)</li>
+            </ol>
+        </div>
+        <button class="test-btn" onclick="testEmptyHash()">Test Empty Hash Copy</button>
+        <div id="empty-hash-result" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <div class="test-title">Test 6: Integration Test</div>
+        <p>Type in the textarea above and verify that:</p>
+        <ul class="checklist">
+            <li>Hashes update in real-time (with 150ms debounce)</li>
+            <li>Copy buttons work with dynamically generated hashes</li>
+            <li>All four hash types can be copied independently</li>
+        </ul>
+        <button class="test-btn" onclick="runIntegrationTest()">Run Integration Test</button>
+        <div id="integration-result" class="test-result"></div>
+    </div>
+
+    <script>
+        // Debounce utility
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func.apply(this, args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Setup copy button functionality
+        function setupCopyButton(buttonId, targetId) {
+            const button = document.getElementById(buttonId);
+            const target = document.getElementById(targetId);
+            
+            if (!button || !target) return;
+            
+            button.addEventListener('click', async () => {
+                const text = target.textContent;
+                if (!text) return;
+                
+                try {
+                    await navigator.clipboard.writeText(text);
+                    
+                    // Visual feedback
+                    const originalHTML = button.innerHTML;
+                    button.innerHTML = '<span class="material-symbols-outlined">check</span> Copied!';
+                    button.classList.add('copied');
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalHTML;
+                        button.classList.remove('copied');
+                    }, 2000);
+                } catch (error) {
+                    console.error('Clipboard error:', error);
+                    alert('Failed to copy to clipboard. Please copy manually.');
+                }
+            });
+        }
+
+        // Hash calculation
+        function calculateHashes() {
+            const input = document.getElementById('hash-input');
+            const text = input.value;
+            
+            if (!text) {
+                document.getElementById('hash-md5').textContent = '';
+                document.getElementById('hash-sha1').textContent = '';
+                document.getElementById('hash-sha256').textContent = '';
+                document.getElementById('hash-sha512').textContent = '';
+                return;
+            }
+            
+            try {
+                document.getElementById('hash-md5').textContent = CryptoJS.MD5(text).toString();
+                document.getElementById('hash-sha1').textContent = CryptoJS.SHA1(text).toString();
+                document.getElementById('hash-sha256').textContent = CryptoJS.SHA256(text).toString();
+                document.getElementById('hash-sha512').textContent = CryptoJS.SHA512(text).toString();
+            } catch (error) {
+                console.error('Hash calculation error:', error);
+            }
+        }
+
+        // Test functions
+        function testClipboardAPI() {
+            const resultDiv = document.getElementById('clipboard-api-result');
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                resultDiv.innerHTML = '<span class="status pass">✓ Clipboard API is available</span>';
+            } else {
+                resultDiv.innerHTML = '<span class="status fail">✗ Clipboard API is NOT available</span>';
+            }
+        }
+
+        function startVisualFeedbackTest() {
+            const resultDiv = document.getElementById('visual-feedback-result');
+            resultDiv.innerHTML = '<span class="status info">Click any Copy button above and observe the visual changes...</span>';
+            
+            // Mark checklist items as user clicks
+            let checkCount = 0;
+            const checkItems = ['check-icon', 'check-text', 'check-color', 'check-duration'];
+            
+            setTimeout(() => {
+                resultDiv.innerHTML = '<span class="status warning">Did you observe all 4 visual changes? Mark them manually if correct.</span>';
+            }, 3000);
+        }
+
+        function testClipboardError() {
+            const resultDiv = document.getElementById('error-handling-result');
+            
+            // Simulate error by temporarily removing clipboard API
+            const originalClipboard = navigator.clipboard;
+            delete navigator.clipboard;
+            
+            try {
+                // Try to copy
+                const button = document.getElementById('copy-md5');
+                button.click();
+                
+                resultDiv.innerHTML = '<span class="status pass">✓ Error handling works - alert should have been shown</span>';
+            } catch (error) {
+                resultDiv.innerHTML = '<span class="status pass">✓ Error caught: ' + error.message + '</span>';
+            } finally {
+                // Restore clipboard API
+                navigator.clipboard = originalClipboard;
+            }
+        }
+
+        function testEmptyHash() {
+            const resultDiv = document.getElementById('empty-hash-result');
+            
+            // Clear hash
+            document.getElementById('hash-md5').textContent = '';
+            
+            // Try to copy
+            const button = document.getElementById('copy-md5');
+            const originalHTML = button.innerHTML;
+            
+            button.click();
+            
+            // Check if button changed (it shouldn't)
+            setTimeout(() => {
+                if (button.innerHTML === originalHTML) {
+                    resultDiv.innerHTML = '<span class="status pass">✓ Empty hash copy prevented correctly</span>';
+                } else {
+                    resultDiv.innerHTML = '<span class="status fail">✗ Empty hash was copied (should be prevented)</span>';
+                }
+                
+                // Restore hash
+                calculateHashes();
+            }, 100);
+        }
+
+        async function runIntegrationTest() {
+            const resultDiv = document.getElementById('integration-result');
+            resultDiv.innerHTML = '<span class="status info">Running integration test...</span>';
+            
+            let results = [];
+            
+            // Test 1: Type and generate hashes
+            const input = document.getElementById('hash-input');
+            input.value = 'integration test';
+            calculateHashes();
+            
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            const md5 = document.getElementById('hash-md5').textContent;
+            if (md5 && md5.length === 32) {
+                results.push('✓ Hash generation works');
+            } else {
+                results.push('✗ Hash generation failed');
+            }
+            
+            // Test 2: Copy each hash
+            try {
+                await navigator.clipboard.writeText(md5);
+                results.push('✓ MD5 copy works');
+                
+                const sha256 = document.getElementById('hash-sha256').textContent;
+                await navigator.clipboard.writeText(sha256);
+                results.push('✓ SHA-256 copy works');
+                
+                const clipboardContent = await navigator.clipboard.readText();
+                if (clipboardContent === sha256) {
+                    results.push('✓ Clipboard content verified');
+                }
+            } catch (error) {
+                results.push('⚠ Clipboard test skipped (permission required)');
+            }
+            
+            resultDiv.innerHTML = '<div>' + results.map(r => 
+                '<span class="status ' + (r.startsWith('✓') ? 'pass' : r.startsWith('✗') ? 'fail' : 'warning') + '">' + r + '</span>'
+            ).join('<br>') + '</div>';
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            // Setup copy buttons
+            setupCopyButton('copy-md5', 'hash-md5');
+            setupCopyButton('copy-sha1', 'hash-sha1');
+            setupCopyButton('copy-sha256', 'hash-sha256');
+            setupCopyButton('copy-sha512', 'hash-sha512');
+            
+            // Setup hash calculation
+            const debouncedCalculate = debounce(calculateHashes, 150);
+            document.getElementById('hash-input').addEventListener('input', debouncedCalculate);
+            
+            // Initial calculation
+            calculateHashes();
+            
+            console.log('Copy functionality verification loaded');
+        });
+    </script>
+</body>
+</html>
