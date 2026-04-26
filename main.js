@@ -775,6 +775,101 @@ const CyberGuardHashTools = {
   }
 };
 
+// ===== CYBERNOTIFY MODAL CONTROLLER =====
+// Replaces native alert() and confirm() with themed, accessible modals
+
+const CyberNotify = {
+  _currentCallback: null,
+
+  _resolveIcon(type) {
+    const ICON_MAP = {
+      warning: { icon: 'warning', color: '#f59e0b' },
+      error:   { icon: 'error',   color: '#ef4444' },
+      info:    { icon: 'info',    color: '#06b6d4' },
+    };
+    return ICON_MAP[type] || ICON_MAP['info'];
+  },
+
+  _hide() {
+    const modal = document.getElementById('cyber-notify-modal');
+    if (!modal) return;
+    modal.classList.remove('cyber-notify-open');
+    setTimeout(() => {
+      modal.classList.add('hidden');
+    }, 300);
+    this._currentCallback = null;
+  },
+
+  _show(message, mode, callback, type) {
+    const modal    = document.getElementById('cyber-notify-modal');
+    const iconEl   = document.getElementById('cyber-notify-icon');
+    const msgEl    = document.getElementById('cyber-notify-message');
+    const confirmBtn = document.getElementById('cyber-notify-confirm-btn');
+    const cancelBtn  = document.getElementById('cyber-notify-cancel-btn');
+
+    if (!modal || !iconEl || !msgEl || !confirmBtn || !cancelBtn) {
+      console.error('CyberNotify: Required DOM elements not found');
+      return;
+    }
+
+    const { icon, color } = this._resolveIcon(type);
+    iconEl.textContent = icon;
+    iconEl.style.color = color;
+
+    msgEl.textContent = String(message ?? '');
+
+    if (mode === 'alert') {
+      confirmBtn.textContent = 'OK';
+      confirmBtn.style.display = '';
+      cancelBtn.style.display = 'none';
+
+      const okHandler = () => {
+        confirmBtn.removeEventListener('click', okHandler);
+        this._hide();
+      };
+      confirmBtn.addEventListener('click', okHandler);
+    } else {
+      confirmBtn.textContent = 'Confirm';
+      cancelBtn.textContent  = 'Cancel';
+      confirmBtn.style.display = '';
+      cancelBtn.style.display  = '';
+
+      const confirmHandler = () => {
+        confirmBtn.removeEventListener('click', confirmHandler);
+        cancelBtn.removeEventListener('click', cancelHandler);
+        this._hide();
+        if (typeof callback === 'function') callback(true);
+      };
+      const cancelHandler = () => {
+        confirmBtn.removeEventListener('click', confirmHandler);
+        cancelBtn.removeEventListener('click', cancelHandler);
+        this._hide();
+        if (typeof callback === 'function') callback(false);
+      };
+      confirmBtn.addEventListener('click', confirmHandler);
+      cancelBtn.addEventListener('click', cancelHandler);
+    }
+
+    modal.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      modal.classList.add('cyber-notify-open');
+    });
+  },
+
+  alert(message, options = {}) {
+    this._show(message, 'alert', null, options.type);
+  },
+
+  confirm(message, callback, options = {}) {
+    if (typeof callback !== 'function') {
+      console.warn('CyberNotify.confirm: callback is not a function');
+      this._hide();
+      return;
+    }
+    this._show(message, 'confirm', callback, options.type);
+  },
+};
+
 // ===== SHODAN-BASED PORT SCANNER =====
 // Professional port scanning using Shodan API for comprehensive network intelligence
 
@@ -845,41 +940,42 @@ document.addEventListener("DOMContentLoaded", () => {
    * Prompts user for confirmation before clearing data
    */
   function clearResults() {
-    // Show confirmation dialog
-    const confirmed = confirm(
-      "Are you sure you want to clear all results? This will remove all scan data and activity logs."
+    // Show themed confirmation modal
+    CyberNotify.confirm(
+      'Are you sure you want to clear all results? This will remove all scan data and activity logs.',
+      (confirmed) => {
+        if (confirmed) {
+          // Clear the results data array
+          resultsData = [];
+          
+          // Clear the activity log container
+          const activityLogContainer = document.getElementById('activity-log-container');
+          if (activityLogContainer) {
+            activityLogContainer.innerHTML = '';
+          }
+          
+          // Reset active filters
+          activeFilters.clear();
+          updateFilterUI();
+          
+          // Reset scan timing variables
+          scanStartTime = null;
+          scanEndTime = null;
+          currentScanTarget = null;
+          
+          // Update the Summary Bar with default values
+          updateSummaryBar(0, '--', '--');
+          
+          // Re-render results (will show empty state)
+          renderResults();
+          
+          // Log the clear action
+          addActivityLog('All results cleared by user', 'System');
+        }
+        // If !confirmed, do nothing — state is unchanged
+      },
+      { type: 'warning' }
     );
-    
-    if (!confirmed) {
-      return; // User cancelled, do nothing
-    }
-    
-    // Clear the results data array
-    resultsData = [];
-    
-    // Clear the activity log container
-    const activityLogContainer = document.getElementById('activity-log-container');
-    if (activityLogContainer) {
-      activityLogContainer.innerHTML = '';
-    }
-    
-    // Reset active filters
-    activeFilters.clear();
-    updateFilterUI();
-    
-    // Reset scan timing variables
-    scanStartTime = null;
-    scanEndTime = null;
-    currentScanTarget = null;
-    
-    // Update the Summary Bar with default values
-    updateSummaryBar(0, '--', '--');
-    
-    // Re-render results (will show empty state)
-    renderResults();
-    
-    // Log the clear action
-    addActivityLog('All results cleared by user', 'System');
   }
 
   /**
@@ -3068,7 +3164,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isRunning) return;
     const inputValue = inputProvider ? inputProvider() : "N/A";
     if (inputProvider && !inputValue) {
-      alert(validationMessage);
+      CyberNotify.alert(validationMessage, { type: 'error' });
       return;
     }
 
@@ -3083,7 +3179,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ) {
       const validation = validateTargetInput(inputValue, feature);
       if (!validation.valid) {
-        alert(validation.message);
+        CyberNotify.alert(validation.message, { type: 'error' });
         return;
       }
     }
