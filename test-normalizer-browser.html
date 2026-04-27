@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Normalizer Browser Test</title>
+</head>
+<body>
+    <h1>Data Normalizer Browser Test</h1>
+    <div id="results"></div>
+
+    <script src="data-normalizer.js?v=1.0.1"></script>
+    <script>
+        const resultsDiv = document.getElementById('results');
+        
+        function log(message, isError = false) {
+            const p = document.createElement('p');
+            p.textContent = message;
+            p.style.color = isError ? 'red' : 'green';
+            resultsDiv.appendChild(p);
+        }
+
+        // Test 1: Check if functions are available
+        log('Test 1: Checking if functions are available on window object...');
+        
+        if (typeof window.normalizeUserData === 'function') {
+            log('✓ normalizeUserData is available');
+        } else {
+            log('✗ normalizeUserData is NOT available', true);
+        }
+
+        if (typeof window.validateNormalizedUser === 'function') {
+            log('✓ validateNormalizedUser is available');
+        } else {
+            log('✗ validateNormalizedUser is NOT available', true);
+        }
+
+        if (typeof window.prepareUserDataForAPI === 'function') {
+            log('✓ prepareUserDataForAPI is available');
+        } else {
+            log('✗ prepareUserDataForAPI is NOT available', true);
+        }
+
+        // Test 2: Test normalizeUserData function
+        log('\nTest 2: Testing normalizeUserData function...');
+        
+        try {
+            const testData = {
+                id: 1,
+                email: 'test@example.com',
+                full_name: 'Test User',
+                job_tittle: 'Security Analyst',
+                email_verified: true
+            };
+
+            const normalized = normalizeUserData(testData);
+            
+            if (normalized && normalized.fullName === 'Test User') {
+                log('✓ normalizeUserData works correctly');
+                log('  - fullName: ' + normalized.fullName);
+                log('  - jobTitle: ' + normalized.jobTitle);
+                log('  - email: ' + normalized.email);
+            } else {
+                log('✗ normalizeUserData returned unexpected result', true);
+            }
+        } catch (error) {
+            log('✗ Error testing normalizeUserData: ' + error.message, true);
+        }
+
+        // Test 3: Test with auth.js pattern
+        log('\nTest 3: Testing the pattern used in auth.js...');
+        
+        try {
+            const rawUser = {
+                id: 123,
+                email: 'user@cyberguard.com',
+                full_name: 'Mohamed Gamal',
+                job_tittle: 'Senior Security Analyst'
+            };
+
+            const user = normalizeUserData(rawUser);
+            
+            if (user) {
+                log('✓ Auth.js pattern works');
+                log('  - User object created successfully');
+                log('  - fullName: ' + user.fullName);
+                log('  - jobTitle: ' + user.jobTitle);
+            } else {
+                log('✗ Auth.js pattern failed - returned null', true);
+            }
+        } catch (error) {
+            log('✗ Error with auth.js pattern: ' + error.message, true);
+        }
+
+        log('\n=== All tests complete ===');
+    </script>
+</body>
+</html>

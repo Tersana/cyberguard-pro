@@ -10,7 +10,8 @@ const DashboardTabManager = {
     'network-tools': false,
     'web-security': false,
     'hash-tools': false,
-    'ai-assistant': false
+    'ai-assistant': false,
+    'projects': false
   },
   
   // Current active tab
@@ -144,6 +145,9 @@ const DashboardTabManager = {
       case 'ai-assistant':
         this.initializeAIAssistant();
         break;
+      case 'projects':
+        this.initializeProjects();
+        break;
     }
     
     // Mark as initialized
@@ -196,6 +200,35 @@ const DashboardTabManager = {
       } catch (error) {
         console.error('DashboardTabManager: Error initializing AI Assistant:', error);
       }
+    }
+  },
+  
+  /**
+   * Initialize Projects tab
+   * Loads projects when the tab is first activated
+   */
+  initializeProjects() {
+    console.log('DashboardTabManager: Initializing Projects tab');
+    
+    // Check if ProjectManager is available
+    if (typeof window.projectManager !== 'undefined' && window.projectManager.renderProjectsList) {
+      try {
+        // Use ProjectManager's renderProjectsList method
+        window.projectManager.renderProjectsList();
+        console.log('DashboardTabManager: Projects loaded via ProjectManager');
+      } catch (error) {
+        console.error('DashboardTabManager: Error loading projects via ProjectManager:', error);
+      }
+    } else if (typeof renderProjectsList === 'function') {
+      // Fallback to global renderProjectsList function
+      try {
+        renderProjectsList();
+        console.log('DashboardTabManager: Projects loaded via global function');
+      } catch (error) {
+        console.error('DashboardTabManager: Error loading projects via global function:', error);
+      }
+    } else {
+      console.warn('DashboardTabManager: No project loading method available');
     }
   },
   

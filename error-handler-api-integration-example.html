@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ErrorHandler API Integration Example</title>
+  <link rel="stylesheet" href="cyber-theme.css">
+  <style>
+    body {
+      padding: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .example-section {
+      margin-bottom: 2rem;
+    }
+    .example-btn {
+      margin: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="cyber-card p-6">
+    <h1 class="text-2xl font-bold text-white mb-4">ErrorHandler API Integration Example</h1>
+    <p class="text-sm text-slate-400 mb-6">
+      This page demonstrates the integration between ErrorHandler and APIClient.
+      Click the buttons below to trigger different error scenarios.
+    </p>
+
+    <!-- 401 Unauthorized Example -->
+    <div class="example-section">
+      <h2 class="text-lg font-semibold text-white mb-2">401 Unauthorized</h2>
+      <p class="text-xs text-slate-400 mb-3">
+        Triggers session clear and redirect to login page.
+      </p>
+      <button id="test-401" class="cyber-btn-primary example-btn">
+        Test 401 Error
+      </button>
+    </div>
+
+    <!-- 422 Validation Error Example -->
+    <div class="example-section">
+      <h2 class="text-lg font-semibold text-white mb-2">422 Validation Error</h2>
+      <p class="text-xs text-slate-400 mb-3">
+        Displays inline validation errors on form fields.
+      </p>
+      <form id="validation-form" class="space-y-3">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Email</label>
+          <input 
+            type="text" 
+            id="email" 
+            class="cyber-input w-full"
+            placeholder="Enter email"
+          >
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Password</label>
+          <input 
+            type="password" 
+            id="password" 
+            class="cyber-input w-full"
+            placeholder="Enter password"
+          >
+        </div>
+        <button type="button" id="test-422" class="cyber-btn-primary example-btn">
+          Test 422 Error
+        </button>
+      </form>
+    </div>
+
+    <!-- 500 Server Error Example -->
+    <div class="example-section">
+      <h2 class="text-lg font-semibold text-white mb-2">500 Server Error</h2>
+      <p class="text-xs text-slate-400 mb-3">
+        Shows generic error message via CyberNotify.
+      </p>
+      <button id="test-500" class="cyber-btn-primary example-btn">
+        Test 500 Error
+      </button>
+    </div>
+
+    <!-- Network Error Example -->
+    <div class="example-section">
+      <h2 class="text-lg font-semibold text-white mb-2">Network Error</h2>
+      <p class="text-xs text-slate-400 mb-3">
+        Shows connection error message via CyberNotify.
+      </p>
+      <button id="test-network" class="cyber-btn-primary example-btn">
+        Test Network Error
+      </button>
+    </div>
+  </div>
+
+  <!-- Load dependencies -->
+  <script src="error-handler.js"></script>
+  <script src="api-client.js"></script>
+  
+  <!-- Mock CyberNotify for this example -->
+  <script>
+    window.CyberNotify = {
+      alert: function(message, options) {
+        alert(`[${options.type.toUpperCase()}] ${message}`);
+      }
+    };
+  </script>
+
+  <!-- Example script -->
+  <script>
+    const apiClient = new APIClient();
+
+    // Mock fetch for demonstration purposes
+    const originalFetch = window.fetch;
+    
+    // Test 401 Unauthorized
+    document.getElementById('test-401').addEventListener('click', async () => {
+      window.fetch = async () => ({
+        ok: false,
+        status: 401,
+        json: async () => ({ message: 'Unauthorized' })
+      });
+      
+      try {
+        await apiClient.get('/test');
+      } catch (error) {
+        console.log('401 error caught:', error);
+      }
+      
+      window.fetch = originalFetch;
+    });
+
+    // Test 422 Validation Error
+    document.getElementById('test-422').addEventListener('click', async () => {
+      window.fetch = async () => ({
+        ok: false,
+        status: 422,
+        json: async () => ({
+          errors: {
+            email: ['Email is required'],
+            password: ['Password must be at least 8 characters']
+          }
+        })
+      });
+      
+      try {
+        await apiClient.post('/test', {});
+      } catch (error) {
+        console.log('422 error caught:', error);
+      }
+      
+      window.fetch = originalFetch;
+    });
+
+    // Test 500 Server Error
+    document.getElementById('test-500').addEventListener('click', async () => {
+      window.fetch = async () => ({
+        ok: false,
+        status: 500,
+        json: async () => ({ message: 'Internal Server Error' })
+      });
+      
+      try {
+        await apiClient.get('/test');
+      } catch (error) {
+        console.log('500 error caught:', error);
+      }
+      
+      window.fetch = originalFetch;
+    });
+
+    // Test Network Error
+    document.getElementById('test-network').addEventListener('click', async () => {
+      window.fetch = async () => {
+        throw new TypeError('Failed to fetch');
+      };
+      
+      try {
+        await apiClient.get('/test');
+      } catch (error) {
+        console.log('Network error caught:', error);
+      }
+      
+      window.fetch = originalFetch;
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Restoration Test - Task 9.2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .test-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-success {
+            background: #10b981;
+            color: white;
+        }
+        .status-error {
+            background: #ef4444;
+            color: white;
+        }
+        .status-pending {
+            background: #f59e0b;
+            color: white;
+        }
+        .log-entry {
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .log-info {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+        .log-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .log-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="test-card p-8 mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Session Restoration Test</h1>
+            <p class="text-gray-600 mb-4">Task 9.2: Verify session restoration on page load</p>
+            
+            <div class="flex gap-4 mb-6">
+                <span class="status-badge status-pending" id="test-status">Not Started</span>
+                <span class="text-sm text-gray-500" id="test-time"></span>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Test Scenarios</h3>
+                    <div class="space-y-2">
+                        <button onclick="testScenario1()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition">
+                            Scenario 1: Valid JWT Token
+                        </button>
+                        <button onclick="testScenario2()" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-4 rounded-lg transition">
+                            Scenario 2: No JWT Token
+                        </button>
+                        <button onclick="testScenario3()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-lg transition">
+                            Scenario 3: Invalid JWT Token
+                        </button>
+                        <button onclick="clearSession()" class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-lg transition">
+                            Clear Session
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Test Log</h3>
+                    <div id="test-log" class="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
+                        <div class="log-entry log-info">Ready to run tests...</div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Current State</h3>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="font-semibold text-gray-600">JWT Token:</span>
+                                <span id="jwt-status" class="ml-2 text-gray-800">-</span>
+                            </div>
+                            <div>
+                                <span class="font-semibold text-gray-600">User Data:</span>
+                                <span id="user-status" class="ml-2 text-gray-800">-</span>
+                            </div>
+                            <div>
+                                <span class="font-semibold text-gray-600">Session Data:</span>
+                                <span id="session-status" class="ml-2 text-gray-800">-</span>
+                            </div>
+                            <div>
+                                <span class="font-semibold text-gray-600">Auth Status:</span>
+                                <span id="auth-status" class="ml-2 text-gray-800">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-card p-6">
+            <h3 class="text-lg font-semibold text-gray-700 mb-3">Instructions</h3>
+            <ol class="list-decimal list-inside space-y-2 text-sm text-gray-600">
+                <li>Click "Scenario 1" to simulate a valid JWT token and test restoration</li>
+                <li>Refresh the page to see if the session is restored automatically</li>
+                <li>Click "Scenario 2" to test behavior without a JWT token</li>
+                <li>Click "Scenario 3" to test behavior with an invalid JWT token</li>
+                <li>Use "Clear Session" to reset all session data</li>
+            </ol>
+        </div>
+    </div>
+
+    <script src="../../api-client.js"></script>
+    <script src="../../auth.js"></script>
+    <script>
+        // Test utilities
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('test-log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(status, type) {
+            const statusEl = document.getElementById('test-status');
+            statusEl.textContent = status;
+            statusEl.className = `status-badge status-${type}`;
+        }
+
+        function updateCurrentState() {
+            const jwt = localStorage.getItem('cyberguard_jwt');
+            const user = localStorage.getItem('cyberguard_user');
+            const session = localStorage.getItem('cyberguard_session');
+            
+            document.getElementById('jwt-status').textContent = jwt ? 'Present' : 'None';
+            document.getElementById('user-status').textContent = user ? 'Present' : 'None';
+            document.getElementById('session-status').textContent = session ? 'Present' : 'None';
+            
+            if (typeof authManager !== 'undefined') {
+                document.getElementById('auth-status').textContent = authManager.isAuthenticated() ? 'Authenticated' : 'Guest';
+            }
+        }
+
+        // Test Scenarios
+        async function testScenario1() {
+            log('Starting Scenario 1: Valid JWT Token', 'info');
+            updateStatus('Running...', 'pending');
+            
+            try {
+                // Simulate a valid JWT token
+                const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+                localStorage.setItem('cyberguard_jwt', mockToken);
+                log('Mock JWT token stored in localStorage', 'success');
+                
+                // Note: This will fail with 401 since it's a mock token
+                // In a real scenario, you would use a valid token from the backend
+                log('Note: This mock token will fail validation (expected behavior)', 'info');
+                log('In production, use a real JWT token from successful login', 'info');
+                
+                updateCurrentState();
+                updateStatus('Ready for Page Reload', 'success');
+                log('Refresh the page to test session restoration', 'info');
+                
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+                updateStatus('Failed', 'error');
+            }
+        }
+
+        async function testScenario2() {
+            log('Starting Scenario 2: No JWT Token', 'info');
+            updateStatus('Running...', 'pending');
+            
+            try {
+                // Clear JWT token but keep legacy session
+                localStorage.removeItem('cyberguard_jwt');
+                
+                // Add legacy session data
+                const mockUser = {
+                    id: 1,
+                    email: 'test@example.com',
+                    name: 'Test User',
+                    role: 'user'
+                };
+                const mockSession = {
+                    timestamp: Date.now(),
+                    userAgent: navigator.userAgent
+                };
+                
+                localStorage.setItem('cyberguard_user', JSON.stringify(mockUser));
+                localStorage.setItem('cyberguard_session', JSON.stringify(mockSession));
+                
+                log('JWT token removed', 'success');
+                log('Legacy session data added', 'success');
+                
+                updateCurrentState();
+                updateStatus('Ready for Page Reload', 'success');
+                log('Refresh the page to test legacy session fallback', 'info');
+                
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+                updateStatus('Failed', 'error');
+            }
+        }
+
+        async function testScenario3() {
+            log('Starting Scenario 3: Invalid JWT Token', 'info');
+            updateStatus('Running...', 'pending');
+            
+            try {
+                // Store an invalid JWT token
+                localStorage.setItem('cyberguard_jwt', 'invalid.token.here');
+                log('Invalid JWT token stored', 'success');
+                
+                updateCurrentState();
+                updateStatus('Ready for Page Reload', 'success');
+                log('Refresh the page to test invalid token handling', 'info');
+                log('Expected: Session should be cleared and guest UI shown', 'info');
+                
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+                updateStatus('Failed', 'error');
+            }
+        }
+
+        function clearSession() {
+            log('Clearing all session data...', 'info');
+            
+            localStorage.removeItem('cyberguard_jwt');
+            localStorage.removeItem('cyberguard_user');
+            localStorage.removeItem('cyberguard_session');
+            
+            log('All session data cleared', 'success');
+            updateCurrentState();
+            updateStatus('Session Cleared', 'success');
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            log('Page loaded', 'info');
+            updateCurrentState();
+            
+            // Check if session restoration was attempted
+            if (typeof authManager !== 'undefined') {
+                if (authManager.isAuthenticated()) {
+                    log('User is authenticated', 'success');
+                    updateStatus('Authenticated', 'success');
+                } else {
+                    log('User is not authenticated (guest mode)', 'info');
+                    updateStatus('Guest Mode', 'pending');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

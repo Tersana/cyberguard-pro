@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alert Replacement Test</title>
+  <link rel="stylesheet" href="cyber-theme.css">
+</head>
+<body class="bg-slate-900">
+  <div class="container mx-auto p-8">
+    <h1 class="text-2xl font-bold text-white mb-6">Task 20.3: Alert Replacement Test</h1>
+    
+    <div class="space-y-4">
+      <button id="test-error" class="cyber-btn-danger">Test Error Alert</button>
+      <button id="test-warning" class="cyber-btn-warning">Test Warning Alert</button>
+      <button id="test-info" class="cyber-btn-primary">Test Info Alert</button>
+      <button id="test-success" class="cyber-btn-success">Test Success Alert</button>
+    </div>
+  </div>
+
+  <!-- CyberNotify Modal -->
+  <div id="cyber-notify-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+    <div class="cyber-card max-w-md w-full p-6 animate-scale-in">
+      <div class="flex items-start gap-4">
+        <div id="cyber-notify-icon" class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h3 id="cyber-notify-title" class="text-lg font-bold text-white mb-2">Notification</h3>
+          <p id="cyber-notify-message" class="text-sm text-slate-300"></p>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-6">
+        <button id="cyber-notify-confirm-btn" class="cyber-btn-primary flex-1">OK</button>
+        <button id="cyber-notify-cancel-btn" class="cyber-btn-ghost flex-1">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+  <script>
+    // Test buttons
+    document.getElementById('test-error').addEventListener('click', () => {
+      console.error('Test error message');
+      CyberNotify.alert('This is an error message', { type: 'error' });
+    });
+
+    document.getElementById('test-warning').addEventListener('click', () => {
+      console.warn('Test warning message');
+      CyberNotify.alert('This is a warning message', { type: 'warning' });
+    });
+
+    document.getElementById('test-info').addEventListener('click', () => {
+      console.info('Test info message');
+      CyberNotify.alert('This is an info message', { type: 'info' });
+    });
+
+    document.getElementById('test-success').addEventListener('click', () => {
+      console.log('Test success message');
+      CyberNotify.alert('This is a success message', { type: 'success' });
+    });
+  </script>
+</body>
+</html>
