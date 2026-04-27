@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test renderProjectsList</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="cyber-theme.css">
+</head>
+<body class="cyber-body p-8">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold text-white mb-8">Test renderProjectsList Function</h1>
+        
+        <div class="cyber-card p-6 mb-6">
+            <h2 class="text-xl font-bold text-white mb-4">Test Controls</h2>
+            <div class="flex gap-4">
+                <button id="test-empty" class="cyber-btn-primary px-4 py-2 rounded-lg">
+                    Test Empty State
+                </button>
+                <button id="test-with-projects" class="cyber-btn-primary px-4 py-2 rounded-lg">
+                    Test With Projects
+                </button>
+                <button id="test-error" class="cyber-btn-danger px-4 py-2 rounded-lg">
+                    Test Error State
+                </button>
+                <button id="test-real-api" class="cyber-btn-ghost px-4 py-2 rounded-lg">
+                    Test Real API (requires auth)
+                </button>
+            </div>
+        </div>
+
+        <!-- Projects Section (mimics dashboard.html structure) -->
+        <div class="space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Security Projects</h2>
+                    <p class="text-sm text-slate-400 mt-1">Organize and manage your security assessments</p>
+                </div>
+            </div>
+
+            <!-- Projects List Container (Grid Layout) -->
+            <div id="projects-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <!-- Project cards will be dynamically rendered here -->
+            </div>
+
+            <!-- Empty State Component -->
+            <div id="projects-empty-state" class="text-center py-16">
+                <div class="cyber-empty-icon mx-auto mb-4">
+                    <svg class="w-16 h-16 text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">No Projects Yet</h3>
+                <p class="text-sm text-slate-400 mb-6">Create your first security project to get started</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load required scripts -->
+    <script src="api-client.js"></script>
+    <script src="project-manager.js"></script>
+    <script src="main.js"></script>
+
+    <script>
+        // Mock project data
+        const mockProjects = [
+            {
+                id: 1,
+                name: 'E-Commerce Security Audit',
+                description: 'Comprehensive security assessment of the main e-commerce platform including payment processing and user authentication.',
+                target: 'shop.example.com',
+                status: 'active',
+                collaborators: [
+                    { id: 1, full_name: 'John Doe', email: 'john@example.com' },
+                    { id: 2, full_name: 'Jane Smith', email: 'jane@example.com' }
+                ]
+            },
+            {
+                id: 2,
+                name: 'API Penetration Test',
+                description: 'Testing REST API endpoints for vulnerabilities and security misconfigurations.',
+                target: 'api.example.com',
+                status: 'completed',
+                collaborators: [
+                    { id: 3, full_name: 'Alice Johnson', email: 'alice@example.com' }
+                ]
+            },
+            {
+                id: 3,
+                name: 'Network Infrastructure Scan',
+                description: 'Port scanning and vulnerability assessment of internal network infrastructure.',
+                target: '192.168.1.0/24',
+                status: 'active',
+                collaborators: []
+            },
+            {
+                id: 4,
+                name: 'Legacy System Review',
+                description: 'Security review of legacy systems before decommissioning.',
+                target: 'legacy.example.com',
+                status: 'archived',
+                collaborators: [
+                    { id: 1, full_name: 'John Doe', email: 'john@example.com' }
+                ]
+            }
+        ];
+
+        // Test button handlers
+        document.getElementById('test-empty').addEventListener('click', async () => {
+            console.log('Testing empty state...');
+            
+            // Mock projectManager to return empty array
+            window.projectManager = {
+                fetchProjects: async () => ({ projects: [] })
+            };
+            
+            await renderProjectsList();
+        });
+
+        document.getElementById('test-with-projects').addEventListener('click', async () => {
+            console.log('Testing with projects...');
+            
+            // Mock projectManager to return mock projects
+            window.projectManager = {
+                fetchProjects: async () => ({ projects: mockProjects })
+            };
+            
+            await renderProjectsList();
+        });
+
+        document.getElementById('test-error').addEventListener('click', async () => {
+            console.log('Testing error state...');
+            
+            // Mock projectManager to throw error
+            window.projectManager = {
+                fetchProjects: async () => {
+                    throw new Error('Failed to connect to API server');
+                }
+            };
+            
+            await renderProjectsList();
+        });
+
+        document.getElementById('test-real-api').addEventListener('click', async () => {
+            console.log('Testing real API...');
+            
+            // Remove mock and use real API client
+            delete window.projectManager;
+            delete window.apiClient;
+            
+            await renderProjectsList();
+        });
+
+        // Dummy functions for edit/delete (referenced in renderProjectCard)
+        window.editProject = (id) => {
+            console.log('Edit project:', id);
+            alert(`Edit project ${id} - Not implemented in this test`);
+        };
+
+        window.deleteProject = (id) => {
+            console.log('Delete project:', id);
+            if (confirm(`Delete project ${id}?`)) {
+                alert(`Delete project ${id} - Not implemented in this test`);
+            }
+        };
+
+        // Auto-run test with projects on load
+        window.addEventListener('load', () => {
+            console.log('Page loaded, running initial test...');
+            document.getElementById('test-with-projects').click();
+        });
+    </script>
+</body>
+</html>

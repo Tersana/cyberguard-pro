@@ -261,7 +261,7 @@
                                     type="email"
                                     id="email"
                                     name="email"
-                                    placeholder="you@company.com"
+                                    placeholder="mohamedGamal@test.com"
                                     class="cyber-input w-full pl-12 pr-4 py-3.5 rounded-xl text-white placeholder-gray-500"
                                     required
                                 >
@@ -300,7 +300,7 @@
                                 <input type="checkbox" class="w-4 h-4 rounded border-gray-600 bg-gray-700 text-neon-cyan focus:ring-neon-cyan focus:ring-offset-0">
                                 <span class="text-sm text-gray-400">Remember me</span>
                             </label>
-                            <a href="#" class="text-sm text-neon-cyan hover:text-cyan-300 transition-colors font-medium">Forgot password?</a>
+                            <a href="forgot-password.html" class="text-sm text-neon-cyan hover:text-cyan-300 transition-colors font-medium">Forgot password?</a>
                         </div>
 
                         <!-- Submit Button -->
@@ -414,6 +414,50 @@
         </div>
     </div>
 
+    <!-- 2FA Challenge Modal -->
+    <div id="twofa-challenge-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="glass-card rounded-2xl p-8 max-w-md mx-4">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-neon-purple to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/40">
+                    <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Two-Factor Authentication</h3>
+                <p class="text-sm text-gray-400">
+                    Enter the 6-digit code from your authenticator app
+                </p>
+            </div>
+            
+            <form id="twofa-form">
+                <input 
+                    type="text" 
+                    id="twofa-code" 
+                    class="cyber-input w-full text-center text-2xl tracking-widest mb-4"
+                    placeholder="000000"
+                    maxlength="6"
+                    pattern="[0-9]{6}"
+                    required
+                    autocomplete="off"
+                >
+                
+                <button type="submit" class="btn-neon w-full py-4 rounded-xl font-bold text-white mb-2">
+                    Verify Code
+                </button>
+                
+                <button type="button" id="twofa-cancel" class="w-full py-3 rounded-xl font-medium text-gray-400 hover:text-white transition-colors">
+                    Cancel
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- API Client -->
+    <script src="api-client.js"></script>
+    
+    <!-- Data Normalizer Utility -->
+    <script src="data-normalizer.js?v=1.0.1"></script>
+    
     <!-- Authentication System -->
     <script src="auth.js"></script>
 
@@ -436,29 +480,56 @@
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            
+            // Prevent double submission
+            if (submitButton.disabled) return;
+            
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             
-            // Show loading
-            document.getElementById('loadingOverlay').classList.remove('hidden');
+            // Show loading state on button
+            showInlineLoading(submitButton, 'Signing In');
             
             try {
-                // Use authentication manager
-                const result = await authManager.login(email, password);
+                // Use API-integrated authentication manager
+                const result = await authManager.loginWithAPI(email, password);
                 
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                
-                if (result.success) {
+                if (result.success && result.requires2FA) {
+                    // Hide button loading before showing 2FA modal
+                    hideInlineLoading(submitButton);
+                    // Show 2FA modal
+                    show2FAModal();
+                } else if (result.success) {
                     showMessage('success', 'Welcome back!', 'Redirecting to dashboard...');
                     setTimeout(() => {
                         window.location.href = 'dashboard.html';
                     }, 1500);
-                } else {
-                    showMessage('error', 'Login Failed', result.message);
                 }
             } catch (error) {
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                showMessage('error', 'Login Error', 'An unexpected error occurred.');
+                hideInlineLoading(submitButton);
+                
+                // Handle validation errors (422)
+                if (error.name === 'ValidationError') {
+                    const messages = Array.isArray(error.errors)
+                        ? error.errors.map(e => e.message).join(', ')
+                        : (error.data && error.data.errors
+                            ? Object.values(error.data.errors).flat().join(', ')
+                            : error.message);
+                    showMessage('error', 'Login Failed', messages || 'Invalid credentials');
+                // Handle 401 — distinguish between unverified email and wrong credentials
+                } else if (error.name === 'APIError' && error.status === 401) {
+                    const msg = error.message || '';
+                    if (msg.toLowerCase().includes('verify') || msg.toLowerCase().includes('verification')) {
+                        showMessage('error', 'Email Not Verified', 'Please check your inbox and verify your email before signing in.');
+                    } else {
+                        showMessage('error', 'Login Failed', 'Invalid email or password. Please try again.');
+                    }
+                } else if (error.name === 'APIError') {
+                    showMessage('error', 'Login Failed', error.message || 'Invalid credentials');
+                } else {
+                    showMessage('error', 'Login Error', 'An unexpected error occurred. Please try again.');
+                }
             }
         });
 
@@ -495,6 +566,62 @@
                 box.classList.remove('success-message', 'error-message');
             }, 5000);
         }
+
+        // Show 2FA modal
+        function show2FAModal() {
+            const modal = document.getElementById('twofa-challenge-modal');
+            modal.classList.remove('hidden');
+            document.getElementById('twofa-code').focus();
+        }
+
+        // Hide 2FA modal
+        function hide2FAModal() {
+            const modal = document.getElementById('twofa-challenge-modal');
+            modal.classList.add('hidden');
+            document.getElementById('twofa-code').value = '';
+        }
+
+        // 2FA form submission
+        document.getElementById('twofa-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            
+            // Prevent double submission
+            if (submitButton.disabled) return;
+            
+            const code = document.getElementById('twofa-code').value;
+            
+            // Show loading state on button
+            showInlineLoading(submitButton, 'Verifying');
+            
+            try {
+                const result = await authManager.verify2FA(code);
+                
+                hide2FAModal();
+                
+                if (result.success) {
+                    showMessage('success', 'Verification Successful', 'Redirecting to dashboard...');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                }
+            } catch (error) {
+                hideInlineLoading(submitButton);
+                
+                // Handle API errors
+                if (error.name === 'APIError') {
+                    showMessage('error', 'Verification Failed', error.message || 'Invalid code');
+                } else {
+                    showMessage('error', 'Verification Error', 'An unexpected error occurred. Please try again.');
+                }
+            }
+        });
+
+        // 2FA cancel button
+        document.getElementById('twofa-cancel').addEventListener('click', function() {
+            hide2FAModal();
+        });
     </script>
 </body>
 </html>

@@ -3,10 +3,15 @@
  * Handles user authentication, session management, and security features
  */
 
+// Note: normalizeUserData and prepareUserDataForAPI are expected to be available globally
+// from data-normalizer.js which should be loaded before this script in the HTML
+
 class AuthManager {
   constructor() {
     this.currentUser = null;
     this.sessionTimeout = 30 * 60 * 1000; // 30 minutes
+    // Initialize API client for backend communication
+    this.apiClient = new APIClient();
     this.init();
   }
 
@@ -17,11 +22,28 @@ class AuthManager {
     this.loadUserSession();
     this.setupSessionTimeout();
     this.setupEventListeners();
+    this.setupPageVisibilityHandler();
   }
 
   // Load user session from localStorage
-  loadUserSession() {
+  async loadUserSession() {
     try {
+      // Check if JWT token exists in localStorage
+      const token = this.apiClient.getToken();
+      
+      if (token) {
+        // Token exists, attempt to restore session from backend
+        const result = await this.restoreSession();
+        
+        if (result.success) {
+          return true;
+        } else {
+          // Fall through to show guest UI (already handled in restoreSession)
+          return false;
+        }
+      }
+      
+      // No token, check for legacy localStorage session
       const userData = localStorage.getItem("cyberguard_user");
       const sessionData = localStorage.getItem("cyberguard_session");
 
@@ -38,9 +60,18 @@ class AuthManager {
           this.logout();
         }
       }
+      
+      // No session found, show guest UI
+      this.currentUser = null;
+      this.updateUI();
     } catch (error) {
       console.error("Error loading user session:", error);
-      this.logout();
+      // Clear session on error
+      this.apiClient.clearToken();
+      localStorage.removeItem("cyberguard_user");
+      localStorage.removeItem("cyberguard_session");
+      this.currentUser = null;
+      this.updateUI();
     }
     return false;
   }
@@ -127,6 +158,483 @@ class AuthManager {
     }
   }
 
+  // Register with API - Backend integration
+  async registerWithAPI(userData) {
+    try {
+      showLoading('Creating your account...');
+
+      // Sanitize and normalize all fields
+      const sanitizedData = {
+        fullName: this.sanitizeInput(userData.fullName?.trim() || ''),
+        email: this.sanitizeInput(userData.email?.trim().toLowerCase() || ''),
+        jobTitle: this.sanitizeInput(userData.jobTitle?.trim() || ''),
+        password: userData.password || '',
+        passwordConfirmation: userData.passwordConfirmation || ''
+      };
+
+      // Frontend password match check — before any network call
+      if (sanitizedData.password !== sanitizedData.passwordConfirmation) {
+        throw new ValidationError([{ field: 'passwordConfirmation', message: 'Passwords do not match' }]);
+      }
+
+      // Frontend field validation
+      const validationErrors = this.validateRegistrationData(sanitizedData);
+      if (validationErrors.length > 0) {
+        throw new ValidationError(validationErrors);
+      }
+
+      // Build strict snake_case payload matching backend schema exactly
+      const apiData = {
+        full_name: sanitizedData.fullName,
+        email: sanitizedData.email,
+        job_tittle: sanitizedData.jobTitle,   // backend requires double-t
+        password: sanitizedData.password,
+        password_confirmation: sanitizedData.passwordConfirmation
+      };
+
+      // Send registration request
+      const response = await this.apiClient.post('auth/register', apiData);
+
+      // Register returns 201 with NO token — user must login separately
+      // Response shape: { status, message, data: { email, full_name, job_title } }
+      const userData201 = response.data || response;
+
+      // Build a minimal user object from the registration response
+      const normalizedUser = this.normalizeUserData({
+        email: userData201.email || sanitizedData.email,
+        full_name: userData201.full_name || sanitizedData.fullName,
+        job_tittle: userData201.job_title || userData201.job_tittle || sanitizedData.jobTitle
+      });
+
+      this.trackRegistration(sanitizedData.email);
+
+      return { success: true, user: normalizedUser };
+    } catch (error) {
+      if (error.name === 'ValidationError' || error.name === 'APIError') {
+        throw error;
+      }
+      throw new Error('An error occurred during registration');
+    } finally {
+      hideLoading();
+    }
+  }
+
+  // Login with API - Backend integration
+  async loginWithAPI(email, password) {
+    try {
+      showLoading('Signing you in...');
+
+      const sanitizedEmail = this.sanitizeInput(email?.trim().toLowerCase() || '');
+
+      const validationErrors = this.validateLoginData(sanitizedEmail, password);
+      if (validationErrors.length > 0) {
+        throw new ValidationError(validationErrors);
+      }
+
+      // Send login request
+      // Response shape: { status, message, data: { user: {...}, token: "..." } }
+      const response = await this.apiClient.post('auth/login', {
+        email: sanitizedEmail,
+        password: password
+      });
+
+      // 2FA required — data.requires_2fa per API docs
+      if (response.data?.requires_2fa) {
+        return {
+          success: true,
+          requires2FA: true,
+          message: '2FA verification required'
+        };
+      }
+
+      // Extract token and user from response.data
+      const token = response.data?.token || response.token;
+      const rawUser = response.data?.user || response.user || response.data || response;
+
+      if (!token) {
+        throw new Error('No authentication token received from server');
+      }
+
+      this.apiClient.setToken(token);
+
+      const normalizedUser = this.normalizeUserData(rawUser);
+      if (!normalizedUser) {
+        throw new Error('Invalid user data received from server');
+      }
+
+      this.saveUserSession(normalizedUser);
+      this.trackLoginAttempt(email, true);
+
+      return { success: true, user: normalizedUser, requires2FA: false };
+    } catch (error) {
+      this.trackLoginAttempt(email, false);
+      if (error.name === 'ValidationError' || error.name === 'APIError') {
+        throw error;
+      }
+      throw new Error('An error occurred during login');
+    } finally {
+      hideLoading();
+    }
+  }
+
+  // Verify 2FA code
+  async verify2FA(code) {
+    try {
+      // Show loading indicator
+      showLoading('Verifying code...');
+      
+      // Send 2FA verification request
+      const response = await this.apiClient.post('auth/2fa/verify', {
+        code: code
+      });
+
+      // Store JWT token
+      this.apiClient.setToken(response.token);
+
+      // Normalize user data
+      const normalizedUser = this.normalizeUserData(response.user);
+
+      // Save user session
+      this.saveUserSession(normalizedUser);
+
+      return { success: true, user: normalizedUser };
+    } catch (error) {
+      console.error("2FA verification error:", error);
+      
+      if (error.name === 'APIError') {
+        throw error; // Re-throw API errors for form handling
+      }
+      
+      throw new Error('An error occurred during 2FA verification');
+    } finally {
+      // Hide loading indicator
+      hideLoading();
+    }
+  }
+
+  // Setup 2FA - Get QR code and secret
+  async setup2FA() {
+    try {
+      // Show loading indicator
+      showLoading('Setting up 2FA...');
+      
+      // Send 2FA setup request
+      const response = await this.apiClient.post('auth/2fa/setup');
+
+      return { 
+        success: true, 
+        qrCode: response.qr_code,
+        secret: response.secret
+      };
+    } catch (error) {
+      console.error("2FA setup error:", error);
+      
+      if (error.name === 'APIError') {
+        throw error; // Re-throw API errors for form handling
+      }
+      
+      throw new Error('An error occurred during 2FA setup');
+    } finally {
+      // Hide loading indicator
+      hideLoading();
+    }
+  }
+
+  // Enable 2FA with verification code
+  async enable2FA(code) {
+    try {
+      // Send 2FA enable request with verification code
+      const response = await this.apiClient.post('auth/2fa/enable', {
+        code: code
+      });
+
+      // Update current user's 2FA status
+      if (this.currentUser) {
+        this.currentUser.twoFactorEnabled = true;
+        localStorage.setItem("cyberguard_user", JSON.stringify(this.currentUser));
+      }
+
+      return { 
+        success: true, 
+        message: response.message || '2FA enabled successfully'
+      };
+    } catch (error) {
+      console.error("2FA enable error:", error);
+      
+      if (error.name === 'APIError') {
+        throw error; // Re-throw API errors for form handling
+      }
+      
+      throw new Error('An error occurred while enabling 2FA');
+    }
+  }
+
+  // Disable 2FA
+  async disable2FA() {
+    try {
+      // Send 2FA disable request
+      const response = await this.apiClient.post('auth/2fa/disable');
+
+      // Update current user's 2FA status
+      if (this.currentUser) {
+        this.currentUser.twoFactorEnabled = false;
+        localStorage.setItem("cyberguard_user", JSON.stringify(this.currentUser));
+      }
+
+      return { 
+        success: true, 
+        message: response.message || '2FA disabled successfully'
+      };
+    } catch (error) {
+      console.error("2FA disable error:", error);
+      
+      if (error.name === 'APIError') {
+        throw error; // Re-throw API errors for form handling
+      }
+      
+      throw new Error('An error occurred while disabling 2FA');
+    }
+  }
+
+  // Fetch user profile from backend
+  async fetchUserProfile() {
+    try {
+      // Send GET request to fetch user profile
+      const response = await this.apiClient.get('auth/me');
+
+      // Normalize user data
+      const normalizedUser = this.normalizeUserData(response.user || response);
+
+      return { 
+        success: true, 
+        user: normalizedUser
+      };
+    } catch (error) {
+      console.error("Fetch user profile error:", error);
+      
+      if (error.name === 'APIError') {
+        throw error; // Re-throw API errors for handling
+      }
+      
+      throw new Error('An error occurred while fetching user profile');
+    }
+  }
+
+  // Fetch session status from backend
+  async fetchSessionStatus() {
+    try {
+      // Send GET request to fetch session status
+      const response = await this.apiClient.get('auth/status');
+
+      return { 
+        success: true, 
+        emailVerified: response.email_verified || false,
+        twoFactorEnabled: response.two_factor_enabled || false
+      };
+    } catch (error) {
+      console.error("Fetch session status error:", error);
+      
+      if (error.name === 'APIError') {
+        throw error; // Re-throw API errors for handling
+      }
+      
+      throw new Error('An error occurred while fetching session status');
+    }
+  }
+
+  // Restore session on page load
+  async restoreSession() {
+    try {
+      // Check if JWT token exists
+      const token = this.apiClient.getToken();
+      
+      if (!token) {
+        // No token, show guest UI
+        this.currentUser = null;
+        this.updateUI();
+        return { success: false, message: 'No token found' };
+      }
+
+      // Fetch user profile and session status in parallel
+      const [profileResult, statusResult] = await Promise.all([
+        this.fetchUserProfile().catch(err => ({ success: false, error: err })),
+        this.fetchSessionStatus().catch(err => ({ success: false, error: err }))
+      ]);
+
+      // Check if both requests succeeded
+      if (!profileResult.success || !statusResult.success) {
+        // One or both requests failed, clear session
+        this.apiClient.clearToken();
+        localStorage.removeItem("cyberguard_user");
+        localStorage.removeItem("cyberguard_session");
+        this.currentUser = null;
+        this.updateUI();
+        return { success: false, message: 'Session validation failed' };
+      }
+
+      // Merge user data with session status
+      const user = {
+        ...profileResult.user,
+        emailVerified: statusResult.emailVerified,
+        twoFactorEnabled: statusResult.twoFactorEnabled
+      };
+
+      // Save user session
+      this.saveUserSession(user);
+
+      return { success: true, user: user };
+    } catch (error) {
+      console.error("Restore session error:", error);
+      
+      // Clear session on any error
+      this.apiClient.clearToken();
+      localStorage.removeItem("cyberguard_user");
+      localStorage.removeItem("cyberguard_session");
+      this.currentUser = null;
+      this.updateUI();
+      
+      return { success: false, message: 'Session restoration failed' };
+    }
+  }
+
+  // Resend verification email
+  async resendVerificationEmail() {
+    try {
+      // Show loading indicator
+      showLoading('Sending verification email...');
+      
+      // Send POST request to resend verification email
+      const response = await this.apiClient.post('auth/resend-verification');
+
+      return { 
+        success: true, 
+        message: response.message || 'Verification email sent successfully'
+      };
+    } catch (error) {
+      console.error("Resend verification email error:", error);
+      
+      if (error.name === 'APIError') {
+        throw error; // Re-throw API errors for form handling
+      }
+      
+      throw new Error('An error occurred while resending verification email');
+    } finally {
+      // Hide loading indicator
+      hideLoading();
+    }
+  }
+
+  // Logout with API - Backend integration
+  async logoutWithAPI() {
+    try {
+      // Send logout request to backend
+      await this.apiClient.post('auth/logout');
+    } catch (error) {
+      console.error("Logout API error:", error);
+      // Continue with local cleanup even if API call fails
+    } finally {
+      // Always clear local session data
+      this.apiClient.clearToken();
+      localStorage.removeItem("cyberguard_user");
+      localStorage.removeItem("cyberguard_session");
+      this.currentUser = null;
+
+      // Track logout
+      this.trackLogout(this.currentUser?.email || 'unknown');
+
+      // Redirect to login page
+      window.location.href = "login.html";
+    }
+  }
+
+  // Validate registration data
+  validateRegistrationData(userData) {
+    const errors = [];
+
+    // Email validation
+    if (!userData.email || !this.validateEmail(userData.email)) {
+      errors.push({ field: 'email', message: 'Valid email is required' });
+    }
+
+    // Password validation
+    const passwordValidation = this.validatePassword(userData.password);
+    if (!passwordValidation.valid) {
+      errors.push({ field: 'password', message: 'Password must be at least 8 characters and include uppercase, lowercase, numbers, and symbols' });
+    }
+
+    // Full name validation (values are already trimmed in registerWithAPI)
+    if (!userData.fullName || userData.fullName.length === 0) {
+      errors.push({ field: 'fullName', message: 'Full name is required' });
+    }
+
+    // Job title validation (values are already trimmed in registerWithAPI)
+    if (!userData.jobTitle || userData.jobTitle.length === 0) {
+      errors.push({ field: 'jobTitle', message: 'Job title is required' });
+    }
+
+    // Password confirmation validation
+    if (!userData.passwordConfirmation || userData.passwordConfirmation.length === 0) {
+      errors.push({ field: 'passwordConfirmation', message: 'Password confirmation is required' });
+    }
+
+    return errors;
+  }
+
+  // Validate login data
+  validateLoginData(email, password) {
+    const errors = [];
+
+    // Email validation
+    if (!email || !this.validateEmail(email)) {
+      errors.push({ field: 'email', message: 'Valid email is required' });
+    }
+
+    // Password validation - just check if it exists for login
+    if (!password || password.trim().length === 0) {
+      errors.push({ field: 'password', message: 'Password is required' });
+    }
+
+    return errors;
+  }
+
+  // Sanitize user input to prevent XSS attacks
+  // Uses character stripping instead of HTML encoding to preserve valid chars like @, +, etc.
+  sanitizeInput(input) {
+    if (typeof input !== 'string') {
+      return input;
+    }
+    // Remove actual dangerous HTML/script characters only — do NOT encode @ . + - _ etc.
+    return input
+      .replace(/</g, '')
+      .replace(/>/g, '')
+      .replace(/&/g, '')
+      .replace(/"/g, '')
+      .replace(/'/g, '')
+      .replace(/`/g, '');
+  }
+
+  // Sanitize an object's string properties
+  sanitizeObject(obj) {
+    const sanitized = {};
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        if (typeof obj[key] === 'string') {
+          sanitized[key] = this.sanitizeInput(obj[key]);
+        } else {
+          sanitized[key] = obj[key];
+        }
+      }
+    }
+    return sanitized;
+  }
+
+  // Normalize user data to handle backend inconsistencies
+  // Uses the external normalizeUserData utility from data-normalizer.js
+  normalizeUserData(userData) {
+    // Call the external utility function
+    return normalizeUserData(userData);
+  }
+
   // Logout function
   logout() {
     try {
@@ -135,7 +643,8 @@ class AuthManager {
         this.trackLogout(this.currentUser.email);
       }
 
-      // Clear session data
+      // Clear all sensitive data including JWT token
+      this.apiClient.clearToken();
       localStorage.removeItem("cyberguard_user");
       localStorage.removeItem("cyberguard_session");
       this.currentUser = null;
@@ -191,24 +700,48 @@ class AuthManager {
         el.classList.remove("disabled");
       });
 
-      // Update user info
+      // Update header user info section
       const userNameEl = document.getElementById("userName");
       const userEmailEl = document.getElementById("userEmail");
+      const userInfoEl = document.getElementById("user-info");
 
-      if (userNameEl) userNameEl.textContent = this.currentUser.name;
+      if (userNameEl) userNameEl.textContent = this.currentUser.fullName || this.currentUser.name;
       if (userEmailEl) userEmailEl.textContent = this.currentUser.email;
+      
+      // Show user info section
+      if (userInfoEl) {
+        userInfoEl.classList.remove("hidden");
+      }
 
-      // Update sidebar profile card
+      // Update sidebar profile card with full_name and job_title
       const sidebarName = document.getElementById("sidebarUserName");
       const sidebarRole = document.getElementById("sidebarUserRole");
       const sidebarInitials = document.getElementById("sidebarUserInitials");
-      if (sidebarName) sidebarName.textContent = this.currentUser.name;
-      if (sidebarRole) sidebarRole.textContent = this.currentUser.role || "Security Analyst";
+      
+      if (sidebarName) {
+        sidebarName.textContent = this.currentUser.fullName || this.currentUser.name;
+      }
+      
+      if (sidebarRole) {
+        // Use job_title from session data, fallback to role or default
+        sidebarRole.textContent = this.currentUser.jobTitle || this.currentUser.role || "Security Analyst";
+      }
+      
+      // Calculate and display user initials from full_name
       if (sidebarInitials) {
-        const parts = this.currentUser.name.trim().split(" ");
-        sidebarInitials.textContent = parts.length >= 2
-          ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-          : this.currentUser.name.substring(0, 2).toUpperCase();
+        const fullName = this.currentUser.fullName || this.currentUser.name || '';
+        const parts = fullName.trim().split(/\s+/); // Split by whitespace
+        
+        if (parts.length >= 2) {
+          // First and last name initials
+          sidebarInitials.textContent = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        } else if (parts.length === 1 && parts[0].length >= 2) {
+          // Single name, use first two characters
+          sidebarInitials.textContent = parts[0].substring(0, 2).toUpperCase();
+        } else {
+          // Fallback
+          sidebarInitials.textContent = fullName.substring(0, 2).toUpperCase() || 'U';
+        }
       }
     } else {
       // Mark document state for CSS overrides
@@ -230,19 +763,10 @@ class AuthManager {
         guestNotice.style.display = "";
       }
 
-      // Add visual indicators for auth-required elements but don't disable them completely
+      // Auth-required elements are now handled by CSS pseudo-elements
+      // The lock icon will appear via CSS when body has 'guest' class
       authRequiredElements.forEach((el) => {
         el.classList.add("auth-required");
-        // Add a subtle indicator that this requires authentication
-        if (!el.querySelector(".auth-badge")) {
-          const badge = document.createElement("span");
-          badge.className =
-            "auth-badge absolute -top-1 -right-1 w-3 h-3 bg-orange-400 rounded-full flex items-center justify-center";
-          badge.innerHTML =
-            '<svg class="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>';
-          el.style.position = "relative";
-          el.appendChild(badge);
-        }
       });
     }
   }
@@ -255,11 +779,109 @@ class AuthManager {
         if (sessionData) {
           const session = JSON.parse(sessionData);
           if (Date.now() - session.timestamp > this.sessionTimeout) {
-            this.logout();
+            this.handleSessionExpiration();
           }
         }
       }
     }, 60000); // Check every minute
+  }
+
+  // Setup page visibility handler to check session on every page load/focus
+  setupPageVisibilityHandler() {
+    // Check session validity when page becomes visible
+    document.addEventListener('visibilitychange', async () => {
+      if (!document.hidden && this.isAuthenticated()) {
+        await this.validateSessionOnPageLoad();
+      }
+    });
+
+    // Check session validity when window gains focus
+    window.addEventListener('focus', async () => {
+      if (this.isAuthenticated()) {
+        await this.validateSessionOnPageLoad();
+      }
+    });
+
+    // Check session validity on page load (beforeunload event for next page)
+    window.addEventListener('beforeunload', () => {
+      // Store timestamp of last activity for next page load check
+      if (this.isAuthenticated()) {
+        const sessionData = localStorage.getItem("cyberguard_session");
+        if (sessionData) {
+          const session = JSON.parse(sessionData);
+          session.lastChecked = Date.now();
+          localStorage.setItem("cyberguard_session", JSON.stringify(session));
+        }
+      }
+    });
+  }
+
+  // Validate session on every page load
+  async validateSessionOnPageLoad() {
+    try {
+      const token = this.apiClient.getToken();
+      
+      if (!token) {
+        // No token, clear session
+        this.currentUser = null;
+        this.updateUI();
+        return;
+      }
+
+      // Check if session has expired locally
+      const sessionData = localStorage.getItem("cyberguard_session");
+      if (sessionData) {
+        const session = JSON.parse(sessionData);
+        if (Date.now() - session.timestamp > this.sessionTimeout) {
+          this.handleSessionExpiration();
+          return;
+        }
+      }
+
+      // Validate session with backend (lightweight check)
+      const statusResult = await this.fetchSessionStatus().catch(err => {
+        console.error("Session validation failed:", err);
+        return { success: false };
+      });
+
+      if (!statusResult.success) {
+        // Session invalid, clear and show guest UI
+        this.handleSessionExpiration();
+      }
+    } catch (error) {
+      console.error("Error validating session on page load:", error);
+      // Don't clear session on network errors, only on auth errors
+    }
+  }
+
+  // Handle session expiration gracefully
+  handleSessionExpiration() {
+    // Clear session data
+    this.apiClient.clearToken();
+    localStorage.removeItem("cyberguard_user");
+    localStorage.removeItem("cyberguard_session");
+    this.currentUser = null;
+
+    // Show user-friendly notification
+    if (typeof CyberNotify !== 'undefined') {
+      CyberNotify.alert(
+        'Your session has expired. Please log in again to continue.',
+        { 
+          type: 'warning',
+          duration: 5000
+        }
+      );
+    }
+
+    // Update UI to guest state
+    this.updateUI();
+
+    // Redirect to login page if not already there
+    if (window.location.pathname !== '/login.html' && window.location.pathname !== '/index.html') {
+      setTimeout(() => {
+        window.location.href = 'login.html?session_expired=true';
+      }, 2000); // Give user time to see the notification
+    }
   }
 
   // Setup event listeners
@@ -601,7 +1223,6 @@ class AuthManager {
 
       console.log("✅ Admin account created!");
       console.log("📧 Email: admin@test.com");
-      console.log("🔑 Password: admin123");
       console.log("👤 Role: admin");
 
       return adminUser;

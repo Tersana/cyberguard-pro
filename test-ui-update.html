@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Update Test - Task 9.3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="cyber-theme.css">
+</head>
+<body class="cyber-body p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold text-white mb-6">Task 9.3: UI Update Test</h1>
+        
+        <!-- Test Controls -->
+        <div class="cyber-card p-6 mb-6">
+            <h2 class="text-lg font-semibold text-white mb-4">Test Controls</h2>
+            <div class="flex gap-4">
+                <button id="testAuthBtn" class="cyber-btn-primary px-4 py-2 rounded-lg">
+                    Simulate Authenticated User
+                </button>
+                <button id="testGuestBtn" class="cyber-btn-ghost px-4 py-2 rounded-lg">
+                    Simulate Guest User
+                </button>
+            </div>
+        </div>
+
+        <!-- Header User Info Section -->
+        <div class="cyber-card p-6 mb-6">
+            <h2 class="text-lg font-semibold text-white mb-4">Header User Info</h2>
+            <div id="user-info" data-auth class="flex items-center gap-3 hidden">
+                <div class="text-right">
+                    <div class="text-sm font-semibold text-white" id="userName">User Name</div>
+                    <div class="text-xs text-slate-400" id="userEmail">user@example.com</div>
+                </div>
+                <div class="cyber-avatar-sm">
+                    <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                    </svg>
+                </div>
+            </div>
+            <div id="guest-actions" data-guest class="text-slate-400">
+                Guest mode - Please log in
+            </div>
+        </div>
+
+        <!-- Sidebar Profile Card -->
+        <div class="cyber-card p-6 mb-6">
+            <h2 class="text-lg font-semibold text-white mb-4">Sidebar Profile Card</h2>
+            <div data-auth class="hidden">
+                <div class="cyber-user-card flex items-center gap-3 p-3 rounded-xl">
+                    <div class="cyber-avatar flex-shrink-0">
+                        <span class="text-sm font-bold text-white" id="sidebarUserInitials">AP</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-white truncate" id="sidebarUserName">Alex Porter</p>
+                        <p class="text-xs text-slate-400 truncate" id="sidebarUserRole">Security Analyst</p>
+                    </div>
+                    <span class="cyber-pro-badge">PRO</span>
+                </div>
+            </div>
+            <div data-guest class="text-slate-400">
+                Guest mode - Profile not available
+            </div>
+        </div>
+
+        <!-- Test Results -->
+        <div class="cyber-card p-6">
+            <h2 class="text-lg font-semibold text-white mb-4">Test Results</h2>
+            <pre id="testResults" class="text-xs text-slate-300 font-mono bg-black/30 p-4 rounded-lg overflow-auto max-h-96"></pre>
+        </div>
+    </div>
+
+    <script src="api-client.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // Initialize AuthManager
+        const authManager = new AuthManager();
+        const resultsEl = document.getElementById('testResults');
+
+        function logResult(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            resultsEl.textContent += `[${timestamp}] ${message}\n`;
+            resultsEl.scrollTop = resultsEl.scrollHeight;
+        }
+
+        // Test authenticated user
+        document.getElementById('testAuthBtn').addEventListener('click', () => {
+            logResult('=== Testing Authenticated User ===');
+            
+            // Create test user with full_name and job_title
+            const testUser = {
+                id: 1,
+                email: 'john.doe@cyberguard.com',
+                full_name: 'John Doe',
+                job_title: 'Senior Security Analyst',
+                email_verified: true,
+                two_factor_enabled: false,
+                role: 'user'
+            };
+
+            // Normalize user data
+            const normalizedUser = authManager.normalizeUserData(testUser);
+            logResult(`Normalized user: ${JSON.stringify(normalizedUser, null, 2)}`);
+
+            // Save session
+            authManager.saveUserSession(normalizedUser);
+            logResult('Session saved');
+
+            // Update UI
+            authManager.updateUI();
+            logResult('UI updated');
+
+            // Verify UI elements
+            const userName = document.getElementById('userName').textContent;
+            const userEmail = document.getElementById('userEmail').textContent;
+            const sidebarName = document.getElementById('sidebarUserName').textContent;
+            const sidebarRole = document.getElementById('sidebarUserRole').textContent;
+            const sidebarInitials = document.getElementById('sidebarUserInitials').textContent;
+
+            logResult(`Header - Name: ${userName}`);
+            logResult(`Header - Email: ${userEmail}`);
+            logResult(`Sidebar - Name: ${sidebarName}`);
+            logResult(`Sidebar - Role: ${sidebarRole}`);
+            logResult(`Sidebar - Initials: ${sidebarInitials}`);
+
+            // Verify values
+            const checks = [
+                { name: 'Header name matches full_name', pass: userName === 'John Doe' },
+                { name: 'Header email matches', pass: userEmail === 'john.doe@cyberguard.com' },
+                { name: 'Sidebar name matches full_name', pass: sidebarName === 'John Doe' },
+                { name: 'Sidebar role matches job_title', pass: sidebarRole === 'Senior Security Analyst' },
+                { name: 'Initials calculated correctly', pass: sidebarInitials === 'JD' },
+                { name: 'User info visible', pass: !document.getElementById('user-info').classList.contains('hidden') },
+                { name: 'Guest actions hidden', pass: document.getElementById('guest-actions').classList.contains('hidden') }
+            ];
+
+            logResult('\n=== Verification Results ===');
+            checks.forEach(check => {
+                logResult(`${check.pass ? '✓' : '✗'} ${check.name}`);
+            });
+
+            const allPassed = checks.every(c => c.pass);
+            logResult(`\n${allPassed ? '✓ ALL TESTS PASSED' : '✗ SOME TESTS FAILED'}`);
+        });
+
+        // Test guest user
+        document.getElementById('testGuestBtn').addEventListener('click', () => {
+            logResult('\n=== Testing Guest User ===');
+            
+            // Clear session
+            localStorage.clear();
+            authManager.currentUser = null;
+            logResult('Session cleared');
+
+            // Update UI
+            authManager.updateUI();
+            logResult('UI updated');
+
+            // Verify UI elements
+            const userInfoHidden = document.getElementById('user-info').classList.contains('hidden');
+            const guestActionsVisible = !document.getElementById('guest-actions').classList.contains('hidden');
+
+            logResult(`User info hidden: ${userInfoHidden}`);
+            logResult(`Guest actions visible: ${guestActionsVisible}`);
+
+            const checks = [
+                { name: 'User info hidden', pass: userInfoHidden },
+                { name: 'Guest actions visible', pass: guestActionsVisible }
+            ];
+
+            logResult('\n=== Verification Results ===');
+            checks.forEach(check => {
+                logResult(`${check.pass ? '✓' : '✗'} ${check.name}`);
+            });
+
+            const allPassed = checks.every(c => c.pass);
+            logResult(`\n${allPassed ? '✓ ALL TESTS PASSED' : '✗ SOME TESTS FAILED'}`);
+        });
+
+        // Initial log
+        logResult('Test page loaded. Click buttons to run tests.');
+    </script>
+</body>
+</html>

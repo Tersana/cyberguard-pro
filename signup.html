@@ -238,6 +238,19 @@
                         </div>
                     </div>
 
+                    <!-- Job Title -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Job Title</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
+                                </svg>
+                            </span>
+                            <input type="text" id="jobTitle" name="jobTitle" placeholder="Security Analyst" class="cyber-input w-full pl-12 pr-4 py-3 rounded-xl text-white placeholder-gray-500" required>
+                        </div>
+                    </div>
+
                     <!-- Company (Optional) -->
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-300 mb-2">Company <span class="text-gray-500">(Optional)</span></label>
@@ -305,7 +318,13 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                 </svg>
                             </span>
-                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" class="cyber-input w-full pl-12 pr-4 py-3 rounded-xl text-white placeholder-gray-500" required>
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" class="cyber-input w-full pl-12 pr-12 py-3 rounded-xl text-white placeholder-gray-500" required>
+                            <button type="button" id="toggleConfirmPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-neon-cyan transition-colors">
+                                <svg class="w-5 h-5" id="eyeIconConfirm" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
 
@@ -472,6 +491,12 @@
         </div>
     </div>
 
+    <!-- API Client -->
+    <script src="api-client.js"></script>
+    
+    <!-- Data Normalizer Utility -->
+    <script src="data-normalizer.js?v=1.0.1"></script>
+    
     <!-- Authentication System -->
     <script src="auth.js"></script>
 
@@ -520,17 +545,70 @@
                 }
             }
             
+            // Step 1: Validate job title specifically
+            if (currentStep === 1) {
+                const jobTitle = document.getElementById('jobTitle').value.trim();
+                if (!jobTitle) {
+                    showMessage('error', 'Required Field', 'Job title is required');
+                    document.getElementById('jobTitle').focus();
+                    return false;
+                }
+            }
+            
             if (currentStep === 2) {
                 const password = document.getElementById('password').value;
                 const confirmPassword = document.getElementById('confirmPassword').value;
                 
                 if (password !== confirmPassword) {
-                    showMessage('error', 'Password Mismatch', 'Passwords do not match.');
+                    showMessage('error', 'Password Mismatch', 'The passwords you entered do not match. Please try again.');
+                    // Clear confirm password field for security
+                    document.getElementById('confirmPassword').value = '';
+                    document.getElementById('confirmPassword').focus();
+                    return false;
+                }
+                
+                // Validate password strength
+                const passwordValidation = validatePasswordStrength(password);
+                if (!passwordValidation.valid) {
+                    showMessage('error', 'Weak Password', 'Password must be at least 8 characters and include uppercase, lowercase, numbers, and symbols.');
                     return false;
                 }
             }
             
             return true;
+        }
+        
+        // Validate all previous steps before final submission
+        function validateAllSteps() {
+            // Save current step
+            const originalStep = currentStep;
+            
+            // Validate each step
+            for (let step = 1; step <= totalSteps; step++) {
+                currentStep = step;
+                if (!validateCurrentStep()) {
+                    // Restore original step if validation fails
+                    currentStep = originalStep;
+                    return false;
+                }
+            }
+            
+            // Restore original step
+            currentStep = originalStep;
+            return true;
+        }
+        
+        // Validate password strength
+        function validatePasswordStrength(password) {
+            const minLength = 8;
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasLowerCase = /[a-z]/.test(password);
+            const hasNumbers = /\d/.test(password);
+            const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+            
+            const valid = password.length >= minLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar;
+            
+            return { valid, minLength, hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChar };
         }
 
         // Password strength
@@ -575,6 +653,78 @@
             strengthText.textContent = strengthLabel;
         });
 
+        // Real-time password strength and match validation
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+            
+            if (password.length === 0) {
+                strengthBar.style.width = '0%';
+                strengthBar.className = 'password-strength';
+                strengthText.textContent = 'Weak';
+                return;
+            }
+            
+            let strength = 0;
+            const checks = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                numbers: /\d/.test(password),
+                special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+            };
+            
+            strength = Object.values(checks).filter(Boolean).length;
+            
+            if (strength <= 2) {
+                strengthBar.style.width = '25%';
+                strengthBar.className = 'password-strength strength-weak';
+                strengthText.textContent = 'Weak';
+            } else if (strength === 3) {
+                strengthBar.style.width = '50%';
+                strengthBar.className = 'password-strength strength-fair';
+                strengthText.textContent = 'Fair';
+            } else if (strength === 4) {
+                strengthBar.style.width = '75%';
+                strengthBar.className = 'password-strength strength-good';
+                strengthText.textContent = 'Good';
+            } else {
+                strengthBar.style.width = '100%';
+                strengthBar.className = 'password-strength strength-strong';
+                strengthText.textContent = 'Strong';
+            }
+            
+            // Check password match in real-time
+            checkPasswordMatch();
+        });
+        
+        // Real-time password match validation
+        document.getElementById('confirmPassword').addEventListener('input', function() {
+            checkPasswordMatch();
+        });
+        
+        function checkPasswordMatch() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const confirmField = document.getElementById('confirmPassword');
+            
+            // Only show feedback if user has started typing in confirm field
+            if (confirmPassword.length === 0) {
+                confirmField.style.borderColor = '';
+                confirmField.style.boxShadow = '';
+                return;
+            }
+            
+            if (password === confirmPassword) {
+                confirmField.style.borderColor = '#10B981'; // Green
+                confirmField.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.3)';
+            } else {
+                confirmField.style.borderColor = '#EF4444'; // Red
+                confirmField.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.3)';
+            }
+        }
+
         // Password toggle
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordField = document.getElementById('password');
@@ -588,43 +738,399 @@
                 eyeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />';
             }
         });
+        
+        // Confirm password toggle
+        document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+            const confirmPasswordField = document.getElementById('confirmPassword');
+            const eyeIconConfirm = document.getElementById('eyeIconConfirm');
+            
+            if (confirmPasswordField.type === 'password') {
+                confirmPasswordField.type = 'text';
+                eyeIconConfirm.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />';
+            } else {
+                confirmPasswordField.type = 'password';
+                eyeIconConfirm.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />';
+            }
+        });
 
         // Form submission
         document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            if (!validateCurrentStep()) return;
+            // Validate ALL steps before submission (not just current step)
+            if (!validateAllSteps()) return;
             
-            document.getElementById('loadingOverlay').classList.remove('hidden');
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            
+            // Prevent double submission
+            if (submitButton.disabled) return;
+            
+            // Clear any previous error messages
+            clearAllFieldErrors();
+            
+            // Show loading state on button
+            showInlineLoading(submitButton, 'Creating Account');
             
             try {
+                // Collect form data with trimmed values (except passwords)
                 const userData = {
-                    fullName: document.getElementById('fullName').value,
-                    email: document.getElementById('email').value,
-                    company: document.getElementById('company').value,
-                    password: document.getElementById('password').value,
-                    securityQuestion1: document.getElementById('securityQuestion1').value,
-                    securityAnswer1: document.getElementById('securityAnswer1').value
+                    fullName: document.getElementById('fullName').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    jobTitle: document.getElementById('jobTitle').value.trim(),
+                    password: document.getElementById('password').value,  // Don't trim passwords
+                    passwordConfirmation: document.getElementById('confirmPassword').value  // Don't trim passwords
                 };
                 
-                const result = await authManager.register(userData);
+                // Log collected data for debugging
+                console.log('📋 FORM DATA COLLECTED:');
+                console.log('  fullName:', userData.fullName || 'EMPTY');
+                console.log('  email:', userData.email || 'EMPTY');
+                console.log('  jobTitle:', userData.jobTitle || 'EMPTY');
+                console.log('  password:', userData.password ? '***' : 'EMPTY');
+                console.log('  confirmPassword:', userData.passwordConfirmation ? '***' : 'EMPTY');
+                console.log('📦 USER DATA OBJECT:', JSON.stringify({...userData, password: '***', passwordConfirmation: '***'}, null, 2));
                 
-                document.getElementById('loadingOverlay').classList.add('hidden');
+                // Frontend validation: Check all required fields before API call
+                if (!userData.fullName) {
+                    showMessage('error', 'Missing Field', 'Full name is required');
+                    hideInlineLoading(submitButton);
+                    showFieldError('fullName', 'Full name is required');
+                    return;
+                }
+                if (!userData.email) {
+                    showMessage('error', 'Missing Field', 'Email is required');
+                    hideInlineLoading(submitButton);
+                    showFieldError('email', 'Email is required');
+                    return;
+                }
+                if (!userData.jobTitle) {
+                    showMessage('error', 'Missing Field', 'Job title is required');
+                    hideInlineLoading(submitButton);
+                    showFieldError('jobTitle', 'Job title is required');
+                    return;
+                }
+                if (!userData.password) {
+                    showMessage('error', 'Missing Field', 'Password is required');
+                    hideInlineLoading(submitButton);
+                    showFieldError('password', 'Password is required');
+                    return;
+                }
+                if (!userData.passwordConfirmation) {
+                    showMessage('error', 'Missing Field', 'Password confirmation is required');
+                    hideInlineLoading(submitButton);
+                    showFieldError('confirmPassword', 'Password confirmation is required');
+                    return;
+                }
+                
+                // Call the new API-integrated registration method
+                const result = await authManager.registerWithAPI(userData);
                 
                 if (result.success) {
-                    showMessage('success', 'Account Created!', 'Welcome to CyberGuard Pro! Redirecting...');
-                    setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 2000);
-                } else {
-                    showMessage('error', 'Registration Failed', result.message);
+                    // Hide the form and show success state with email verification guidance
+                    hideInlineLoading(submitButton);
+                    showEmailVerificationSuccess(userData.email);
                 }
             } catch (error) {
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                showMessage('error', 'Registration Error', 'An unexpected error occurred.');
+                hideInlineLoading(submitButton);
+
+                // Handle validation errors (422) from API
+                if (error.name === 'ValidationError' && error.data && error.data.errors) {
+                    // API returns errors in format: { field_name: ['Error message'] }
+                    Object.entries(error.data.errors).forEach(([field, messages]) => {
+                        let message = Array.isArray(messages) ? messages[0] : messages;
+
+                        // Backend returns "Invalid Email." for BOTH malformed AND already-taken emails.
+                        // Remap to a clear, actionable message.
+                        if (field === 'email' && message.toLowerCase().includes('invalid email')) {
+                            message = 'This email is already registered. Please use a different email or sign in.';
+                        }
+
+                        showFieldError(field, message);
+                    });
+                    showMessage('error', 'Validation Error', 'Please correct the highlighted fields');
+                }
+                // Handle validation errors (frontend)
+                else if (error.name === 'ValidationError' && Array.isArray(error.errors)) {
+                    error.errors.forEach(({ field, message }) => {
+                        showFieldError(field, message);
+                    });
+                    showMessage('error', 'Validation Error', 'Please correct the errors in the form.');
+                }
+                // Handle generic validation error
+                else if (error.name === 'ValidationError') {
+                    showMessage('error', 'Validation Error', error.message || 'Please check your input');
+                }
+                // Handle API errors
+                else if (error.name === 'APIError') {
+                    showMessage('error', 'Registration Failed', error.message);
+                }
+                // Handle network errors
+                else if (error.name === 'NetworkError') {
+                    showMessage('error', 'Network Error', 'Please check your connection and try again.');
+                }
+                // Handle unknown errors
+                else {
+                    showMessage('error', 'Registration Error', 'An unexpected error occurred. Please try again.');
+                }
             }
         });
+        
+        // Helper function to show field-specific errors
+        function showFieldError(fieldName, message) {
+            // Map API field names to form field IDs
+            const fieldMap = {
+                'full_name': 'fullName',
+                'job_title': 'jobTitle',
+                'job_tittle': 'jobTitle',
+                'email': 'email',
+                'password': 'password',
+                'password_confirmation': 'confirmPassword'
+            };
+            
+            const fieldId = fieldMap[fieldName] || fieldName;
+            const fieldEl = document.getElementById(fieldId);
+            
+            console.log(`🔍 Showing error for field: ${fieldName} → ${fieldId}`, message);
+            
+            if (fieldEl) {
+                // Add error styling
+                fieldEl.style.borderColor = '#EF4444';
+                fieldEl.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.3)';
+                
+                // Create/update error message
+                let errorEl = fieldEl.parentElement.querySelector('.field-error');
+                if (!errorEl) {
+                    errorEl = document.createElement('p');
+                    errorEl.className = 'field-error text-xs text-red-400 mt-1';
+                    fieldEl.parentElement.appendChild(errorEl);
+                }
+                errorEl.textContent = message;
+                
+                // Navigate to the step containing the error field
+                // Only navigate if the error step is different from current AND
+                // we haven't already navigated to a step for a previous error
+                const stepEl = fieldEl.closest('.form-step');
+                if (stepEl && !stepEl.classList.contains('active')) {
+                    const stepId = stepEl.id;
+                    const stepNumber = parseInt(stepId.replace('step', ''));
+                    
+                    // Only navigate to an earlier step — never jump forward past current
+                    if (stepNumber < currentStep || currentStep === 3) {
+                        document.getElementById(`step${currentStep}`).classList.remove('active');
+                        document.querySelector(`[data-step="${currentStep}"]`).classList.remove('active');
+                        
+                        currentStep = stepNumber;
+                        
+                        document.getElementById(`step${currentStep}`).classList.add('active');
+                        document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+                    }
+                }
+                
+                // Scroll to field
+                fieldEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                fieldEl.focus();
+            } else {
+                console.warn(`⚠️ Field not found: ${fieldId} (from ${fieldName})`);
+                // Show generic error if field not found
+                showMessage('error', 'Validation Error', `${fieldName}: ${message}`);
+            }
+        }
+        
+        // Helper function to clear all field errors
+        function clearAllFieldErrors() {
+            document.querySelectorAll('.field-error').forEach(el => el.remove());
+            document.querySelectorAll('input').forEach(input => {
+                input.style.borderColor = '';
+                input.style.boxShadow = '';
+            });
+        }
+        
+        // Clear error when user starts typing
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', function() {
+                this.style.borderColor = '';
+                this.style.boxShadow = '';
+                const errorEl = this.parentElement.querySelector('.field-error');
+                if (errorEl) errorEl.remove();
+            });
+        });
+        
 
+        // Show inline loading on button
+        function showInlineLoading(button, text) {
+            if (!button) return;
+            button.disabled = true;
+            button.dataset.originalText = button.innerHTML;
+            button.innerHTML = `
+                <svg class="animate-spin h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="ml-2">${text || 'Loading...'}</span>
+            `;
+        }
+
+        // Hide inline loading on button
+        function hideInlineLoading(button) {
+            if (!button) return;
+            button.disabled = false;
+            if (button.dataset.originalText) {
+                button.innerHTML = button.dataset.originalText;
+                delete button.dataset.originalText;
+            }
+        }
+
+        // Show loading overlay
+        function showLoading(message) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+            }
+        }
+
+        // Hide loading overlay
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+            }
+        }
+
+        // Show email verification success state
+        function showEmailVerificationSuccess(email) {
+            // Hide the entire form
+            const formSteps = document.querySelectorAll('.form-step');
+            formSteps.forEach(step => step.style.display = 'none');
+            
+            // Hide step indicators
+            const stepIndicators = document.querySelector('.flex.items-center.justify-center.gap-4.mb-8');
+            if (stepIndicators) stepIndicators.style.display = 'none';
+            
+            // Hide sign-in link
+            const signInLink = document.querySelector('p.text-center.mt-6');
+            if (signInLink) signInLink.style.display = 'none';
+            
+            // Create success state HTML
+            const successHTML = `
+                <div class="text-center animate-slide-in">
+                    <!-- Success Icon -->
+                    <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/40">
+                        <svg class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    
+                    <!-- Success Title -->
+                    <h2 class="text-2xl font-bold text-white mb-3">Account Created Successfully!</h2>
+                    
+                    <!-- Email Verification Message -->
+                    <div class="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-xl p-5 mb-6">
+                        <div class="flex items-start gap-3 mb-3">
+                            <svg class="w-6 h-6 text-neon-cyan flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                            </svg>
+                            <div class="text-left">
+                                <p class="text-white font-semibold mb-1">Check Your Email</p>
+                                <p class="text-sm text-gray-300">We've sent a verification link to:</p>
+                                <p class="text-sm text-neon-cyan font-mono mt-1">${email}</p>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 text-left">
+                            <strong class="text-gray-300">Important:</strong> Please verify your email before signing in. 
+                            Check your spam folder if you don't see the email within a few minutes.
+                        </p>
+                    </div>
+                    
+                    <!-- Resend Email Button -->
+                    <button type="button" id="resendVerificationBtn" class="btn-secondary-glass w-full py-3 rounded-xl font-semibold text-gray-300 flex items-center justify-center gap-2 mb-4">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                        <span>Resend Verification Email</span>
+                    </button>
+                    
+                    <!-- Continue to Login Button -->
+                    <a href="login.html" class="btn-neon w-full py-3.5 rounded-xl font-bold text-white flex items-center justify-center gap-2">
+                        Continue to Sign In
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
+                    </a>
+                    
+                    <!-- Help Text -->
+                    <p class="text-xs text-gray-500 mt-6">
+                        Didn't receive the email? Check your spam folder or click "Resend Verification Email" above.
+                    </p>
+                </div>
+            `;
+            
+            // Find the form element and replace its content
+            const form = document.getElementById('signupForm');
+            if (form) {
+                form.innerHTML = successHTML;
+                
+                // Add event listener for resend button
+                const resendBtn = document.getElementById('resendVerificationBtn');
+                if (resendBtn) {
+                    resendBtn.addEventListener('click', async function() {
+                        // Disable button and show loading state
+                        resendBtn.disabled = true;
+                        const originalHTML = resendBtn.innerHTML;
+                        resendBtn.innerHTML = `
+                            <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Sending...</span>
+                        `;
+                        
+                        try {
+                            // Store email temporarily for resend
+                            sessionStorage.setItem('pendingVerificationEmail', email);
+                            
+                            const result = await authManager.resendVerificationEmail();
+                            
+                            if (result.success) {
+                                // Show success feedback
+                                resendBtn.innerHTML = `
+                                    <svg class="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>Email Sent!</span>
+                                `;
+                                resendBtn.classList.remove('btn-secondary-glass');
+                                resendBtn.classList.add('bg-green-500/20', 'border-green-500/50');
+                                
+                                // Reset button after 3 seconds
+                                setTimeout(() => {
+                                    resendBtn.innerHTML = originalHTML;
+                                    resendBtn.classList.add('btn-secondary-glass');
+                                    resendBtn.classList.remove('bg-green-500/20', 'border-green-500/50');
+                                    resendBtn.disabled = false;
+                                }, 3000);
+                            }
+                        } catch (error) {
+                            // Show error feedback
+                            resendBtn.innerHTML = `
+                                <svg class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                                </svg>
+                                <span>Failed to send</span>
+                            `;
+                            
+                            // Reset button after 3 seconds
+                            setTimeout(() => {
+                                resendBtn.innerHTML = originalHTML;
+                                resendBtn.disabled = false;
+                            }, 3000);
+                            
+                            console.error('Resend verification error:', error);
+                        }
+                    });
+                }
+            }
+        }
+        
         // Show message
         function showMessage(type, title, text) {
             const container = document.getElementById('messageContainer');

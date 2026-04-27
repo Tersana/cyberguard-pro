@@ -1,3 +1,44 @@
+// ===== API CLIENT INITIALIZATION =====
+// Global API client instance for backend communication
+// Requirement 1.1: API Client Foundation
+
+/**
+ * Global API Client Instance
+ * Configured with base URL: https://peptonelike-lelia-interdepartmentally.ngrok-free.dev/api/
+ * Automatically includes ngrok-skip-browser-warning header
+ * Handles JWT token authentication from localStorage
+ */
+let apiClient;
+
+// Initialize API client when DOM is ready
+if (typeof APIClient !== 'undefined') {
+  apiClient = new APIClient();
+  window.apiClient = apiClient; // Expose globally
+  console.log('[CyberGuard] API Client initialized');
+} else {
+  console.error('[CyberGuard] APIClient class not found. Ensure api-client.js is loaded before main.js');
+}
+
+// ===== PROJECT MANAGER INITIALIZATION =====
+// Global Project Manager instance for project management
+// Requirement 9.1: Project Creation
+
+/**
+ * Global Project Manager Instance
+ * Handles security project CRUD operations and collaborator management
+ * Requires apiClient to be initialized first
+ */
+let projectManager;
+
+// Initialize Project Manager when DOM is ready
+if (typeof ProjectManager !== 'undefined' && apiClient) {
+  projectManager = new ProjectManager(apiClient);
+  window.projectManager = projectManager; // Expose globally
+  console.log('[CyberGuard] Project Manager initialized');
+} else {
+  console.error('[CyberGuard] ProjectManager class not found or apiClient not initialized. Ensure project-manager.js is loaded before main.js');
+}
+
 // ===== INPUT VALIDATION FUNCTIONS =====
 // Validation functions for target input to prevent XSS and ensure proper IP/domain format
 
@@ -317,7 +358,8 @@ const CyberGuardHashTools = {
         }, 2000);
         
         // Show user-friendly message
-        alert('Failed to copy to clipboard. Clipboard access may be denied. Please copy manually or check browser permissions.');
+        console.error('Clipboard copy failed:', error);
+        CyberNotify.alert('Failed to copy to clipboard. Clipboard access may be denied. Please copy manually or check browser permissions.', { type: 'error' });
       }
     });
   },
@@ -1668,6 +1710,325 @@ document.addEventListener("DOMContentLoaded", () => {
   // The old tab switching code has been removed to prevent conflicts
   // All tab switching logic is centralized in the tab manager for better maintainability
 
+  // --- 2FA Setup Flow ---
+  // Task 8.3: Implement 2FA setup flow
+  const enable2FABtn = document.getElementById("enable-2fa-btn");
+  const twofaSetupModal = document.getElementById("twofa-setup-modal");
+  const twofaSetupClose = document.getElementById("twofa-setup-close");
+  const twofaCancelBtn = document.getElementById("twofa-cancel-btn");
+  const twofaEnableBtn = document.getElementById("twofa-enable-btn");
+  const twofaVerificationCode = document.getElementById("twofa-verification-code");
+  const twofaQrCode = document.getElementById("twofa-qr-code");
+  const twofaSecretKey = document.getElementById("twofa-secret-key");
+  const copySecretBtn = document.getElementById("copy-secret-btn");
+  const twofaErrorMessage = document.getElementById("twofa-error-message");
+
+  /**
+   * Show 2FA setup modal and initiate setup flow
+   * Calls authManager.setup2FA to get QR code and secret
+   */
+  async function show2FASetup() {
+    try {
+      // Show modal with loading state
+      twofaSetupModal.classList.remove("hidden");
+      twofaQrCode.innerHTML = '<div class="text-slate-400 text-sm">Loading QR code...</div>';
+      twofaSecretKey.textContent = '';
+      twofaVerificationCode.value = '';
+      twofaErrorMessage.classList.add("hidden");
+      twofaErrorMessage.textContent = '';
+
+      // Call authManager.setup2FA to get QR code and secret
+      const response = await authManager.setup2FA();
+
+      if (response.success) {
+        // Display QR code image from response
+        twofaQrCode.innerHTML = `<img src="${response.qrCode}" alt="2FA QR Code" class="w-48 h-48" />`;
+        
+        // Display secret key text
+        twofaSecretKey.textContent = response.secret;
+
+        logResult(
+          new Date(),
+          "System",
+          "🔐 2FA setup initiated. Scan QR code with your authenticator app.",
+          "info"
+        );
+      } else {
+        throw new Error(response.message || 'Failed to setup 2FA');
+      }
+    } catch (error) {
+      console.error("2FA setup error:", error);
+      twofaQrCode.innerHTML = '<div class="text-red-400 text-sm">Failed to load QR code. Please try again.</div>';
+      
+      // Show error message
+      CyberNotify.alert(
+        error.message || 'Failed to setup 2FA. Please try again.',
+        { type: 'error' }
+      );
+    }
+  }
+
+  /**
+   * Hide 2FA setup modal
+   */
+  function hide2FASetup() {
+    twofaSetupModal.classList.add("hidden");
+    twofaVerificationCode.value = '';
+    twofaErrorMessage.classList.add("hidden");
+    twofaErrorMessage.textContent = '';
+  }
+
+  /**
+   * Handle verification code submission
+   * Calls authManager.enable2FA with the code
+   */
+  async function handleVerificationSubmit() {
+    const code = twofaVerificationCode.value.trim();
+
+    // Validate code format
+    if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+      twofaErrorMessage.textContent = 'Please enter a valid 6-digit code';
+      twofaErrorMessage.classList.remove("hidden");
+      return;
+    }
+
+    try {
+      // Show loading state
+      twofaEnableBtn.disabled = true;
+      twofaEnableBtn.innerHTML = `
+        <svg class="w-4 h-4 animate-spin inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Verifying...
+      `;
+      twofaErrorMessage.classList.add("hidden");
+
+      // Call authManager.enable2FA with verification code
+      const response = await authManager.enable2FA(code);
+
+      if (response.success) {
+        // Update UI to show 2FA enabled status
+        const enable2FABtn = document.getElementById("enable-2fa-btn");
+        const twofaEnabledSection = document.getElementById("twofa-enabled-section");
+        
+        if (enable2FABtn) {
+          enable2FABtn.classList.add("hidden");
+        }
+        
+        if (twofaEnabledSection) {
+          twofaEnabledSection.classList.remove("hidden");
+        }
+
+        // Show success message
+        CyberNotify.alert(
+          response.message || '2FA enabled successfully! Your account is now more secure.',
+          { type: 'success' }
+        );
+
+        logResult(
+          new Date(),
+          "System",
+          "✅ Two-factor authentication enabled successfully.",
+          "success"
+        );
+
+        // Hide modal
+        hide2FASetup();
+      } else {
+        throw new Error(response.message || 'Failed to enable 2FA');
+      }
+    } catch (error) {
+      console.error("2FA enable error:", error);
+      
+      // Show error message
+      twofaErrorMessage.textContent = error.message || 'Invalid verification code. Please try again.';
+      twofaErrorMessage.classList.remove("hidden");
+    } finally {
+      // Restore button state
+      twofaEnableBtn.disabled = false;
+      twofaEnableBtn.innerHTML = 'Enable 2FA';
+    }
+  }
+
+  /**
+   * Copy secret key to clipboard
+   */
+  async function copySecretKey() {
+    const secret = twofaSecretKey.textContent;
+    
+    if (!secret) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(secret);
+      
+      // Show visual feedback
+      const originalHTML = copySecretBtn.innerHTML;
+      copySecretBtn.innerHTML = `
+        <svg class="w-4 h-4 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+      `;
+      
+      setTimeout(() => {
+        copySecretBtn.innerHTML = originalHTML;
+      }, 2000);
+
+      logResult(
+        new Date(),
+        "System",
+        "📋 Secret key copied to clipboard.",
+        "info"
+      );
+    } catch (error) {
+      console.error("Failed to copy secret key:", error);
+      CyberNotify.alert("Failed to copy to clipboard. Please copy manually.", { type: 'error' });
+    }
+  }
+
+  // Event listeners for 2FA setup
+  if (enable2FABtn) {
+    enable2FABtn.addEventListener("click", show2FASetup);
+  }
+
+  if (twofaSetupClose) {
+    twofaSetupClose.addEventListener("click", hide2FASetup);
+  }
+
+  if (twofaCancelBtn) {
+    twofaCancelBtn.addEventListener("click", hide2FASetup);
+  }
+
+  if (twofaEnableBtn) {
+    twofaEnableBtn.addEventListener("click", handleVerificationSubmit);
+  }
+
+  if (copySecretBtn) {
+    copySecretBtn.addEventListener("click", copySecretKey);
+  }
+
+  // Allow Enter key to submit verification code
+  if (twofaVerificationCode) {
+    twofaVerificationCode.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleVerificationSubmit();
+      }
+    });
+  }
+
+  // --- 2FA Disable Flow ---
+  // Task 8.4: Implement 2FA disable functionality
+  const disable2FABtn = document.getElementById("disable-2fa-btn");
+
+  /**
+   * Handle 2FA disable request
+   * Shows confirmation prompt and calls authManager.disable2FA
+   */
+  async function handleDisable2FA() {
+    // Show confirmation prompt using CyberNotify
+    CyberNotify.confirm(
+      'Are you sure you want to disable two-factor authentication? This will make your account less secure.',
+      async (confirmed) => {
+        if (!confirmed) {
+          return;
+        }
+
+        try {
+          // Call authManager.disable2FA
+          const response = await authManager.disable2FA();
+
+          if (response.success) {
+            // Update UI to show 2FA disabled status
+            const enable2FABtn = document.getElementById("enable-2fa-btn");
+            const twofaEnabledSection = document.getElementById("twofa-enabled-section");
+            
+            if (enable2FABtn) {
+              enable2FABtn.classList.remove("hidden");
+            }
+            
+            if (twofaEnabledSection) {
+              twofaEnabledSection.classList.add("hidden");
+            }
+
+            // Show success message
+            CyberNotify.alert(
+              response.message || '2FA has been disabled. You can re-enable it anytime from your profile.',
+              { type: 'info' }
+            );
+
+            logResult(
+              new Date(),
+              "System",
+              "🔓 Two-factor authentication disabled.",
+              "info"
+            );
+          } else {
+            throw new Error(response.message || 'Failed to disable 2FA');
+          }
+        } catch (error) {
+          console.error("2FA disable error:", error);
+          
+          // Show error message
+          CyberNotify.alert(
+            error.message || 'Failed to disable 2FA. Please try again.',
+            { type: 'error' }
+          );
+        }
+      },
+      { type: 'warning' }
+    );
+  }
+
+  // Event listener for disable 2FA button
+  if (disable2FABtn) {
+    disable2FABtn.addEventListener("click", handleDisable2FA);
+  }
+
+  // Close modal on ESC key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !twofaSetupModal.classList.contains("hidden")) {
+      hide2FASetup();
+    }
+  });
+
+  // Close modal when clicking outside
+  twofaSetupModal.addEventListener("click", (e) => {
+    if (e.target === twofaSetupModal) {
+      hide2FASetup();
+    }
+  });
+
+  // Initialize 2FA UI based on current user status
+  function update2FAStatus() {
+    const currentUser = authManager.getCurrentUser();
+    const enable2FABtn = document.getElementById("enable-2fa-btn");
+    const twofaEnabledSection = document.getElementById("twofa-enabled-section");
+    
+    if (currentUser && currentUser.twoFactorEnabled) {
+      // 2FA is enabled - show disable button
+      if (enable2FABtn) {
+        enable2FABtn.classList.add("hidden");
+      }
+      if (twofaEnabledSection) {
+        twofaEnabledSection.classList.remove("hidden");
+      }
+    } else {
+      // 2FA is disabled - show enable button
+      if (enable2FABtn) {
+        enable2FABtn.classList.remove("hidden");
+      }
+      if (twofaEnabledSection) {
+        twofaEnabledSection.classList.add("hidden");
+      }
+    }
+  }
+
+  // Update 2FA status on page load
+  update2FAStatus();
+
   // --- API Key Management ---
   saveVtKeyBtn.addEventListener("click", () => {
     virusTotalApiKey = vtApiKeyInput.value.trim();
@@ -1682,7 +2043,8 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       vtApiKeyInput.value = ""; // Clear for security
     } else {
-      alert("Please enter a valid API key.");
+      console.error("Invalid VirusTotal API key provided");
+      CyberNotify.alert("Please enter a valid API key.", { type: 'warning' });
     }
   });
   function loadVtKey() {
@@ -1711,7 +2073,8 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       abuseApiKeyInput.value = "";
     } else {
-      alert("Please enter a valid API key.");
+      console.error("Invalid AbuseIPDB API key provided");
+      CyberNotify.alert("Please enter a valid API key.", { type: 'warning' });
     }
   });
   function loadAbuseKey() {
@@ -2148,7 +2511,8 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       whoisApiKeyInput.value = "";
     } else {
-      alert("Please enter a valid API key.");
+      console.error("Invalid WhoisXML API key provided");
+      CyberNotify.alert("Please enter a valid API key.", { type: 'warning' });
     }
   });
   function loadWhoisKey() {
@@ -2179,7 +2543,8 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       shodanApiKeyInput.value = "";
     } else {
-      alert("Please enter a valid API key.");
+      console.error("Invalid Shodan API key provided");
+      CyberNotify.alert("Please enter a valid API key.", { type: 'warning' });
     }
   });
   function loadShodanKey() {
@@ -2937,7 +3302,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (saveResultsBtn) {
     saveResultsBtn.addEventListener("click", () => {
       if (history.length === 0) {
-        alert("No results to save.");
+        console.error("No results available to save");
+        CyberNotify.alert("No results to save.", { type: 'info' });
         return;
       }
       const textContent = history
@@ -3005,7 +3371,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Task 10.3: Wire export buttons (add click event listeners, show loading state)
   exportCsvBtn.addEventListener("click", () => {
     if (resultsData.length === 0) {
-      alert("No results to export.");
+      console.error("No results available to export");
+      CyberNotify.alert("No results to export.", { type: 'info' });
       return;
     }
     
@@ -3025,7 +3392,7 @@ document.addEventListener("DOMContentLoaded", () => {
       logResult(new Date(), "System", "📄 CSV report exported successfully.", "system");
     } catch (error) {
       console.error("CSV export failed:", error);
-      alert("Failed to export CSV. Please try again.");
+      CyberNotify.alert("Failed to export CSV. Please try again.", { type: 'error' });
     } finally {
       // Restore button state
       setTimeout(() => {
@@ -3083,12 +3450,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // Task 10.3: Wire export buttons (add click event listeners, show loading state)
   exportPdfBtn.addEventListener("click", async () => {
     if (resultsData.length === 0) {
-      alert("No results to export.");
+      console.error("No results available to export");
+      CyberNotify.alert("No results to export.", { type: 'info' });
       return;
     }
     const { jsPDF } = window.jspdf || {};
     if (!jsPDF || !window.jspdf) {
-      alert("PDF library not loaded.");
+      console.error("PDF library not loaded");
+      CyberNotify.alert("PDF library not loaded.", { type: 'error' });
       return;
     }
     
@@ -3108,7 +3477,7 @@ document.addEventListener("DOMContentLoaded", () => {
       logResult(new Date(), "System", "📑 PDF report exported successfully.", "system");
     } catch (error) {
       console.error("PDF export failed:", error);
-      alert("Failed to export PDF. Please try again.");
+      CyberNotify.alert("Failed to export PDF. Please try again.", { type: 'error' });
     } finally {
       // Restore button state
       setTimeout(() => {
@@ -8270,7 +8639,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- VirusTotal Tool Implementations ---
   function checkVtApiKey() {
     if (!virusTotalApiKey) {
-      alert("Please enter your VirusTotal API Key in the sidebar first.");
+      console.error("VirusTotal API key not configured");
+      CyberNotify.alert("Please enter your VirusTotal API Key in the sidebar first.", { type: 'warning' });
       return false;
     }
     return true;
@@ -8564,7 +8934,8 @@ document.addEventListener("DOMContentLoaded", () => {
   async function scanFileVirusTotal(file) {
     if (!checkVtApiKey()) return;
     if (file.size > 32 * 1024 * 1024) {
-      alert("File is too large for the public API (> 32MB).");
+      console.error("File size exceeds VirusTotal public API limit:", file.size);
+      CyberNotify.alert("File is too large for the public API (> 32MB).", { type: 'warning' });
       return;
     }
     logResult(
@@ -9524,3 +9895,195 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
   }
 
 })(); // end initAIAssistant IIFE
+
+// ===== PROJECT MANAGEMENT UI =====
+// Project card rendering and UI components for project management
+
+/**
+ * Renders a project card component with all project information
+ * @param {Object} project - Project object containing id, name, description, target, status, collaborators
+ * @returns {string} HTML string for the project card
+ */
+function renderProjectCard(project) {
+  // Validate project object
+  if (!project || typeof project !== 'object') {
+    console.error('[renderProjectCard] Invalid project object:', project);
+    return '';
+  }
+
+  // Extract project data with defaults
+  const {
+    id = 0,
+    name = 'Untitled Project',
+    description = 'No description provided',
+    target = 'N/A',
+    status = 'active',
+    collaborators = []
+  } = project;
+
+  // Map status to badge class
+  const statusBadgeMap = {
+    'active': 'cyber-badge-safe',
+    'completed': 'cyber-badge-info',
+    'archived': 'cyber-badge-warning'
+  };
+  const badgeClass = statusBadgeMap[status] || 'cyber-badge-info';
+
+  // Capitalize status for display
+  const statusDisplay = status.charAt(0).toUpperCase() + status.slice(1);
+
+  // Generate collaborator avatars (max 3 visible)
+  const maxVisibleCollaborators = 3;
+  const visibleCollaborators = collaborators.slice(0, maxVisibleCollaborators);
+  const remainingCount = collaborators.length - maxVisibleCollaborators;
+
+  const collaboratorAvatarsHTML = visibleCollaborators.map(collaborator => {
+    // Generate initials from full_name
+    const initials = collaborator.full_name
+      ? collaborator.full_name
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase())
+          .join('')
+          .slice(0, 2)
+      : '??';
+
+    return `
+      <div class="cyber-avatar-sm text-xs font-bold text-white" title="${collaborator.full_name || 'Unknown'}">
+        ${initials}
+      </div>
+    `;
+  }).join('');
+
+  // Add remaining count indicator if there are more collaborators
+  const remainingCountHTML = remainingCount > 0
+    ? `<div class="cyber-avatar-sm text-xs font-bold text-slate-400 bg-slate-700/50">+${remainingCount}</div>`
+    : '';
+
+  // Collaborator count text
+  const collaboratorCountText = collaborators.length === 1
+    ? '1 collaborator'
+    : `${collaborators.length} collaborators`;
+
+  // Generate the project card HTML
+  return `
+    <div class="cyber-card p-5 hover:border-purple-500/40 transition-all cursor-pointer" data-project-id="${id}">
+      <div class="flex items-start justify-between mb-3">
+        <div class="flex-1 min-w-0">
+          <h3 class="text-base font-bold text-white mb-1 truncate">${name}</h3>
+          <p class="text-xs text-slate-400 line-clamp-2">${description}</p>
+        </div>
+        <span class="${badgeClass} ml-2 flex-shrink-0">${statusDisplay}</span>
+      </div>
+      
+      <div class="flex items-center gap-2 text-xs text-slate-500 mb-3">
+        <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+        </svg>
+        <span class="font-mono truncate">${target}</span>
+      </div>
+      
+      <div class="flex items-center justify-between pt-3 border-t border-white/5">
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="flex -space-x-2">
+            ${collaboratorAvatarsHTML}
+            ${remainingCountHTML}
+          </div>
+          <span class="text-xs text-slate-500 truncate">${collaboratorCountText}</span>
+        </div>
+        
+        <div class="flex gap-1 flex-shrink-0">
+          <button class="cyber-btn-ghost text-xs px-2 py-1 rounded" onclick="editProject(${id}); event.stopPropagation();" title="Edit Project">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+            </svg>
+          </button>
+          <button class="cyber-btn-danger text-xs px-2 py-1 rounded" onclick="deleteProject(${id}); event.stopPropagation();" title="Delete Project">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Renders the projects list by fetching projects from API and displaying them
+ * Handles loading state, empty state, and error state
+ * **Validates: Requirements 10.1, 10.2**
+ */
+async function renderProjectsList() {
+  const projectsListContainer = document.getElementById('projects-list');
+  const emptyStateContainer = document.getElementById('projects-empty-state');
+  
+  if (!projectsListContainer || !emptyStateContainer) {
+    console.error('[renderProjectsList] Required DOM elements not found');
+    return;
+  }
+
+  try {
+    // Show loading state
+    projectsListContainer.innerHTML = `
+      <div class="col-span-full flex items-center justify-center py-16">
+        <div class="text-center">
+          <div class="cyber-spinner mb-4"></div>
+          <p class="text-sm text-slate-400">Loading projects...</p>
+        </div>
+      </div>
+    `;
+    emptyStateContainer.classList.add('hidden');
+
+    // Initialize API client and project manager if not already done
+    if (typeof window.apiClient === 'undefined') {
+      window.apiClient = new APIClient();
+    }
+    if (typeof window.projectManager === 'undefined') {
+      window.projectManager = new ProjectManager(window.apiClient);
+    }
+
+    // Fetch projects from API
+    const response = await window.projectManager.fetchProjects();
+    const projects = response.projects || [];
+
+    // Clear loading state
+    projectsListContainer.innerHTML = '';
+
+    // Check if there are projects
+    if (projects.length === 0) {
+      // Show empty state
+      projectsListContainer.classList.add('hidden');
+      emptyStateContainer.classList.remove('hidden');
+    } else {
+      // Hide empty state and show projects
+      projectsListContainer.classList.remove('hidden');
+      emptyStateContainer.classList.add('hidden');
+
+      // Render each project card
+      projects.forEach(project => {
+        const cardHTML = renderProjectCard(project);
+        projectsListContainer.insertAdjacentHTML('beforeend', cardHTML);
+      });
+    }
+
+  } catch (error) {
+    console.error('[renderProjectsList] Error fetching projects:', error);
+    
+    // Show error state
+    projectsListContainer.innerHTML = `
+      <div class="col-span-full cyber-card p-8 text-center">
+        <div class="cyber-icon-box-red mx-auto mb-4">
+          <svg class="w-6 h-6 text-red-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-white mb-2">Failed to Load Projects</h3>
+        <p class="text-sm text-slate-400 mb-4">${error.message || 'An error occurred while fetching projects'}</p>
+        <button onclick="renderProjectsList()" class="cyber-btn-primary px-4 py-2 rounded-lg text-sm font-semibold">
+          Try Again
+        </button>
+      </div>
+    `;
+    emptyStateContainer.classList.add('hidden');
+  }
+}

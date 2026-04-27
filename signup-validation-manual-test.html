@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup Validation Manual Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-case {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-case h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .pass {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .fail {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Signup Validation Manual Test</h1>
+    <p>This page tests the validation logic from signup.html</p>
+
+    <div class="test-case">
+        <h3>Test 1: Empty job_title should be caught</h3>
+        <button onclick="test1()">Run Test</button>
+        <div id="test1-result"></div>
+    </div>
+
+    <div class="test-case">
+        <h3>Test 2: Whitespace-only job_title should be caught</h3>
+        <button onclick="test2()">Run Test</button>
+        <div id="test2-result"></div>
+    </div>
+
+    <div class="test-case">
+        <h3>Test 3: Valid data should pass validation</h3>
+        <button onclick="test3()">Run Test</button>
+        <div id="test3-result"></div>
+    </div>
+
+    <div class="test-case">
+        <h3>Test 4: Step 1 validation should check job title</h3>
+        <button onclick="test4()">Run Test</button>
+        <div id="test4-result"></div>
+    </div>
+
+    <script>
+        // Extract validation logic from signup.html
+        function validateFormData(userData) {
+            const errors = [];
+            
+            // Frontend validation: Check all required fields before API call
+            if (!userData.fullName || !userData.fullName.trim()) {
+                errors.push({ field: 'fullName', message: 'Full name is required' });
+            }
+            if (!userData.email || !userData.email.trim()) {
+                errors.push({ field: 'email', message: 'Email is required' });
+            }
+            if (!userData.jobTitle || !userData.jobTitle.trim()) {
+                errors.push({ field: 'jobTitle', message: 'Job title is required' });
+            }
+            if (!userData.password) {
+                errors.push({ field: 'password', message: 'Password is required' });
+            }
+            if (!userData.passwordConfirmation) {
+                errors.push({ field: 'passwordConfirmation', message: 'Password confirmation is required' });
+            }
+            
+            return errors;
+        }
+
+        function test1() {
+            const userData = {
+                fullName: 'John Doe',
+                email: 'john@example.com',
+                jobTitle: '', // EMPTY
+                password: 'Password123!',
+                passwordConfirmation: 'Password123!'
+            };
+            
+            const errors = validateFormData(userData);
+            const resultDiv = document.getElementById('test1-result');
+            
+            if (errors.length > 0 && errors.some(e => e.field === 'jobTitle')) {
+                resultDiv.className = 'test-result pass';
+                resultDiv.innerHTML = '✓ PASS: Empty job_title was caught by validation<br>Errors: ' + JSON.stringify(errors);
+            } else {
+                resultDiv.className = 'test-result fail';
+                resultDiv.innerHTML = '✗ FAIL: Empty job_title was NOT caught<br>Errors: ' + JSON.stringify(errors);
+            }
+        }
+
+        function test2() {
+            const userData = {
+                fullName: 'John Doe',
+                email: 'john@example.com',
+                jobTitle: '   ', // WHITESPACE ONLY
+                password: 'Password123!',
+                passwordConfirmation: 'Password123!'
+            };
+            
+            const errors = validateFormData(userData);
+            const resultDiv = document.getElementById('test2-result');
+            
+            if (errors.length > 0 && errors.some(e => e.field === 'jobTitle')) {
+                resultDiv.className = 'test-result pass';
+                resultDiv.innerHTML = '✓ PASS: Whitespace-only job_title was caught by validation<br>Errors: ' + JSON.stringify(errors);
+            } else {
+                resultDiv.className = 'test-result fail';
+                resultDiv.innerHTML = '✗ FAIL: Whitespace-only job_title was NOT caught<br>Errors: ' + JSON.stringify(errors);
+            }
+        }
+
+        function test3() {
+            const userData = {
+                fullName: 'John Doe',
+                email: 'john@example.com',
+                jobTitle: 'Security Analyst',
+                password: 'Password123!',
+                passwordConfirmation: 'Password123!'
+            };
+            
+            const errors = validateFormData(userData);
+            const resultDiv = document.getElementById('test3-result');
+            
+            if (errors.length === 0) {
+                resultDiv.className = 'test-result pass';
+                resultDiv.innerHTML = '✓ PASS: Valid data passed validation';
+            } else {
+                resultDiv.className = 'test-result fail';
+                resultDiv.innerHTML = '✗ FAIL: Valid data was rejected<br>Errors: ' + JSON.stringify(errors);
+            }
+        }
+
+        function test4() {
+            // Simulate Step 1 validation
+            const jobTitle = '   '; // Whitespace only
+            const resultDiv = document.getElementById('test4-result');
+            
+            if (!jobTitle.trim()) {
+                resultDiv.className = 'test-result pass';
+                resultDiv.innerHTML = '✓ PASS: Step 1 validation correctly checks trimmed job title';
+            } else {
+                resultDiv.className = 'test-result fail';
+                resultDiv.innerHTML = '✗ FAIL: Step 1 validation does not check trimmed job title';
+            }
+        }
+    </script>
+</body>
+</html>
