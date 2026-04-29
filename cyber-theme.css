@@ -212,6 +212,12 @@ main {
   background: rgba(8, 12, 20, 0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-subtle);
+  transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Adjust header padding when sidebar is collapsed to avoid overlapping the float button */
+.cyber-sidebar.sidebar-collapsed ~ main .cyber-header {
+  padding-left: 3.5rem; /* ~56px to clear the floating button (which is 36px wide + 12px left) */
 }
 
 /* ---- Floating Button ---- */
@@ -228,33 +234,103 @@ main {
   box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
 }
 
-/* ---- Sidebar Toggle Button ---- */
+/* ---- Sidebar Header Layout ---- */
+.cyber-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1rem 1rem 1.25rem;
+  position: relative;
+}
+
+/* ---- Sidebar Toggle Button (Chevron) ---- */
 .cyber-sidebar-toggle {
-  position: fixed;
-  top: 1rem;
-  left: 1rem;
-  z-index: 50;
-  background: rgba(139, 92, 246, 0.2);
-  border: 1px solid rgba(139, 92, 246, 0.4);
-  color: #8B949E;
+  position: relative;
+  z-index: 51;
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: #94a3b8;
   border-radius: 0.5rem;
-  padding: 0.5rem;
-  transition: all 0.2s ease;
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  transition: all 0.3s ease-in-out;
+  box-shadow: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .cyber-sidebar-toggle:hover {
-  background: rgba(139, 92, 246, 0.3);
+  background: rgba(0, 163, 255, 0.15);
+  border-color: rgba(0, 163, 255, 0.5);
   color: #00A3FF;
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 16px rgba(0, 163, 255, 0.3);
 }
 
 .cyber-sidebar-toggle:focus {
-  outline: 2px solid rgba(139, 92, 246, 0.6);
+  outline: 2px solid rgba(0, 163, 255, 0.6);
+  outline-offset: 2px;
+}
+
+.cyber-sidebar-toggle:active {
+  transform: scale(0.92);
+}
+
+/* ---- Chevron Icon Rotation Animation ---- */
+.cyber-chevron-icon {
+  transition: transform 0.3s ease-in-out;
+  display: block;
+}
+
+/* When sidebar is collapsed, rotate chevron to point right */
+.cyber-chevron-icon.chevron-rotated {
+  transform: rotate(180deg);
+}
+
+/* ---- Collapsed: Show toggle button as a floating edge tab ---- */
+.cyber-sidebar.sidebar-collapsed .cyber-sidebar-header {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* When sidebar is collapsed, show toggle as a fixed edge button */
+.cyber-sidebar.sidebar-collapsed ~ .cyber-sidebar-toggle-collapsed {
+  display: flex;
+}
+
+/* Floating toggle that appears when sidebar is collapsed */
+.cyber-sidebar-toggle-float {
+  position: fixed;
+  top: 1rem;
+  left: 0.75rem;
+  z-index: 51;
+  background: rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  color: #94a3b8;
+  border-radius: 0.5rem;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  cursor: pointer;
+  display: none; /* Shown via JS when collapsed */
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
+}
+
+.cyber-sidebar-toggle-float:hover {
+  background: rgba(0, 163, 255, 0.15);
+  border-color: rgba(0, 163, 255, 0.5);
+  color: #00A3FF;
+  box-shadow: 0 0 20px rgba(0, 163, 255, 0.35);
+}
+
+.cyber-sidebar-toggle-float:focus {
+  outline: 2px solid rgba(0, 163, 255, 0.6);
   outline-offset: 2px;
 }
 
