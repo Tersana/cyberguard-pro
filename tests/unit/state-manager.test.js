@@ -300,7 +300,7 @@ describe('State Manager', () => {
       const labelEl = document.getElementById('riskLabel');
       expect(labelEl.textContent).toBe('CONNECTION ERROR');
       // JSDOM converts hex to rgb format
-      expect(labelEl.style.color).toMatch(/rgb\(239,\s*68,\s*68\)|#ef4444/);
+      expect(labelEl.style.color).toMatch(/rgb\(248,\s*113,\s*113\)|#F87171/);
     });
 
     it('should set risk score to 0', () => {
@@ -314,7 +314,7 @@ describe('State Manager', () => {
       StateManager.handleScanFailure();
       
       const arc = document.getElementById('riskGaugeArc');
-      expect(arc.getAttribute('stroke')).toBe('#ef4444');
+      expect(arc.getAttribute('stroke')).toBe('#F87171');
       expect(arc.getAttribute('stroke-dashoffset')).toBe('427.26');
     });
 

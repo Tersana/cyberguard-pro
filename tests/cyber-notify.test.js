@@ -6,9 +6,9 @@ const CyberNotify = {
   _currentCallback: null,
   _resolveIcon(type) {
     const ICON_MAP = {
-      warning: { icon: 'warning', color: '#f59e0b' },
-      error:   { icon: 'error',   color: '#ef4444' },
-      info:    { icon: 'info',    color: '#06b6d4' },
+      warning: { icon: 'warning', color: '#FBBF24' },
+      error:   { icon: 'error',   color: '#F87171' },
+      info:    { icon: 'info',    color: '#38BDF8' },
     };
     return ICON_MAP[type] || ICON_MAP['info'];
   },

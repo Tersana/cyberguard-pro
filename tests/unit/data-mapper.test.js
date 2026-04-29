@@ -93,7 +93,7 @@ describe('Data Mapper - mapDataToUI', () => {
     mapDataToUI(scanData);
     const el = document.getElementById('sslHealthStatus');
     expect(el.textContent).toBe('Healthy');
-    expect(el.style.color).toBe('rgb(16, 185, 129)'); // #10b981 in RGB
+    expect(el.style.color).toBe('rgb(52, 211, 153)'); // #34D399 in RGB
   });
 
   it('should display "Critical" with red color for expired SSL', () => {
@@ -103,7 +103,7 @@ describe('Data Mapper - mapDataToUI', () => {
     mapDataToUI(scanData);
     const el = document.getElementById('sslHealthStatus');
     expect(el.textContent).toBe('Critical');
-    expect(el.style.color).toBe('rgb(239, 68, 68)'); // #ef4444 in RGB
+    expect(el.style.color).toBe('rgb(248, 113, 113)'); // #F87171 in RGB
   });
 
   it('should display "Critical" with red color for missing SSL', () => {
@@ -113,7 +113,7 @@ describe('Data Mapper - mapDataToUI', () => {
     mapDataToUI(scanData);
     const el = document.getElementById('sslHealthStatus');
     expect(el.textContent).toBe('Critical');
-    expect(el.style.color).toBe('rgb(239, 68, 68)'); // #ef4444 in RGB
+    expect(el.style.color).toBe('rgb(248, 113, 113)'); // #F87171 in RGB
   });
 
   /**
@@ -144,7 +144,7 @@ describe('Data Mapper - mapDataToUI', () => {
     };
     mapDataToUI(scanData);
     const el = document.getElementById('warningStatCount');
-    expect(el.style.color).toBe('rgb(16, 185, 129)'); // green
+    expect(el.style.color).toBe('rgb(52, 211, 153)'); // green (#34D399)
   });
 
   it('should display yellow color for 1-5 warnings', () => {
@@ -153,7 +153,7 @@ describe('Data Mapper - mapDataToUI', () => {
     };
     mapDataToUI(scanData);
     const el = document.getElementById('warningStatCount');
-    expect(el.style.color).toBe('rgb(245, 158, 11)'); // yellow
+    expect(el.style.color).toBe('rgb(251, 191, 36)'); // yellow (#FBBF24)
   });
 
   it('should display red color for >5 warnings', () => {
@@ -162,7 +162,7 @@ describe('Data Mapper - mapDataToUI', () => {
     };
     mapDataToUI(scanData);
     const el = document.getElementById('warningStatCount');
-    expect(el.style.color).toBe('rgb(239, 68, 68)'); // red
+    expect(el.style.color).toBe('rgb(248, 113, 113)'); // red (#F87171)
   });
 
   /**

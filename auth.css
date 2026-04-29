@@ -5,10 +5,16 @@
 
 /* Base Authentication Styles */
 .auth-container {
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--cg-bg-surface);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--cg-border);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Dot Grid Overlay */
+.dot-grid-overlay {
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 30px 30px;
 }
 
 /* Floating Background Shapes */
@@ -22,7 +28,7 @@
 
 .shape {
     position: absolute;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--cg-border-subtle);
     border-radius: 50%;
     animation: float 6s ease-in-out infinite;
 }
@@ -80,7 +86,7 @@
 .input-group input:focus,
 .input-group select:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--cg-accent);
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(102, 126, 234, 0.15);
 }
@@ -100,14 +106,14 @@
 .input-group select:focus + label,
 .input-group select:not([value=""]) + label {
     transform: translateY(-25px) scale(0.9);
-    color: #667eea;
+    color: var(--cg-accent);
     background: #ffffff;
     padding: 0 0.5rem;
 }
 
 /* Button Styles */
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--cg-accent) 0%, var(--cg-accent-hover) 100%);
     color: white;
     border: none;
     padding: 1rem 2rem;
@@ -137,7 +143,7 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    background: linear-gradient(90deg, transparent, var(--cg-border), transparent);
     transition: left 0.5s;
 }
 
@@ -231,7 +237,7 @@
 }
 
 .step.active {
-    background: #667eea;
+    background: var(--cg-accent);
     transform: scale(1.2);
 }
 
@@ -335,7 +341,7 @@
 .loading-spinner {
     width: 3rem;
     height: 3rem;
-    border: 4px solid #667eea;
+    border: 4px solid var(--cg-accent);
     border-top: 4px solid transparent;
     border-radius: 50%;
     animation: spin 1s linear infinite;
@@ -365,7 +371,7 @@
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     padding: 1rem;
     margin-bottom: 0.5rem;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid var(--cg-accent);
 }
 
 .message-box.success {
@@ -431,8 +437,8 @@
 }
 
 .checkbox-group input[type="checkbox"]:checked {
-    background: #667eea;
-    border-color: #667eea;
+    background: var(--cg-accent);
+    border-color: var(--cg-accent);
 }
 
 .checkbox-group input[type="checkbox"]:focus {
@@ -510,8 +516,8 @@
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
     .auth-container {
-        background: rgba(15, 23, 42, 0.95);
-        border-color: rgba(255, 255, 255, 0.1);
+        background: var(--cg-bg-surface);
+        border-color: var(--cg-border-subtle);
     }
     
     .input-group input,
@@ -523,7 +529,7 @@
     
     .input-group input:focus,
     .input-group select:focus {
-        border-color: #667eea;
+        border-color: var(--cg-accent);
     }
     
     .input-group label {
@@ -584,7 +590,7 @@
 .btn-primary:focus,
 .btn-secondary:focus,
 .social-btn:focus {
-    outline: 2px solid #667eea;
+    outline: 2px solid var(--cg-accent);
     outline-offset: 2px;
 }
 

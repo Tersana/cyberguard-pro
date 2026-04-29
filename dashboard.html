@@ -10,8 +10,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <link rel="stylesheet" href="Style.css">
+    <link rel="stylesheet" href="theme-tokens.css">
     <link rel="stylesheet" href="cyber-theme.css">
+    <link rel="stylesheet" href="Style.css">
 </head>
 <body class="cyber-body">
 
@@ -468,8 +469,8 @@
 
                                 <!-- SVG Gauge -->
                                 <div class="flex justify-center my-4">
-                                    <div class="risk-gauge-wrapper" style="position:relative;display:inline-flex;align-items:center;justify-content:center;">
-                                        <svg id="riskGaugeSvg" width="160" height="160" viewBox="0 0 160 160" style="transform:rotate(-90deg)">
+                                    <div class="cyber-gauge-wrapper">
+                                        <svg id="riskGaugeSvg" width="160" height="160" viewBox="0 0 160 160" class="cyber-gauge-svg">
                                             <!-- Track -->
                                             <circle
                                                 cx="80" cy="80" r="68"
@@ -488,13 +489,13 @@
                                                 stroke-linecap="round"
                                                 stroke-dasharray="427.26"
                                                 stroke-dashoffset="427.26"
-                                                style="transition:stroke-dashoffset 0.05s linear, stroke 0.4s ease, filter 0.4s ease;"
+                                                class="cyber-gauge-arc"
                                             />
                                         </svg>
                                         <!-- Inner content -->
-                                        <div style="position:absolute;text-align:center;display:flex;flex-direction:column;align-items:center;">
-                                            <span id="riskScore" style="font-size:2.5rem;font-weight:800;color:#fff;line-height:1;font-family:'JetBrains Mono',monospace;">0</span>
-                                            <span id="riskLabel" style="font-size:0.6rem;font-weight:700;letter-spacing:0.12em;color:#6b7280;margin-top:2px;">IDLE</span>
+                                        <div class="cyber-gauge-content">
+                                            <span id="riskScore" class="cyber-gauge-score">0</span>
+                                            <span id="riskLabel" class="cyber-gauge-status">IDLE</span>
                                         </div>
                                     </div>
                                 </div>
@@ -571,12 +572,12 @@
                                         <div class="cyber-meta-item p-3 rounded-lg">
                                             <p class="text-xs text-slate-500">Scan Depth</p>
                                             <p class="text-sm font-semibold text-white mt-0.5">Standard</p>
-                                            <p class="text-xs text-purple-400">Active</p>
+                                            <p class="text-xs text-emerald-400">Active</p>
                                         </div>
                                         <div class="cyber-meta-item p-3 rounded-lg">
                                             <p class="text-xs text-slate-500">Sessions</p>
                                             <p class="text-sm font-semibold text-white mt-0.5">4</p>
-                                            <p class="text-xs text-blue-400">Saved</p>
+                                            <p class="text-xs text-emerald-400">Saved</p>
                                         </div>
                                     </div>
                                 </div>
