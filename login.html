@@ -14,20 +14,27 @@
                         'cyber-dark': '#080B14',
                         'cyber-mid': '#0F172A',
                         'cyber-light': '#1a1033',
-                        'neon-cyan': '#06B6D4',
-                        'neon-purple': '#A855F7',
+                        'neon-cyan': '#A78BFA',
+                        'neon-purple': '#A78BFA',
                     }
                 }
             }
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme-tokens.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             -webkit-font-smoothing: antialiased;
+        }
+
+        /* Dot grid overlay */
+        .dot-grid-overlay {
+            background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
         }
 
         /* Animated radial glows */
@@ -51,7 +58,7 @@
         .glow-orb-2 {
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(167, 139, 250, 0.3) 0%, transparent 70%);
             bottom: -150px;
             left: -150px;
             animation-delay: 4s;
@@ -81,7 +88,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+            box-shadow: 0 0 20px rgba(167, 139, 250, 0.2);
         }
 
         /* Input styles */
@@ -92,21 +99,21 @@
         }
 
         .cyber-input:focus {
-            border-color: #06B6D4;
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+            border-color: var(--cg-accent);
+            box-shadow: 0 0 20px rgba(167, 139, 250, 0.3);
             outline: none;
         }
 
         /* Neon button */
         .btn-neon {
-            background: linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%);
-            box-shadow: 0 0 30px rgba(6, 182, 212, 0.5);
+            background: linear-gradient(135deg, var(--cg-accent) 0%, var(--cg-accent-hover) 100%);
+            box-shadow: 0 0 30px rgba(167, 139, 250, 0.5);
             transition: all 0.3s ease;
         }
 
         .btn-neon:hover {
             transform: translateY(-2px);
-            box-shadow: 0 0 40px rgba(6, 182, 212, 0.7);
+            box-shadow: 0 0 40px rgba(167, 139, 250, 0.7);
         }
 
         /* Social buttons */
@@ -155,12 +162,12 @@
         <!-- LEFT PANEL - Brand Showcase -->
         <div class="hidden lg:flex lg:w-1/2 xl:w-[55%] relative p-12 xl:p-16 flex-col justify-between">
             <!-- Dot grid overlay -->
-            <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 30px 30px;"></div>
+            <div class="absolute inset-0 opacity-20 dot-grid-overlay"></div>
 
             <div class="relative z-10">
                 <!-- Logo -->
                 <div class="flex items-center gap-3 mb-auto">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-neon-purple to-neon-cyan flex items-center justify-center shadow-lg shadow-neon-cyan/30">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-neon-purple to-neon-purple flex items-center justify-center shadow-lg shadow-neon-purple/30">
                         <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
                         </svg>
@@ -174,7 +181,7 @@
                 <!-- Hero Content -->
                 <div class="mt-20 xl:mt-24">
                     <h1 class="text-4xl xl:text-5xl font-bold leading-tight mb-6">
-                        Secure Your <span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan to-blue-400">Digital</span><br>
+                        Secure Your <span class="text-transparent bg-clip-text bg-gradient-to-r from-neon-purple to-purple-400">Digital</span><br>
                         Infrastructure
                     </h1>
                     <p class="text-gray-400 text-base xl:text-lg max-w-md leading-relaxed">
@@ -224,7 +231,7 @@
 
             <!-- Footer -->
             <div class="relative z-10 text-sm text-gray-500">
-                &copy; 2025 CyberGuard Pro — Built with security in mind
+                &copy; 2026 CyberGuard Pro — Built with security in mind
             </div>
         </div>
 
@@ -236,7 +243,7 @@
                     
                     <!-- Card Header -->
                     <div class="text-center mb-8">
-                        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-neon-cyan to-blue-500 flex items-center justify-center shadow-lg shadow-neon-cyan/40">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-neon-purple to-purple-500 flex items-center justify-center shadow-lg shadow-neon-purple/40">
                             <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
                             </svg>
@@ -285,7 +292,7 @@
                                     class="cyber-input w-full pl-12 pr-12 py-3.5 rounded-xl text-white placeholder-gray-500"
                                     required
                                 >
-                                <button type="button" id="togglePassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-neon-cyan transition-colors">
+                                <button type="button" id="togglePassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-neon-purple transition-colors">
                                     <svg class="w-5 h-5" id="eyeIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -297,10 +304,10 @@
                         <!-- Remember & Forgot -->
                         <div class="flex items-center justify-between">
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" class="w-4 h-4 rounded border-gray-600 bg-gray-700 text-neon-cyan focus:ring-neon-cyan focus:ring-offset-0">
+                                <input type="checkbox" class="w-4 h-4 rounded border-gray-600 bg-gray-700 text-neon-purple focus:ring-neon-purple focus:ring-offset-0">
                                 <span class="text-sm text-gray-400">Remember me</span>
                             </label>
-                            <a href="forgot-password.html" class="text-sm text-neon-cyan hover:text-cyan-300 transition-colors font-medium">Forgot password?</a>
+                            <a href="forgot-password.html" class="text-sm text-neon-purple hover:text-purple-300 transition-colors font-medium">Forgot password?</a>
                         </div>
 
                         <!-- Submit Button -->
@@ -344,13 +351,13 @@
                     <!-- Sign Up Link -->
                     <p class="text-center mt-6 text-gray-400 text-sm">
                         Don't have an account?
-                        <a href="signup.html" class="text-neon-cyan hover:text-cyan-300 font-semibold transition-colors ml-1">Create one now</a>
+                        <a href="signup.html" class="text-neon-purple hover:text-purple-300 font-semibold transition-colors ml-1">Create one now</a>
                     </p>
 
                     <!-- Security Features -->
                     <div class="security-box rounded-xl p-4 mt-6">
                         <h4 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-3 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-neon-cyan" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <svg class="w-4 h-4 text-neon-purple" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
                             </svg>
                             Security Features

@@ -824,10 +824,11 @@ const CyberNotify = {
   _currentCallback: null,
 
   _resolveIcon(type) {
+    const _v = (n, fb) => { try { return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || fb; } catch(_) { return fb; } };
     const ICON_MAP = {
-      warning: { icon: 'warning', color: '#f59e0b' },
-      error:   { icon: 'error',   color: '#ef4444' },
-      info:    { icon: 'info',    color: '#06b6d4' },
+      warning: { icon: 'warning', color: _v('--cg-warning', '#FBBF24') },
+      error:   { icon: 'error',   color: _v('--cg-danger',  '#F87171') },
+      info:    { icon: 'info',    color: _v('--cg-info',    '#38BDF8') },
     };
     return ICON_MAP[type] || ICON_MAP['info'];
   },
@@ -2942,26 +2943,27 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getStatusColor(status) {
+    const _v = (n, fb) => { try { return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || fb; } catch(_) { return fb; } };
     const colors = {
       safe: {
-        background: "rgba(16, 185, 129, 0.15)",
-        text: "#6ee7b7",
-        border: "rgba(16, 185, 129, 0.4)",
+        background: "rgba(52, 211, 153, 0.15)",
+        text: _v('--cg-success', '#34D399'),
+        border: "rgba(52, 211, 153, 0.4)",
       },
       warning: {
-        background: "rgba(245, 158, 11, 0.15)",
-        text: "#fcd34d",
-        border: "rgba(245, 158, 11, 0.4)",
+        background: "rgba(251, 191, 36, 0.15)",
+        text: _v('--cg-warning', '#FBBF24'),
+        border: "rgba(251, 191, 36, 0.4)",
       },
       threat: {
-        background: "rgba(239, 68, 68, 0.15)",
-        text: "#fca5a5",
-        border: "rgba(239, 68, 68, 0.4)",
+        background: "rgba(248, 113, 113, 0.15)",
+        text: _v('--cg-danger', '#F87171'),
+        border: "rgba(248, 113, 113, 0.4)",
       },
       system: {
-        background: "rgba(139, 92, 246, 0.15)",
-        text: "#c4b5fd",
-        border: "rgba(139, 92, 246, 0.4)",
+        background: "rgba(167, 139, 250, 0.15)",
+        text: _v('--cg-accent', '#A78BFA'),
+        border: "rgba(167, 139, 250, 0.4)",
       },
     };
     return colors[status] || colors.system;
@@ -3143,11 +3145,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const group = document.createElement("div");
     group.className = `result-group result-group-${status}`;
 
+    const _v = (n, fb) => { try { return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || fb; } catch(_) { return fb; } };
     const statusInfo = {
-      threat: { title: "🚨 Security Threats", icon: "🚨", color: "#ef4444" },
-      warning: { title: "⚠️ Security Warnings", icon: "⚠️", color: "#f59e0b" },
-      safe: { title: "🛡️ Safe Results", icon: "🛡️", color: "#10b981" },
-      system: { title: "⚙️ System Information", icon: "⚙️", color: "#6366f1" },
+      threat: { title: "🚨 Security Threats", icon: "🚨", color: _v('--cg-danger', '#F87171') },
+      warning: { title: "⚠️ Security Warnings", icon: "⚠️", color: _v('--cg-warning', '#FBBF24') },
+      safe: { title: "🛡️ Safe Results", icon: "🛡️", color: _v('--cg-success', '#34D399') },
+      system: { title: "⚙️ System Information", icon: "⚙️", color: _v('--cg-accent', '#A78BFA') },
     };
 
     const info = statusInfo[status] || statusInfo.system;
@@ -3332,7 +3335,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const button = event.target;
         const originalText = button.textContent;
         button.textContent = "Copied!";
-        button.style.background = "#10b981";
+        button.style.background = getComputedStyle(document.documentElement).getPropertyValue('--cg-success').trim() || '#34D399';
         button.style.color = "white";
         setTimeout(() => {
           button.textContent = originalText;
@@ -3378,7 +3381,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const truncatedMessage =
           item.message.split("\n")[0].substring(0, 30) +
           (item.message.length > 30 ? "..." : "");
-        div.innerHTML = `<div class="font-bold text-xs" style="color:#c4b5fd">🔧 ${item.feature}</div><div class="text-xs" style="color:#64748b">📝 ${truncatedMessage}</div>`;
+        div.innerHTML = `<div class="font-bold text-xs" style="color:var(--cg-accent)">🔧 ${item.feature}</div><div class="text-xs" style="color:var(--cg-text-3)">📝 ${truncatedMessage}</div>`;
         historyList.appendChild(div);
       });
   }

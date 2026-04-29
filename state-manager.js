@@ -162,13 +162,15 @@
       if (scoreEl) scoreEl.textContent = '0';
       if (labelEl) {
         labelEl.textContent = 'CONNECTION ERROR';
-        labelEl.style.color = '#ef4444';
+        labelEl.style.color = getComputedStyle(document.documentElement)
+          .getPropertyValue('--cg-danger').trim() || '#F87171';
       }
 
       // Set gauge to red with 0 score
       const arc = document.getElementById('riskGaugeArc');
       if (arc) {
-        arc.setAttribute('stroke', '#ef4444');
+        arc.setAttribute('stroke', getComputedStyle(document.documentElement)
+          .getPropertyValue('--cg-danger').trim() || '#F87171');
         arc.setAttribute('stroke-dashoffset', '427.26'); // 0% fill
       }
     }

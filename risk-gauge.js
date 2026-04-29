@@ -6,6 +6,7 @@
  *   RiskGauge.init()                  — reset to idle state
  *   RiskGauge.startScan()             — enter loading/scanning state
  *   RiskGauge.update(scanData)        — feed results and animate
+ *   RiskGauge.refreshColors()         — invalidate color cache (call after theme changes)
  *
  * scanData shape:
  *   {
@@ -24,49 +25,117 @@
   const RADIUS = 68;
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS; // ≈ 427.26
 
-  // ─── Threshold config ────────────────────────────────────────────
-  const THRESHOLDS = [
-    {
-      max: 30,
-      label: "LOW RISK",
-      color: "#10b981",          // emerald-500
-      glow: "0 0 18px rgba(16,185,129,0.7), 0 0 40px rgba(16,185,129,0.3)",
-      textColor: "#6ee7b7",
-      iconColor: "#10b981",
-    },
-    {
-      max: 69,
-      label: "MEDIUM RISK",
-      color: "#f59e0b",          // amber-500
-      glow: "0 0 18px rgba(245,158,11,0.7), 0 0 40px rgba(245,158,11,0.3)",
-      textColor: "#fcd34d",
-      iconColor: "#f59e0b",
-    },
-    {
-      max: 100,
-      label: "HIGH RISK",
-      color: "#ef4444",          // red-500
-      glow: "0 0 18px rgba(239,68,68,0.7), 0 0 40px rgba(239,68,68,0.3)",
-      textColor: "#fca5a5",
-      iconColor: "#ef4444",
-    },
-  ];
+  // ─── Token resolver (reads --cg-* from :root via getComputedStyle) ─
+  /**
+   * Resolves CSS custom property values from the document root.
+   * Implements design token resolution with error handling and fallback support.
+   * 
+   * **Validates: Requirements 4.1, 4.2, 4.5, 4.6**
+   * 
+   * @param {string} name - CSS custom property name (e.g., '--cg-accent')
+   * @param {string} fallback - Fallback value to use if token is not found
+   * @returns {string} Resolved token value or fallback
+   * 
+   * @example
+   * const accentColor = getCSSVar('--cg-accent', '#A78BFA');
+   * // Returns: '#A78BFA' (from CSS) or fallback if not found
+   */
+  function getCSSVar(name, fallback) {
+    try {
+      const val = getComputedStyle(document.documentElement)
+        .getPropertyValue(name)
+        .trim();
+      
+      if (!val) {
+        console.warn(`[RiskGauge] CSS token '${name}' not found, using fallback: ${fallback}`);
+        return fallback;
+      }
+      
+      return val;
+    } catch (error) {
+      console.warn(`[RiskGauge] Failed to resolve CSS token '${name}': ${error.message}, using fallback: ${fallback}`);
+      return fallback;
+    }
+  }
 
-  const IDLE_CONFIG = {
-    label: "IDLE",
-    color: "#6b7280",
-    glow: "none",
-    textColor: "#6b7280",
-    iconColor: "#6b7280",
-  };
+  /** Lazily resolved colors — cached after first call */
+  let _colors = null;
+  function colors() {
+    if (!_colors) {
+      _colors = {
+        success:  getCSSVar('--cg-success', '#34D399'),
+        warning:  getCSSVar('--cg-warning', '#FBBF24'),
+        danger:   getCSSVar('--cg-danger',  '#F87171'),
+        accent:   getCSSVar('--cg-accent',  '#A78BFA'),
+        info:     getCSSVar('--cg-info',    '#38BDF8'),
+        muted:    getCSSVar('--cg-text-3',  '#64748B'),
+      };
+    }
+    return _colors;
+  }
 
-  const SCAN_CONFIG = {
-    label: "SCANNING...",
-    color: "#8b5cf6",
-    glow: "0 0 18px rgba(139,92,246,0.7), 0 0 40px rgba(139,92,246,0.3)",
-    textColor: "#c4b5fd",
-    iconColor: "#8b5cf6",
-  };
+  /**
+   * Invalidates the color cache, forcing colors() to re-resolve tokens on next call.
+   * Call this after theme changes or CSS custom property updates.
+   * 
+   * **Validates: Requirement 12.3**
+   */
+  function refreshColors() {
+    _colors = null;
+  }
+
+  // ─── Threshold config (uses design tokens) ───────────────────────
+  function getThresholds() {
+    const c = colors();
+    return [
+      {
+        max: 30,
+        label: "LOW RISK",
+        color: c.success,
+        glow: `0 0 18px ${c.success}B3, 0 0 40px ${c.success}4D`,
+        textColor: c.success,
+        iconColor: c.success,
+      },
+      {
+        max: 69,
+        label: "MEDIUM RISK",
+        color: c.warning,
+        glow: `0 0 18px ${c.warning}B3, 0 0 40px ${c.warning}4D`,
+        textColor: c.warning,
+        iconColor: c.warning,
+      },
+      {
+        max: 100,
+        label: "HIGH RISK",
+        color: c.danger,
+        glow: `0 0 18px ${c.danger}B3, 0 0 40px ${c.danger}4D`,
+        textColor: c.danger,
+        iconColor: c.danger,
+      },
+    ];
+  }
+
+  function getIdleConfig() {
+    const c = colors();
+    return {
+      label: "IDLE",
+      color: c.muted,
+      glow: "none",
+      textColor: c.muted,
+      iconColor: c.muted,
+    };
+  }
+
+  function getScanConfig() {
+    const c = colors();
+    return {
+      label: "SCANNING...",
+      color: c.accent,
+      glow: `0 0 18px ${c.accent}B3, 0 0 40px ${c.accent}4D`,
+      textColor: c.accent,
+      iconColor: c.accent,
+    };
+  }
 
   // ─── DOM refs (resolved lazily after DOMContentLoaded) ───────────
   let els = {};
@@ -100,7 +169,8 @@
 
   /** Pick the threshold config for a given score */
   function getConfig(score) {
-    return THRESHOLDS.find((t) => score <= t.max) || THRESHOLDS[2];
+    const thresholds = getThresholds();
+    return thresholds.find((t) => score <= t.max) || thresholds[2];
   }
 
   /**
@@ -109,13 +179,14 @@
    * 
    * @param {number} score - Risk score between 0 and 100
    * @returns {Object} Object containing color and label properties
-   * @returns {string} return.color - Hex color code (#10b981, #f59e0b, or #ef4444)
+   * @returns {string} return.color - Resolved color from design tokens
    * @returns {string} return.label - Risk level label (LOW RISK, MEDIUM RISK, or HIGH RISK)
    */
   function getColorForScore(score) {
+    const c = colors();
     // Validate input
     if (typeof score !== 'number' || isNaN(score)) {
-      return { color: '#6b7280', label: 'INVALID' };
+      return { color: c.muted, label: 'INVALID' };
     }
 
     // Clamp score to valid range
@@ -123,11 +194,11 @@
 
     // Determine color and label based on thresholds
     if (clampedScore <= 30) {
-      return { color: '#10b981', label: 'LOW RISK' };
+      return { color: c.success, label: 'LOW RISK' };
     } else if (clampedScore <= 69) {
-      return { color: '#f59e0b', label: 'MEDIUM RISK' };
+      return { color: c.warning, label: 'MEDIUM RISK' };
     } else {
-      return { color: '#ef4444', label: 'HIGH RISK' };
+      return { color: c.danger, label: 'HIGH RISK' };
     }
   }
 
@@ -314,19 +385,21 @@
     // Map SSL health status with color coding
     const sslHealthEl = document.getElementById('sslHealthStatus');
     if (sslHealthEl && scanData.web?.sslStatus) {
+      const c = colors();
       const status = scanData.web.sslStatus;
       if (status === 'valid') {
         sslHealthEl.textContent = 'Healthy';
-        sslHealthEl.style.color = '#10b981'; // green
+        sslHealthEl.style.color = c.success;
       } else if (status === 'expired' || status === 'missing') {
         sslHealthEl.textContent = 'Critical';
-        sslHealthEl.style.color = '#ef4444'; // red
+        sslHealthEl.style.color = c.danger;
       }
     }
 
     // Map warnings count with color coding
     const warningsEl = document.getElementById('warningStatCount');
     if (warningsEl && scanData.issues?.warnings !== undefined) {
+      const c = colors();
       const warnCount = Array.isArray(scanData.issues.warnings)
         ? scanData.issues.warnings.length
         : scanData.issues.warnings;
@@ -334,11 +407,11 @@
 
       // Apply color based on severity
       if (warnCount === 0) {
-        warningsEl.style.color = '#10b981'; // green
+        warningsEl.style.color = c.success;
       } else if (warnCount <= 5) {
-        warningsEl.style.color = '#f59e0b'; // yellow
+        warningsEl.style.color = c.warning;
       } else {
-        warningsEl.style.color = '#ef4444'; // red
+        warningsEl.style.color = c.danger;
       }
     }
 
@@ -390,7 +463,7 @@
     if (els.vuln)    els.vuln.textContent     = "0";
     if (els.latency) els.latency.textContent  = "0ms";
 
-    applyConfig(IDLE_CONFIG);
+    applyConfig(getIdleConfig());
   }
 
   /** Enter scanning/loading state */
@@ -401,7 +474,7 @@
     if (els.card) els.card.classList.add("risk-scanning");
     if (els.score) els.score.textContent = "--";
 
-    applyConfig(SCAN_CONFIG);
+    applyConfig(getScanConfig());
     startSpinAnimation();
   }
 
@@ -525,6 +598,6 @@
   }
 
   // Expose public API
-  window.RiskGauge = { init, startScan, update, calculateScore, mapDataToUI, getColorForScore };
+  window.RiskGauge = { init, startScan, update, calculateScore, mapDataToUI, getColorForScore, refreshColors };
 
 })();

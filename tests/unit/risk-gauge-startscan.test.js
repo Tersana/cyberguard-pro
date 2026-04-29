@@ -102,7 +102,7 @@ describe('RiskGauge.startScan', () => {
     expect(score.textContent).toBe('--');
   });
 
-  it('should apply purple color theme for scanning state', () => {
+  it('should apply violet accent color theme for scanning state', () => {
     // Arrange
     const arc = document.getElementById('riskGaugeArc');
     const label = document.getElementById('riskLabel');
@@ -111,8 +111,8 @@ describe('RiskGauge.startScan', () => {
     window.RiskGauge.startScan();
 
     // Assert
-    expect(arc.getAttribute('stroke')).toBe('#8b5cf6'); // purple
+    expect(arc.getAttribute('stroke')).toBe('#A78BFA'); // violet accent
     // JSDOM converts hex colors to rgb format
-    expect(label.style.color).toBe('rgb(196, 181, 253)'); // light purple (#c4b5fd)
+    expect(label.style.color).toBe('rgb(167, 139, 250)'); // violet accent (#A78BFA)
   });
 });

@@ -4,10 +4,10 @@
   }
 
   const TYPE_STYLES = {
-    success: "border-[#059669] bg-[#064e3b] text-[#ecfdf5]",
-    warning: "border-[#d97706] bg-[#78350f] text-[#fffbeb]",
-    error: "border-[#dc2626] bg-[#7f1d1d] text-[#fef2f2]",
-    info: "border-[#2563eb] bg-[#1e3a5f] text-[#eff6ff]"
+    success: "border-[var(--cg-success)] bg-[rgba(52,211,153,0.15)] text-[var(--cg-success)]",
+    warning: "border-[var(--cg-warning)] bg-[rgba(251,191,36,0.15)] text-[var(--cg-warning)]",
+    error: "border-[var(--cg-danger)] bg-[rgba(248,113,113,0.15)] text-[var(--cg-danger)]",
+    info: "border-[var(--cg-info)] bg-[rgba(56,189,248,0.15)] text-[var(--cg-info)]"
   };
 
   function ensureContainer() {
