@@ -19,32 +19,33 @@
     <!-- Mobile Overlay -->
     <div id="sidebar-overlay" class="cyber-sidebar-overlay"></div>
 
-    <!-- Sidebar Toggle Button -->
-    <button 
-      id="sidebar-toggle-btn" 
-      class="cyber-sidebar-toggle" 
-      aria-label="Toggle sidebar navigation"
-      aria-expanded="true"
-      aria-controls="sidebar"
-      title="Show/Hide Sidebar">
-        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-        </svg>
-    </button>
-
     <!-- ===== SIDEBAR ===== -->
     <aside id="sidebar" class="cyber-sidebar w-64 flex-shrink-0 flex flex-col z-40" role="navigation" aria-label="Main navigation" aria-hidden="false">
-        <!-- Logo -->
-        <div class="px-5 pt-16 pb-4 flex items-center gap-3">
-            <div class="cyber-logo-icon">
-                <svg class="h-5 w-5 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+        <!-- Sidebar Header: Logo + Toggle -->
+        <div class="cyber-sidebar-header">
+            <div class="flex items-center gap-3">
+                <div class="cyber-logo-icon">
+                    <svg class="h-5 w-5 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-white">CyberGuard</h1>
+                    <p class="text-xs text-slate-400">Security Pro</p>
+                </div>
+            </div>
+            <!-- Sidebar Toggle Button (Chevron) -->
+            <button 
+              id="sidebar-toggle-btn" 
+              class="cyber-sidebar-toggle" 
+              aria-label="Toggle sidebar navigation"
+              aria-expanded="true"
+              aria-controls="sidebar"
+              title="Collapse Sidebar">
+                <svg class="cyber-chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="18" height="18">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                 </svg>
-            </div>
-            <div>
-                <h1 class="text-base font-bold text-white">CyberGuard</h1>
-                <p class="text-xs text-slate-400">Security Pro</p>
-            </div>
+            </button>
         </div>
 
         <div class="cyber-divider mx-5 mb-3"></div>
@@ -151,6 +152,17 @@
             </div>
         </div>
     </aside>
+
+    <!-- Floating Toggle Button (visible when sidebar is collapsed) -->
+    <button 
+      id="sidebar-toggle-float" 
+      class="cyber-sidebar-toggle-float" 
+      aria-label="Expand sidebar navigation"
+      title="Expand Sidebar">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="18" height="18">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+        </svg>
+    </button>
 
     <!-- ===== MAIN CONTENT ===== -->
     <main class="flex-1 flex flex-col overflow-hidden">
@@ -1829,6 +1841,16 @@
                 // Toggle state (Requirement 5.2)
                 sidebar.classList.toggle('sidebar-collapsed');
                 
+                // Rotate chevron icon based on state
+                const chevron = toggleBtn.querySelector('.cyber-chevron-icon');
+                if (chevron) {
+                    if (sidebar.classList.contains('sidebar-collapsed')) {
+                        chevron.classList.add('chevron-rotated');
+                    } else {
+                        chevron.classList.remove('chevron-rotated');
+                    }
+                }
+                
                 console.log('[Sidebar Toggle] After toggle:', {
                     hasCollapsedClass: sidebar.classList.contains('sidebar-collapsed'),
                     sidebarClasses: sidebar.className
@@ -1836,11 +1858,18 @@
                 
                 // Update ARIA attributes (Requirements 9.2, 9.3, 9.4)
                 toggleBtn.setAttribute('aria-expanded', isCollapsed ? 'true' : 'false');
+                toggleBtn.setAttribute('title', isCollapsed ? 'Collapse Sidebar' : 'Expand Sidebar');
                 sidebar.setAttribute('aria-hidden', newState ? 'true' : 'false');
                 
                 // Handle mobile overlay
                 if (window.innerWidth < 768) {
                     overlay.classList.toggle('active', !newState);
+                }
+                
+                // Show/hide floating toggle button
+                const floatBtn = document.getElementById('sidebar-toggle-float');
+                if (floatBtn) {
+                    floatBtn.style.display = sidebar.classList.contains('sidebar-collapsed') ? 'flex' : 'none';
                 }
             });
             
@@ -1969,6 +1998,17 @@
             // Attach event listeners
             console.log('[Sidebar Toggle] Attaching click event listener to button');
             toggleBtn.addEventListener('click', toggleSidebar);
+            
+            // Wire up floating toggle button
+            const floatBtn = document.getElementById('sidebar-toggle-float');
+            if (floatBtn) {
+                floatBtn.addEventListener('click', toggleSidebar);
+            }
+            
+            // Sync floating button visibility with initial state
+            if (savedState && floatBtn) {
+                floatBtn.style.display = 'flex';
+            }
             
             // Keyboard support (Requirement 5.2)
             toggleBtn.addEventListener('keydown', (e) => {

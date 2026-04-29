@@ -166,11 +166,13 @@ body {
   opacity: 1;
 }
 
-#sidebar.hidden {
+#sidebar.hidden,
+#sidebar.sidebar-collapsed {
   transform: translateX(-100%);
   opacity: 0;
   width: 0;
   min-width: 0;
+  overflow: hidden;
 }
 
 /* --- Main Content Responsive --- */
@@ -232,20 +234,16 @@ main.sidebar-visible {
   display: none !important;
 }
 
-/* Add padding to main content to avoid floating button conflicts */
+/* Add padding to main content area */
 main {
-  padding-top: 50px; /* Further reduced to allow more content space */
-  min-height: calc(100vh - 50px); /* Ensure full height minus padding */
+  padding-top: 0;
+  min-height: 100vh;
   overflow-y: auto; /* Allow scrolling if content is too tall */
 }
 
-/* Ensure sidebar content has proper spacing from floating button */
+/* Ensure sidebar content has proper spacing */
 #sidebar {
   padding-top: 0;
-}
-
-#sidebar > div:first-child {
-  padding-top: 4rem; /* 64px - enough space for floating button */
 }
 
 /* --- Responsive Layout --- */
@@ -259,7 +257,7 @@ main {
   
   main {
     margin-left: 0;
-    padding-top: 50px; /* Add space for floating button */
+    padding-top: 0;
   }
 }
 
