@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threat Intel Integration Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .pass {
+            background: #10b981;
+            color: white;
+        }
+        .fail {
+            background: #ef4444;
+            color: white;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background: #7c3aed;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #8b5cf6;
+        }
+        #console-output {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin: 5px 0;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔒 Threat Intel Hub Integration Test</h1>
+    
+    <div id="test-results"></div>
+    
+    <h2>Manual Tests</h2>
+    <button onclick="testTabInitialized()">Test 1: Check tabInitialized</button>
+    <button onclick="testInitializeMethod()">Test 2: Test initializeThreatIntel()</button>
+    <button onclick="testTabSwitching()">Test 3: Test Tab Switching</button>
+    <button onclick="runAllTests()">Run All Tests</button>
+    
+    <h2>Console Output</h2>
+    <div id="console-output"></div>
+
+    <!-- Hidden tab elements for testing -->
+    <div style="display: none;">
+        <button class="tab-button" data-tab="threat-intel">Threat Intel</button>
+        <div id="threat-intel" class="tab-pane hidden"></div>
+    </div>
+
+    <!-- Load the actual modules -->
+    <script src="threat-intel.js"></script>
+    <script src="dashboard-tab-manager.js"></script>
+
+    <script>
+        // Capture console logs
+        const consoleOutput = document.getElementById('console-output');
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+
+        function addLogEntry(type, ...args) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.style.color = type === 'error' ? '#ef4444' : type === 'warn' ? '#f59e0b' : '#06b6d4';
+            entry.textContent = `[${type.toUpperCase()}] ${args.join(' ')}`;
+            consoleOutput.appendChild(entry);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addLogEntry('log', ...args);
+        };
+
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addLogEntry('warn', ...args);
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLogEntry('error', ...args);
+        };
+
+        // Test functions
+        function addTestResult(testName, passed, message) {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            resultDiv.textContent = `${passed ? '✓' : '✗'} ${testName}: ${message}`;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function testTabInitialized() {
+            console.log('Running Test 1: Check tabInitialized');
+            const hasThreatIntel = DashboardTabManager.tabInitialized.hasOwnProperty('threat-intel');
+            const isInitiallyFalse = DashboardTabManager.tabInitialized['threat-intel'] === false;
+            
+            if (hasThreatIntel && isInitiallyFalse) {
+                addTestResult('Test 1', true, 'threat-intel is in tabInitialized and set to false');
+            } else {
+                addTestResult('Test 1', false, 'threat-intel not properly registered');
+            }
+        }
+
+        function testInitializeMethod() {
+            console.log('Running Test 2: Test initializeThreatIntel()');
+            
+            // Check if method exists
+            if (typeof DashboardTabManager.initializeThreatIntel === 'function') {
+                addTestResult('Test 2a', true, 'initializeThreatIntel() method exists');
+                
+                // Test calling the method
+                try {
+                    DashboardTabManager.initializeThreatIntel();
+                    addTestResult('Test 2b', true, 'initializeThreatIntel() executed without errors');
+                } catch (error) {
+                    addTestResult('Test 2b', false, `Error: ${error.message}`);
+                }
+            } else {
+                addTestResult('Test 2a', false, 'initializeThreatIntel() method not found');
+            }
+        }
+
+        function testTabSwitching() {
+            console.log('Running Test 3: Test Tab Switching');
+            
+            // Reset initialization state
+            DashboardTabManager.tabInitialized['threat-intel'] = false;
+            
+            // Test initializeTab
+            try {
+                DashboardTabManager.initializeTab('threat-intel');
+                
+                const isInitialized = DashboardTabManager.isTabInitialized('threat-intel');
+                if (isInitialized) {
+                    addTestResult('Test 3', true, 'Tab initialized successfully via initializeTab()');
+                } else {
+                    addTestResult('Test 3', false, 'Tab not marked as initialized');
+                }
+            } catch (error) {
+                addTestResult('Test 3', false, `Error: ${error.message}`);
+            }
+        }
+
+        function runAllTests() {
+            document.getElementById('test-results').innerHTML = '';
+            document.getElementById('console-output').innerHTML = '';
+            
+            console.log('=== Starting All Tests ===');
+            testTabInitialized();
+            testInitializeMethod();
+            testTabSwitching();
+            console.log('=== All Tests Complete ===');
+        }
+
+        // Auto-run tests on load
+        window.addEventListener('load', () => {
+            console.log('Page loaded, modules ready');
+            console.log('ThreatIntelHub available:', typeof ThreatIntelHub !== 'undefined');
+            console.log('DashboardTabManager available:', typeof DashboardTabManager !== 'undefined');
+        });
+    </script>
+</body>
+</html>

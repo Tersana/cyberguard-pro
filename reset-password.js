@@ -21,12 +21,7 @@ function notify(message, type) {
     window.CyberNotify.alert(message, { type });
     return;
   }
-
-  if (type === "error") {
-    window.alert(message);
-  } else {
-    console.info(message);
-  }
+  console[type === "error" ? "error" : "info"](message);
 }
 
 function setSubmittingState(button, isSubmitting, defaultLabel) {
@@ -41,6 +36,17 @@ function parseResetParams(search) {
     token: (params.get("token") || "").trim(),
     email: (params.get("email") || "").trim()
   };
+}
+
+function scrubSensitiveResetQueryParams() {
+  if (!window.history || typeof window.history.replaceState !== "function") return;
+  const params = new URLSearchParams(window.location.search || "");
+  params.delete("token");
+  params.delete("email");
+  const query = params.toString();
+  const cleanPath = window.location.pathname || "/reset-password.html";
+  const nextUrl = query ? `${cleanPath}?${query}` : cleanPath;
+  window.history.replaceState({}, document.title, nextUrl);
 }
 
 function extractBackendMessage(payload) {
@@ -165,6 +171,7 @@ function initResetPasswordPage() {
   if (!form) return;
 
   const params = parseResetParams(window.location.search);
+  scrubSensitiveResetQueryParams();
   applyResetParamsToForm(form, params);
 
   if (!params.token || !params.email) {
@@ -176,6 +183,18 @@ function initResetPasswordPage() {
   }
 
   form.addEventListener("submit", handleResetPasswordSubmit);
+
+  const togglePasswordVisibility = (inputId, buttonId) => {
+    const input = document.getElementById(inputId);
+    const button = document.getElementById(buttonId);
+    if (!input || !button) return;
+    button.addEventListener("click", () => {
+      input.type = input.type === "password" ? "text" : "password";
+    });
+  };
+
+  togglePasswordVisibility("new_password", "toggleNewPassword");
+  togglePasswordVisibility("password_confirmation", "toggleConfirmPassword");
 }
 
 if (typeof window !== "undefined") {

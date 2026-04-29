@@ -16,18 +16,24 @@
 <body class="cyber-body">
 
 <div id="app" class="flex h-screen overflow-hidden">
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-30 hidden sm:hidden"></div>
+    <!-- Mobile Overlay -->
+    <div id="sidebar-overlay" class="cyber-sidebar-overlay"></div>
 
-    <!-- Floating Sidebar Toggle -->
-    <button id="floating-sidebar-toggle" class="fixed top-3 left-3 z-50 cyber-float-btn flex items-center gap-2 px-3 py-2 text-sm" title="Show/Hide Sidebar">
-        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25A2.25 2.25 0 0 1 13.5 8.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+    <!-- Sidebar Toggle Button -->
+    <button 
+      id="sidebar-toggle-btn" 
+      class="cyber-sidebar-toggle" 
+      aria-label="Toggle sidebar navigation"
+      aria-expanded="true"
+      aria-controls="sidebar"
+      title="Show/Hide Sidebar">
+        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
         </svg>
-        <span class="text-sm font-medium">Sidebar</span>
     </button>
 
     <!-- ===== SIDEBAR ===== -->
-    <aside id="sidebar" class="cyber-sidebar w-64 flex-shrink-0 flex flex-col z-40">
+    <aside id="sidebar" class="cyber-sidebar w-64 flex-shrink-0 flex flex-col z-40" role="navigation" aria-label="Main navigation" aria-hidden="false">
         <!-- Logo -->
         <div class="px-5 pt-16 pb-4 flex items-center gap-3">
             <div class="cyber-logo-icon">
@@ -75,13 +81,19 @@
                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                 </svg>
-                <span class="text-sm font-medium">Cryptography</span>
+                <span class="text-sm font-medium">Hash Tools</span>
             </a>
             <a href="#" class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg" onclick="switchToTab('ai-assistant'); return false;">
                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
                 </svg>
                 <span class="text-sm font-medium">AI Assistant</span>
+            </a>
+            <a href="#" class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg" onclick="switchToTab('threat-intel'); return false;">
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                </svg>
+                <span class="text-sm font-medium">Threat Intel</span>
             </a>
             <a href="#" class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg" onclick="switchToTab('projects'); return false;">
                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -247,6 +259,14 @@
                             <input type="password" id="shodan-api-key" class="api-key-input cyber-input w-full text-sm p-3 rounded-lg" placeholder="Enter Shodan API key...">
                             <button id="save-shodan-key-btn" class="api-save-btn cyber-btn-purple mt-3 w-full text-sm py-2.5 px-4 rounded-lg">Save Key</button>
                         </div>
+                        <div class="api-key-card cyber-card p-5">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="cyber-icon-box-cyan"><svg class="w-4 h-4 text-cyan-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" /></svg></div>
+                                <div><h4 class="text-sm font-bold text-white">URLScan.io</h4><p class="text-xs text-slate-400">URL scanning</p></div>
+                            </div>
+                            <input type="password" id="urlscan-api-key" class="api-key-input cyber-input w-full text-sm p-3 rounded-lg" placeholder="Enter URLScan API key...">
+                            <button id="save-urlscan-key-btn" class="api-save-btn cyber-btn-cyan mt-3 w-full text-sm py-2.5 px-4 rounded-lg">Save Key</button>
+                        </div>
                     </div>
                     <div class="mt-6 flex justify-between items-center">
                         <button id="clear-all-keys-btn" class="cyber-btn-danger text-sm font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
@@ -262,6 +282,7 @@
                             <a href="https://www.abuseipdb.com/api" target="_blank" class="text-xs cyber-link-badge-amber px-3 py-1.5 rounded-lg">AbuseIPDB</a>
                             <a href="https://whoisxmlapi.com/api" target="_blank" class="text-xs cyber-link-badge-green px-3 py-1.5 rounded-lg">WhoisXML</a>
                             <a href="https://account.shodan.io/" target="_blank" class="text-xs cyber-link-badge-purple px-3 py-1.5 rounded-lg">Shodan</a>
+                            <a href="https://urlscan.io/user/profile/" target="_blank" class="text-xs cyber-link-badge-cyan px-3 py-1.5 rounded-lg">URLScan.io</a>
                         </div>
                     </div>
                 </div>
@@ -407,34 +428,6 @@
             </div>
 
             <div class="px-4 sm:px-6 pb-6">
-
-                <!-- ===== TAB BAR ===== -->
-                <div class="cyber-tab-bar flex gap-1 mb-6 p-1 rounded-xl">
-                    <button data-tab="network-tools" class="tab-button cyber-tab active flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium">
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" />
-                        </svg>
-                        Network
-                    </button>
-                    <button data-tab="web-security" class="tab-button cyber-tab flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium">
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
-                        </svg>
-                        Web Security
-                    </button>
-                    <button data-tab="hash-tools" class="tab-button cyber-tab flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium">
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                        </svg>
-                        Hash Tools
-                    </button>
-                    <button data-tab="ai-assistant" class="tab-button cyber-tab flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium">
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
-                        </svg>
-                        AI Assistant
-                    </button>
-                </div>
 
                 <div id="tab-content" class="space-y-6">
 
@@ -1140,6 +1133,174 @@
                     </div>
                     <!-- END PROJECTS TAB -->
 
+                    <!-- ============================================================ -->
+                    <!-- THREAT INTEL TAB -->
+                    <!-- ============================================================ -->
+                    <div id="threat-intel" class="tab-pane hidden space-y-6">
+                        
+                        <!-- Search Interface -->
+                        <div class="cyber-card p-8">
+                            <div class="flex flex-col items-center space-y-4">
+                                <!-- Search Input -->
+                                <div class="w-full flex justify-center">
+                                    <input 
+                                        type="text" 
+                                        id="threat-intel-search-input"
+                                        class="cyber-input font-mono text-lg px-6 py-4 w-full"
+                                        style="max-width: 600px;"
+                                        placeholder="Enter IP address, domain, or file hash..."
+                                        autocomplete="off"
+                                    />
+                                </div>
+                                
+                                <!-- Search Button -->
+                                <button 
+                                    id="threat-intel-search-btn"
+                                    class="cyber-btn-primary px-8 py-3 text-base font-semibold"
+                                >
+                                    <svg class="w-5 h-5 inline-block mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                                    </svg>
+                                    Search Threat Intelligence
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Recent Searches Section -->
+                        <div id="threat-intel-recent-searches" class="cyber-card p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-purple-400">Recent Searches</h3>
+                                <button 
+                                    id="threat-intel-clear-history-btn"
+                                    class="cyber-btn-danger text-xs px-3 py-2 rounded-lg flex items-center gap-2"
+                                >
+                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                    </svg>
+                                    Clear History
+                                </button>
+                            </div>
+                            
+                            <!-- Recent Searches List -->
+                            <div id="threat-intel-history-list" class="space-y-2">
+                                <!-- History items will be inserted here -->
+                                <div class="text-sm text-slate-400 text-center py-4">
+                                    No recent searches
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Results Section -->
+                        <div id="threat-intel-results-section">
+                            
+                            <!-- Verdict Card (initially hidden) -->
+                            <div id="threat-intel-verdict-card" class="cyber-card backdrop-blur-md p-8 text-center hidden mb-6">
+                                <div class="flex flex-col items-center space-y-4">
+                                    <!-- Verdict Icon -->
+                                    <div id="threat-intel-verdict-icon" class="text-6xl">
+                                        <!-- Shield icon for CLEAR -->
+                                        <svg id="verdict-icon-clear" class="w-16 h-16 mx-auto hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+                                        </svg>
+                                        <!-- Warning icon for MALICIOUS -->
+                                        <svg id="verdict-icon-malicious" class="w-16 h-16 mx-auto hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                                        </svg>
+                                    </div>
+                                    
+                                    <!-- Verdict Text -->
+                                    <div id="threat-intel-verdict-text" class="text-3xl font-bold tracking-wider">
+                                        <!-- Verdict status will be inserted here -->
+                                    </div>
+                                    
+                                    <!-- Verdict Details -->
+                                    <div id="threat-intel-verdict-details" class="text-sm text-gray-400">
+                                        <!-- Threat count details will be inserted here -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Source Cards Container -->
+                            <div id="threat-intel-source-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                
+                                <!-- VirusTotal Source Card -->
+                                <div id="virustotal-card" class="cyber-card backdrop-blur-md p-6">
+                                    <div class="flex flex-col space-y-4">
+                                        <!-- Card Header -->
+                                        <div class="flex items-center justify-between">
+                                            <h3 class="text-lg font-semibold text-purple-400">VirusTotal</h3>
+                                            <div id="virustotal-status" class="text-sm">
+                                                <!-- Status will be inserted here -->
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Loading Spinner -->
+                                        <div id="virustotal-loading" class="hidden flex justify-center py-8">
+                                            <div class="loading-spinner w-8 h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"></div>
+                                        </div>
+                                        
+                                        <!-- Results Placeholder -->
+                                        <div id="virustotal-results" class="text-center py-8 text-slate-400 text-sm">
+                                            Awaiting search
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- AbuseIPDB Source Card -->
+                                <div id="abuseipdb-card" class="cyber-card backdrop-blur-md p-6">
+                                    <div class="flex flex-col space-y-4">
+                                        <!-- Card Header -->
+                                        <div class="flex items-center justify-between">
+                                            <h3 class="text-lg font-semibold text-purple-400">AbuseIPDB</h3>
+                                            <div id="abuseipdb-status" class="text-sm">
+                                                <!-- Status will be inserted here -->
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Loading Spinner -->
+                                        <div id="abuseipdb-loading" class="hidden flex justify-center py-8">
+                                            <div class="loading-spinner w-8 h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"></div>
+                                        </div>
+                                        
+                                        <!-- Results Placeholder -->
+                                        <div id="abuseipdb-results" class="text-center py-8 text-slate-400 text-sm">
+                                            Awaiting search
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- URLScan.io Source Card -->
+                                <div id="urlscan-card" class="cyber-card backdrop-blur-md p-6">
+                                    <div class="flex flex-col space-y-4">
+                                        <!-- Card Header -->
+                                        <div class="flex items-center justify-between">
+                                            <h3 class="text-lg font-semibold text-purple-400">URLScan.io</h3>
+                                            <div id="urlscan-status" class="text-sm">
+                                                <!-- Status will be inserted here -->
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Loading Spinner -->
+                                        <div id="urlscan-loading" class="hidden flex justify-center py-8">
+                                            <div class="loading-spinner w-8 h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"></div>
+                                        </div>
+                                        
+                                        <!-- Results Placeholder -->
+                                        <div id="urlscan-results" class="text-center py-8 text-slate-400 text-sm">
+                                            Awaiting search
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <!-- End Source Cards Container -->
+
+                        </div>
+                        <!-- End Results Section -->
+
+                    </div>
+                    <!-- END THREAT INTEL TAB -->
+
                 </div><!-- end #tab-content -->
 
                 <!-- ============================================================ -->
@@ -1351,24 +1512,6 @@
                     <p id="project-description-error" class="text-xs text-red-400 mt-1 hidden"></p>
                 </div>
 
-                <!-- Target -->
-                <div>
-                    <label for="project-target" class="block text-sm font-semibold text-slate-300 mb-2">
-                        Target <span class="text-red-400">*</span>
-                    </label>
-                    <input 
-                        type="text" 
-                        id="project-target" 
-                        name="target"
-                        class="cyber-input w-full p-3 rounded-lg text-sm font-mono"
-                        placeholder="e.g., example.com or 192.168.1.1"
-                        required
-                        maxlength="255"
-                    >
-                    <p class="text-xs text-slate-500 mt-1">IP address or domain name</p>
-                    <p id="project-target-error" class="text-xs text-red-400 mt-1 hidden"></p>
-                </div>
-
                 <!-- Status -->
                 <div>
                     <label for="project-status" class="block text-sm font-semibold text-slate-300 mb-2">
@@ -1466,24 +1609,6 @@
                         maxlength="500"
                     ></textarea>
                     <p id="edit-project-description-error" class="text-xs text-red-400 mt-1 hidden"></p>
-                </div>
-
-                <!-- Target -->
-                <div>
-                    <label for="edit-project-target" class="block text-sm font-semibold text-slate-300 mb-2">
-                        Target <span class="text-red-400">*</span>
-                    </label>
-                    <input 
-                        type="text" 
-                        id="edit-project-target" 
-                        name="target"
-                        class="cyber-input w-full p-3 rounded-lg text-sm font-mono"
-                        placeholder="e.g., example.com or 192.168.1.1"
-                        required
-                        maxlength="255"
-                    >
-                    <p class="text-xs text-slate-500 mt-1">IP address or domain name</p>
-                    <p id="edit-project-target-error" class="text-xs text-red-400 mt-1 hidden"></p>
                 </div>
 
                 <!-- Status -->
@@ -1628,6 +1753,8 @@
 <script src="auth.js?v=1.0.1"></script>
 <!-- Main JavaScript File - Must load first to attach event listeners -->
 <script src="main.js?v=1.0.1"></script>
+<!-- Threat Intel Hub Module -->
+<script src="threat-intel.js"></script>
 <!-- Dashboard Tab Manager - Loads after main.js to avoid conflicts -->
 <script src="dashboard-tab-manager.js"></script>
 <!-- State Manager Module -->
@@ -1649,5 +1776,240 @@
         </div>
       </div>
     </div>
+
+    <!-- Sidebar Toggle Script -->
+    <script>
+        /**
+         * Toggle sidebar visibility state
+         * Handles animation, state persistence, and ARIA updates
+         * Implements Requirements 5.1, 5.2, 11.1, 11.2, 11.3
+         */
+        function toggleSidebar() {
+            console.log('[Sidebar Toggle] toggleSidebar() called');
+            
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('sidebar-toggle-btn');
+            const overlay = document.getElementById('sidebar-overlay');
+            const main = document.querySelector('main');
+            
+            console.log('[Sidebar Toggle] Elements found:', {
+                sidebar: !!sidebar,
+                toggleBtn: !!toggleBtn,
+                overlay: !!overlay,
+                main: !!main
+            });
+            
+            // Check if elements exist
+            if (!sidebar || !toggleBtn || !overlay || !main) {
+                console.warn('Sidebar toggle: Required elements not found');
+                return;
+            }
+            
+            const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+            const newState = !isCollapsed;
+            
+            console.log('[Sidebar Toggle] Current state:', {
+                isCollapsed,
+                newState,
+                sidebarClasses: sidebar.className
+            });
+            
+            // Focus management (Requirement 9.8): Move focus to toggle button if focus is inside sidebar
+            const activeElement = document.activeElement;
+            if (newState && sidebar.contains(activeElement)) {
+                // Sidebar is closing and focus is inside - move focus to toggle button
+                toggleBtn.focus();
+            }
+            
+            // Add will-change for performance (Requirement 11.2)
+            requestAnimationFrame(() => {
+                sidebar.style.willChange = 'transform, width, opacity';
+                main.style.willChange = 'margin-left';
+                
+                // Toggle state (Requirement 5.2)
+                sidebar.classList.toggle('sidebar-collapsed');
+                
+                console.log('[Sidebar Toggle] After toggle:', {
+                    hasCollapsedClass: sidebar.classList.contains('sidebar-collapsed'),
+                    sidebarClasses: sidebar.className
+                });
+                
+                // Update ARIA attributes (Requirements 9.2, 9.3, 9.4)
+                toggleBtn.setAttribute('aria-expanded', isCollapsed ? 'true' : 'false');
+                sidebar.setAttribute('aria-hidden', newState ? 'true' : 'false');
+                
+                // Handle mobile overlay
+                if (window.innerWidth < 768) {
+                    overlay.classList.toggle('active', !newState);
+                }
+            });
+            
+            // Remove will-change after animation completes (Requirement 11.3)
+            setTimeout(() => {
+                sidebar.style.willChange = 'auto';
+                main.style.willChange = 'auto';
+            }, 300);
+            
+            // Save state to LocalStorage (Requirement 5.2)
+            saveSidebarState(newState);
+            
+            // Screen reader announcement (Requirement 9.9)
+            announceStateChange(newState);
+            
+            // Dispatch custom event (Requirement 5.2)
+            window.dispatchEvent(new CustomEvent('sidebarToggled', {
+                detail: { isCollapsed: newState, timestamp: Date.now() }
+            }));
+        }
+        
+        /**
+         * Announce state change to screen readers
+         * Creates a temporary live region for accessibility
+         * Implements Requirement 9.9
+         * @param {boolean} isCollapsed - true if sidebar is collapsed
+         */
+        function announceStateChange(isCollapsed) {
+            // Create announcement element
+            const announcement = document.createElement('div');
+            announcement.setAttribute('role', 'status');
+            announcement.setAttribute('aria-live', 'polite');
+            announcement.className = 'sr-only';
+            announcement.textContent = isCollapsed 
+                ? 'Sidebar collapsed' 
+                : 'Sidebar expanded';
+            
+            // Add to DOM
+            document.body.appendChild(announcement);
+            
+            // Remove after announcement is read (1 second)
+            setTimeout(() => {
+                if (announcement.parentNode) {
+                    announcement.remove();
+                }
+            }, 1000);
+        }
+        
+        /**
+         * Save sidebar state to LocalStorage
+         * @param {boolean} isCollapsed - true if collapsed, false if expanded
+         */
+        function saveSidebarState(isCollapsed) {
+            try {
+                localStorage.setItem('sidebarCollapsed', JSON.stringify(isCollapsed));
+            } catch (error) {
+                console.warn('Failed to save sidebar state:', error);
+                // Gracefully degrade - feature still works, just doesn't persist
+            }
+        }
+        
+        /**
+         * Load sidebar state from LocalStorage
+         * @returns {boolean} - true if collapsed, false if expanded (default)
+         */
+        function loadSidebarState() {
+            try {
+                const stored = localStorage.getItem('sidebarCollapsed');
+                if (stored === null) return false;
+                
+                const parsed = JSON.parse(stored);
+                // Validate type
+                if (typeof parsed !== 'boolean') {
+                    console.warn('Invalid sidebar state type');
+                    return false;
+                }
+                return parsed;
+            } catch (error) {
+                console.warn('Failed to load sidebar state:', error);
+                return false; // Default to expanded
+            }
+        }
+        
+        /**
+         * Set sidebar state programmatically
+         * @param {boolean} collapsed - true to collapse, false to expand
+         */
+        function setSidebarState(collapsed) {
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
+            
+            const isCurrentlyCollapsed = sidebar.classList.contains('sidebar-collapsed');
+            
+            if (collapsed !== isCurrentlyCollapsed) {
+                toggleSidebar();
+            }
+        }
+        
+        /**
+         * Initialize sidebar on page load
+         */
+        function initSidebar() {
+            console.log('[Sidebar Toggle] initSidebar() called');
+            console.log('[Sidebar Toggle] document.readyState:', document.readyState);
+            
+            const toggleBtn = document.getElementById('sidebar-toggle-btn');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            console.log('[Sidebar Toggle] Init elements found:', {
+                toggleBtn: !!toggleBtn,
+                overlay: !!overlay
+            });
+            
+            if (!toggleBtn || !overlay) {
+                console.warn('Sidebar toggle: Required elements not found for initialization');
+                return;
+            }
+            
+            // Load saved state
+            const savedState = loadSidebarState();
+            console.log('[Sidebar Toggle] Loaded saved state:', savedState);
+            if (savedState) {
+                setSidebarState(savedState);
+            }
+            
+            // Attach event listeners
+            console.log('[Sidebar Toggle] Attaching click event listener to button');
+            toggleBtn.addEventListener('click', toggleSidebar);
+            
+            // Keyboard support (Requirement 5.2)
+            toggleBtn.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleSidebar();
+                }
+            });
+            
+            // Mobile overlay click
+            overlay.addEventListener('click', () => {
+                if (window.innerWidth < 768) {
+                    setSidebarState(true); // Collapse on mobile
+                }
+            });
+            
+            // Handle resize with debouncing
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    const isMobile = window.innerWidth < 768;
+                    // Update overlay visibility based on mode
+                    if (!isMobile) {
+                        overlay.classList.remove('active');
+                    }
+                }, 150);
+            });
+            
+            console.log('[Sidebar Toggle] Initialization complete');
+        }
+        
+        // Initialize on DOM ready
+        console.log('[Sidebar Toggle] Script loaded, checking readyState');
+        if (document.readyState === 'loading') {
+            console.log('[Sidebar Toggle] DOM still loading, adding DOMContentLoaded listener');
+            document.addEventListener('DOMContentLoaded', initSidebar);
+        } else {
+            console.log('[Sidebar Toggle] DOM already loaded, calling initSidebar immediately');
+            initSidebar();
+        }
+    </script>
 </body>
 </html>

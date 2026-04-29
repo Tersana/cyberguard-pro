@@ -498,6 +498,8 @@
                 if (result.success && result.requires2FA) {
                     // Hide button loading before showing 2FA modal
                     hideInlineLoading(submitButton);
+                    // Store email for the 2FA verify call (API requires it)
+                    window._pending2FAEmail = result.email || email;
                     // Show 2FA modal
                     show2FAModal();
                 } else if (result.success) {
@@ -528,7 +530,9 @@
                 } else if (error.name === 'APIError') {
                     showMessage('error', 'Login Failed', error.message || 'Invalid credentials');
                 } else {
-                    showMessage('error', 'Login Error', 'An unexpected error occurred. Please try again.');
+                    // Show the actual error message instead of a generic one
+                    console.error('[Login] Unhandled error type:', error.name, error.message);
+                    showMessage('error', 'Login Error', error.message || 'Something went wrong. Please try again.');
                 }
             }
         });
@@ -596,7 +600,7 @@
             showInlineLoading(submitButton, 'Verifying');
             
             try {
-                const result = await authManager.verify2FA(code);
+                const result = await authManager.verify2FA(code, window._pending2FAEmail);
                 
                 hide2FAModal();
                 

@@ -1606,7 +1606,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const apiKeysModal = document.getElementById("api-keys-modal");
   const apiKeysClose = document.getElementById("api-keys-close");
   const floatingSidebarToggle = document.getElementById(
-    "floating-sidebar-toggle"
+    "sidebar-toggle-btn"
   );
 
   const VT_BASE_URL = "https://www.virustotal.com/api/v3";
@@ -1667,44 +1667,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Sidebar Panel Management ---
 
-  function showSidebar() {
-    sidebar.classList.remove("hidden");
-    const mainEl = document.querySelector("main");
-    if (mainEl) { mainEl.classList.add("sidebar-visible"); mainEl.classList.remove("sidebar-hidden"); }
-    // Hide floating button when sidebar is visible
-    floatingSidebarToggle.style.opacity = "0";
-    floatingSidebarToggle.style.pointerEvents = "none";
-    floatingSidebarToggle.style.transform = "scale(0.8)";
-  }
-
-  function hideSidebar() {
-    sidebar.classList.add("hidden");
-    const mainEl = document.querySelector("main");
-    if (mainEl) { mainEl.classList.add("sidebar-hidden"); mainEl.classList.remove("sidebar-visible"); }
-    // Show floating button when sidebar is hidden
-    floatingSidebarToggle.style.opacity = "1";
-    floatingSidebarToggle.style.pointerEvents = "auto";
-    floatingSidebarToggle.style.transform = "scale(1)";
-  }
-
-  function toggleSidebar() {
-    if (sidebar.classList.contains("hidden")) {
-      showSidebar();
-    } else {
-      hideSidebar();
-    }
-  }
-
+  // NOTE: Sidebar toggle functionality has been moved to dashboard.html
+  // The new implementation uses .sidebar-collapsed class and includes:
+  // - Smooth animations
+  // - LocalStorage persistence
+  // - Mobile responsive behavior
+  // - Full accessibility support
+  // See dashboard.html (lines ~1780-1980) for the new implementation
+  
+  // Keep the floating button reference for backward compatibility
+  // but don't add event listener since it's handled in dashboard.html
+  
   apiKeysToggle.addEventListener("click", toggleApiKeysModal);
   apiKeysClose.addEventListener("click", hideApiKeysModal);
-  floatingSidebarToggle.addEventListener("click", toggleSidebar);
+  // floatingSidebarToggle event listener is now in dashboard.html
 
-  // Legacy mobile sidebar toggle (kept for mobile compatibility)
-  const toggleMobileSidebar = () => {
-    sidebar.classList.toggle("-translate-x-full");
-    sidebarOverlay.classList.toggle("hidden");
-  };
-  sidebarOverlay.addEventListener("click", toggleMobileSidebar);
+  // NOTE: Sidebar overlay click handler is now in dashboard.html
+  // The new implementation uses .sidebar-collapsed class and handles mobile/desktop modes
+  // See dashboard.html (lines ~1950-1960) for the overlay click handler
 
   // NOTE: Tab switching is now handled by DashboardTabManager (dashboard-tab-manager.js)
   // The old tab switching code has been removed to prevent conflicts
@@ -1741,11 +1721,41 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await authManager.setup2FA();
 
       if (response.success) {
-        // Display QR code image from response
-        twofaQrCode.innerHTML = `<img src="${response.qrCode}" alt="2FA QR Code" class="w-48 h-48" />`;
-        
-        // Display secret key text
-        twofaSecretKey.textContent = response.secret;
+        // Display secret key text (show immediately as fallback)
+        twofaSecretKey.textContent = response.secret || '';
+
+        // Build the image src — handle raw Base64 strings and full data URIs
+        let qrSrc = response.qrCode || '';
+        if (qrSrc && !qrSrc.startsWith('data:') && !qrSrc.startsWith('http')) {
+          // Raw Base64 string without data URI prefix
+          qrSrc = `data:image/png;base64,${qrSrc}`;
+        }
+
+        if (qrSrc) {
+          const img = document.createElement('img');
+          img.src = qrSrc;
+          img.alt = '2FA QR Code';
+          img.className = 'w-48 h-48';
+          img.onerror = () => {
+            // QR image failed to load — show manual key fallback
+            twofaQrCode.innerHTML = `
+              <div class="text-amber-400 text-sm text-center">
+                <p class="mb-2">QR code could not be displayed.</p>
+                <p>Enter this key manually in your authenticator app:</p>
+                <code class="block mt-2 text-white font-mono tracking-wider text-base">${response.secret || 'N/A'}</code>
+              </div>`;
+          };
+          twofaQrCode.innerHTML = '';
+          twofaQrCode.appendChild(img);
+        } else {
+          // No QR code URL at all — show manual key only
+          twofaQrCode.innerHTML = `
+            <div class="text-amber-400 text-sm text-center">
+              <p class="mb-2">QR code not available.</p>
+              <p>Enter this key manually in your authenticator app:</p>
+              <code class="block mt-2 text-white font-mono tracking-wider text-base">${response.secret || 'N/A'}</code>
+            </div>`;
+        }
 
         logResult(
           new Date(),
@@ -2026,8 +2036,35 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Update 2FA status on page load
-  update2FAStatus();
+  // Async dashboard initialization with event-driven 2FA UI update
+  async function initializeDashboard() {
+    // Add loading state for 2FA toggle area during session restoration
+    const enable2FABtn = document.getElementById("enable-2fa-btn");
+    const twofaEnabledSection = document.getElementById("twofa-enabled-section");
+    
+    // Hide both buttons initially to show loading state
+    if (enable2FABtn) {
+      enable2FABtn.classList.add("hidden");
+    }
+    if (twofaEnabledSection) {
+      twofaEnabledSection.classList.add("hidden");
+    }
+    
+    // Wait for session restoration to complete
+    await authManager.loadUserSession();
+    
+    // Update 2FA status after session restoration completes
+    // This ensures the UI is updated even if the event doesn't fire
+    update2FAStatus();
+  }
+
+  // Listen for session restoration completion event
+  document.addEventListener('cyberguard:sessionRestored', (event) => {
+    update2FAStatus();
+  });
+
+  // Initialize dashboard asynchronously
+  initializeDashboard();
 
   // --- API Key Management ---
   saveVtKeyBtn.addEventListener("click", () => {
@@ -2041,6 +2078,8 @@ document.addEventListener("DOMContentLoaded", () => {
         "✅ VirusTotal API Key saved securely.",
         "success"
       );
+      // Show success notification
+      CyberNotify.alert("VirusTotal API Key saved successfully!", { type: 'success' });
       vtApiKeyInput.value = ""; // Clear for security
     } else {
       console.error("Invalid VirusTotal API key provided");
@@ -2064,13 +2103,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const key = abuseApiKeyInput.value.trim();
     if (key) {
       const encryptedKey = encryptApiKey(key);
-      localStorage.setItem("abuseApiKey", encryptedKey);
+      localStorage.setItem("abuseipdbApiKey", encryptedKey);
       logResult(
         new Date(),
         "System",
         "✅ AbuseIPDB API Key saved securely.",
         "success"
       );
+      // Show success notification
+      CyberNotify.alert("AbuseIPDB API Key saved successfully!", { type: 'success' });
       abuseApiKeyInput.value = "";
     } else {
       console.error("Invalid AbuseIPDB API key provided");
@@ -2078,7 +2119,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   function loadAbuseKey() {
-    const storedKey = localStorage.getItem("abuseApiKey");
+    const storedKey = localStorage.getItem("abuseipdbApiKey");
     return storedKey ? decryptApiKey(storedKey) : "";
   }
 
@@ -2509,6 +2550,8 @@ document.addEventListener("DOMContentLoaded", () => {
         "✅ WhoisXML API Key saved securely.",
         "success"
       );
+      // Show success notification
+      CyberNotify.alert("WhoisXML API Key saved successfully!", { type: 'success' });
       whoisApiKeyInput.value = "";
     } else {
       console.error("Invalid WhoisXML API key provided");
@@ -2541,6 +2584,8 @@ document.addEventListener("DOMContentLoaded", () => {
         "✅ Shodan API Key saved securely.",
         "success"
       );
+      // Show success notification
+      CyberNotify.alert("Shodan API Key saved successfully!", { type: 'success' });
       shodanApiKeyInput.value = "";
     } else {
       console.error("Invalid Shodan API key provided");
@@ -2560,6 +2605,43 @@ document.addEventListener("DOMContentLoaded", () => {
     return shodanApiKey || "";
   }
 
+  // URLScan key management
+  const urlscanApiKeyInput = document.getElementById("urlscan-api-key");
+  const saveUrlscanKeyBtn = document.getElementById("save-urlscan-key-btn");
+  
+  if (saveUrlscanKeyBtn) {
+    saveUrlscanKeyBtn.addEventListener("click", () => {
+      const key = urlscanApiKeyInput.value.trim();
+      if (key) {
+        const encryptedKey = encryptApiKey(key);
+        localStorage.setItem("urlscanApiKey", encryptedKey);
+        logResult(
+          new Date(),
+          "System",
+          "✅ URLScan API Key saved securely.",
+          "success"
+        );
+        // Show success notification
+        CyberNotify.alert("URLScan API Key saved successfully!", { type: 'success' });
+        urlscanApiKeyInput.value = "";
+      } else {
+        console.error("Invalid URLScan API key provided");
+        CyberNotify.alert("Please enter a valid API key.", { type: 'warning' });
+      }
+    });
+  }
+  function loadUrlscanKey() {
+    const storedKey = localStorage.getItem("urlscanApiKey");
+    if (storedKey) {
+      logResult(
+        new Date(),
+        "System",
+        "ℹ️ URLScan API Key loaded from secure storage."
+      );
+    }
+    return storedKey ? decryptApiKey(storedKey) : "";
+  }
+
   // Clear all API keys function
   function clearAllApiKeys() {
     if (
@@ -2569,9 +2651,10 @@ document.addEventListener("DOMContentLoaded", () => {
     ) {
       // Clear from localStorage
       localStorage.removeItem("vtApiKey");
-      localStorage.removeItem("abuseApiKey");
       localStorage.removeItem("whoisApiKey");
       localStorage.removeItem("shodanApiKey");
+      localStorage.removeItem("urlscanApiKey");
+      localStorage.removeItem("abuseipdbApiKey");
 
       // Clear from memory
       virusTotalApiKey = "";
@@ -2583,6 +2666,7 @@ document.addEventListener("DOMContentLoaded", () => {
       abuseApiKeyInput.value = "";
       whoisApiKeyInput.value = "";
       shodanApiKeyInput.value = "";
+      if (urlscanApiKeyInput) urlscanApiKeyInput.value = "";
 
       logResult(
         new Date(),
@@ -9538,14 +9622,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Show welcome popup first, then initialize sidebar
+  // Show welcome popup
+  // Note: Sidebar is now automatically initialized by dashboard.html
   setTimeout(() => {
     showWelcomePopup();
-
-    // Initialize sidebar after welcome popup is shown
-    setTimeout(() => {
-      showSidebar();
-    }, 30);
   }, 50);
 });
 
@@ -9904,6 +9984,36 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
  * @param {Object} project - Project object containing id, name, description, target, status, collaborators
  * @returns {string} HTML string for the project card
  */
+/**
+ * Global wrapper for editing a project — delegates to ProjectManager
+ * @param {string} projectId - UUID of the project to edit
+ */
+function editProject(projectId) {
+  if (window.projectManager) {
+    window.projectManager.showEditProjectModal(projectId);
+  } else {
+    console.error('[editProject] ProjectManager not initialized');
+    if (window.CyberNotify) {
+      window.CyberNotify.alert('Project manager not ready. Please refresh the page.', { type: 'error' });
+    }
+  }
+}
+
+/**
+ * Global wrapper for deleting a project — delegates to ProjectManager
+ * @param {string} projectId - UUID of the project to delete
+ */
+function deleteProject(projectId) {
+  if (window.projectManager) {
+    window.projectManager.deleteProjectConfirm(projectId);
+  } else {
+    console.error('[deleteProject] ProjectManager not initialized');
+    if (window.CyberNotify) {
+      window.CyberNotify.alert('Project manager not ready. Please refresh the page.', { type: 'error' });
+    }
+  }
+}
+
 function renderProjectCard(project) {
   // Validate project object
   if (!project || typeof project !== 'object') {
@@ -9913,13 +10023,17 @@ function renderProjectCard(project) {
 
   // Extract project data with defaults
   const {
-    id = 0,
+    id = '',
     name = 'Untitled Project',
     description = 'No description provided',
-    target = 'N/A',
     status = 'active',
-    collaborators = []
+    targets_count = 0,
+    collaborators = [],
+    active_collaborators = []
   } = project;
+
+  // Use active_collaborators from API if collaborators is empty
+  const collabList = collaborators.length > 0 ? collaborators : active_collaborators;
 
   // Map status to badge class
   const statusBadgeMap = {
@@ -9934,8 +10048,8 @@ function renderProjectCard(project) {
 
   // Generate collaborator avatars (max 3 visible)
   const maxVisibleCollaborators = 3;
-  const visibleCollaborators = collaborators.slice(0, maxVisibleCollaborators);
-  const remainingCount = collaborators.length - maxVisibleCollaborators;
+  const visibleCollaborators = collabList.slice(0, maxVisibleCollaborators);
+  const remainingCount = collabList.length - maxVisibleCollaborators;
 
   const collaboratorAvatarsHTML = visibleCollaborators.map(collaborator => {
     // Generate initials from full_name
@@ -9960,13 +10074,16 @@ function renderProjectCard(project) {
     : '';
 
   // Collaborator count text
-  const collaboratorCountText = collaborators.length === 1
+  const collaboratorCountText = collabList.length === 1
     ? '1 collaborator'
-    : `${collaborators.length} collaborators`;
+    : `${collabList.length} collaborators`;
+
+  // Escape ID for safe inline use (UUIDs are strings, need quotes)
+  const escapedId = String(id).replace(/'/g, "\\'");
 
   // Generate the project card HTML
   return `
-    <div class="cyber-card p-5 hover:border-purple-500/40 transition-all cursor-pointer" data-project-id="${id}">
+    <div class="cyber-card p-5 hover:border-purple-500/40 transition-all cursor-pointer" data-project-id="${id}" onclick="editProject('${escapedId}')">
       <div class="flex items-start justify-between mb-3">
         <div class="flex-1 min-w-0">
           <h3 class="text-base font-bold text-white mb-1 truncate">${name}</h3>
@@ -9977,9 +10094,9 @@ function renderProjectCard(project) {
       
       <div class="flex items-center gap-2 text-xs text-slate-500 mb-3">
         <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25" />
         </svg>
-        <span class="font-mono truncate">${target}</span>
+        <span class="font-mono truncate">${targets_count} target${targets_count !== 1 ? 's' : ''}</span>
       </div>
       
       <div class="flex items-center justify-between pt-3 border-t border-white/5">
@@ -9992,12 +10109,12 @@ function renderProjectCard(project) {
         </div>
         
         <div class="flex gap-1 flex-shrink-0">
-          <button class="cyber-btn-ghost text-xs px-2 py-1 rounded" onclick="editProject(${id}); event.stopPropagation();" title="Edit Project">
+          <button class="cyber-btn-ghost text-xs px-2 py-1 rounded" onclick="editProject('${escapedId}'); event.stopPropagation();" title="Edit Project">
             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
             </svg>
           </button>
-          <button class="cyber-btn-danger text-xs px-2 py-1 rounded" onclick="deleteProject(${id}); event.stopPropagation();" title="Delete Project">
+          <button class="cyber-btn-danger text-xs px-2 py-1 rounded" onclick="deleteProject('${escapedId}'); event.stopPropagation();" title="Delete Project">
             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
             </svg>

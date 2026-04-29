@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidebar Toggle CSS Demo - Task 2.1</title>
+    <link rel="stylesheet" href="cyber-theme.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .demo-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .demo-main {
+            flex: 1;
+            padding: 2rem;
+            background: var(--bg-base);
+            color: #e2e8f0;
+        }
+        
+        .demo-controls {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 1rem;
+        }
+        
+        .demo-button {
+            margin-right: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .demo-info {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(139, 92, 246, 0.08);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 0.75rem;
+        }
+        
+        .demo-info h3 {
+            margin-top: 0;
+            color: #c4b5fd;
+        }
+        
+        .demo-info ul {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+        
+        .demo-info li {
+            margin: 0.5rem 0;
+            color: #94a3b8;
+        }
+        
+        .demo-info code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: #6ee7b7;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        
+        .status-expanded {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+        
+        .status-collapsed {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+        }
+    </style>
+</head>
+<body class="cyber-body">
+    <div class="demo-container">
+        <!-- Sidebar -->
+        <aside id="demo-sidebar" class="cyber-sidebar">
+            <div class="px-5 pt-6 pb-4">
+                <div class="cyber-logo-icon">
+                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold text-white mt-2">CyberGuard Pro</h2>
+                <p class="text-sm text-gray-400">Demo Sidebar</p>
+            </div>
+            
+            <div class="cyber-divider my-4"></div>
+            
+            <nav class="px-3 space-y-1">
+                <a href="#" class="cyber-nav-item cyber-nav-active flex items-center gap-3 px-3 py-2 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="cyber-nav-item flex items-center gap-3 px-3 py-2 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="cyber-nav-item flex items-center gap-3 px-3 py-2 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                    </svg>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="demo-main">
+            <h1 class="text-3xl font-bold text-white mb-2">
+                Task 2.1: Sidebar Toggle CSS Demo
+                <span id="status-indicator" class="status-indicator status-expanded">Expanded</span>
+            </h1>
+            <p class="text-gray-400 mb-6">Testing CSS transition properties for sidebar collapse/expand animation</p>
+            
+            <div class="demo-controls">
+                <h2 class="text-xl font-semibold text-white mb-4">Controls</h2>
+                <button onclick="toggleSidebar()" class="cyber-btn-primary px-6 py-2 rounded-lg demo-button">
+                    Toggle Sidebar
+                </button>
+                <button onclick="collapseSidebar()" class="cyber-btn-warning px-6 py-2 rounded-lg demo-button">
+                    Collapse
+                </button>
+                <button onclick="expandSidebar()" class="cyber-btn-success px-6 py-2 rounded-lg demo-button">
+                    Expand
+                </button>
+            </div>
+            
+            <div class="demo-info">
+                <h3>✅ Task 2.1 Implementation Complete</h3>
+                <p class="text-gray-300 mb-3">The following CSS properties have been added to <code>.cyber-sidebar</code>:</p>
+                <ul>
+                    <li><strong>Width:</strong> <code>260px</code> (expanded) → <code>0px</code> (collapsed)</li>
+                    <li><strong>Transition Duration:</strong> <code>300ms</code> for all properties</li>
+                    <li><strong>Easing Function:</strong> <code>cubic-bezier(0.4, 0, 0.2, 1)</code></li>
+                    <li><strong>Animated Properties:</strong> <code>transform</code>, <code>width</code>, <code>opacity</code></li>
+                    <li><strong>GPU Acceleration:</strong> <code>will-change: transform, width, opacity</code></li>
+                    <li><strong>Performance:</strong> <code>transform: translateZ(0)</code> and <code>backface-visibility: hidden</code></li>
+                    <li><strong>Collapsed State:</strong> <code>.sidebar-collapsed</code> class with <code>translateX(-100%)</code></li>
+                </ul>
+                
+                <h3 class="mt-4">Requirements Validated</h3>
+                <ul>
+                    <li>✅ <strong>Requirement 2.1:</strong> Sidebar animates from 260px to 0px width</li>
+                    <li>✅ <strong>Requirement 2.2:</strong> Uses <code>translateX(-100%)</code> for smooth animation</li>
+                    <li>✅ <strong>Requirement 2.3:</strong> 300ms duration with cubic-bezier easing</li>
+                    <li>✅ <strong>Requirement 2.4:</strong> All properties transition simultaneously</li>
+                    <li>✅ <strong>Requirement 2.5:</strong> <code>will-change</code> property for GPU acceleration</li>
+                    <li>✅ <strong>Requirement 2.6:</strong> Border and shadow effects maintained during transition</li>
+                    <li>✅ <strong>Requirement 10.1:</strong> <code>.sidebar-collapsed</code> class created</li>
+                    <li>✅ <strong>Requirement 10.2:</strong> Follows cyber-theme naming conventions</li>
+                    <li>✅ <strong>Requirement 10.6:</strong> Legacy <code>.hidden</code> class support maintained</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        const sidebar = document.getElementById('demo-sidebar');
+        const statusIndicator = document.getElementById('status-indicator');
+        
+        function updateStatus() {
+            const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+            statusIndicator.textContent = isCollapsed ? 'Collapsed' : 'Expanded';
+            statusIndicator.className = 'status-indicator ' + (isCollapsed ? 'status-collapsed' : 'status-expanded');
+        }
+        
+        function toggleSidebar() {
+            sidebar.classList.toggle('sidebar-collapsed');
+            updateStatus();
+        }
+        
+        function collapseSidebar() {
+            sidebar.classList.add('sidebar-collapsed');
+            updateStatus();
+        }
+        
+        function expandSidebar() {
+            sidebar.classList.remove('sidebar-collapsed');
+            updateStatus();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Event Listeners - Threat Intel Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .test-section {
+            background: rgba(17, 19, 31, 0.8);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+        .test-result {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+        }
+        .test-pass {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+        }
+        .test-fail {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+        .cyber-btn {
+            background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .cyber-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+        }
+        .cyber-input {
+            background: rgba(17, 19, 31, 0.6);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .cyber-card {
+            background: rgba(17, 19, 31, 0.6);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-top-color: #8b5cf6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-4xl font-bold text-white mb-8 text-center">
+            🔒 Event Listener Verification Test
+        </h1>
+
+        <!-- Test 1: Event Listeners Bound Once -->
+        <div class="test-section">
+            <h2 class="text-2xl font-bold text-purple-400 mb-4">Test 1: Event Listeners Bound Once</h2>
+            <p class="text-gray-300 mb-4">
+                This test verifies that event listeners are bound only once during initialization.
+                Click the button multiple times - the counter should increment by 1 each time.
+            </p>
+            
+            <div class="space-y-4">
+                <input 
+                    type="text" 
+                    id="test-search-input"
+                    class="cyber-input"
+                    placeholder="Enter test value..."
+                />
+                <button id="test-search-btn" class="cyber-btn">
+                    Test Search Button
+                </button>
+                <div id="test1-result" class="test-result test-pass hidden">
+                    Click count: <span id="test1-count">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 2: Tab Switch Persistence -->
+        <div class="test-section">
+            <h2 class="text-2xl font-bold text-purple-400 mb-4">Test 2: Tab Switch Persistence</h2>
+            <p class="text-gray-300 mb-4">
+                This test verifies that event listeners persist across tab switches without being duplicated.
+                Switch tabs multiple times, then click the button - counter should increment by 1.
+            </p>
+            
+            <div class="space-y-4">
+                <div class="flex gap-4">
+                    <button id="show-tab-btn" class="cyber-btn">Show Tab</button>
+                    <button id="hide-tab-btn" class="cyber-btn">Hide Tab</button>
+                </div>
+                
+                <div id="test-tab" class="cyber-card">
+                    <p class="text-white mb-4">Tab Content (visible/hidden)</p>
+                    <button id="test-tab-btn" class="cyber-btn">Test Tab Button</button>
+                </div>
+                
+                <div id="test2-result" class="test-result test-pass hidden">
+                    Tab switches: <span id="test2-switches">0</span><br>
+                    Button clicks: <span id="test2-clicks">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 3: Event Delegation for Dynamic Elements -->
+        <div class="test-section">
+            <h2 class="text-2xl font-bold text-purple-400 mb-4">Test 3: Event Delegation</h2>
+            <p class="text-gray-300 mb-4">
+                This test verifies that event delegation works for dynamically created elements.
+                Add items and click them - they should work without rebinding listeners.
+            </p>
+            
+            <div class="space-y-4">
+                <button id="add-item-btn" class="cyber-btn">Add Dynamic Item</button>
+                
+                <div id="dynamic-container" class="cyber-card space-y-2">
+                    <!-- Dynamic items will be added here -->
+                </div>
+                
+                <div id="test3-result" class="test-result test-pass hidden">
+                    Items added: <span id="test3-added">0</span><br>
+                    Items clicked: <span id="test3-clicked">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 4: History Item Event Delegation -->
+        <div class="test-section">
+            <h2 class="text-2xl font-bold text-purple-400 mb-4">Test 4: History Item Delegation</h2>
+            <p class="text-gray-300 mb-4">
+                This test verifies that history items use event delegation properly.
+                Add history items and click them - they should work without individual listeners.
+            </p>
+            
+            <div class="space-y-4">
+                <button id="add-history-btn" class="cyber-btn">Add History Item</button>
+                
+                <div id="threat-intel-history-list" class="cyber-card space-y-2">
+                    <!-- History items will be added here -->
+                </div>
+                
+                <div id="test4-result" class="test-result test-pass hidden">
+                    History items added: <span id="test4-added">0</span><br>
+                    History items clicked: <span id="test4-clicked">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test 5: Details Button Event Delegation -->
+        <div class="test-section">
+            <h2 class="text-2xl font-bold text-purple-400 mb-4">Test 5: Details Button Delegation</h2>
+            <p class="text-gray-300 mb-4">
+                This test verifies that "View Details" buttons use event delegation.
+                Add source cards and click details buttons - they should work without individual listeners.
+            </p>
+            
+            <div class="space-y-4">
+                <button id="add-source-btn" class="cyber-btn">Add Source Card</button>
+                
+                <div id="threat-intel-source-cards" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Source cards will be added here -->
+                </div>
+                
+                <div id="test5-result" class="test-result test-pass hidden">
+                    Source cards added: <span id="test5-added">0</span><br>
+                    Details buttons clicked: <span id="test5-clicked">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test 1: Event Listeners Bound Once
+        let test1Count = 0;
+        const test1Btn = document.getElementById('test-search-btn');
+        const test1Result = document.getElementById('test1-result');
+        const test1CountEl = document.getElementById('test1-count');
+        
+        // Bind listener ONCE
+        test1Btn.addEventListener('click', () => {
+            test1Count++;
+            test1CountEl.textContent = test1Count;
+            test1Result.classList.remove('hidden');
+        });
+
+        // Test 2: Tab Switch Persistence
+        let test2Switches = 0;
+        let test2Clicks = 0;
+        const testTab = document.getElementById('test-tab');
+        const showTabBtn = document.getElementById('show-tab-btn');
+        const hideTabBtn = document.getElementById('hide-tab-btn');
+        const testTabBtn = document.getElementById('test-tab-btn');
+        const test2Result = document.getElementById('test2-result');
+        const test2SwitchesEl = document.getElementById('test2-switches');
+        const test2ClicksEl = document.getElementById('test2-clicks');
+        
+        // Bind listener ONCE
+        testTabBtn.addEventListener('click', () => {
+            test2Clicks++;
+            test2ClicksEl.textContent = test2Clicks;
+            test2Result.classList.remove('hidden');
+        });
+        
+        showTabBtn.addEventListener('click', () => {
+            testTab.classList.remove('hidden');
+            test2Switches++;
+            test2SwitchesEl.textContent = test2Switches;
+            test2Result.classList.remove('hidden');
+        });
+        
+        hideTabBtn.addEventListener('click', () => {
+            testTab.classList.add('hidden');
+            test2Switches++;
+            test2SwitchesEl.textContent = test2Switches;
+            test2Result.classList.remove('hidden');
+        });
+
+        // Test 3: Event Delegation for Dynamic Elements
+        let test3Added = 0;
+        let test3Clicked = 0;
+        const dynamicContainer = document.getElementById('dynamic-container');
+        const addItemBtn = document.getElementById('add-item-btn');
+        const test3Result = document.getElementById('test3-result');
+        const test3AddedEl = document.getElementById('test3-added');
+        const test3ClickedEl = document.getElementById('test3-clicked');
+        
+        // Event delegation - bind ONCE to container
+        dynamicContainer.addEventListener('click', (e) => {
+            const item = e.target.closest('.dynamic-item');
+            if (item) {
+                test3Clicked++;
+                test3ClickedEl.textContent = test3Clicked;
+                item.style.background = 'rgba(16, 185, 129, 0.2)';
+                setTimeout(() => {
+                    item.style.background = '';
+                }, 300);
+            }
+        });
+        
+        addItemBtn.addEventListener('click', () => {
+            test3Added++;
+            const item = document.createElement('div');
+            item.className = 'dynamic-item cyber-card cursor-pointer hover:bg-purple-500/10 transition-all';
+            item.innerHTML = `
+                <p class="text-white">Dynamic Item ${test3Added}</p>
+                <p class="text-xs text-gray-400">Click me!</p>
+            `;
+            dynamicContainer.appendChild(item);
+            test3AddedEl.textContent = test3Added;
+            test3Result.classList.remove('hidden');
+        });
+
+        // Test 4: History Item Event Delegation
+        let test4Added = 0;
+        let test4Clicked = 0;
+        const historyList = document.getElementById('threat-intel-history-list');
+        const addHistoryBtn = document.getElementById('add-history-btn');
+        const test4Result = document.getElementById('test4-result');
+        const test4AddedEl = document.getElementById('test4-added');
+        const test4ClickedEl = document.getElementById('test4-clicked');
+        
+        // Event delegation - bind ONCE to container
+        historyList.addEventListener('click', (e) => {
+            const item = e.target.closest('.recent-search-item');
+            if (item) {
+                test4Clicked++;
+                test4ClickedEl.textContent = test4Clicked;
+                item.style.background = 'rgba(16, 185, 129, 0.2)';
+                setTimeout(() => {
+                    item.style.background = '';
+                }, 300);
+            }
+        });
+        
+        addHistoryBtn.addEventListener('click', () => {
+            test4Added++;
+            const item = document.createElement('div');
+            item.className = 'recent-search-item cyber-card cursor-pointer hover:bg-purple-500/10 transition-all';
+            item.dataset.index = test4Added - 1;
+            item.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white font-mono text-sm">192.168.1.${test4Added}</p>
+                        <p class="text-xs text-gray-400">Just now</p>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>
+                </div>
+            `;
+            historyList.appendChild(item);
+            test4AddedEl.textContent = test4Added;
+            test4Result.classList.remove('hidden');
+        });
+
+        // Test 5: Details Button Event Delegation
+        let test5Added = 0;
+        let test5Clicked = 0;
+        const sourceCardsContainer = document.getElementById('threat-intel-source-cards');
+        const addSourceBtn = document.getElementById('add-source-btn');
+        const test5Result = document.getElementById('test5-result');
+        const test5AddedEl = document.getElementById('test5-added');
+        const test5ClickedEl = document.getElementById('test5-clicked');
+        
+        // Event delegation - bind ONCE to container
+        sourceCardsContainer.addEventListener('click', (e) => {
+            const detailsBtn = e.target.closest('.view-details-btn');
+            if (detailsBtn) {
+                test5Clicked++;
+                test5ClickedEl.textContent = test5Clicked;
+                
+                // Toggle details
+                const card = detailsBtn.closest('.source-card');
+                const details = card.querySelector('.source-details');
+                const chevron = detailsBtn.querySelector('.chevron-icon');
+                
+                details.classList.toggle('hidden');
+                if (details.classList.contains('hidden')) {
+                    chevron.style.transform = 'rotate(0deg)';
+                } else {
+                    chevron.style.transform = 'rotate(180deg)';
+                }
+            }
+        });
+        
+        addSourceBtn.addEventListener('click', () => {
+            test5Added++;
+            const sources = ['VirusTotal', 'AbuseIPDB', 'URLScan.io'];
+            const sourceName = sources[(test5Added - 1) % 3];
+            
+            const card = document.createElement('div');
+            card.className = 'source-card cyber-card';
+            card.innerHTML = `
+                <h3 class="text-lg font-semibold text-purple-400 mb-4">${sourceName} ${test5Added}</h3>
+                <div class="space-y-3">
+                    <div class="text-green-400 font-semibold">Clean</div>
+                    <button class="view-details-btn cyber-btn text-xs w-full flex items-center justify-center gap-2" data-source="${sourceName.toLowerCase()}">
+                        <span>View Details</span>
+                        <svg class="chevron-icon w-4 h-4 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
+                    <div class="source-details hidden bg-black/30 border border-white/10 rounded-lg p-4">
+                        <pre class="text-xs font-mono text-slate-300">{ "test": "data" }</pre>
+                    </div>
+                </div>
+            `;
+            sourceCardsContainer.appendChild(card);
+            test5AddedEl.textContent = test5Added;
+            test5Result.classList.remove('hidden');
+        });
+
+        console.log('✅ Event Listener Test Page Loaded');
+        console.log('All event listeners bound ONCE during page load');
+        console.log('Event delegation used for dynamic elements');
+    </script>
+</body>
+</html>

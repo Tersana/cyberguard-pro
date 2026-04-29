@@ -2,15 +2,19 @@ const FORGOT_PASSWORD_ENDPOINTS = [
   "https://peptonelike-lelia-interdepartmentally.ngrok-free.dev/api/auth/forget-password",
   "https://peptonelike-lelia-interdepartmentally.ngrok-free.dev/api/auth/forgot-password"
 ];
+const UNIFIED_SECURITY_MESSAGE = "If this email is registered, a password reset link has been sent.";
+const UNIFIED_SECURITY_FEEDBACK_CLASSES = "rounded-xl border px-4 py-3 shadow-2xl backdrop-blur-md bg-[#064e3b] border-[#059669] text-[#ecfdf5]";
 
-function notify(message, type) {
+function notify(message, type, className) {
   const statusEl = document.getElementById("forgotPasswordStatus");
   if (statusEl) {
     statusEl.textContent = message;
     statusEl.classList.remove("hidden");
-    statusEl.className = "text-sm rounded-lg px-3 py-2 border";
+    statusEl.className = `${className || "text-sm rounded-lg px-3 py-2 border"}`;
 
-    if (type === "success") {
+    if (className) {
+      // Explicit className should fully define appearance.
+    } else if (type === "success") {
       statusEl.classList.add("text-green-300", "bg-green-900/30", "border-green-700");
     } else if (type === "warning") {
       statusEl.classList.add("text-yellow-300", "bg-yellow-900/30", "border-yellow-700");
@@ -20,14 +24,8 @@ function notify(message, type) {
   }
 
   if (window.CyberNotify && typeof window.CyberNotify.alert === "function") {
-    window.CyberNotify.alert(message, { type });
+    window.CyberNotify.alert(message, { type, className });
     return;
-  }
-
-  if (type === "error") {
-    window.alert(message);
-  } else {
-    console.info(message);
   }
 }
 
@@ -37,26 +35,14 @@ function setSubmittingState(button, isSubmitting, defaultLabel) {
   button.textContent = isSubmitting ? "Sending..." : defaultLabel;
 }
 
-function extractErrorMessage(errorPayload) {
-  if (!errorPayload || typeof errorPayload !== "object") {
-    return "";
-  }
+function notifyUnifiedSecurityFeedback() {
+  notify(UNIFIED_SECURITY_MESSAGE, "success", UNIFIED_SECURITY_FEEDBACK_CLASSES);
+}
 
-  if (typeof errorPayload.message === "string" && errorPayload.message.trim()) {
-    return errorPayload.message;
-  }
-
-  if (errorPayload.errors && typeof errorPayload.errors === "object") {
-    const firstField = Object.values(errorPayload.errors)[0];
-    if (Array.isArray(firstField) && firstField[0]) {
-      return String(firstField[0]);
-    }
-    if (typeof firstField === "string") {
-      return firstField;
-    }
-  }
-
-  return "";
+function isValidEmail(email) {
+  if (typeof email !== "string") return false;
+  if (email.length > 254) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 async function handleForgotPasswordSubmit(event) {
@@ -66,9 +52,20 @@ async function handleForgotPasswordSubmit(event) {
   const submitButton = form.querySelector("button[type='submit']");
   const emailInput = form.querySelector("input[name='email']");
   const email = emailInput ? emailInput.value.trim() : "";
+  const alreadySubmitted = form.dataset.recoverySent === "true";
+
+  if (alreadySubmitted) {
+    notifyUnifiedSecurityFeedback();
+    return;
+  }
 
   if (!email) {
     notify("Please enter your email address.", "warning");
+    return;
+  }
+
+  if (!isValidEmail(email)) {
+    notify("Please enter a valid email address.", "warning");
     return;
   }
 
@@ -76,7 +73,6 @@ async function handleForgotPasswordSubmit(event) {
 
   try {
     let response = null;
-    let payload = {};
 
     // Some backends use /forget-password while others use /forgot-password.
     // Retry on 404 to support both without requiring code changes.
@@ -94,29 +90,23 @@ async function handleForgotPasswordSubmit(event) {
         break;
       }
 
-      payload = await response.json().catch(() => ({}));
-
       // Stop retrying when route exists but returns an app-level error.
       if (response.status !== 404) {
         break;
       }
     }
-
-    if (response.ok) {
-      notify(
-        "Password reset link sent! Please check your email inbox and spam folder.",
-        "success"
-      );
-      form.reset();
-      return;
-    }
-
-    const message = extractErrorMessage(payload) || "Unable to send reset link right now. Please try again.";
-    notify(message, "error");
-  } catch (error) {
-    notify("Network error while sending reset link. Please try again.", "error");
+  } catch (_error) {
+    // Intentionally do not reveal backend/network details to avoid account enumeration hints.
   } finally {
-    setSubmittingState(submitButton, false, "Send Reset Link");
+    notifyUnifiedSecurityFeedback();
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = "Check Email";
+    }
+    form.dataset.recoverySent = "true";
+    if (emailInput) {
+      emailInput.readOnly = true;
+    }
   }
 }
 

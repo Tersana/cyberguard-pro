@@ -41,8 +41,8 @@ function normalizeUserData(userData) {
     jobTitle: userData.job_title || userData.job_tittle || '',
     
     // Optional boolean fields with defaults
-    emailVerified: userData.email_verified || false,
-    twoFactorEnabled: userData.two_factor_enabled || false,
+    emailVerified: userData.email_verified ?? false,
+    twoFactorEnabled: userData.two_factor_enabled ?? false,
     
     // Role with default
     role: userData.role || 'user',

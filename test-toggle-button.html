@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toggle Button Test</title>
+    <link rel="stylesheet" href="cyber-theme.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        .test-section h2 {
+            color: #c4b5fd;
+            margin-top: 0;
+        }
+        .test-section p {
+            color: #94a3b8;
+            margin: 10px 0;
+        }
+        .demo-button {
+            position: relative;
+            display: inline-block;
+            margin: 20px;
+        }
+        .overlay-demo {
+            position: relative;
+            width: 300px;
+            height: 200px;
+            background: #111827;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .overlay-demo-content {
+            padding: 20px;
+            color: #e2e8f0;
+        }
+    </style>
+</head>
+<body class="cyber-body">
+    <div class="test-container">
+        <h1 style="color: #c4b5fd; text-align: center;">Sidebar Toggle Button - Visual Test</h1>
+        
+        <div class="test-section">
+            <h2>1. Toggle Button (Default State)</h2>
+            <p>The button should have a purple transparent background with a gray hamburger icon.</p>
+            <div class="demo-button">
+                <button 
+                    id="test-toggle-btn-1" 
+                    class="cyber-sidebar-toggle" 
+                    aria-label="Toggle sidebar navigation"
+                    aria-expanded="true"
+                    aria-controls="sidebar"
+                    title="Show/Hide Sidebar">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                    </svg>
+                </button>
+            </div>
+            <p><strong>Hover Test:</strong> Hover over the button - icon should turn cyan (#00A3FF) and glow should intensify.</p>
+            <p><strong>Focus Test:</strong> Click the button to focus it - should show purple outline ring.</p>
+        </div>
+
+        <div class="test-section">
+            <h2>2. Toggle Button (Fixed Position)</h2>
+            <p>This button demonstrates the fixed positioning (top-left corner).</p>
+            <p>Scroll down to verify it stays in place.</p>
+            <button 
+                id="sidebar-toggle-btn" 
+                class="cyber-sidebar-toggle" 
+                aria-label="Toggle sidebar navigation"
+                aria-expanded="true"
+                aria-controls="sidebar"
+                title="Show/Hide Sidebar">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="test-section">
+            <h2>3. Overlay (Hidden State)</h2>
+            <p>The overlay should be invisible by default (opacity: 0).</p>
+            <div class="overlay-demo">
+                <div class="overlay-demo-content">
+                    <p>Content behind overlay</p>
+                </div>
+                <div id="test-overlay-1" class="cyber-sidebar-overlay"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>4. Overlay (Active State)</h2>
+            <p>The overlay should be visible with semi-transparent black background.</p>
+            <div class="overlay-demo">
+                <div class="overlay-demo-content">
+                    <p>Content behind overlay (should be dimmed)</p>
+                </div>
+                <div id="test-overlay-2" class="cyber-sidebar-overlay active"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>5. Color Verification</h2>
+            <ul style="color: #94a3b8; line-height: 1.8;">
+                <li><strong>Default Icon Color:</strong> <span style="color: #8B949E;">#8B949E (Gray)</span></li>
+                <li><strong>Hover Icon Color:</strong> <span style="color: #00A3FF;">#00A3FF (Cyan)</span></li>
+                <li><strong>Background:</strong> rgba(139, 92, 246, 0.2) (Purple transparent)</li>
+                <li><strong>Border:</strong> rgba(139, 92, 246, 0.4) (Purple semi-transparent)</li>
+                <li><strong>Box Shadow:</strong> 0 0 12px rgba(139, 92, 246, 0.2) (Purple glow)</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>6. Accessibility Attributes</h2>
+            <p>Check browser DevTools to verify ARIA attributes:</p>
+            <ul style="color: #94a3b8; line-height: 1.8;">
+                <li>aria-label="Toggle sidebar navigation"</li>
+                <li>aria-expanded="true"</li>
+                <li>aria-controls="sidebar"</li>
+                <li>title="Show/Hide Sidebar"</li>
+            </ul>
+        </div>
+
+        <!-- Spacer for scroll test -->
+        <div style="height: 1000px; color: #64748b; text-align: center; padding-top: 100px;">
+            <p>Scroll up to verify the fixed toggle button stays in the top-left corner</p>
+        </div>
+    </div>
+
+    <script>
+        // Simple test to toggle overlay active state
+        document.getElementById('test-toggle-btn-1').addEventListener('click', function() {
+            const overlay1 = document.getElementById('test-overlay-1');
+            overlay1.classList.toggle('active');
+        });
+    </script>
+</body>
+</html>
