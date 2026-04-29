@@ -42,9 +42,27 @@ class ProjectManager {
       const endpoint = `/projects?page=${page}&limit=${limit}`;
       const response = await this.apiClient.get(endpoint);
       
-      // Handle both paginated and non-paginated responses
-      if (response.projects) {
-        // Paginated response
+      // Handle the API response format: { owned: [...], collaborating: [...] }
+      if (response.owned || response.collaborating) {
+        const ownedProjects = Array.isArray(response.owned) ? response.owned : [];
+        const collaboratingProjects = Array.isArray(response.collaborating) ? response.collaborating : [];
+        
+        // Merge owned and collaborating, deduplicating by ID
+        const projectMap = new Map();
+        ownedProjects.forEach(p => projectMap.set(p.id, p));
+        collaboratingProjects.forEach(p => {
+          if (!projectMap.has(p.id)) {
+            projectMap.set(p.id, p);
+          }
+        });
+        
+        this.projects = Array.from(projectMap.values());
+        return {
+          projects: this.projects,
+          pagination: response.pagination || null
+        };
+      } else if (response.projects) {
+        // Paginated response fallback
         this.projects = response.projects;
         return {
           projects: response.projects,
@@ -59,6 +77,7 @@ class ProjectManager {
         };
       } else {
         // Unexpected format
+        console.warn('[ProjectManager] Unexpected response format:', Object.keys(response));
         this.projects = [];
         return {
           projects: [],
@@ -109,14 +128,17 @@ class ProjectManager {
       if (!projectData.name || !projectData.name.trim()) {
         throw new Error('Project name is required');
       }
-      
-      if (!projectData.target || !projectData.target.trim()) {
-        throw new Error('Project target is required');
-      }
 
-      const response = await this.apiClient.post('/projects', projectData);
+      // Build payload matching backend API spec: only name and description
+      const payload = {
+        name: projectData.name.trim(),
+        description: (projectData.description || '').trim()
+      };
+
+      const response = await this.apiClient.post('/projects', payload);
       
       // Handle both wrapped and direct project responses
+      // API returns: { message: "...", project: {...} }
       const newProject = response.project || response;
       
       // Add to local projects array
@@ -364,7 +386,7 @@ class ProjectManager {
     const errors = {};
     let valid = true;
 
-    // Validate name (required)
+    // Validate name (required by backend API)
     if (!formData.name || !formData.name.trim()) {
       errors.name = 'Project name is required';
       valid = false;
@@ -373,11 +395,8 @@ class ProjectManager {
       valid = false;
     }
 
-    // Validate target (required)
-    if (!formData.target || !formData.target.trim()) {
-      errors.target = 'Target is required';
-      valid = false;
-    }
+    // Note: target and status are not required by the backend API
+    // The backend only requires name and description for project creation
 
     return { valid, errors };
   }
@@ -392,13 +411,11 @@ class ProjectManager {
     // Clear previous errors
     this.clearFormErrors();
 
-    // Get form data
+    // Get form data — only send fields the backend API accepts (name, description)
     const form = event.target;
     const formData = {
       name: form.name.value.trim(),
-      description: form.description.value.trim(),
-      target: form.target.value.trim(),
-      status: form.status.value
+      description: form.description ? form.description.value.trim() : ''
     };
 
     // Validate form
@@ -423,19 +440,24 @@ class ProjectManager {
     }
 
     try {
-      // Create project via API
+      // Create project via API (sends only name + description)
       const newProject = await this.createProject(formData);
       
       // Success: close modal and refresh project list
       this.hideCreateProjectModal();
       
-      // Show success notification
+      // Show success notification with project name
+      const projectName = newProject.name || formData.name;
       if (window.CyberNotify) {
-        window.CyberNotify.alert('Project created successfully!', { type: 'success' });
+        window.CyberNotify.alert(`Project "${projectName}" created successfully.`, { type: 'success' });
       }
       
-      // Refresh project list
-      await this.renderProjectsList();
+      // Refresh project list — use global renderProjectsList if available (richer card template)
+      if (typeof renderProjectsList === 'function') {
+        await renderProjectsList();
+      } else {
+        await this.renderProjectsList();
+      }
       
     } catch (error) {
       console.error('[ProjectManager] Error creating project:', error);
@@ -600,7 +622,6 @@ class ProjectManager {
       document.getElementById('edit-project-id').value = project.id;
       document.getElementById('edit-project-name').value = project.name || '';
       document.getElementById('edit-project-description').value = project.description || '';
-      document.getElementById('edit-project-target').value = project.target || '';
       document.getElementById('edit-project-status').value = project.status || 'active';
       
       // Clear any previous errors
@@ -638,7 +659,6 @@ class ProjectManager {
     const errorElements = [
       'edit-project-name-error',
       'edit-project-description-error',
-      'edit-project-target-error',
       'edit-project-status-error'
     ];
     
@@ -651,7 +671,7 @@ class ProjectManager {
     });
 
     // Remove error styling from inputs
-    const inputs = ['edit-project-name', 'edit-project-description', 'edit-project-target', 'edit-project-status'];
+    const inputs = ['edit-project-name', 'edit-project-description', 'edit-project-status'];
     inputs.forEach(id => {
       const input = document.getElementById(id);
       if (input) {
@@ -689,17 +709,16 @@ class ProjectManager {
     // Clear previous errors
     this.clearEditFormErrors();
 
-    // Get form data
+    // Get form data — aligned with PUT /api/projects/{id} spec
     const form = event.target;
-    const projectId = parseInt(document.getElementById('edit-project-id').value);
+    const projectId = document.getElementById('edit-project-id').value; // UUID string, don't parseInt
     const formData = {
       name: form.name.value.trim(),
-      description: form.description.value.trim(),
-      target: form.target.value.trim(),
-      status: form.status.value
+      description: form.description ? form.description.value.trim() : '',
+      status: form.status ? form.status.value : 'active'
     };
 
-    // Validate form
+    // Validate form (only name is required)
     const validation = this.validateProjectForm(formData);
     if (!validation.valid) {
       // Display validation errors
@@ -722,18 +741,23 @@ class ProjectManager {
 
     try {
       // Update project via API
-      await this.updateProject(projectId, formData);
+      const updatedProject = await this.updateProject(projectId, formData);
       
       // Success: close modal and refresh project list
       this.hideEditProjectModal();
       
-      // Show success notification
+      // Show success notification with project name
+      const projectName = updatedProject.name || formData.name;
       if (window.CyberNotify) {
-        window.CyberNotify.alert('Project updated successfully!', { type: 'success' });
+        window.CyberNotify.alert(`Project "${projectName}" updated successfully.`, { type: 'success' });
       }
       
-      // Refresh project list
-      await this.renderProjectsList();
+      // Refresh project list — use global renderProjectsList if available
+      if (typeof renderProjectsList === 'function') {
+        await renderProjectsList();
+      } else {
+        await this.renderProjectsList();
+      }
       
     } catch (error) {
       console.error('[ProjectManager] Error updating project:', error);
@@ -1126,160 +1150,197 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // Initialize project manager when DOM is ready
 if (typeof window !== 'undefined') {
+  /**
+   * Sets up all ProjectManager event listeners and UI bindings.
+   * Separated from initialization so it can be called after apiClient is ready.
+   */
+  function _setupProjectManagerListeners() {
+    if (!window.projectManager) return;
+    
+    // Set up modal event listeners
+    const newProjectBtn = document.getElementById('new-project-btn');
+    const createProjectClose = document.getElementById('create-project-close');
+    const createProjectCancel = document.getElementById('create-project-cancel');
+    const createProjectForm = document.getElementById('create-project-form');
+    
+    const editProjectClose = document.getElementById('edit-project-close');
+    const editProjectCancel = document.getElementById('edit-project-cancel');
+    const editProjectForm = document.getElementById('edit-project-form');
+    
+    // Open create modal
+    if (newProjectBtn) {
+      newProjectBtn.addEventListener('click', () => {
+        window.projectManager.showCreateProjectModal();
+      });
+    }
+    
+    // Close create modal buttons
+    if (createProjectClose) {
+      createProjectClose.addEventListener('click', () => {
+        window.projectManager.hideCreateProjectModal();
+      });
+    }
+    
+    if (createProjectCancel) {
+      createProjectCancel.addEventListener('click', () => {
+        window.projectManager.hideCreateProjectModal();
+      });
+    }
+    
+    // Handle create form submission
+    if (createProjectForm) {
+      createProjectForm.addEventListener('submit', (event) => {
+        window.projectManager.handleProjectFormSubmit(event);
+      });
+    }
+    
+    // Close edit modal buttons
+    if (editProjectClose) {
+      editProjectClose.addEventListener('click', () => {
+        window.projectManager.hideEditProjectModal();
+      });
+    }
+    
+    if (editProjectCancel) {
+      editProjectCancel.addEventListener('click', () => {
+        window.projectManager.hideEditProjectModal();
+      });
+    }
+    
+    // Handle edit form submission
+    if (editProjectForm) {
+      editProjectForm.addEventListener('submit', (event) => {
+        window.projectManager.handleEditProjectFormSubmit(event);
+      });
+    }
+    
+    // Close modals on backdrop click
+    const createModal = document.getElementById('create-project-modal');
+    if (createModal) {
+      createModal.addEventListener('click', (event) => {
+        if (event.target === createModal) {
+          window.projectManager.hideCreateProjectModal();
+        }
+      });
+    }
+    
+    const editModal = document.getElementById('edit-project-modal');
+    if (editModal) {
+      editModal.addEventListener('click', (event) => {
+        if (event.target === editModal) {
+          window.projectManager.hideEditProjectModal();
+        }
+      });
+    }
+    
+    // Add Collaborator Modal event listeners
+    const addCollaboratorBtn = document.getElementById('add-collaborator-btn');
+    const addCollaboratorClose = document.getElementById('add-collaborator-close');
+    const addCollaboratorCancel = document.getElementById('add-collaborator-cancel');
+    const addCollaboratorForm = document.getElementById('add-collaborator-form');
+    const addCollaboratorModal = document.getElementById('add-collaborator-modal');
+    
+    if (addCollaboratorBtn) {
+      addCollaboratorBtn.addEventListener('click', () => {
+        window.projectManager.showAddCollaboratorModal();
+      });
+    }
+    
+    if (addCollaboratorClose) {
+      addCollaboratorClose.addEventListener('click', () => {
+        window.projectManager.hideAddCollaboratorModal();
+      });
+    }
+    
+    if (addCollaboratorCancel) {
+      addCollaboratorCancel.addEventListener('click', () => {
+        window.projectManager.hideAddCollaboratorModal();
+      });
+    }
+    
+    if (addCollaboratorForm) {
+      addCollaboratorForm.addEventListener('submit', (event) => {
+        window.projectManager.handleAddCollaboratorSubmit(event);
+      });
+    }
+    
+    if (addCollaboratorModal) {
+      addCollaboratorModal.addEventListener('click', (event) => {
+        if (event.target === addCollaboratorModal) {
+          window.projectManager.hideAddCollaboratorModal();
+        }
+      });
+    }
+    
+    // Load projects when Projects tab becomes active
+    // Listen for custom tab switch event
+    document.addEventListener('tabSwitched', (event) => {
+      if (event.detail && event.detail.tabId === 'projects') {
+        console.log('[ProjectManager] Projects tab activated, loading projects...');
+        // Small delay to ensure tab is visible
+        setTimeout(() => {
+          // Prefer global renderProjectsList (richer card template from main.js)
+          if (typeof renderProjectsList === 'function') {
+            renderProjectsList();
+          } else {
+            window.projectManager.renderProjectsList();
+          }
+        }, 100);
+      }
+    });
+    
+    // Also bind to sidebar link click
+    const projectsSidebarLink = document.querySelector('a[onclick*="switchToTab(\'projects\')"]');
+    if (projectsSidebarLink) {
+      projectsSidebarLink.addEventListener('click', () => {
+        console.log('[ProjectManager] Projects sidebar link clicked');
+        setTimeout(() => {
+          if (typeof renderProjectsList === 'function') {
+            renderProjectsList();
+          } else {
+            window.projectManager.renderProjectsList();
+          }
+        }, 150);
+      });
+    }
+    
+    // Also bind to empty state button
+    const emptyStateBtn = document.querySelector('#projects-empty-state button');
+    if (emptyStateBtn) {
+      emptyStateBtn.addEventListener('click', () => {
+        window.projectManager.showCreateProjectModal();
+      });
+    }
+    
+    console.log('[ProjectManager] Initialized successfully');
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
+    // Ensure APIClient is available — api-client.js loads before this script,
+    // so the APIClient class is always defined even if main.js hasn't run yet
+    if (!window.apiClient && typeof APIClient !== 'undefined') {
+      window.apiClient = new APIClient();
+      console.log('[ProjectManager] Created APIClient instance (early init)');
+    }
+
     // Initialize ProjectManager if APIClient is available
     if (window.apiClient) {
       window.projectManager = new ProjectManager(window.apiClient);
-      
-      // Set up modal event listeners
-      const newProjectBtn = document.getElementById('new-project-btn');
-      const createProjectClose = document.getElementById('create-project-close');
-      const createProjectCancel = document.getElementById('create-project-cancel');
-      const createProjectForm = document.getElementById('create-project-form');
-      
-      const editProjectClose = document.getElementById('edit-project-close');
-      const editProjectCancel = document.getElementById('edit-project-cancel');
-      const editProjectForm = document.getElementById('edit-project-form');
-      
-      // Open create modal
-      if (newProjectBtn) {
-        newProjectBtn.addEventListener('click', () => {
-          window.projectManager.showCreateProjectModal();
-        });
-      }
-      
-      // Close create modal buttons
-      if (createProjectClose) {
-        createProjectClose.addEventListener('click', () => {
-          window.projectManager.hideCreateProjectModal();
-        });
-      }
-      
-      if (createProjectCancel) {
-        createProjectCancel.addEventListener('click', () => {
-          window.projectManager.hideCreateProjectModal();
-        });
-      }
-      
-      // Handle create form submission
-      if (createProjectForm) {
-        createProjectForm.addEventListener('submit', (event) => {
-          window.projectManager.handleProjectFormSubmit(event);
-        });
-      }
-      
-      // Close edit modal buttons
-      if (editProjectClose) {
-        editProjectClose.addEventListener('click', () => {
-          window.projectManager.hideEditProjectModal();
-        });
-      }
-      
-      if (editProjectCancel) {
-        editProjectCancel.addEventListener('click', () => {
-          window.projectManager.hideEditProjectModal();
-        });
-      }
-      
-      // Handle edit form submission
-      if (editProjectForm) {
-        editProjectForm.addEventListener('submit', (event) => {
-          window.projectManager.handleEditProjectFormSubmit(event);
-        });
-      }
-      
-      // Close modals on backdrop click
-      const createModal = document.getElementById('create-project-modal');
-      if (createModal) {
-        createModal.addEventListener('click', (event) => {
-          if (event.target === createModal) {
-            window.projectManager.hideCreateProjectModal();
-          }
-        });
-      }
-      
-      const editModal = document.getElementById('edit-project-modal');
-      if (editModal) {
-        editModal.addEventListener('click', (event) => {
-          if (event.target === editModal) {
-            window.projectManager.hideEditProjectModal();
-          }
-        });
-      }
-      
-      // Add Collaborator Modal event listeners
-      const addCollaboratorBtn = document.getElementById('add-collaborator-btn');
-      const addCollaboratorClose = document.getElementById('add-collaborator-close');
-      const addCollaboratorCancel = document.getElementById('add-collaborator-cancel');
-      const addCollaboratorForm = document.getElementById('add-collaborator-form');
-      const addCollaboratorModal = document.getElementById('add-collaborator-modal');
-      
-      if (addCollaboratorBtn) {
-        addCollaboratorBtn.addEventListener('click', () => {
-          window.projectManager.showAddCollaboratorModal();
-        });
-      }
-      
-      if (addCollaboratorClose) {
-        addCollaboratorClose.addEventListener('click', () => {
-          window.projectManager.hideAddCollaboratorModal();
-        });
-      }
-      
-      if (addCollaboratorCancel) {
-        addCollaboratorCancel.addEventListener('click', () => {
-          window.projectManager.hideAddCollaboratorModal();
-        });
-      }
-      
-      if (addCollaboratorForm) {
-        addCollaboratorForm.addEventListener('submit', (event) => {
-          window.projectManager.handleAddCollaboratorSubmit(event);
-        });
-      }
-      
-      if (addCollaboratorModal) {
-        addCollaboratorModal.addEventListener('click', (event) => {
-          if (event.target === addCollaboratorModal) {
-            window.projectManager.hideAddCollaboratorModal();
-          }
-        });
-      }
-      
-      // Load projects when Projects tab becomes active
-      // Listen for custom tab switch event
-      document.addEventListener('tabSwitched', (event) => {
-        if (event.detail && event.detail.tabId === 'projects') {
-          console.log('[ProjectManager] Projects tab activated, loading projects...');
-          // Small delay to ensure tab is visible
-          setTimeout(() => {
-            window.projectManager.renderProjectsList();
-          }, 100);
-        }
-      });
-      
-      // Also bind to sidebar link click
-      const projectsSidebarLink = document.querySelector('a[onclick*="switchToTab(\'projects\')"]');
-      if (projectsSidebarLink) {
-        projectsSidebarLink.addEventListener('click', () => {
-          console.log('[ProjectManager] Projects sidebar link clicked');
-          setTimeout(() => {
-            window.projectManager.renderProjectsList();
-          }, 150);
-        });
-      }
-      
-      // Also bind to empty state button
-      const emptyStateBtn = document.querySelector('#projects-empty-state button');
-      if (emptyStateBtn) {
-        emptyStateBtn.addEventListener('click', () => {
-          window.projectManager.showCreateProjectModal();
-        });
-      }
-      
-      console.log('[ProjectManager] Initialized successfully');
+      _setupProjectManagerListeners();
     } else {
-      console.warn('[ProjectManager] APIClient not available, skipping initialization');
+      // Fallback: wait briefly for main.js to initialize apiClient
+      console.warn('[ProjectManager] APIClient not yet available, retrying in 200ms...');
+      setTimeout(() => {
+        if (!window.apiClient && typeof APIClient !== 'undefined') {
+          window.apiClient = new APIClient();
+        }
+        if (window.apiClient && !window.projectManager) {
+          window.projectManager = new ProjectManager(window.apiClient);
+          _setupProjectManagerListeners();
+        } else if (!window.apiClient) {
+          console.error('[ProjectManager] APIClient still not available after retry. Ensure api-client.js is loaded.');
+        }
+      }, 200);
     }
   });
 }

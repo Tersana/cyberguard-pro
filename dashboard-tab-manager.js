@@ -11,7 +11,8 @@ const DashboardTabManager = {
     'web-security': false,
     'hash-tools': false,
     'ai-assistant': false,
-    'projects': false
+    'projects': false,
+    'threat-intel': false
   },
   
   // Current active tab
@@ -84,15 +85,32 @@ const DashboardTabManager = {
   
   /**
    * Update tab button active states
+   * Handles both horizontal tab buttons and sidebar navigation items
    * @param {string} activeTabId - The ID of the active tab
    */
   updateTabButtons(activeTabId) {
+    // Update horizontal tab buttons (backward compatibility)
     const tabButtons = document.querySelectorAll('.tab-button');
     tabButtons.forEach(button => {
       if (button.dataset.tab === activeTabId) {
         button.classList.add('active');
       } else {
         button.classList.remove('active');
+      }
+    });
+    
+    // Update sidebar navigation items
+    const navItems = document.querySelectorAll('.cyber-nav-item[onclick*="switchToTab"]');
+    navItems.forEach(item => {
+      const onclickAttr = item.getAttribute('onclick');
+      if (onclickAttr) {
+        // Extract tab ID from onclick="switchToTab('tab-id')"
+        const match = onclickAttr.match(/switchToTab\('([^']+)'\)/);
+        if (match && match[1] === activeTabId) {
+          item.classList.add('cyber-nav-active');
+        } else {
+          item.classList.remove('cyber-nav-active');
+        }
       }
     });
   },
@@ -147,6 +165,9 @@ const DashboardTabManager = {
         break;
       case 'projects':
         this.initializeProjects();
+        break;
+      case 'threat-intel':
+        this.initializeThreatIntel();
         break;
     }
     
@@ -229,6 +250,26 @@ const DashboardTabManager = {
       }
     } else {
       console.warn('DashboardTabManager: No project loading method available');
+    }
+  },
+  
+  /**
+   * Initialize Threat Intel Hub tab
+   * Initializes the threat intelligence aggregation module
+   */
+  initializeThreatIntel() {
+    console.log('DashboardTabManager: Initializing Threat Intel Hub tab');
+    
+    // Check if ThreatIntelHub is available
+    if (typeof ThreatIntelHub !== 'undefined') {
+      try {
+        ThreatIntelHub.init();
+        console.log('DashboardTabManager: Threat Intel Hub initialized');
+      } catch (error) {
+        console.error('DashboardTabManager: Error initializing Threat Intel Hub:', error);
+      }
+    } else {
+      console.warn('DashboardTabManager: ThreatIntelHub not found');
     }
   },
   

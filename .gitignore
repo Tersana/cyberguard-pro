@@ -27,8 +27,6 @@ test-dashboard-integration.html
 test-filter-pills.html
 test-state-manager.html
 test-stop-scan.html
-auth.test.js
-api-client.test.js
 # --- System Files ---
 .DS_Store
 Thumbs.db

@@ -238,30 +238,62 @@ class AuthManager {
         password: password
       });
 
-      // 2FA required — data.requires_2fa per API docs
-      if (response.data?.requires_2fa) {
-        return {
-          success: true,
-          requires2FA: true,
-          message: '2FA verification required'
-        };
-      }
+      // --- Phase 2 Fix: Check for 2FA requirement EARLY ---
+      // The backend may signal 2FA is required via requires_2fa flag before
+      // we can fully extract/normalize user data. Check this first to avoid
+      // falling into the generic error handler.
+      const requires2FA = response.data?.requires_2fa
+        || response.requires_2fa
+        || response.data?.requires2FA
+        || response.requires2FA;
 
       // Extract token and user from response.data
       const token = response.data?.token || response.token;
       const rawUser = response.data?.user || response.user || response.data || response;
 
+      // Store token if present (even for 2FA flow — needed for verify endpoint)
+      if (token) {
+        this.apiClient.setToken(token);
+      }
+
+      // Attempt to normalize user data (may be partial during 2FA flow)
+      let normalizedUser = null;
+      try {
+        normalizedUser = this.normalizeUserData(rawUser);
+      } catch (normalizeError) {
+        console.warn('[2FA Debug] User data normalization failed:', normalizeError.message);
+        // If 2FA is required, normalization failure is acceptable — the backend
+        // may not return full user data until after 2FA verification
+      }
+
+      // Determine if 2FA challenge is needed:
+      // 1. Backend explicitly says requires_2fa = true, OR
+      // 2. Normalized user has twoFactorEnabled = true
+      const needs2FA = requires2FA === true
+        || (normalizedUser && normalizedUser.twoFactorEnabled === true);
+
+      if (needs2FA) {
+        // Extract the email from the 2FA response — the verify endpoint needs it
+        const twoFAEmail = response.data?.email || response.email || sanitizedEmail;
+        console.info('[2FA] 2FA verification required — showing challenge modal');
+        return {
+          success: true,
+          requires2FA: true,
+          email: twoFAEmail,
+          message: '2FA verification required'
+        };
+      }
+
+      // No 2FA needed — validate we have what we need for a full session
       if (!token) {
-        throw new Error('No authentication token received from server');
+        throw new APIError('No authentication token received from server', 500);
       }
 
-      this.apiClient.setToken(token);
-
-      const normalizedUser = this.normalizeUserData(rawUser);
       if (!normalizedUser) {
-        throw new Error('Invalid user data received from server');
+        throw new APIError('Invalid user data received from server', 500);
       }
 
+      // User has 2FA disabled, proceed to save session and redirect to dashboard
       this.saveUserSession(normalizedUser);
       this.trackLoginAttempt(email, true);
 
@@ -271,28 +303,47 @@ class AuthManager {
       if (error.name === 'ValidationError' || error.name === 'APIError') {
         throw error;
       }
-      throw new Error('An error occurred during login');
+      // Preserve the original error message for debugging instead of swallowing it
+      console.error('[Login] Unexpected error:', error.message || error);
+      throw new APIError(
+        error.message || 'An error occurred during login',
+        error.status || 500
+      );
     } finally {
       hideLoading();
     }
   }
 
-  // Verify 2FA code
-  async verify2FA(code) {
+  // Verify 2FA code during login
+  // API docs: POST /api/auth/2fa/verify  body: { email, code }
+  // Response: { status, message, data: { user: {...}, token: "..." } }
+  async verify2FA(code, email) {
     try {
       // Show loading indicator
       showLoading('Verifying code...');
-      
-      // Send 2FA verification request
+
+      // Send 2FA verification request — backend requires both email and code
       const response = await this.apiClient.post('auth/2fa/verify', {
+        email: email,
         code: code
       });
 
+      // Backend nests payload under response.data
+      const payload = response.data || response;
+
       // Store JWT token
-      this.apiClient.setToken(response.token);
+      const token = payload.token || response.token;
+      if (token) {
+        this.apiClient.setToken(token);
+      }
 
       // Normalize user data
-      const normalizedUser = this.normalizeUserData(response.user);
+      const rawUser = payload.user || response.user;
+      const normalizedUser = this.normalizeUserData(rawUser);
+
+      // The verify endpoint response may not include two_factor_enabled,
+      // but the user just passed 2FA — so it's definitively enabled
+      normalizedUser.twoFactorEnabled = true;
 
       // Save user session
       this.saveUserSession(normalizedUser);
@@ -300,11 +351,11 @@ class AuthManager {
       return { success: true, user: normalizedUser };
     } catch (error) {
       console.error("2FA verification error:", error);
-      
-      if (error.name === 'APIError') {
-        throw error; // Re-throw API errors for form handling
+
+      if (error.name === 'APIError' || error.name === 'ValidationError') {
+        throw error; // Re-throw for form handling
       }
-      
+
       throw new Error('An error occurred during 2FA verification');
     } finally {
       // Hide loading indicator
@@ -317,22 +368,48 @@ class AuthManager {
     try {
       // Show loading indicator
       showLoading('Setting up 2FA...');
-      
+
       // Send 2FA setup request
       const response = await this.apiClient.post('auth/2fa/setup');
 
-      return { 
-        success: true, 
-        qrCode: response.qr_code,
-        secret: response.secret
+      // Backend may nest payload under response.data or return it flat
+      const payload = response.data || response;
+
+      // Extract QR code — handle multiple possible field names
+      const qrCode = payload.qr_code
+        || payload.qr_code_url
+        || payload.qrCode
+        || payload.qr
+        || payload.svg
+        || payload.otpauth_url
+        || response.qr_code
+        || response.qrCode
+        || null;
+
+      // Extract secret key
+      const secret = payload.secret
+        || payload.secret_key
+        || payload.secretKey
+        || payload.manual_key
+        || response.secret
+        || null;
+
+      if (!qrCode && !secret) {
+        console.error('[2FA Setup] No QR code or secret in response:', response);
+      }
+
+      return {
+        success: true,
+        qrCode: qrCode,
+        secret: secret
       };
     } catch (error) {
       console.error("2FA setup error:", error);
-      
+
       if (error.name === 'APIError') {
         throw error; // Re-throw API errors for form handling
       }
-      
+
       throw new Error('An error occurred during 2FA setup');
     } finally {
       // Hide loading indicator
@@ -375,23 +452,49 @@ class AuthManager {
       // Send 2FA disable request
       const response = await this.apiClient.post('auth/2fa/disable');
 
-      // Update current user's 2FA status
+      // Update current user's 2FA status in memory
       if (this.currentUser) {
         this.currentUser.twoFactorEnabled = false;
+        this.currentUser.requires2FA = false;
         localStorage.setItem("cyberguard_user", JSON.stringify(this.currentUser));
       }
 
-      return { 
-        success: true, 
+      // CRITICAL: Clear ALL 2FA-related state to prevent ghost 2FA prompts
+      // on the next login after deactivation
+      localStorage.removeItem('requires_2fa');
+      localStorage.removeItem('cyberguard_2fa_pending');
+      localStorage.removeItem('cyberguard_2fa_secret');
+
+      sessionStorage.removeItem('requires_2fa');
+      sessionStorage.removeItem('pending_2fa_verification');
+      sessionStorage.removeItem('2fa_session_token');
+      sessionStorage.removeItem('cyberguard_2fa_pending');
+
+      // Double-check: ensure the persisted user object has twoFactorEnabled: false
+      const storedUser = localStorage.getItem("cyberguard_user");
+      if (storedUser) {
+        try {
+          const userObj = JSON.parse(storedUser);
+          userObj.twoFactorEnabled = false;
+          userObj.requires2FA = false;
+          delete userObj.two_factor_enabled;
+          localStorage.setItem("cyberguard_user", JSON.stringify(userObj));
+        } catch (e) {
+          console.warn("Failed to update stored user object:", e);
+        }
+      }
+
+      return {
+        success: true,
         message: response.message || '2FA disabled successfully'
       };
     } catch (error) {
       console.error("2FA disable error:", error);
-      
+
       if (error.name === 'APIError') {
-        throw error; // Re-throw API errors for form handling
+        throw error;
       }
-      
+
       throw new Error('An error occurred while disabling 2FA');
     }
   }
@@ -455,15 +558,12 @@ class AuthManager {
         return { success: false, message: 'No token found' };
       }
 
-      // Fetch user profile and session status in parallel
-      const [profileResult, statusResult] = await Promise.all([
-        this.fetchUserProfile().catch(err => ({ success: false, error: err })),
-        this.fetchSessionStatus().catch(err => ({ success: false, error: err }))
-      ]);
+      // Fetch user profile (which includes two_factor_enabled)
+      const profileResult = await this.fetchUserProfile().catch(err => ({ success: false, error: err }));
 
-      // Check if both requests succeeded
-      if (!profileResult.success || !statusResult.success) {
-        // One or both requests failed, clear session
+      // Check if request succeeded
+      if (!profileResult.success) {
+        // Request failed, clear session
         this.apiClient.clearToken();
         localStorage.removeItem("cyberguard_user");
         localStorage.removeItem("cyberguard_session");
@@ -472,15 +572,17 @@ class AuthManager {
         return { success: false, message: 'Session validation failed' };
       }
 
-      // Merge user data with session status
-      const user = {
-        ...profileResult.user,
-        emailVerified: statusResult.emailVerified,
-        twoFactorEnabled: statusResult.twoFactorEnabled
-      };
+      // Use the user data from profile (already includes two_factor_enabled)
+      const user = profileResult.user;
 
       // Save user session
       this.saveUserSession(user);
+
+      // Dispatch custom event to notify dashboard that session restoration is complete
+      const sessionRestoredEvent = new CustomEvent('cyberguard:sessionRestored', {
+        detail: { user: user }
+      });
+      document.dispatchEvent(sessionRestoredEvent);
 
       return { success: true, user: user };
     } catch (error) {
@@ -526,6 +628,9 @@ class AuthManager {
 
   // Logout with API - Backend integration
   async logoutWithAPI() {
+    // Capture email before clearing state
+    const userEmail = this.currentUser?.email || 'unknown';
+
     try {
       // Send logout request to backend
       await this.apiClient.post('auth/logout');
@@ -533,14 +638,26 @@ class AuthManager {
       console.error("Logout API error:", error);
       // Continue with local cleanup even if API call fails
     } finally {
-      // Always clear local session data
+      // Clear JWT token
       this.apiClient.clearToken();
+
+      // Clear core session data
       localStorage.removeItem("cyberguard_user");
       localStorage.removeItem("cyberguard_session");
+
+      // Clear all 2FA-related state to prevent ghost prompts on next login
+      localStorage.removeItem('requires_2fa');
+      localStorage.removeItem('cyberguard_2fa_pending');
+      localStorage.removeItem('cyberguard_2fa_secret');
+      sessionStorage.removeItem('requires_2fa');
+      sessionStorage.removeItem('pending_2fa_verification');
+      sessionStorage.removeItem('2fa_session_token');
+      sessionStorage.removeItem('cyberguard_2fa_pending');
+
       this.currentUser = null;
 
-      // Track logout
-      this.trackLogout(this.currentUser?.email || 'unknown');
+      // Track logout (using captured email)
+      this.trackLogout(userEmail);
 
       // Redirect to login page
       window.location.href = "login.html";
@@ -647,6 +764,16 @@ class AuthManager {
       this.apiClient.clearToken();
       localStorage.removeItem("cyberguard_user");
       localStorage.removeItem("cyberguard_session");
+
+      // Clear all 2FA-related state to prevent ghost prompts on next login
+      localStorage.removeItem('requires_2fa');
+      localStorage.removeItem('cyberguard_2fa_pending');
+      localStorage.removeItem('cyberguard_2fa_secret');
+      sessionStorage.removeItem('requires_2fa');
+      sessionStorage.removeItem('pending_2fa_verification');
+      sessionStorage.removeItem('2fa_session_token');
+      sessionStorage.removeItem('cyberguard_2fa_pending');
+
       this.currentUser = null;
 
       // Redirect to login page
@@ -860,6 +987,16 @@ class AuthManager {
     this.apiClient.clearToken();
     localStorage.removeItem("cyberguard_user");
     localStorage.removeItem("cyberguard_session");
+
+    // Clear 2FA state to prevent ghost prompts
+    localStorage.removeItem('requires_2fa');
+    localStorage.removeItem('cyberguard_2fa_pending');
+    localStorage.removeItem('cyberguard_2fa_secret');
+    sessionStorage.removeItem('requires_2fa');
+    sessionStorage.removeItem('pending_2fa_verification');
+    sessionStorage.removeItem('2fa_session_token');
+    sessionStorage.removeItem('cyberguard_2fa_pending');
+
     this.currentUser = null;
 
     // Show user-friendly notification
