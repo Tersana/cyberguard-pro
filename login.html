@@ -883,13 +883,24 @@
                             // Show 2FA modal
                             show2FAModal();
                         } else if (result.success) {
+                            // Honor ?redirect= so invite links work:
+                            // after login the user returns to the original page
+                            const redirectParam = new URLSearchParams(
+                                window.location.search,
+                            ).get("redirect");
+                            // Only follow the redirect if it is a same-origin
+                            // relative path (starts with /) to prevent open redirect
+                            const dest =
+                                redirectParam && redirectParam.startsWith("/")
+                                    ? redirectParam
+                                    : "dashboard.html";
                             showMessage(
                                 "success",
                                 "Welcome back!",
-                                "Redirecting to dashboard...",
+                                "Redirecting...",
                             );
                             setTimeout(() => {
-                                window.location.href = "dashboard.html";
+                                window.location.href = dest;
                             }, 1500);
                         }
                     } catch (error) {
@@ -1031,13 +1042,21 @@
                         hide2FAModal();
 
                         if (result.success) {
+                            // Honor ?redirect= for the 2FA path as well
+                            const redirectParam = new URLSearchParams(
+                                window.location.search,
+                            ).get("redirect");
+                            const dest =
+                                redirectParam && redirectParam.startsWith("/")
+                                    ? redirectParam
+                                    : "dashboard.html";
                             showMessage(
                                 "success",
                                 "Verification Successful",
-                                "Redirecting to dashboard...",
+                                "Redirecting...",
                             );
                             setTimeout(() => {
-                                window.location.href = "dashboard.html";
+                                window.location.href = dest;
                             }, 1500);
                         }
                     } catch (error) {

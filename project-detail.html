@@ -366,39 +366,23 @@
 
                     <!-- Form state -->
                     <div id="invite-panel-form">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                            <div>
-                                <label
-                                    class="block text-xs font-semibold text-slate-300 mb-1"
-                                    >Role *</label
-                                >
-                                <select
-                                    id="ip-role"
-                                    class="cyber-input w-full p-2 rounded-lg text-sm"
-                                >
-                                    <option value="editor">
-                                        Editor — can modify data
-                                    </option>
-                                    <option value="viewer">
-                                        Viewer — read-only
-                                    </option>
-                                </select>
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-xs font-semibold text-slate-300 mb-1"
-                                    >Email
-                                    <span class="text-slate-500 font-normal"
-                                        >(optional)</span
-                                    ></label
-                                >
-                                <input
-                                    type="email"
-                                    id="ip-email"
-                                    class="cyber-input w-full p-2 rounded-lg text-sm"
-                                    placeholder="user@example.com"
-                                />
-                            </div>
+                        <!-- Role selector is the only required field per API spec §5 -->
+                        <div class="mb-3">
+                            <label
+                                class="block text-xs font-semibold text-slate-300 mb-1"
+                                >Role <span class="text-red-400">*</span></label
+                            >
+                            <select
+                                id="ip-role"
+                                class="cyber-input w-full p-2 rounded-lg text-sm"
+                            >
+                                <option value="editor">
+                                    Editor — can view and modify data
+                                </option>
+                                <option value="viewer">
+                                    Viewer — read-only access
+                                </option>
+                            </select>
                         </div>
                         <div class="flex gap-2">
                             <button
@@ -1023,21 +1007,25 @@
                     resetInvitePanel();
                 });
 
+            // ── FLOW 1: Generate Invite Link ───────────────────────────────────────
+            // POST /api/projects/{project}/invite
+            //   Body: { role } — only role is required per API spec §5
+            //   201 → show invite_link + expires_at with copy-to-clipboard
+            //   403 → "Only the project owner can invite members"
             async function generateInvite() {
                 const btn = document.getElementById("ip-generate-btn");
                 const role =
                     document.getElementById("ip-role")?.value || "viewer";
-                const email = document.getElementById("ip-email")?.value || "";
 
                 setBtnLoading(btn, "Generating…");
                 try {
-                    const body = { role };
-                    if (email.trim()) body.email = email.trim();
+                    // Body contains only role — email is omitted per spec Flow 1
                     const res = await apiFetch(
                         `/projects/${_projectId}/invite`,
-                        { method: "POST", body: JSON.stringify(body) },
+                        { method: "POST", body: JSON.stringify({ role }) },
                     );
 
+                    // 403 → caller is not the project owner
                     if (res.status === 403) {
                         notify(
                             "Only the project owner can invite members.",
@@ -1045,29 +1033,37 @@
                         );
                         return;
                     }
+
                     if (!res.ok) {
-                        notify("Failed to generate invite link.", "error");
+                        const d = await res.json().catch(() => ({}));
+                        notify(
+                            d.message || "Failed to generate invite link.",
+                            "error",
+                        );
                         return;
                     }
 
+                    // 201 → show link + expiry with copy-to-clipboard button
                     const data = await res.json();
                     const link = data.invite_link || data.inviteLink || "";
                     const expires = data.expires_at || data.expiresAt || "";
 
-                    document.getElementById("ip-link-display").textContent =
-                        link;
+                    const linkEl = document.getElementById("ip-link-display");
+                    if (linkEl) linkEl.textContent = link;
+
                     const expEl = document.getElementById("ip-expiry-display");
                     if (expEl)
                         expEl.textContent = expires
                             ? `Expires: ${fmtDate(expires.split("T")[0])}`
                             : "";
 
+                    // Switch panel to the result view
                     document
                         .getElementById("invite-panel-form")
-                        .classList.add("hidden");
+                        ?.classList.add("hidden");
                     document
                         .getElementById("invite-panel-result")
-                        .classList.remove("hidden");
+                        ?.classList.remove("hidden");
                 } finally {
                     restoreBtn(btn);
                 }
@@ -1092,12 +1088,13 @@
             function resetInvitePanel() {
                 document
                     .getElementById("invite-panel-form")
-                    .classList.remove("hidden");
+                    ?.classList.remove("hidden");
                 document
                     .getElementById("invite-panel-result")
-                    .classList.add("hidden");
-                const form = document.getElementById("invite-panel-form");
-                form.querySelectorAll("input").forEach((i) => (i.value = ""));
+                    ?.classList.add("hidden");
+                // Reset role selector back to its default (editor)
+                const roleEl = document.getElementById("ip-role");
+                if (roleEl) roleEl.value = "editor";
             }
 
             // ─── Role change ──────────────────────────────────────────────────────────

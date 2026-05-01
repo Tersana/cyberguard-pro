@@ -287,12 +287,12 @@ class ProjectManager {
    * @param {string} role  — 'editor' | 'viewer'
    * @param {string} [email]
    */
-  async inviteCollaborator(projectId, role, email) {
+  async inviteCollaborator(projectId, role) {
     try {
       if (typeof showLoading !== "undefined")
         showLoading("Generating invite link…");
+      // API ref §5: only 'role' is required — email is optional and removed from UI
       const payload = { role };
-      if (email && email.trim()) payload.email = email.trim();
       return await this.apiClient.post(
         `/projects/${projectId}/invite`,
         payload,
@@ -1099,11 +1099,7 @@ class ProjectManager {
     const form = document.getElementById("invite-collaborator-form");
     if (form) form.reset();
 
-    const errEl = document.getElementById("invite-email-error");
-    if (errEl) {
-      errEl.textContent = "";
-      errEl.classList.add("hidden");
-    }
+    // invite-email-error removed (email field no longer in UI)
 
     modal.classList.remove("hidden");
   }
@@ -1122,14 +1118,14 @@ class ProjectManager {
     if (!projectId) return;
 
     const role = document.getElementById("invite-role")?.value || "viewer";
-    const email = document.getElementById("invite-email")?.value || "";
+    // email removed from UI — API only requires 'role' (email is truly optional and not surfaced)
 
     const submitBtn = document.getElementById("invite-submit-btn");
     if (submitBtn && typeof showInlineLoading !== "undefined")
       showInlineLoading(submitBtn, "Generating");
 
     try {
-      const result = await this.inviteCollaborator(projectId, role, email);
+      const result = await this.inviteCollaborator(projectId, role, "");
       const inviteLink = result.invite_link || result.inviteLink || "";
       const expiresAt = result.expires_at || result.expiresAt || "";
 

@@ -1,728 +1,1396 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Project Invitation — CyberGuard Pro</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="theme-tokens.css" />
-  <link rel="stylesheet" href="cyber-theme.css" />
-  <style>
-    body {
-      font-family: var(--cg-font-sans);
-      background-color: var(--cg-bg-base);
-      background-image:
-        radial-gradient(ellipse 70% 50% at 50% 0%, rgba(167,139,250,0.10) 0%, transparent 65%),
-        radial-gradient(ellipse 50% 40% at 80% 90%, rgba(56,189,248,0.06) 0%, transparent 55%);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 1.5rem;
-      color: var(--cg-text-1);
-    }
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Project Invitation — CyberGuard Pro</title>
+        <!--
+    NOTE: NO external CSS files are linked here on purpose.
+    When Vercel rewrites /invite/TOKEN → invite.html the browser URL stays
+    at /invite/TOKEN, so any path (relative OR root-relative) may be affected
+    by CDN edge-caching returning wrong content or timing issues.
+    This page is intentionally 100% self-contained.
+    The only external file is api-client.js which is only used for CyberNotify
+    (optional – the page works without it).
+  -->
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            /* ─── Hard-coded palette (no CSS variables) ──────────────── */
+            /* bg-base:    #0B0F19  |  surface:  #111827  |  elevated: #1F2937 */
+            /* text-1:     #F1F5F9  |  text-2:   #94A3B8  |  text-3:   #64748B */
+            /* accent:     #A78BFA  |  a-dark:   #6d28d9                       */
+            /* success:    #34D399  |  warning:  #FBBF24  |  danger:   #F87171 */
+            /* info:       #38BDF8                                              */
 
-    /* ── Card ── */
-    .inv-card {
-      width: 100%;
-      max-width: 440px;
-      background: var(--cg-bg-surface);
-      border: 1px solid var(--cg-border-subtle);
-      border-radius: var(--cg-radius-xl);
-      overflow: hidden;
-      box-shadow: 0 0 48px rgba(167,139,250,0.12), 0 20px 40px rgba(0,0,0,0.45);
-      animation: slideUp 0.45s cubic-bezier(0.34,1.56,0.64,1) both;
-    }
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
 
-    @keyframes slideUp {
-      from { opacity:0; transform:translateY(32px) scale(0.97); }
-      to   { opacity:1; transform:translateY(0)    scale(1);    }
-    }
+            html,
+            body {
+                height: 100%;
+            }
 
-    /* ── Top accent strip ── */
-    .accent-strip {
-      height: 4px;
-      background: linear-gradient(90deg, var(--cg-accent), var(--cg-info));
-    }
-    .accent-strip-danger {
-      background: linear-gradient(90deg, var(--cg-danger), rgba(248,113,113,0.4));
-    }
-    .accent-strip-success {
-      background: linear-gradient(90deg, var(--cg-success), rgba(52,211,153,0.4));
-    }
-    .accent-strip-warning {
-      background: linear-gradient(90deg, var(--cg-warning), rgba(251,191,36,0.4));
-    }
+            body {
+                font-family:
+                    "Inter",
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    sans-serif;
+                min-height: 100vh;
+                /* Always dark — no CSS variable, pure hex */
+                background-color: #0b0f19;
+                background-image:
+                    radial-gradient(
+                        ellipse 80% 55% at 50% 0%,
+                        rgba(167, 139, 250, 0.13) 0%,
+                        transparent 62%
+                    ),
+                    radial-gradient(
+                        ellipse 55% 45% at 82% 92%,
+                        rgba(56, 189, 248, 0.07) 0%,
+                        transparent 55%
+                    );
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem 1rem;
+                color: #f1f5f9;
+                -webkit-font-smoothing: antialiased;
+            }
 
-    /* ── Shimmer skeleton ── */
-    .shimmer {
-      background: linear-gradient(90deg,
-        rgba(167,139,250,0.06) 25%,
-        rgba(167,139,250,0.13) 50%,
-        rgba(167,139,250,0.06) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-      border-radius: 6px;
-    }
-    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+            /* ─── utilities ─────────────────────────────────────────── */
+            .hidden {
+                display: none !important;
+            }
 
-    /* ── Spin for buttons ── */
-    @keyframes spin { to { transform:rotate(360deg); } }
-    .btn-spinner {
-      display: inline-block;
-      width: 14px; height: 14px;
-      border: 2px solid currentColor;
-      border-top-color: transparent;
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-      margin-right: 6px;
-      vertical-align: middle;
-    }
-  </style>
-</head>
-<body>
+            /* ─── card ──────────────────────────────────────────────── */
+            .card {
+                width: 100%;
+                max-width: 460px;
+                background: #111827;
+                border: 1px solid #374151;
+                border-radius: 18px;
+                overflow: hidden;
+                box-shadow:
+                    0 0 0 1px rgba(167, 139, 250, 0.09),
+                    0 0 48px rgba(167, 139, 250, 0.11),
+                    0 24px 56px rgba(0, 0, 0, 0.6);
+                animation: rise 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+            }
+            @keyframes rise {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px) scale(0.97);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
+            }
 
-  <!-- ── Logo ── -->
-  <div style="margin-bottom:2rem; text-align:center; position:relative; z-index:1;">
-    <div style="
-      width:52px; height:52px; border-radius:14px; margin:0 auto 10px;
-      background:linear-gradient(135deg,var(--cg-accent),var(--cg-accent-dark));
-      display:flex; align-items:center; justify-content:center;
-      box-shadow:0 0 28px rgba(167,139,250,0.45);
-      animation:pulse 3s ease-in-out infinite;
-    ">
-      <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6
+            /* ─── accent strip ──────────────────────────────────────── */
+            .strip {
+                height: 4px;
+                background: linear-gradient(90deg, #a78bfa, #38bdf8);
+            }
+            .strip-danger {
+                background: linear-gradient(
+                    90deg,
+                    #f87171,
+                    rgba(248, 113, 113, 0.3)
+                );
+            }
+            .strip-success {
+                background: linear-gradient(
+                    90deg,
+                    #34d399,
+                    rgba(52, 211, 153, 0.3)
+                );
+            }
+            .strip-warning {
+                background: linear-gradient(
+                    90deg,
+                    #fbbf24,
+                    rgba(251, 191, 36, 0.3)
+                );
+            }
+
+            /* ─── shimmer skeleton ──────────────────────────────────── */
+            .shimmer {
+                border-radius: 8px;
+                background: linear-gradient(
+                    90deg,
+                    rgba(167, 139, 250, 0.06) 25%,
+                    rgba(167, 139, 250, 0.14) 50%,
+                    rgba(167, 139, 250, 0.06) 75%
+                );
+                background-size: 200% 100%;
+                animation: sh 1.5s infinite;
+            }
+            @keyframes sh {
+                0% {
+                    background-position: 200% 0;
+                }
+                100% {
+                    background-position: -200% 0;
+                }
+            }
+
+            /* ─── detail row ────────────────────────────────────────── */
+            .row {
+                background: #1f2937;
+                border: 1px solid #374151;
+                border-radius: 10px;
+                padding: 12px 15px;
+            }
+            .row-label {
+                font-size: 10px;
+                font-weight: 600;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                margin-bottom: 5px;
+            }
+
+            /* ─── buttons ───────────────────────────────────────────── */
+            .btn-accept {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                padding: 11px 14px;
+                border-radius: 10px;
+                border: none;
+                cursor: pointer;
+                font-family: inherit;
+                font-size: 14px;
+                font-weight: 700;
+                color: #ffffff;
+                background: linear-gradient(135deg, #a78bfa 0%, #6d28d9 100%);
+                box-shadow: 0 0 20px rgba(167, 139, 250, 0.3);
+                transition:
+                    opacity 0.18s,
+                    transform 0.12s;
+            }
+            .btn-accept:hover:not(:disabled) {
+                opacity: 0.87;
+            }
+            .btn-accept:active:not(:disabled) {
+                transform: scale(0.97);
+            }
+            .btn-accept:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            .btn-decline {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                padding: 11px 14px;
+                border-radius: 10px;
+                border: 1px solid #374151;
+                cursor: pointer;
+                font-family: inherit;
+                font-size: 14px;
+                font-weight: 600;
+                color: #94a3b8;
+                background: rgba(255, 255, 255, 0.04);
+                transition:
+                    background 0.18s,
+                    border-color 0.18s,
+                    color 0.18s;
+            }
+            .btn-decline:hover:not(:disabled) {
+                background: #1f2937;
+                border-color: #a78bfa;
+                color: #f1f5f9;
+            }
+            .btn-decline:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            /* ghost anchor button */
+            .btn-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 9px 18px;
+                border-radius: 10px;
+                border: 1px solid #374151;
+                background: rgba(255, 255, 255, 0.04);
+                color: #f1f5f9;
+                font-size: 13px;
+                font-weight: 600;
+                text-decoration: none;
+                font-family: inherit;
+                cursor: pointer;
+                transition: background 0.18s;
+            }
+            .btn-link:hover {
+                background: #1f2937;
+            }
+
+            /* primary anchor button */
+            .btn-primary-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 9px 18px;
+                border-radius: 10px;
+                border: none;
+                background: linear-gradient(135deg, #a78bfa 0%, #6d28d9 100%);
+                color: #ffffff;
+                font-size: 13px;
+                font-weight: 700;
+                text-decoration: none;
+                font-family: inherit;
+                cursor: pointer;
+                transition: opacity 0.18s;
+            }
+            .btn-primary-link:hover {
+                opacity: 0.87;
+            }
+
+            /* ─── role badge ────────────────────────────────────────── */
+            .badge {
+                display: inline-block;
+                font-size: 12px;
+                font-weight: 700;
+                padding: 3px 11px;
+                border-radius: 999px;
+                border: 1px solid;
+            }
+
+            /* ─── icon box ──────────────────────────────────────────── */
+            .icon-box {
+                width: 52px;
+                height: 52px;
+                border-radius: 14px;
+                margin: 0 auto 18px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            /* ─── button spinner ────────────────────────────────────── */
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+            .spin {
+                display: inline-block;
+                width: 13px;
+                height: 13px;
+                border: 2px solid currentColor;
+                border-top-color: transparent;
+                border-radius: 50%;
+                animation: spin 0.65s linear infinite;
+            }
+
+            /* ─── logo animation ────────────────────────────────────── */
+            @keyframes glow {
+                0%,
+                100% {
+                    box-shadow: 0 0 26px rgba(167, 139, 250, 0.45);
+                }
+                50% {
+                    box-shadow: 0 0 44px rgba(167, 139, 250, 0.7);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- ── Logo ───────────────────────────────────────────── -->
+        <div style="text-align: center; margin-bottom: 2rem">
+            <div
+                style="
+                    width: 52px;
+                    height: 52px;
+                    border-radius: 14px;
+                    margin: 0 auto 10px;
+                    background: linear-gradient(135deg, #a78bfa, #6d28d9);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 0 26px rgba(167, 139, 250, 0.45);
+                    animation: glow 3s ease-in-out infinite;
+                "
+            >
+                <svg
+                    width="26"
+                    height="26"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="white"
+                    stroke-width="2"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6
              11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622
              5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152
-             c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z"/>
-      </svg>
-    </div>
-    <p style="font-size:1.1rem; font-weight:700; color:var(--cg-text-1); letter-spacing:-0.3px;">CyberGuard Pro</p>
-    <p style="font-size:0.7rem; color:var(--cg-text-3); letter-spacing:0.12em; text-transform:uppercase; margin-top:2px;">Security Platform</p>
-  </div>
-  <style>
-    @keyframes pulse {
-      0%,100%{box-shadow:0 0 28px rgba(167,139,250,0.45);}
-      50%    {box-shadow:0 0 44px rgba(167,139,250,0.70);}
-    }
-  </style>
-
-  <!-- ════════════════════════════════════════════
-       STATE: LOADING (skeleton)
-  ════════════════════════════════════════════ -->
-  <div id="state-loading" class="inv-card">
-    <div class="accent-strip"></div>
-    <div style="padding:2rem;">
-      <div class="shimmer" style="height:20px; width:60%; margin:0 auto 8px;"></div>
-      <div class="shimmer" style="height:14px; width:40%; margin:0 auto 2rem;"></div>
-      <div class="shimmer" style="height:60px; border-radius:10px; margin-bottom:12px;"></div>
-      <div class="shimmer" style="height:60px; border-radius:10px; margin-bottom:12px;"></div>
-      <div class="shimmer" style="height:60px; border-radius:10px; margin-bottom:2rem;"></div>
-      <div style="display:flex; gap:10px;">
-        <div class="shimmer" style="height:44px; flex:1; border-radius:10px;"></div>
-        <div class="shimmer" style="height:44px; flex:1; border-radius:10px;"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ════════════════════════════════════════════
-       STATE: SUCCESS (invitation preview)
-  ════════════════════════════════════════════ -->
-  <div id="state-success" class="inv-card hidden">
-    <div class="accent-strip"></div>
-    <div style="padding:2rem;">
-
-      <!-- header -->
-      <div style="text-align:center; margin-bottom:1.75rem;">
-        <div style="
-          width:48px; height:48px; border-radius:12px; margin:0 auto 14px;
-          background:var(--cg-accent-muted); border:1px solid rgba(167,139,250,0.35);
-          display:flex; align-items:center; justify-content:center;
-        ">
-          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="var(--cg-accent)" stroke-width="1.8">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M21.75 9v.906a2.25 2.25 0 0 1-1.183 1.981l-6.478 3.488
-                 M2.25 9v.906a2.25 2.25 0 0 0 1.183 1.981l6.478 3.488m8.839 2.51
-                 -4.66-2.51m0 0-1.023-.55a2.25 2.25 0 0 0-2.134 0l-1.022.55m0 0
-                 -4.661 2.51m16.5 1.615a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0
-                 1-2.25-2.25V8.844a2.25 2.25 0 0 1 1.183-1.981l7.5-4.039a2.25 2.25 0 0
-                 1 2.134 0l7.5 4.039a2.25 2.25 0 0 1 1.183 1.98V19.5Z"/>
-          </svg>
-        </div>
-        <h1 style="font-size:1.3rem; font-weight:800; color:var(--cg-text-1); margin-bottom:4px;">
-          You've Been Invited!
-        </h1>
-        <p style="font-size:0.8rem; color:var(--cg-text-3);">Review the details below before joining.</p>
-      </div>
-
-      <!-- detail rows -->
-      <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:1.75rem;">
-
-        <!-- project name -->
-        <div style="
-          background:var(--cg-bg-elevated); border:1px solid var(--cg-border);
-          border-radius:10px; padding:12px 14px;
-        ">
-          <p style="font-size:0.65rem; color:var(--cg-text-3); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Project</p>
-          <p id="inv-project" style="font-size:0.95rem; font-weight:700; color:var(--cg-text-1); word-break:break-word;">—</p>
+             c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z"
+                    />
+                </svg>
+            </div>
+            <p
+                style="
+                    font-size: 1.05rem;
+                    font-weight: 700;
+                    color: #f1f5f9;
+                    letter-spacing: -0.3px;
+                "
+            >
+                CyberGuard Pro
+            </p>
+            <p
+                style="
+                    font-size: 0.65rem;
+                    color: #64748b;
+                    letter-spacing: 0.14em;
+                    text-transform: uppercase;
+                    margin-top: 3px;
+                "
+            >
+                Security Platform
+            </p>
         </div>
 
-        <!-- role -->
-        <div style="
-          background:var(--cg-bg-elevated); border:1px solid var(--cg-border);
-          border-radius:10px; padding:12px 14px;
-          display:flex; align-items:center; justify-content:space-between;
-        ">
-          <div>
-            <p style="font-size:0.65rem; color:var(--cg-text-3); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Your Role</p>
-            <span id="inv-role-badge" style="
-              font-size:0.75rem; font-weight:700; padding:3px 10px; border-radius:999px; border:1px solid;
-            ">—</span>
-          </div>
-          <p id="inv-role-desc" style="font-size:0.75rem; color:var(--cg-text-3); text-align:right; max-width:140px;">—</p>
+        <!-- ══════════════════════════════════════════════════
+       LOADING skeleton
+  ══════════════════════════════════════════════════ -->
+        <div id="s-loading" class="card">
+            <div class="strip"></div>
+            <div style="padding: 2rem">
+                <div
+                    class="shimmer"
+                    style="height: 17px; width: 55%; margin: 0 auto 8px"
+                ></div>
+                <div
+                    class="shimmer"
+                    style="height: 12px; width: 36%; margin: 0 auto 2rem"
+                ></div>
+                <div
+                    class="shimmer"
+                    style="height: 60px; margin-bottom: 10px"
+                ></div>
+                <div
+                    class="shimmer"
+                    style="height: 60px; margin-bottom: 10px"
+                ></div>
+                <div
+                    class="shimmer"
+                    style="height: 60px; margin-bottom: 1.75rem"
+                ></div>
+                <div style="display: flex; gap: 10px">
+                    <div
+                        class="shimmer"
+                        style="height: 44px; flex: 1; border-radius: 10px"
+                    ></div>
+                    <div
+                        class="shimmer"
+                        style="height: 44px; flex: 1; border-radius: 10px"
+                    ></div>
+                </div>
+            </div>
         </div>
 
-        <!-- invited by -->
-        <div style="
-          background:var(--cg-bg-elevated); border:1px solid var(--cg-border);
-          border-radius:10px; padding:12px 14px;
-        ">
-          <p style="font-size:0.65rem; color:var(--cg-text-3); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px;">Invited By</p>
-          <p id="inv-by"  style="font-size:0.875rem; font-weight:600; color:var(--cg-text-1);">—</p>
-          <p id="inv-job" style="font-size:0.75rem; color:var(--cg-text-3); margin-top:2px;"></p>
+        <!-- ══════════════════════════════════════════════════
+       SUCCESS — invitation preview
+  ══════════════════════════════════════════════════ -->
+        <div id="s-success" class="card hidden">
+            <div class="strip"></div>
+            <div style="padding: 1.75rem 1.75rem 2rem">
+                <!-- header -->
+                <div style="text-align: center; margin-bottom: 1.5rem">
+                    <div
+                        style="
+                            width: 46px;
+                            height: 46px;
+                            border-radius: 12px;
+                            margin: 0 auto 13px;
+                            background: rgba(167, 139, 250, 0.14);
+                            border: 1px solid rgba(167, 139, 250, 0.32);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        "
+                    >
+                        <svg
+                            width="21"
+                            height="21"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="#A78BFA"
+                            stroke-width="1.8"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M21.75 9v.906a2.25 2.25 0 0 1-1.183 1.981l-6.478 3.488
+                 M2.25 9v.906a2.25 2.25 0 0 0 1.183 1.981l6.478 3.488
+                 m8.839 2.51-4.66-2.51m0 0-1.023-.55a2.25 2.25 0 0 0-2.134 0
+                 l-1.022.55m0 0-4.661 2.51m16.5 1.615a2.25 2.25 0 0 1-2.25 2.25
+                 h-15a2.25 2.25 0 0 1-2.25-2.25V8.844a2.25 2.25 0 0 1 1.183-1.981
+                 l7.5-4.039a2.25 2.25 0 0 1 2.134 0l7.5 4.039a2.25 2.25 0 0 1
+                 1.183 1.98V19.5Z"
+                            />
+                        </svg>
+                    </div>
+                    <h1
+                        style="
+                            font-size: 1.2rem;
+                            font-weight: 800;
+                            color: #f1f5f9;
+                            margin-bottom: 4px;
+                        "
+                    >
+                        You've Been Invited!
+                    </h1>
+                    <p style="font-size: 0.8rem; color: #64748b">
+                        Review the details below before joining.
+                    </p>
+                </div>
+
+                <!-- rows -->
+                <div
+                    style="
+                        display: flex;
+                        flex-direction: column;
+                        gap: 10px;
+                        margin-bottom: 1.5rem;
+                    "
+                >
+                    <!-- project -->
+                    <div class="row">
+                        <p class="row-label">Project</p>
+                        <p
+                            id="inv-project"
+                            style="
+                                font-size: 0.95rem;
+                                font-weight: 700;
+                                color: #f1f5f9;
+                                word-break: break-word;
+                            "
+                        >
+                            —
+                        </p>
+                    </div>
+
+                    <!-- role -->
+                    <div
+                        class="row"
+                        style="
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            gap: 12px;
+                        "
+                    >
+                        <div style="min-width: 0">
+                            <p class="row-label">Your Role</p>
+                            <span id="inv-role-badge" class="badge">—</span>
+                        </div>
+                        <p
+                            id="inv-role-desc"
+                            style="
+                                font-size: 0.78rem;
+                                color: #64748b;
+                                text-align: right;
+                                flex-shrink: 0;
+                                max-width: 155px;
+                            "
+                        >
+                            —
+                        </p>
+                    </div>
+
+                    <!-- invited by -->
+                    <div class="row">
+                        <p class="row-label">Invited By</p>
+                        <p
+                            id="inv-by"
+                            style="
+                                font-size: 0.875rem;
+                                font-weight: 600;
+                                color: #f1f5f9;
+                            "
+                        >
+                            —
+                        </p>
+                        <p
+                            id="inv-job"
+                            style="
+                                font-size: 0.75rem;
+                                color: #64748b;
+                                margin-top: 3px;
+                            "
+                        ></p>
+                    </div>
+
+                    <!-- expiry -->
+                    <div
+                        style="
+                            display: flex;
+                            align-items: center;
+                            gap: 7px;
+                            padding: 2px 3px;
+                        "
+                    >
+                        <svg
+                            width="13"
+                            height="13"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="#64748B"
+                            stroke-width="1.8"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                            />
+                        </svg>
+                        <p
+                            id="inv-expiry"
+                            style="font-size: 0.78rem; color: #64748b"
+                        >
+                            —
+                        </p>
+                    </div>
+                </div>
+
+                <!-- action buttons -->
+                <div style="display: flex; gap: 10px">
+                    <button id="btn-accept" class="btn-accept">
+                        <svg
+                            width="14"
+                            height="14"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M4.5 12.75l6 6 9-13.5"
+                            />
+                        </svg>
+                        Join Project
+                    </button>
+                    <button id="btn-decline" class="btn-decline">
+                        <svg
+                            width="13"
+                            height="13"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M6 18L18 6M6 6l12 12"
+                            />
+                        </svg>
+                        Decline
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <!-- expiry -->
-        <div style="display:flex; align-items:center; gap:8px; padding:0 2px;">
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="var(--cg-text-3)" stroke-width="1.8">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-          </svg>
-          <p id="inv-expiry" style="font-size:0.75rem; color:var(--cg-text-3);">—</p>
+        <!-- ══════════════════════════════════════════════════
+       404 — expired / invalid link
+  ══════════════════════════════════════════════════ -->
+        <div id="s-404" class="card hidden">
+            <div class="strip strip-danger"></div>
+            <div style="padding: 2.5rem 2rem; text-align: center">
+                <div
+                    class="icon-box"
+                    style="
+                        background: rgba(248, 113, 113, 0.12);
+                        border: 1px solid rgba(248, 113, 113, 0.3);
+                    "
+                >
+                    <svg
+                        width="24"
+                        height="24"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="#F87171"
+                        stroke-width="1.8"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0
+               1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0
+               0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
+                        />
+                    </svg>
+                </div>
+                <h2
+                    style="
+                        font-size: 1.15rem;
+                        font-weight: 800;
+                        color: #f1f5f9;
+                        margin-bottom: 8px;
+                    "
+                >
+                    Link Expired or Invalid
+                </h2>
+                <p
+                    style="
+                        font-size: 0.85rem;
+                        color: #94a3b8;
+                        line-height: 1.65;
+                        margin-bottom: 6px;
+                    "
+                >
+                    This invitation link is no longer valid.<br />It may have
+                    expired or already been used.
+                </p>
+                <p
+                    style="
+                        font-size: 0.8rem;
+                        color: #64748b;
+                        margin-bottom: 1.75rem;
+                    "
+                >
+                    Contact the project owner to request a new link.
+                </p>
+                <a href="/dashboard.html" class="btn-link">
+                    <svg
+                        width="13"
+                        height="13"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+                        />
+                    </svg>
+                    Back to Dashboard
+                </a>
+            </div>
         </div>
 
-      </div>
-
-      <!-- actions -->
-      <div style="display:flex; gap:10px;">
-        <button id="btn-accept"
-          style="
-            flex:1; padding:11px; border-radius:10px; font-size:0.875rem; font-weight:700;
-            background:linear-gradient(135deg,var(--cg-accent),var(--cg-accent-dark));
-            border:none; color:#fff; cursor:pointer;
-            display:flex; align-items:center; justify-content:center; gap:6px;
-            transition:opacity .2s, transform .15s;
-          "
-          onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'"
-        >
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
-          </svg>
-          Join Project
-        </button>
-        <button id="btn-decline"
-          style="
-            flex:1; padding:11px; border-radius:10px; font-size:0.875rem; font-weight:600;
-            background:rgba(255,255,255,0.05); border:1px solid var(--cg-border-subtle);
-            color:var(--cg-text-2); cursor:pointer;
-            display:flex; align-items:center; justify-content:center; gap:6px;
-            transition:background .2s, border-color .2s;
-          "
-          onmouseover="this.style.background='var(--cg-bg-elevated)';this.style.borderColor='var(--cg-accent)'"
-          onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.borderColor='var(--cg-border-subtle)'"
-        >
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-          Decline
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ════════════════════════════════════════════
-       STATE: 404 — expired / invalid link
-  ════════════════════════════════════════════ -->
-  <div id="state-404" class="inv-card hidden">
-    <div class="accent-strip accent-strip-danger"></div>
-    <div style="padding:2.5rem 2rem; text-align:center;">
-      <div style="
-        width:56px; height:56px; border-radius:14px; margin:0 auto 1.25rem;
-        background:rgba(248,113,113,0.12); border:1px solid rgba(248,113,113,0.3);
-        display:flex; align-items:center; justify-content:center;
-      ">
-        <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="var(--cg-danger)" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364
-               l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5
-               4.5 0 0 0 1.242 7.244"/>
-        </svg>
-      </div>
-      <h2 style="font-size:1.2rem; font-weight:800; color:var(--cg-text-1); margin-bottom:8px;">
-        Link Expired or Invalid
-      </h2>
-      <p style="font-size:0.85rem; color:var(--cg-text-2); line-height:1.6; margin-bottom:6px;">
-        This invitation link is no longer valid. It may have expired or already been used.
-      </p>
-      <p style="font-size:0.8rem; color:var(--cg-text-3); margin-bottom:1.75rem;">
-        Contact the project owner to request a new link.
-      </p>
-      <a href="dashboard.html" style="
-        display:inline-flex; align-items:center; gap:6px; padding:10px 20px;
-        background:rgba(255,255,255,0.05); border:1px solid var(--cg-border-subtle);
-        border-radius:10px; color:var(--cg-text-1); font-size:0.85rem; font-weight:600;
-        text-decoration:none; transition:background .2s;
-      "
-        onmouseover="this.style.background='var(--cg-bg-elevated)'"
-        onmouseout="this.style.background='rgba(255,255,255,0.05)'"
-      >
-        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
-        </svg>
-        Back to Dashboard
-      </a>
-    </div>
-  </div>
-
-  <!-- ════════════════════════════════════════════
-       STATE: 409 — already a member
-  ════════════════════════════════════════════ -->
-  <div id="state-409" class="inv-card hidden">
-    <div class="accent-strip accent-strip-success"></div>
-    <div style="padding:2.5rem 2rem; text-align:center;">
-      <div style="
-        width:56px; height:56px; border-radius:14px; margin:0 auto 1.25rem;
-        background:rgba(52,211,153,0.12); border:1px solid rgba(52,211,153,0.3);
-        display:flex; align-items:center; justify-content:center;
-      ">
-        <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="var(--cg-success)" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6
+        <!-- ══════════════════════════════════════════════════
+       409 — already a member
+  ══════════════════════════════════════════════════ -->
+        <div id="s-409" class="card hidden">
+            <div class="strip strip-success"></div>
+            <div style="padding: 2.5rem 2rem; text-align: center">
+                <div
+                    class="icon-box"
+                    style="
+                        background: rgba(52, 211, 153, 0.12);
+                        border: 1px solid rgba(52, 211, 153, 0.3);
+                    "
+                >
+                    <svg
+                        width="24"
+                        height="24"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="#34D399"
+                        stroke-width="1.8"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6
                11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622
                5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152
-               c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z"/>
-        </svg>
-      </div>
-      <h2 style="font-size:1.2rem; font-weight:800; color:var(--cg-text-1); margin-bottom:8px;">
-        Already a Member
-      </h2>
-      <p style="font-size:0.85rem; color:var(--cg-text-2); margin-bottom:1.75rem;">
-        You're already a collaborator on this project.
-      </p>
-      <a id="link-409-project" href="dashboard.html" style="
-        display:inline-flex; align-items:center; gap:6px; padding:10px 20px;
-        background:linear-gradient(135deg,var(--cg-accent),var(--cg-accent-dark));
-        border:none; border-radius:10px; color:#fff; font-size:0.85rem; font-weight:700;
-        text-decoration:none; transition:opacity .2s;
-      "
-        onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'"
-      >View Project</a>
-    </div>
-  </div>
+               c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z"
+                        />
+                    </svg>
+                </div>
+                <h2
+                    style="
+                        font-size: 1.15rem;
+                        font-weight: 800;
+                        color: #f1f5f9;
+                        margin-bottom: 8px;
+                    "
+                >
+                    Already a Member
+                </h2>
+                <p
+                    style="
+                        font-size: 0.85rem;
+                        color: #94a3b8;
+                        margin-bottom: 1.75rem;
+                    "
+                >
+                    You're already a collaborator on this project.
+                </p>
+                <div
+                    style="
+                        display: flex;
+                        gap: 10px;
+                        justify-content: center;
+                        flex-wrap: wrap;
+                    "
+                >
+                    <a
+                        id="link-409"
+                        href="/dashboard.html"
+                        class="btn-primary-link"
+                    >
+                        <svg
+                            width="13"
+                            height="13"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5
+                 c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64
+                 19.5 12 19.5c-4.641 0-8.573-3.007-9.964-7.178Z"
+                            />
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                            />
+                        </svg>
+                        View Project
+                    </a>
+                    <a href="/dashboard.html" class="btn-link">Dashboard</a>
+                </div>
+            </div>
+        </div>
 
-  <!-- ════════════════════════════════════════════
-       STATE: unauthenticated
-  ════════════════════════════════════════════ -->
-  <div id="state-auth" class="inv-card hidden">
-    <div class="accent-strip accent-strip-warning"></div>
-    <div style="padding:2.5rem 2rem; text-align:center;">
-      <div style="
-        width:56px; height:56px; border-radius:14px; margin:0 auto 1.25rem;
-        background:rgba(251,191,36,0.12); border:1px solid rgba(251,191,36,0.3);
-        display:flex; align-items:center; justify-content:center;
-      ">
-        <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="var(--cg-warning)" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0
-               2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25
-               2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/>
-        </svg>
-      </div>
-      <h2 style="font-size:1.2rem; font-weight:800; color:var(--cg-text-1); margin-bottom:8px;">
-        Sign In Required
-      </h2>
-      <p style="font-size:0.85rem; color:var(--cg-text-2); line-height:1.6; margin-bottom:1.75rem;">
-        You must be logged in to accept this invitation.<br>Your invite will be waiting after sign-in.
-      </p>
-      <div style="display:flex; gap:10px; justify-content:center;">
-        <a id="link-login" href="login.html" style="
-          padding:10px 20px; border-radius:10px; font-size:0.85rem; font-weight:700;
-          background:linear-gradient(135deg,var(--cg-accent),var(--cg-accent-dark));
-          color:#fff; text-decoration:none; transition:opacity .2s;
-        "
-          onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'"
-        >Log In to Accept</a>
-        <a href="signup.html" style="
-          padding:10px 20px; border-radius:10px; font-size:0.85rem; font-weight:600;
-          background:rgba(255,255,255,0.05); border:1px solid var(--cg-border-subtle);
-          color:var(--cg-text-1); text-decoration:none; transition:background .2s;
-        "
-          onmouseover="this.style.background='var(--cg-bg-elevated)'"
-          onmouseout="this.style.background='rgba(255,255,255,0.05)'"
-        >Sign Up</a>
-      </div>
-    </div>
-  </div>
+        <!-- ══════════════════════════════════════════════════
+       AUTH — not logged in
+  ══════════════════════════════════════════════════ -->
+        <div id="s-auth" class="card hidden">
+            <div class="strip strip-warning"></div>
+            <div style="padding: 2.5rem 2rem; text-align: center">
+                <div
+                    class="icon-box"
+                    style="
+                        background: rgba(251, 191, 36, 0.12);
+                        border: 1px solid rgba(251, 191, 36, 0.3);
+                    "
+                >
+                    <svg
+                        width="24"
+                        height="24"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="#FBBF24"
+                        stroke-width="1.8"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0
+               0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0
+               -2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+                        />
+                    </svg>
+                </div>
+                <h2
+                    style="
+                        font-size: 1.15rem;
+                        font-weight: 800;
+                        color: #f1f5f9;
+                        margin-bottom: 8px;
+                    "
+                >
+                    Sign In Required
+                </h2>
+                <p
+                    style="
+                        font-size: 0.85rem;
+                        color: #94a3b8;
+                        line-height: 1.65;
+                        margin-bottom: 1.75rem;
+                    "
+                >
+                    You must be logged in to accept this invitation.<br />
+                    Your invite will be waiting after you sign in.
+                </p>
+                <div style="display: flex; gap: 10px; justify-content: center">
+                    <a
+                        id="link-login"
+                        href="/login.html"
+                        class="btn-primary-link"
+                    >
+                        <svg
+                            width="13"
+                            height="13"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25
+                 v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15
+                 M12 9l-3 3m0 0 3 3m-3-3h12.75"
+                            />
+                        </svg>
+                        Log In to Accept
+                    </a>
+                    <a href="/signup.html" class="btn-link">Sign Up</a>
+                </div>
+            </div>
+        </div>
 
-  <!-- ════════════════════════════════════════════
-       STATE: generic error
-  ════════════════════════════════════════════ -->
-  <div id="state-error" class="inv-card hidden">
-    <div class="accent-strip accent-strip-danger"></div>
-    <div style="padding:2.5rem 2rem; text-align:center;">
-      <div style="
-        width:56px; height:56px; border-radius:14px; margin:0 auto 1.25rem;
-        background:rgba(248,113,113,0.12); border:1px solid rgba(248,113,113,0.3);
-        display:flex; align-items:center; justify-content:center;
-      ">
-        <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="var(--cg-danger)" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0
+        <!-- ══════════════════════════════════════════════════
+       ERROR — generic
+  ══════════════════════════════════════════════════ -->
+        <div id="s-error" class="card hidden">
+            <div class="strip strip-danger"></div>
+            <div style="padding: 2.5rem 2rem; text-align: center">
+                <div
+                    class="icon-box"
+                    style="
+                        background: rgba(248, 113, 113, 0.12);
+                        border: 1px solid rgba(248, 113, 113, 0.3);
+                    "
+                >
+                    <svg
+                        width="24"
+                        height="24"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="#F87171"
+                        stroke-width="1.8"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0
                2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898
-               0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
-        </svg>
-      </div>
-      <h2 style="font-size:1.2rem; font-weight:800; color:var(--cg-text-1); margin-bottom:8px;">
-        Something Went Wrong
-      </h2>
-      <p id="error-msg" style="font-size:0.85rem; color:var(--cg-text-2); margin-bottom:1.75rem;">
-        An unexpected error occurred. Please try again.
-      </p>
-      <div style="display:flex; gap:10px; justify-content:center;">
-        <button onclick="boot()" style="
-          padding:10px 20px; border-radius:10px; font-size:0.85rem; font-weight:700;
-          background:linear-gradient(135deg,var(--cg-accent),var(--cg-accent-dark));
-          border:none; color:#fff; cursor:pointer; transition:opacity .2s;
-        "
-          onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'"
-        >Retry</button>
-        <a href="dashboard.html" style="
-          padding:10px 20px; border-radius:10px; font-size:0.85rem; font-weight:600;
-          background:rgba(255,255,255,0.05); border:1px solid var(--cg-border-subtle);
-          color:var(--cg-text-1); text-decoration:none; transition:background .2s;
-        "
-          onmouseover="this.style.background='var(--cg-bg-elevated)'"
-          onmouseout="this.style.background='rgba(255,255,255,0.05)'"
-        >Dashboard</a>
-      </div>
-    </div>
-  </div>
+               0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                        />
+                    </svg>
+                </div>
+                <h2
+                    style="
+                        font-size: 1.15rem;
+                        font-weight: 800;
+                        color: #f1f5f9;
+                        margin-bottom: 8px;
+                    "
+                >
+                    Something Went Wrong
+                </h2>
+                <p
+                    id="err-msg"
+                    style="
+                        font-size: 0.85rem;
+                        color: #94a3b8;
+                        line-height: 1.65;
+                        margin-bottom: 1.75rem;
+                    "
+                >
+                    An unexpected error occurred. Please try again.
+                </p>
+                <div style="display: flex; gap: 10px; justify-content: center">
+                    <button
+                        onclick="boot()"
+                        style="
+                            padding: 9px 18px;
+                            border-radius: 10px;
+                            border: none;
+                            cursor: pointer;
+                            font-size: 13px;
+                            font-weight: 700;
+                            font-family: inherit;
+                            background: linear-gradient(
+                                135deg,
+                                #a78bfa,
+                                #6d28d9
+                            );
+                            color: #fff;
+                            transition: opacity 0.18s;
+                        "
+                        onmouseover="this.style.opacity = '.85'"
+                        onmouseout="this.style.opacity = '1'"
+                    >
+                        Retry
+                    </button>
+                    <a href="/dashboard.html" class="btn-link">Dashboard</a>
+                </div>
+            </div>
+        </div>
 
-  <!-- ── toast container (re-uses CyberNotify if loaded, else custom) ── -->
-  <div id="toast-container" style="
-    position:fixed; top:1rem; right:1rem; z-index:9999;
-    display:flex; flex-direction:column; gap:8px; max-width:340px;
-  "></div>
+        <!-- ── Toast container ── -->
+        <div
+            id="toasts"
+            style="
+                position: fixed;
+                top: 1rem;
+                right: 1rem;
+                z-index: 9999;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                max-width: 340px;
+                pointer-events: none;
+            "
+        ></div>
 
-  <script src="api-client.js"></script>
+        <!--
+    api-client.js is OPTIONAL here — only used if CyberNotify is defined on it.
+    The page works fully without it because we have our own apiFetch + toast.
+  -->
+        <script src="/api-client.js"></script>
 
-  <script>
-  'use strict';
+        <script>
+            "use strict";
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     CONSTANTS
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  const API_BASE  = 'https://peptonelike-lelia-interdepartmentally.ngrok-free.dev/api/';
-  const JWT_KEY   = 'cyberguard_jwt';
-  const STATES    = ['loading','success','404','409','auth','error'];
+            /* ═══════════════════════════════════════════════════════════
+               CONFIG
+            ═══════════════════════════════════════════════════════════ */
+            const BASE =
+                "https://peptonelike-lelia-interdepartmentally.ngrok-free.dev/api/";
+            const JWT = "cyberguard_jwt";
+            const STATES = [
+                "loading",
+                "success",
+                "404",
+                "409",
+                "auth",
+                "error",
+            ];
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     TOKEN EXTRACTION
-     URL shape: /invite/{token}
-     e.g. /invite/SSUeWozMlhtKhkHD7o4Zvt6AZjZZZn39mQXvXYy7dcTr7lDrlhvsNU1Jdta9Weu9
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  function extractToken() {
-    const pathname = window.location.pathname; // e.g. "/invite/TOKEN"
+            /* ═══════════════════════════════════════════════════════════
+               TOKEN EXTRACTION
+               Supports:
+                 /invitations/TOKEN   ← spec-canonical route
+                 /invite/TOKEN        ← legacy / vercel alias
+                 ?token=TOKEN         ← query-string fallback
+            ═══════════════════════════════════════════════════════════ */
+            function getToken() {
+                // Match /invitations/TOKEN or /invite/TOKEN (optional trailing slash)
+                const m = window.location.pathname.match(
+                    /^\/(invitations|invite)\/([^\/\s?#]+)\/?$/,
+                );
+                if (m) return decodeURIComponent(m[2]);
+                // Fallback: query string ?token=TOKEN
+                return (
+                    new URLSearchParams(window.location.search).get("token") ||
+                    null
+                );
+            }
 
-    // Primary: path-based  /invite/{token}
-    const pathMatch = pathname.match(/^\/invite\/([^\/]+)\/?$/);
-    if (pathMatch && pathMatch[1]) {
-      return decodeURIComponent(pathMatch[1]);
-    }
+            /* ═══════════════════════════════════════════════════════════
+               STATE — show exactly one panel, hide all others
+            ═══════════════════════════════════════════════════════════ */
+            function show(name) {
+                STATES.forEach((id) => {
+                    const el = document.getElementById("s-" + id);
+                    if (el) el.classList.toggle("hidden", id !== name);
+                });
+            }
 
-    // Fallback: query param  ?token=TOKEN  (for backward compat with old links)
-    const params = new URLSearchParams(window.location.search);
-    const qToken = params.get('token');
-    if (qToken) return decodeURIComponent(qToken);
+            /* ═══════════════════════════════════════════════════════════
+               FETCH — Bearer auth token auto-attached from localStorage
+            ═══════════════════════════════════════════════════════════ */
+            function req(path, opts) {
+                const jwt = localStorage.getItem(JWT);
+                return fetch(BASE + path, {
+                    headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json",
+                        "ngrok-skip-browser-warning": "true",
+                        ...(jwt ? { Authorization: "Bearer " + jwt } : {}),
+                    },
+                    ...(opts || {}),
+                });
+            }
 
-    return null;
-  }
+            /* ═══════════════════════════════════════════════════════════
+               TOAST — delegates to CyberNotify when available,
+               falls back to a hand-rolled inline banner.
+            ═══════════════════════════════════════════════════════════ */
+            function toast(msg, type) {
+                if (window.CyberNotify) {
+                    window.CyberNotify.alert(msg, { type });
+                    return;
+                }
+                const COLORS = {
+                    success: "#34D399",
+                    error: "#F87171",
+                    info: "#A78BFA",
+                    warning: "#FBBF24",
+                };
+                const c = COLORS[type] || COLORS.info;
+                const el = Object.assign(document.createElement("div"), {
+                    textContent: String(msg),
+                });
+                Object.assign(el.style, {
+                    padding: "11px 15px",
+                    borderRadius: "10px",
+                    border: `1px solid ${c}44`,
+                    background: "#111827",
+                    color: c,
+                    fontSize: "13px",
+                    fontWeight: "500",
+                    fontFamily: "inherit",
+                    boxShadow: "0 4px 16px rgba(0,0,0,.55)",
+                    pointerEvents: "auto",
+                });
+                document.getElementById("toasts")?.appendChild(el);
+                setTimeout(() => el.remove(), 4200);
+            }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     STATE MACHINE
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  function showState(name) {
-    STATES.forEach(s => {
-      const el = document.getElementById('state-' + s);
-      if (el) el.classList.toggle('hidden', s !== name);
-    });
-  }
+            /* ═══════════════════════════════════════════════════════════
+               BUTTON HELPERS — show/restore loading state
+            ═══════════════════════════════════════════════════════════ */
+            function busy(btn, label) {
+                if (!btn) return;
+                btn._orig = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = `<span class="spin"></span>${label}`;
+            }
+            function idle(btn) {
+                if (!btn || !btn._orig) return;
+                btn.innerHTML = btn._orig;
+                btn.disabled = false;
+                delete btn._orig;
+            }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     FETCH HELPER  (Bearer token auto-attached)
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  async function apiFetch(endpoint, options) {
-    const jwt = localStorage.getItem(JWT_KEY);
-    const res = await fetch(API_BASE + endpoint.replace(/^\//, ''), {
-      headers: {
-        'Accept':                     'application/json',
-        'Content-Type':               'application/json',
-        'ngrok-skip-browser-warning': 'true',
-        ...(jwt ? { 'Authorization': 'Bearer ' + jwt } : {}),
-      },
-      ...options,
-    });
-    return res;
-  }
+            /* ═══════════════════════════════════════════════════════════
+               DATE FORMAT — converts ISO string to human-readable date
+            ═══════════════════════════════════════════════════════════ */
+            function fmt(iso) {
+                if (!iso) return "—";
+                // Append time component so Date doesn't shift by timezone offset
+                const d = new Date(iso.includes("T") ? iso : iso + "T00:00:00");
+                return isNaN(d)
+                    ? iso
+                    : d.toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                      });
+            }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     TOAST
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  function toast(msg, type) {
-    // Delegate to CyberNotify if available
-    if (window.CyberNotify) { window.CyberNotify.alert(msg, { type }); return; }
+            /* ═══════════════════════════════════════════════════════════
+               RENDER — populate the invitation preview panel
+               Fields per API spec §5:
+                 project_name, role, expires_at,
+                 invited_by, job_tittle, avatar_url
+            ═══════════════════════════════════════════════════════════ */
+            function render(inv) {
+                // ── Project name ────────────────────────────────────────
+                const pEl = document.getElementById("inv-project");
+                if (pEl)
+                    pEl.textContent = inv.project_name || "Unnamed Project";
 
-    const colours = {
-      success: 'border-[var(--cg-success)] bg-[rgba(52,211,153,0.12)] text-[var(--cg-success)]',
-      error:   'border-[var(--cg-danger)]  bg-[rgba(248,113,113,0.12)] text-[var(--cg-danger)]',
-      info:    'border-[var(--cg-accent)]  bg-[var(--cg-accent-muted)]  text-[var(--cg-accent)]',
-    };
-    const t = document.createElement('div');
-    t.className = 'rounded-xl border px-4 py-3 text-sm font-medium shadow-2xl backdrop-blur-md ' +
-                  (colours[type] || colours.info);
-    t.textContent = String(msg);
-    document.getElementById('toast-container').appendChild(t);
-    setTimeout(() => t.remove(), 4000);
-  }
+                // ── Role badge + description ────────────────────────────
+                const role = (inv.role || "viewer").toLowerCase();
+                const ROLES = {
+                    editor: {
+                        color: "#38BDF8",
+                        bg: "rgba(56,189,248,.13)",
+                        border: "rgba(56,189,248,.35)",
+                        desc: "Can view and modify project data",
+                    },
+                    viewer: {
+                        color: "#FBBF24",
+                        bg: "rgba(251,191,36,.12)",
+                        border: "rgba(251,191,36,.35)",
+                        desc: "Read-only access to project data",
+                    },
+                };
+                const r = ROLES[role] || ROLES.viewer;
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     BUTTON LOADING HELPERS
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  function setBtnLoading(btn, label) {
-    if (!btn) return;
-    btn._orig    = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="btn-spinner"></span>' + label;
-  }
-  function restoreBtn(btn) {
-    if (!btn || !btn._orig) return;
-    btn.innerHTML = btn._orig;
-    btn.disabled  = false;
-  }
+                const badge = document.getElementById("inv-role-badge");
+                if (badge) {
+                    badge.textContent =
+                        role.charAt(0).toUpperCase() + role.slice(1);
+                    badge.style.color = r.color;
+                    badge.style.background = r.bg;
+                    badge.style.borderColor = r.border;
+                }
+                const descEl = document.getElementById("inv-role-desc");
+                if (descEl) descEl.textContent = r.desc;
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     DATE FORMATTER
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  function fmtDate(iso) {
-    if (!iso) return '—';
-    const d = new Date(iso);
-    if (isNaN(d)) return iso;
-    return d.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
-  }
+                // ── Invited by + job title ──────────────────────────────
+                const byEl = document.getElementById("inv-by");
+                if (byEl) byEl.textContent = inv.invited_by || "A team member";
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     RENDER INVITATION DATA INTO SUCCESS STATE
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  function renderInvitation(inv) {
-    // Project
-    const projEl = document.getElementById('inv-project');
-    if (projEl) projEl.textContent = inv.project_name || 'Unnamed Project';
+                const jobEl = document.getElementById("inv-job");
+                if (jobEl) {
+                    // API returns the field as 'job_tittle' (API typo preserved intentionally)
+                    const job = inv.job_tittle || inv.job_title || "";
+                    jobEl.textContent = job;
+                    jobEl.style.display = job ? "" : "none";
+                }
 
-    // Role badge
-    const role       = (inv.role || 'viewer').toLowerCase();
-    const roleBadge  = document.getElementById('inv-role-badge');
-    const roleDesc   = document.getElementById('inv-role-desc');
-    const ROLE_STYLE = {
-      editor: { color:'#38BDF8', bg:'rgba(56,189,248,0.12)', border:'rgba(56,189,248,0.3)',
-                desc:'Can view and modify project data' },
-      viewer: { color:'#FBBF24', bg:'rgba(251,191,36,0.12)', border:'rgba(251,191,36,0.3)',
-                desc:'Read-only access to project data'  },
-    };
-    const rs = ROLE_STYLE[role] || ROLE_STYLE.viewer;
-    if (roleBadge) {
-      roleBadge.textContent           = role.charAt(0).toUpperCase() + role.slice(1);
-      roleBadge.style.color           = rs.color;
-      roleBadge.style.background      = rs.bg;
-      roleBadge.style.borderColor     = rs.border;
-    }
-    if (roleDesc) roleDesc.textContent = rs.desc;
+                // ── Expiry ──────────────────────────────────────────────
+                const expEl = document.getElementById("inv-expiry");
+                if (expEl) {
+                    if (inv.expires_at) {
+                        const expired = new Date(inv.expires_at) < new Date();
+                        expEl.textContent =
+                            (expired ? "Expired on " : "Expires ") +
+                            fmt(inv.expires_at);
+                        expEl.style.color = expired ? "#F87171" : "#64748B";
+                    } else {
+                        expEl.textContent = "No expiry information";
+                        expEl.style.color = "#64748B";
+                    }
+                }
+            }
 
-    // Inviter
-    const byEl  = document.getElementById('inv-by');
-    const jobEl = document.getElementById('inv-job');
-    if (byEl)  byEl.textContent  = inv.invited_by  || 'A team member';
-    if (jobEl) {
-      const job = inv.job_tittle || inv.job_title || '';
-      jobEl.textContent  = job;
-      jobEl.style.display = job ? '' : 'none';
-    }
+            /* ═══════════════════════════════════════════════════════════
+               FLOW 2 — Load Invitation on page mount
+               GET /api/invitations/{token}
+                 200 → render preview, show s-success
+                 401 → not logged in, show s-auth
+                 404 → expired/invalid, show s-404
+                 other → show s-error with message
+            ═══════════════════════════════════════════════════════════ */
+            let TOKEN = null; // invitation token read from URL — never hardcoded
 
-    // Expiry
-    const expEl = document.getElementById('inv-expiry');
-    if (expEl && inv.expires_at) {
-      const isExpired = new Date(inv.expires_at) < new Date();
-      expEl.textContent = isExpired
-        ? 'Expired on ' + fmtDate(inv.expires_at)
-        : 'Expires ' + fmtDate(inv.expires_at);
-      expEl.style.color = isExpired ? 'var(--cg-danger)' : 'var(--cg-text-3)';
-    }
-  }
+            async function load(token) {
+                show("loading");
+                try {
+                    const res = await req("invitations/" + token);
+                    console.log(
+                        "[invite] GET invitations/" + token + " →",
+                        res.status,
+                    );
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     LOAD INVITATION  (GET /api/invitations/{token})
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  let _token = null; // module-level so accept/decline can reuse it
+                    if (res.status === 401) {
+                        show("auth");
+                        return;
+                    }
+                    if (res.status === 404) {
+                        show("404");
+                        return;
+                    }
 
-  async function loadInvitation(token) {
-    showState('loading');
-    try {
-      const res = await apiFetch('invitations/' + token);
+                    if (!res.ok) {
+                        const d = await res.json().catch(() => ({}));
+                        const errEl = document.getElementById("err-msg");
+                        if (errEl)
+                            errEl.textContent =
+                                d.message ||
+                                "Server returned " +
+                                    res.status +
+                                    ". Please try again.";
+                        show("error");
+                        return;
+                    }
 
-      if (res.status === 401) { showState('auth');  return; }
-      if (res.status === 404) { showState('404');   return; }
+                    const data = await res.json();
+                    render(data.invitation || data);
+                    show("success");
+                } catch (e) {
+                    console.error("[invite] network error", e);
+                    const errEl = document.getElementById("err-msg");
+                    if (errEl)
+                        errEl.textContent =
+                            "Could not reach the server. Check your connection and try again.";
+                    show("error");
+                }
+            }
 
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        document.getElementById('error-msg').textContent =
-          d.message || ('Server error ' + res.status + '. Please try again.');
-        showState('error');
-        return;
-      }
+            /* ═══════════════════════════════════════════════════════════
+               FLOW 3 — Accept Invitation
+               POST /api/invitations/{token}/accept
+                 200 → navigate to project using project.id from response
+                 401 → not logged in, show s-auth
+                 404 → expired/invalid, show s-404
+                 409 → already a member; navigate to project if id present
+            ═══════════════════════════════════════════════════════════ */
+            async function accept() {
+                const btn = document.getElementById("btn-accept");
+                busy(btn, "Joining…");
+                try {
+                    const res = await req("invitations/" + TOKEN + "/accept", {
+                        method: "POST",
+                    });
+                    console.log("[invite] POST accept →", res.status);
 
-      const data = await res.json();
-      const inv  = data.invitation || data;
-      renderInvitation(inv);
-      showState('success');
+                    if (res.status === 401) {
+                        idle(btn);
+                        show("auth");
+                        return;
+                    }
 
-    } catch (err) {
-      // Network error
-      document.getElementById('error-msg').textContent =
-        'Could not reach the server. Check your connection and try again.';
-      showState('error');
-    }
-  }
+                    // 404 → link is expired or invalid
+                    if (res.status === 404) {
+                        idle(btn);
+                        show("404");
+                        return;
+                    }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     ACCEPT  (POST /api/invitations/{token}/accept)
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  async function acceptInvitation() {
-    const btn = document.getElementById('btn-accept');
-    setBtnLoading(btn, 'Joining…');
-    try {
-      const res = await apiFetch('invitations/' + _token + '/accept', { method: 'POST' });
+                    // 409 → already a member; navigate to project if id is available
+                    if (res.status === 409) {
+                        const d = await res.json().catch(() => ({}));
+                        const pid = d.project?.id || d.project_id || null;
+                        const lnk = document.getElementById("link-409");
+                        if (lnk && pid)
+                            lnk.href =
+                                "/project-detail.html?id=" +
+                                encodeURIComponent(pid);
+                        idle(btn);
+                        show("409");
+                        return;
+                    }
 
-      if (res.status === 401) { restoreBtn(btn); showState('auth'); return; }
+                    if (!res.ok) {
+                        const d = await res.json().catch(() => ({}));
+                        toast(
+                            d.message ||
+                                "Failed to join (HTTP " + res.status + ").",
+                            "error",
+                        );
+                        idle(btn);
+                        return;
+                    }
 
-      if (res.status === 404) {
-        restoreBtn(btn);
-        showState('404');
-        return;
-      }
+                    // 200 → success: navigate to the project using project.id
+                    const data = await res.json();
+                    const pid = data.project?.id || null;
+                    toast("Successfully joined the project!", "success");
+                    setTimeout(() => {
+                        window.location.href = pid
+                            ? "/project-detail.html?id=" +
+                              encodeURIComponent(pid)
+                            : "/dashboard.html";
+                    }, 1100);
+                } catch (e) {
+                    console.error("[invite] accept error", e);
+                    toast("Network error. Please try again.", "error");
+                    idle(btn);
+                }
+            }
 
-      if (res.status === 409) {
-        // Already a member — try to extract project ID for direct link
-        const d = await res.json().catch(() => ({}));
-        const pid = d.project?.id || null;
-        const linkEl = document.getElementById('link-409-project');
-        if (linkEl && pid) {
-          linkEl.href = 'project-detail.html?id=' + encodeURIComponent(pid);
-        }
-        showState('409');
-        return;
-      }
+            /* ═══════════════════════════════════════════════════════════
+               FLOW 4 — Decline Invitation
+               DELETE /api/invitations/{token}/reject
+                 200 → confirmation toast + navigate to /projects
+                 404 → treat same as expired link (show s-404), per spec
+            ═══════════════════════════════════════════════════════════ */
+            async function decline() {
+                const btn = document.getElementById("btn-decline");
+                busy(btn, "Declining…");
+                try {
+                    const res = await req("invitations/" + TOKEN + "/reject", {
+                        method: "DELETE",
+                    });
+                    console.log("[invite] DELETE reject →", res.status);
 
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        toast(d.message || 'Failed to join project. Please try again.', 'error');
-        restoreBtn(btn);
-        return;
-      }
+                    // 404 on reject → treat the same as an expired/invalid link
+                    if (res.status === 404) {
+                        idle(btn);
+                        show("404");
+                        return;
+                    }
 
-      const data = await res.json();
-      const pid  = data.project?.id || null;
+                    if (!res.ok) {
+                        const d = await res.json().catch(() => ({}));
+                        toast(
+                            d.message || "Could not decline. Please try again.",
+                            "error",
+                        );
+                        idle(btn);
+                        return;
+                    }
 
-      toast('Successfully joined the project!', 'success');
-      setTimeout(() => {
-        window.location.href = pid
-          ? 'project-detail.html?id=' + encodeURIComponent(pid) + '&owned=false'
-          : 'dashboard.html';
-      }, 1200);
+                    // 200 → declined; show confirmation toast and navigate to projects
+                    toast("Invitation declined.", "info");
+                    setTimeout(() => {
+                        window.location.href = "/dashboard.html";
+                    }, 1100);
+                } catch (e) {
+                    console.error("[invite] decline error", e);
+                    toast("Network error. Please try again.", "error");
+                    idle(btn);
+                }
+            }
 
-    } catch (err) {
-      toast('Network error. Please try again.', 'error');
-      restoreBtn(btn);
-    }
-  }
+            /* ═══════════════════════════════════════════════════════════
+               BOOT — runs on page load
+               1. Extract token from URL (never hardcoded)
+               2. If not logged in → redirect to login with redirect_back
+               3. If logged in → call load() to fetch invitation
+            ═══════════════════════════════════════════════════════════ */
+            function boot() {
+                TOKEN = getToken();
+                console.log(
+                    "[invite] path:",
+                    window.location.pathname,
+                    "→ token:",
+                    TOKEN,
+                );
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     DECLINE  (DELETE /api/invitations/{token}/reject)
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  async function declineInvitation() {
-    const btn = document.getElementById('btn-decline');
-    setBtnLoading(btn, 'Declining…');
-    try {
-      const res = await apiFetch('invitations/' + _token + '/reject', { method: 'DELETE' });
+                // No token in URL — show error
+                if (!TOKEN) {
+                    const errEl = document.getElementById("err-msg");
+                    if (errEl)
+                        errEl.textContent =
+                            "No invitation token found in this URL. " +
+                            "Make sure you opened the full link shared with you.";
+                    show("error");
+                    return;
+                }
 
-      if (res.status === 404) {
-        // Invitation already gone — treat as graceful decline
-        toast('Invitation declined.', 'info');
-        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
-        return;
-      }
+                // Not logged in → redirect to login, then back here after login
+                if (!localStorage.getItem(JWT)) {
+                    const lnk = document.getElementById("link-login");
+                    if (lnk)
+                        lnk.href =
+                            "/login.html?redirect=" +
+                            encodeURIComponent(window.location.href);
+                    show("auth");
+                    return;
+                }
 
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        toast(d.message || 'Could not decline the invitation. Please try again.', 'error');
-        restoreBtn(btn);
-        return;
-      }
+                // Logged in → fetch invitation from server
+                load(TOKEN);
+            }
 
-      toast('Invitation declined.', 'info');
-      setTimeout(() => { window.location.href = 'dashboard.html'; }, 1200);
+            // Wire up action buttons
+            document
+                .getElementById("btn-accept")
+                ?.addEventListener("click", accept);
+            document
+                .getElementById("btn-decline")
+                ?.addEventListener("click", decline);
 
-    } catch (err) {
-      toast('Network error. Please try again.', 'error');
-      restoreBtn(btn);
-    }
-  }
-
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     BOOT
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  function boot() {
-    _token = extractToken();
-
-    // No token in URL at all
-    if (!_token) {
-      document.getElementById('error-msg').textContent =
-        'No invitation token found in this URL.';
-      showState('error');
-      return;
-    }
-
-    // Not authenticated — redirect to login preserving the full invite URL
-    const jwt = localStorage.getItem(JWT_KEY);
-    if (!jwt) {
-      const loginLink = document.getElementById('link-login');
-      if (loginLink) {
-        loginLink.href = 'login.html?redirect=' + encodeURIComponent(window.location.href);
-      }
-      showState('auth');
-      return;
-    }
-
-    loadInvitation(_token);
-  }
-
-  /* ── Wire buttons ── */
-  document.getElementById('btn-accept') .addEventListener('click', acceptInvitation);
-  document.getElementById('btn-decline').addEventListener('click', declineInvitation);
-
-  /* ── Start ── */
-  boot();
-  </script>
-</body>
+            // Kick off
+            boot();
+        </script>
+    </body>
 </html>
