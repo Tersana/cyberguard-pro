@@ -1,0 +1,1395 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Project Detail — CyberGuard Pro</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="theme-tokens.css" />
+        <link rel="stylesheet" href="cyber-theme.css" />
+        <link rel="stylesheet" href="Style.css" />
+        <style>
+            .detail-tab {
+                transition: all 0.2s;
+                cursor: pointer;
+            }
+            .detail-tab.active {
+                background: var(--cg-accent-muted);
+                color: var(--cg-accent);
+                border-color: var(--cg-accent);
+            }
+            .shimmer {
+                background: linear-gradient(
+                    90deg,
+                    rgba(167, 139, 250, 0.06) 25%,
+                    rgba(167, 139, 250, 0.12) 50%,
+                    rgba(167, 139, 250, 0.06) 75%
+                );
+                background-size: 200% 100%;
+                animation: shimmer 1.5s infinite;
+            }
+            @keyframes shimmer {
+                0% {
+                    background-position: 200% 0;
+                }
+                100% {
+                    background-position: -200% 0;
+                }
+            }
+            .danger-zone {
+                border-color: rgba(248, 113, 113, 0.3);
+                background: rgba(248, 113, 113, 0.05);
+            }
+        </style>
+    </head>
+    <body class="cyber-body min-h-screen">
+        <!-- ─── Top Bar ─────────────────────────────────────────────────────────── -->
+        <header
+            class="cyber-header px-6 py-3 flex items-center justify-between z-10 border-b border-[var(--cg-border)]"
+        >
+            <div class="flex items-center gap-4">
+                <a
+                    href="dashboard.html#projects"
+                    onclick="goBack(event)"
+                    class="cyber-btn-ghost text-xs px-3 py-2 rounded-lg flex items-center gap-2"
+                >
+                    <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+                        />
+                    </svg>
+                    Back to Projects
+                </a>
+                <div class="w-px h-5 bg-[var(--cg-border)]"></div>
+                <div>
+                    <h1 id="page-title" class="text-base font-bold text-white">
+                        Loading project…
+                    </h1>
+                    <p id="page-subtitle" class="text-xs text-slate-400">
+                        Security Assessment
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span
+                    id="status-badge"
+                    class="text-xs px-2.5 py-1 rounded-full border font-semibold hidden"
+                ></span>
+                <a
+                    href="dashboard.html"
+                    class="cyber-btn-ghost text-xs px-3 py-2 rounded-lg"
+                    >Dashboard</a
+                >
+            </div>
+        </header>
+
+        <!-- ─── Loading Skeleton ─────────────────────────────────────────────────── -->
+        <div
+            id="loading-skeleton"
+            class="max-w-5xl mx-auto px-4 py-8 space-y-6"
+        >
+            <div class="shimmer h-10 rounded-xl w-2/3"></div>
+            <div class="shimmer h-32 rounded-xl"></div>
+            <div class="shimmer h-64 rounded-xl"></div>
+        </div>
+
+        <!-- ─── Error State ──────────────────────────────────────────────────────── -->
+        <div
+            id="error-state"
+            class="hidden max-w-lg mx-auto px-4 py-24 text-center"
+        >
+            <div
+                class="w-16 h-16 mx-auto mb-6 rounded-2xl bg-[rgba(248,113,113,0.15)] border border-[rgba(248,113,113,0.3)] flex items-center justify-center"
+            >
+                <svg
+                    class="w-8 h-8 text-[var(--cg-danger)]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                    />
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold text-white mb-2" id="error-title">
+                Project Not Found
+            </h2>
+            <p class="text-sm text-slate-400 mb-6" id="error-msg">
+                This project doesn't exist or you don't have access.
+            </p>
+            <a
+                href="dashboard.html"
+                class="cyber-btn-primary px-6 py-2.5 rounded-lg font-semibold text-sm inline-flex items-center gap-2"
+            >
+                <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+                    />
+                </svg>
+                Go to Dashboard
+            </a>
+        </div>
+
+        <!-- ─── Main Content ──────────────────────────────────────────────────────── -->
+        <main
+            id="main-content"
+            class="hidden max-w-5xl mx-auto px-4 py-8 space-y-6"
+        >
+            <!-- Tab Bar -->
+            <div
+                class="flex gap-1 p-1 rounded-xl border border-[var(--cg-border)] bg-[var(--cg-bg-base)] w-fit"
+            >
+                <button
+                    class="detail-tab active px-5 py-2 rounded-lg text-sm font-semibold border border-transparent"
+                    onclick="switchDetailTab('overview')"
+                >
+                    <svg
+                        class="w-4 h-4 inline-block mr-1.5 -mt-0.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                        />
+                    </svg>
+                    Overview
+                </button>
+                <button
+                    class="detail-tab px-5 py-2 rounded-lg text-sm font-semibold border border-transparent text-[var(--cg-text-2)]"
+                    onclick="switchDetailTab('team')"
+                >
+                    <svg
+                        class="w-4 h-4 inline-block mr-1.5 -mt-0.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
+                        />
+                    </svg>
+                    Team
+                </button>
+                <button
+                    id="settings-tab-btn"
+                    class="detail-tab hidden px-5 py-2 rounded-lg text-sm font-semibold border border-transparent text-[var(--cg-text-2)]"
+                    onclick="switchDetailTab('settings')"
+                >
+                    <svg
+                        class="w-4 h-4 inline-block mr-1.5 -mt-0.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"
+                        />
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                        />
+                    </svg>
+                    Settings
+                </button>
+            </div>
+
+            <!-- ── Overview Tab ────────────────────────────────────────────────────── -->
+            <div id="tab-overview" class="space-y-6">
+                <div class="cyber-card p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Left: Project Info -->
+                        <div class="space-y-4">
+                            <div>
+                                <p
+                                    class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1"
+                                >
+                                    Description
+                                </p>
+                                <p
+                                    id="ov-description"
+                                    class="text-sm text-slate-300"
+                                >
+                                    —
+                                </p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p
+                                        class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1"
+                                    >
+                                        Start Date
+                                    </p>
+                                    <p
+                                        id="ov-start-date"
+                                        class="text-sm text-white font-mono"
+                                    >
+                                        —
+                                    </p>
+                                </div>
+                                <div>
+                                    <p
+                                        class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1"
+                                    >
+                                        End Date
+                                    </p>
+                                    <p
+                                        id="ov-end-date"
+                                        class="text-sm text-white font-mono"
+                                    >
+                                        —
+                                    </p>
+                                </div>
+                            </div>
+                            <div>
+                                <p
+                                    class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1"
+                                >
+                                    Created
+                                </p>
+                                <p
+                                    id="ov-created"
+                                    class="text-sm text-slate-300"
+                                >
+                                    —
+                                </p>
+                            </div>
+                        </div>
+                        <!-- Right: Stats -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="cyber-card p-4 text-center">
+                                <p
+                                    id="ov-team-size"
+                                    class="text-3xl font-bold text-[var(--cg-accent)] font-mono"
+                                >
+                                    —
+                                </p>
+                                <p class="text-xs text-slate-400 mt-1">
+                                    Team Members
+                                </p>
+                            </div>
+                            <div class="cyber-card p-4 text-center">
+                                <p
+                                    id="ov-role-badge"
+                                    class="text-sm font-bold text-white mt-1"
+                                >
+                                    —
+                                </p>
+                                <p class="text-xs text-slate-400 mt-1">
+                                    Your Role
+                                </p>
+                            </div>
+                            <div class="cyber-card p-4 text-center col-span-2">
+                                <p
+                                    id="ov-project-id"
+                                    class="text-xs font-mono text-[var(--cg-info)] truncate"
+                                >
+                                    —
+                                </p>
+                                <p class="text-xs text-slate-400 mt-1">
+                                    Project ID
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Team Tab ────────────────────────────────────────────────────────── -->
+            <div id="tab-team" class="hidden space-y-4">
+                <!-- Header row -->
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-white">Team Members</h2>
+                    <button
+                        id="open-invite-btn"
+                        class="cyber-btn-primary px-4 py-2 rounded-lg text-sm font-semibold hidden flex items-center gap-2"
+                    >
+                        <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
+                            />
+                        </svg>
+                        Invite Member
+                    </button>
+                </div>
+
+                <!-- Invite Panel (inline, slides in) -->
+                <div
+                    id="invite-panel"
+                    class="hidden cyber-card p-5 border-[var(--cg-accent)]/30 space-y-4"
+                >
+                    <h3 class="text-sm font-bold text-white">
+                        Generate Invite Link
+                    </h3>
+
+                    <!-- Form state -->
+                    <div id="invite-panel-form">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                            <div>
+                                <label
+                                    class="block text-xs font-semibold text-slate-300 mb-1"
+                                    >Role *</label
+                                >
+                                <select
+                                    id="ip-role"
+                                    class="cyber-input w-full p-2 rounded-lg text-sm"
+                                >
+                                    <option value="editor">
+                                        Editor — can modify data
+                                    </option>
+                                    <option value="viewer">
+                                        Viewer — read-only
+                                    </option>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-semibold text-slate-300 mb-1"
+                                    >Email
+                                    <span class="text-slate-500 font-normal"
+                                        >(optional)</span
+                                    ></label
+                                >
+                                <input
+                                    type="email"
+                                    id="ip-email"
+                                    class="cyber-input w-full p-2 rounded-lg text-sm"
+                                    placeholder="user@example.com"
+                                />
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button
+                                id="ip-generate-btn"
+                                onclick="generateInvite()"
+                                class="cyber-btn-primary px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
+                            >
+                                <svg
+                                    class="w-4 h-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="1.5"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
+                                    />
+                                </svg>
+                                Generate Link
+                            </button>
+                            <button
+                                onclick="
+                                    document
+                                        .getElementById('invite-panel')
+                                        .classList.add('hidden')
+                                "
+                                class="cyber-btn-ghost px-4 py-2 rounded-lg text-sm"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Link result state -->
+                    <div id="invite-panel-result" class="hidden">
+                        <div
+                            class="p-4 rounded-xl bg-[rgba(167,139,250,0.08)] border border-[rgba(167,139,250,0.25)] mb-3"
+                        >
+                            <p
+                                class="text-xs font-semibold text-[var(--cg-accent)] mb-2"
+                            >
+                                Invite Link Ready
+                            </p>
+                            <div class="flex items-start gap-2">
+                                <code
+                                    id="ip-link-display"
+                                    class="flex-1 text-xs font-mono text-[var(--cg-info)] break-all bg-[var(--cg-bg-elevated)] p-2 rounded border border-[var(--cg-border)]"
+                                ></code>
+                                <button
+                                    onclick="copyInviteLink()"
+                                    class="cyber-btn-ghost text-xs px-2 py-2 rounded flex-shrink-0 flex items-center gap-1"
+                                >
+                                    <svg
+                                        class="w-3.5 h-3.5"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke-width="1.5"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184"
+                                        />
+                                    </svg>
+                                    Copy
+                                </button>
+                            </div>
+                            <p
+                                id="ip-expiry-display"
+                                class="text-xs text-slate-500 mt-2"
+                            ></p>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-3">
+                            Share this link. The invitee must be logged in to
+                            accept.
+                        </p>
+                        <div class="flex gap-2">
+                            <button
+                                onclick="resetInvitePanel()"
+                                class="cyber-btn-ghost px-4 py-2 rounded-lg text-sm"
+                            >
+                                Generate Another
+                            </button>
+                            <button
+                                onclick="
+                                    document
+                                        .getElementById('invite-panel')
+                                        .classList.add('hidden');
+                                    resetInvitePanel();
+                                "
+                                class="cyber-btn-primary px-4 py-2 rounded-lg text-sm"
+                            >
+                                Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team list -->
+                <div id="team-list" class="space-y-2">
+                    <!-- Shimmer placeholders -->
+                    <div class="shimmer h-14 rounded-xl"></div>
+                    <div class="shimmer h-14 rounded-xl"></div>
+                </div>
+            </div>
+
+            <!-- ── Settings Tab (owner only) ─────────────────────────────────────── -->
+            <div id="tab-settings" class="hidden space-y-6">
+                <!-- Edit Form -->
+                <div class="cyber-card p-6">
+                    <h2 class="text-base font-bold text-white mb-5">
+                        Edit Project
+                    </h2>
+                    <form
+                        id="settings-form"
+                        onsubmit="handleSettingsSave(event)"
+                        class="space-y-4"
+                    >
+                        <div>
+                            <label
+                                class="block text-sm font-semibold text-slate-300 mb-2"
+                                >Project Name
+                                <span class="text-red-400">*</span></label
+                            >
+                            <input
+                                type="text"
+                                id="s-name"
+                                class="cyber-input w-full p-3 rounded-lg text-sm"
+                                maxlength="255"
+                                required
+                            />
+                            <p
+                                id="s-name-error"
+                                class="text-xs text-red-400 mt-1 hidden"
+                            ></p>
+                        </div>
+                        <div>
+                            <label
+                                class="block text-sm font-semibold text-slate-300 mb-2"
+                                >Description</label
+                            >
+                            <textarea
+                                id="s-description"
+                                rows="3"
+                                class="cyber-input w-full p-3 rounded-lg text-sm resize-none"
+                                maxlength="500"
+                            ></textarea>
+                        </div>
+                        <div>
+                            <label
+                                class="block text-sm font-semibold text-slate-300 mb-2"
+                                >Status</label
+                            >
+                            <select
+                                id="s-status"
+                                class="cyber-input w-full p-3 rounded-lg text-sm"
+                            >
+                                <option value="active">Active</option>
+                                <option value="completed">Completed</option>
+                                <option value="archived">Archived</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label
+                                    class="block text-sm font-semibold text-slate-300 mb-2"
+                                    >Start Date</label
+                                >
+                                <input
+                                    type="date"
+                                    id="s-start-date"
+                                    class="cyber-input w-full p-3 rounded-lg text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-sm font-semibold text-slate-300 mb-2"
+                                    >End Date</label
+                                >
+                                <input
+                                    type="date"
+                                    id="s-end-date"
+                                    class="cyber-input w-full p-3 rounded-lg text-sm"
+                                />
+                                <p
+                                    id="s-end-date-error"
+                                    class="text-xs text-red-400 mt-1 hidden"
+                                ></p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3 pt-2">
+                            <button
+                                type="submit"
+                                id="settings-save-btn"
+                                class="cyber-btn-primary px-6 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2"
+                            >
+                                <svg
+                                    class="w-4 h-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="1.5"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M4.5 12.75l6 6 9-13.5"
+                                    />
+                                </svg>
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="cyber-card p-6 danger-zone rounded-xl border">
+                    <h2
+                        class="text-base font-bold text-[var(--cg-danger)] mb-2 flex items-center gap-2"
+                    >
+                        <svg
+                            class="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                            />
+                        </svg>
+                        Danger Zone
+                    </h2>
+                    <p class="text-sm text-slate-400 mb-4">
+                        Deleting this project is permanent. This action cannot
+                        be undone.
+                    </p>
+
+                    <!-- Type-to-confirm -->
+                    <div id="delete-confirm-area" class="hidden space-y-3">
+                        <p class="text-sm text-slate-300">
+                            Type
+                            <strong
+                                id="delete-name-hint"
+                                class="text-white font-mono"
+                            ></strong>
+                            to confirm:
+                        </p>
+                        <input
+                            type="text"
+                            id="delete-confirm-input"
+                            class="cyber-input w-full p-3 rounded-lg text-sm"
+                            placeholder="Type project name…"
+                            autocomplete="off"
+                            oninput="checkDeleteMatch(this)"
+                        />
+                        <div class="flex gap-3">
+                            <button
+                                id="delete-confirm-btn"
+                                onclick="handleDeleteProject()"
+                                disabled
+                                class="cyber-btn-danger px-6 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2 disabled:opacity-40"
+                            >
+                                <svg
+                                    class="w-4 h-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke-width="1.5"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                                    />
+                                </svg>
+                                Delete Project
+                            </button>
+                            <button
+                                onclick="
+                                    document
+                                        .getElementById('delete-confirm-area')
+                                        .classList.add('hidden')
+                                "
+                                class="cyber-btn-ghost px-4 py-2.5 rounded-lg text-sm"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                    <button
+                        id="show-delete-btn"
+                        onclick="showDeleteArea()"
+                        class="cyber-btn-danger px-5 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2"
+                    >
+                        <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                            />
+                        </svg>
+                        Delete This Project
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- ─── CyberNotify toast ──────────────────────────────────────────────── -->
+        <script src="cyber-notify.js"></script>
+        <script src="api-client.js"></script>
+
+        <script>
+            "use strict";
+
+            // ─── State ────────────────────────────────────────────────────────────────
+            const API_BASE =
+                "https://peptonelike-lelia-interdepartmentally.ngrok-free.dev/api/";
+            const JWT_KEY = "cyberguard_jwt";
+
+            let _projectId = null;
+            let _project = null;
+            let _isOwner = false;
+            let _currentUser = null;
+            let _apiClient = null;
+            let _currentTab = "overview";
+
+            // ─── Boot ─────────────────────────────────────────────────────────────────
+            (function boot() {
+                const params = new URLSearchParams(location.search);
+                _projectId = params.get("id");
+                const isOwnedHint = params.get("owned") === "true";
+
+                if (!_projectId) {
+                    location.replace("dashboard.html");
+                    return;
+                }
+
+                const token = localStorage.getItem(JWT_KEY);
+                if (!token) {
+                    location.replace(
+                        `login.html?redirect=${encodeURIComponent(location.href)}`,
+                    );
+                    return;
+                }
+
+                // Load current user
+                try {
+                    const raw = localStorage.getItem("cyberguard_user");
+                    _currentUser = raw ? JSON.parse(raw) : null;
+                } catch (_) {}
+
+                _apiClient = new APIClient(API_BASE);
+
+                loadProject(isOwnedHint);
+            })();
+
+            // ─── API helpers ─────────────────────────────────────────────────────────
+            function apiFetch(endpoint, opts = {}) {
+                const token = localStorage.getItem(JWT_KEY);
+                return fetch(API_BASE + endpoint.replace(/^\//, ""), {
+                    headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json",
+                        "ngrok-skip-browser-warning": "true",
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    },
+                    ...opts,
+                });
+            }
+
+            // ─── Load Project ─────────────────────────────────────────────────────────
+            async function loadProject(isOwnedHint) {
+                try {
+                    const res = await apiFetch(`/projects/${_projectId}`);
+
+                    if (res.status === 403 || res.status === 404) {
+                        showError(
+                            "Project Not Found",
+                            "This project doesn't exist or you don't have access to it.",
+                        );
+                        return;
+                    }
+                    if (!res.ok) {
+                        showError(
+                            "Error",
+                            `Couldn't load project (HTTP ${res.status}). Please try again.`,
+                        );
+                        return;
+                    }
+
+                    const data = await res.json();
+                    _project = data.project || data;
+
+                    // Ownership detection
+                    _isOwner =
+                        isOwnedHint ||
+                        (_currentUser &&
+                            _project.owner_id &&
+                            String(_project.owner_id) ===
+                                String(_currentUser.id));
+
+                    renderProject();
+                    loadTeam();
+                } catch (err) {
+                    showError(
+                        "Network Error",
+                        "Could not reach the server. Check your connection and try again.",
+                    );
+                }
+            }
+
+            // ─── Render project into the page ─────────────────────────────────────────
+            function renderProject() {
+                const p = _project;
+
+                // Page header
+                const titleEl = document.getElementById("page-title");
+                const subtitleEl = document.getElementById("page-subtitle");
+                if (titleEl) titleEl.textContent = p.name || "Untitled Project";
+                if (subtitleEl)
+                    subtitleEl.textContent =
+                        p.description || "Security Assessment";
+
+                // Status badge
+                const STATUS = {
+                    active: {
+                        cls: "text-[#34D399] bg-[rgba(52,211,153,0.15)]  border-[rgba(52,211,153,0.3)]",
+                        label: "Active",
+                    },
+                    completed: {
+                        cls: "text-[#38BDF8] bg-[rgba(56,189,248,0.15)]  border-[rgba(56,189,248,0.3)]",
+                        label: "Completed",
+                    },
+                    archived: {
+                        cls: "text-[#FBBF24] bg-[rgba(251,191,36,0.15)]  border-[rgba(251,191,36,0.3)]",
+                        label: "Archived",
+                    },
+                };
+                const { cls, label } = STATUS[p.status] || STATUS.active;
+                const badge = document.getElementById("status-badge");
+                if (badge) {
+                    badge.className = `text-xs px-2.5 py-1 rounded-full border font-semibold ${cls}`;
+                    badge.textContent = label;
+                    badge.classList.remove("hidden");
+                }
+
+                // Overview fields
+                _set("ov-description", p.description || "—");
+                _set(
+                    "ov-start-date",
+                    p.start_date ? fmtDate(p.start_date) : "—",
+                );
+                _set("ov-end-date", p.end_date ? fmtDate(p.end_date) : "—");
+                _set(
+                    "ov-created",
+                    p.created_at ? fmtRelative(p.created_at) : "—",
+                );
+                _set("ov-project-id", p.id || "—");
+                _set(
+                    "ov-role-badge",
+                    _isOwner ? "Owner" : p.role ? cap(p.role) : "Member",
+                );
+
+                // Settings form
+                _val("s-name", p.name || "");
+                _val("s-description", p.description || "");
+                _val("s-status", p.status || "active");
+                _val("s-start-date", p.start_date || "");
+                _val("s-end-date", p.end_date || "");
+                _set("delete-name-hint", p.name || "");
+
+                // Show/hide owner-only UI
+                if (_isOwner) {
+                    document
+                        .getElementById("settings-tab-btn")
+                        ?.classList.remove("hidden");
+                    document
+                        .getElementById("open-invite-btn")
+                        ?.classList.remove("hidden");
+                }
+
+                // Hide skeleton, show content
+                document
+                    .getElementById("loading-skeleton")
+                    ?.classList.add("hidden");
+                document
+                    .getElementById("main-content")
+                    ?.classList.remove("hidden");
+
+                document.title = `${p.name || "Project"} — CyberGuard Pro`;
+            }
+
+            // ─── Load Team ────────────────────────────────────────────────────────────
+            async function loadTeam() {
+                const listEl = document.getElementById("team-list");
+                try {
+                    const res = await apiFetch(
+                        `/projects/${_projectId}/collaborators`,
+                    );
+                    if (!res.ok) {
+                        if (listEl)
+                            listEl.innerHTML = errMsg(
+                                "Failed to load team members.",
+                            );
+                        return;
+                    }
+
+                    const data = await res.json();
+                    const members = Array.isArray(data.collaborators)
+                        ? data.collaborators
+                        : Array.isArray(data)
+                          ? data
+                          : [];
+
+                    // Update team count on overview
+                    _set("ov-team-size", String(members.length));
+
+                    if (!listEl) return;
+                    if (members.length === 0) {
+                        listEl.innerHTML = `<div class="text-center py-8 text-sm text-slate-500">No team members yet. Invite someone to collaborate.</div>`;
+                        return;
+                    }
+                    listEl.innerHTML = members
+                        .map((m) => renderMemberRow(m))
+                        .join("");
+                } catch (_) {
+                    if (listEl)
+                        listEl.innerHTML = errMsg(
+                            "Network error loading team.",
+                        );
+                }
+            }
+
+            function renderMemberRow(member) {
+                // Normalise — API may return nested user or flat
+                const user = member.user || member;
+                const name = esc(
+                    user.full_name ||
+                        user.name ||
+                        member.full_name ||
+                        "Unknown",
+                );
+                const email = esc(user.email || member.email || "");
+                const jobTitle = esc(
+                    user.job_tittle ||
+                        user.job_title ||
+                        member.job_tittle ||
+                        member.job_title ||
+                        "",
+                );
+                const role = member.role || "viewer";
+                const userId = user.id || member.user_id || member.id;
+                const isSelf =
+                    _currentUser &&
+                    userId &&
+                    String(userId) === String(_currentUser.id);
+                const initials = getInitials(
+                    user.full_name || user.name || member.full_name || "U",
+                );
+
+                const ROLE_CLS = {
+                    owner: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border-[rgba(167,139,250,0.3)]",
+                    editor: "text-[#38BDF8] bg-[rgba(56,189,248,0.15)]  border-[rgba(56,189,248,0.3)]",
+                    viewer: "text-[#FBBF24] bg-[rgba(251,191,36,0.15)]  border-[rgba(251,191,36,0.3)]",
+                };
+                const roleCls = ROLE_CLS[role] || ROLE_CLS.viewer;
+
+                const roleControl =
+                    _isOwner && !isSelf
+                        ? `<select class="cyber-input text-xs px-2 py-1 rounded-lg"
+                onchange="changeRole('${esc(String(userId))}', this.value)">
+         <option value="editor" ${role === "editor" ? "selected" : ""}>Editor</option>
+         <option value="viewer" ${role === "viewer" ? "selected" : ""}>Viewer</option>
+       </select>`
+                        : `<span class="text-xs px-2 py-0.5 rounded-full border font-semibold ${roleCls}">${cap(role)}</span>`;
+
+                const removeBtn = _isOwner
+                    ? isSelf
+                        ? `<button disabled title="You cannot remove yourself" class="cyber-btn-ghost text-xs px-2 py-1.5 rounded opacity-40 cursor-not-allowed">
+           <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+         </button>`
+                        : `<button onclick="removeMember('${esc(String(userId))}')" title="Remove member" class="cyber-btn-danger text-xs px-2 py-1.5 rounded flex items-center gap-1">
+           <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+         </button>`
+                    : "";
+
+                return `
+    <div class="cyber-card p-3 flex items-center gap-3">
+      <div class="cyber-avatar-sm flex-shrink-0 flex items-center justify-center">
+        <span class="text-xs font-bold text-white">${initials}</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-white truncate">${name}${isSelf ? ' <span class="text-xs text-slate-400 font-normal">(you)</span>' : ""}</p>
+        <p class="text-xs text-slate-400 truncate">${email || jobTitle || role}</p>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        ${roleControl}
+        ${removeBtn}
+      </div>
+    </div>`;
+            }
+
+            // ─── Invite ───────────────────────────────────────────────────────────────
+            document
+                .getElementById("open-invite-btn")
+                ?.addEventListener("click", () => {
+                    const panel = document.getElementById("invite-panel");
+                    if (panel) panel.classList.toggle("hidden");
+                    resetInvitePanel();
+                });
+
+            async function generateInvite() {
+                const btn = document.getElementById("ip-generate-btn");
+                const role =
+                    document.getElementById("ip-role")?.value || "viewer";
+                const email = document.getElementById("ip-email")?.value || "";
+
+                setBtnLoading(btn, "Generating…");
+                try {
+                    const body = { role };
+                    if (email.trim()) body.email = email.trim();
+                    const res = await apiFetch(
+                        `/projects/${_projectId}/invite`,
+                        { method: "POST", body: JSON.stringify(body) },
+                    );
+
+                    if (res.status === 403) {
+                        notify(
+                            "Only the project owner can invite members.",
+                            "error",
+                        );
+                        return;
+                    }
+                    if (!res.ok) {
+                        notify("Failed to generate invite link.", "error");
+                        return;
+                    }
+
+                    const data = await res.json();
+                    const link = data.invite_link || data.inviteLink || "";
+                    const expires = data.expires_at || data.expiresAt || "";
+
+                    document.getElementById("ip-link-display").textContent =
+                        link;
+                    const expEl = document.getElementById("ip-expiry-display");
+                    if (expEl)
+                        expEl.textContent = expires
+                            ? `Expires: ${fmtDate(expires.split("T")[0])}`
+                            : "";
+
+                    document
+                        .getElementById("invite-panel-form")
+                        .classList.add("hidden");
+                    document
+                        .getElementById("invite-panel-result")
+                        .classList.remove("hidden");
+                } finally {
+                    restoreBtn(btn);
+                }
+            }
+
+            function copyInviteLink() {
+                const text =
+                    document.getElementById("ip-link-display")?.textContent ||
+                    "";
+                if (!text) return;
+                navigator.clipboard
+                    .writeText(text)
+                    .then(() => notify("Invite link copied!", "success"))
+                    .catch(() =>
+                        notify(
+                            "Copy failed — please copy manually.",
+                            "warning",
+                        ),
+                    );
+            }
+
+            function resetInvitePanel() {
+                document
+                    .getElementById("invite-panel-form")
+                    .classList.remove("hidden");
+                document
+                    .getElementById("invite-panel-result")
+                    .classList.add("hidden");
+                const form = document.getElementById("invite-panel-form");
+                form.querySelectorAll("input").forEach((i) => (i.value = ""));
+            }
+
+            // ─── Role change ──────────────────────────────────────────────────────────
+            async function changeRole(userId, newRole) {
+                try {
+                    const res = await apiFetch(
+                        `/projects/${_projectId}/collaborators/${userId}`,
+                        {
+                            method: "PATCH",
+                            body: JSON.stringify({ role: newRole }),
+                        },
+                    );
+                    if (res.status === 403) {
+                        notify(
+                            "Only the project owner can change roles.",
+                            "error",
+                        );
+                        loadTeam();
+                        return;
+                    }
+                    if (!res.ok) {
+                        notify("Failed to change role.", "error");
+                        loadTeam();
+                        return;
+                    }
+                    notify("Role updated.", "success");
+                } catch (_) {
+                    notify("Network error.", "error");
+                    loadTeam();
+                }
+            }
+
+            // ─── Remove member ────────────────────────────────────────────────────────
+            async function removeMember(userId) {
+                if (!confirm("Remove this team member?")) return;
+                try {
+                    const res = await apiFetch(
+                        `/projects/${_projectId}/collaborators/${userId}`,
+                        { method: "DELETE" },
+                    );
+                    if (res.status === 400) {
+                        notify("You cannot remove yourself.", "error");
+                        return;
+                    }
+                    if (res.status === 403) {
+                        notify(
+                            "Only the project owner can remove members.",
+                            "error",
+                        );
+                        return;
+                    }
+                    if (!res.ok) {
+                        notify("Failed to remove member.", "error");
+                        return;
+                    }
+                    notify("Team member removed.", "success");
+                    loadTeam();
+                } catch (_) {
+                    notify("Network error.", "error");
+                }
+            }
+
+            // ─── Settings save ────────────────────────────────────────────────────────
+            async function handleSettingsSave(e) {
+                e.preventDefault();
+                const nameEl = document.getElementById("s-name");
+                const descEl = document.getElementById("s-description");
+                const statusEl = document.getElementById("s-status");
+                const startEl = document.getElementById("s-start-date");
+                const endEl = document.getElementById("s-end-date");
+                const endErrEl = document.getElementById("s-end-date-error");
+                const nameErrEl = document.getElementById("s-name-error");
+                const btn = document.getElementById("settings-save-btn");
+
+                if (nameErrEl) nameErrEl.classList.add("hidden");
+                if (endErrEl) endErrEl.classList.add("hidden");
+
+                const name = nameEl?.value.trim() || "";
+                if (!name) {
+                    if (nameErrEl) {
+                        nameErrEl.textContent = "Project name is required.";
+                        nameErrEl.classList.remove("hidden");
+                    }
+                    return;
+                }
+                const start = startEl?.value || "";
+                const end = endEl?.value || "";
+                if (start && end && new Date(end) <= new Date(start)) {
+                    if (endErrEl) {
+                        endErrEl.textContent =
+                            "End date must be after start date.";
+                        endErrEl.classList.remove("hidden");
+                    }
+                    return;
+                }
+
+                setBtnLoading(btn, "Saving…");
+                try {
+                    const body = {
+                        name,
+                        description: descEl?.value.trim() || "",
+                        status: statusEl?.value || "active",
+                    };
+                    if (start) body.start_date = start;
+                    if (end) body.end_date = end;
+
+                    const res = await apiFetch(`/projects/${_projectId}`, {
+                        method: "PATCH",
+                        body: JSON.stringify(body),
+                    });
+                    if (res.status === 403) {
+                        notify(
+                            "Only the project owner can edit this project.",
+                            "error",
+                        );
+                        return;
+                    }
+                    if (res.status === 422) {
+                        const d = await res.json();
+                        const msgs = Object.values(d.errors || {})
+                            .flat()
+                            .join(". ");
+                        notify(msgs || "Validation error.", "error");
+                        return;
+                    }
+                    if (!res.ok) {
+                        notify("Failed to save changes.", "error");
+                        return;
+                    }
+
+                    const data = await res.json();
+                    _project = data.project || data;
+                    renderProject();
+                    notify(
+                        `Project "${_project.name}" saved successfully.`,
+                        "success",
+                    );
+                } finally {
+                    restoreBtn(btn);
+                }
+            }
+
+            // ─── Delete ───────────────────────────────────────────────────────────────
+            function showDeleteArea() {
+                document
+                    .getElementById("show-delete-btn")
+                    .classList.add("hidden");
+                document
+                    .getElementById("delete-confirm-area")
+                    .classList.remove("hidden");
+                document.getElementById("delete-confirm-input").value = "";
+                document.getElementById("delete-confirm-btn").disabled = true;
+                document.getElementById("delete-confirm-input").focus();
+            }
+
+            function checkDeleteMatch(input) {
+                const hint =
+                    document.getElementById("delete-name-hint")?.textContent ||
+                    "";
+                document.getElementById("delete-confirm-btn").disabled =
+                    input.value !== hint;
+            }
+
+            async function handleDeleteProject() {
+                const btn = document.getElementById("delete-confirm-btn");
+                setBtnLoading(btn, "Deleting…");
+                try {
+                    const res = await apiFetch(`/projects/${_projectId}`, {
+                        method: "DELETE",
+                    });
+                    if (res.status === 403) {
+                        notify(
+                            "Only the project owner can delete this project.",
+                            "error",
+                        );
+                        return;
+                    }
+                    if (!res.ok) {
+                        notify("Failed to delete project.", "error");
+                        return;
+                    }
+                    notify("Project deleted.", "success");
+                    setTimeout(() => location.replace("dashboard.html"), 1500);
+                } finally {
+                    restoreBtn(btn);
+                }
+            }
+
+            // ─── Tab switching ────────────────────────────────────────────────────────
+            function switchDetailTab(tab) {
+                _currentTab = tab;
+                document.querySelectorAll(".detail-tab").forEach((btn) => {
+                    const isActive =
+                        btn.getAttribute("onclick") ===
+                        `switchDetailTab('${tab}')`;
+                    btn.classList.toggle("active", isActive);
+                    if (!isActive) btn.classList.remove("active");
+                });
+                ["overview", "team", "settings"].forEach((id) => {
+                    const el = document.getElementById(`tab-${id}`);
+                    if (el) el.classList.toggle("hidden", id !== tab);
+                });
+            }
+
+            // ─── Back navigation ──────────────────────────────────────────────────────
+            function goBack(e) {
+                e.preventDefault();
+                if (
+                    document.referrer &&
+                    document.referrer.includes("dashboard.html")
+                ) {
+                    history.back();
+                } else {
+                    location.replace("dashboard.html");
+                }
+            }
+
+            // ─── Utilities ────────────────────────────────────────────────────────────
+            function showError(title, msg) {
+                document
+                    .getElementById("loading-skeleton")
+                    ?.classList.add("hidden");
+                document.getElementById("error-title").textContent = title;
+                document.getElementById("error-msg").textContent = msg;
+                document
+                    .getElementById("error-state")
+                    ?.classList.remove("hidden");
+            }
+
+            function notify(msg, type = "info") {
+                if (window.CyberNotify) window.CyberNotify.alert(msg, { type });
+                else console.log(`[${type}]`, msg);
+            }
+
+            function esc(t) {
+                const d = document.createElement("div");
+                d.textContent = String(t || "");
+                return d.innerHTML;
+            }
+            function cap(s) {
+                return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+            }
+            function _set(id, val) {
+                const el = document.getElementById(id);
+                if (el) el.textContent = val;
+            }
+            function _val(id, val) {
+                const el = document.getElementById(id);
+                if (el) el.value = val;
+            }
+            function errMsg(msg) {
+                return `<div class="text-center py-6 text-xs text-[var(--cg-danger)]">${esc(msg)}</div>`;
+            }
+            function getInitials(n) {
+                if (!n) return "U";
+                const p = n.trim().split(/\s+/);
+                return p.length === 1
+                    ? p[0][0].toUpperCase()
+                    : (p[0][0] + p[p.length - 1][0]).toUpperCase();
+            }
+
+            function fmtDate(s) {
+                if (!s) return "—";
+                const d = new Date(s.includes("T") ? s : `${s}T00:00:00`);
+                return isNaN(d)
+                    ? s
+                    : d.toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                      });
+            }
+            function fmtRelative(s) {
+                if (!s) return "—";
+                const days = Math.floor((Date.now() - new Date(s)) / 86400000);
+                if (days === 0) return "Today";
+                if (days === 1) return "Yesterday";
+                if (days < 30) return `${days} days ago`;
+                return fmtDate(s);
+            }
+
+            function setBtnLoading(btn, label) {
+                if (!btn) return;
+                btn._orig = btn.innerHTML;
+                btn.innerHTML = `<span class="cyber-spinner-sm mr-1"></span>${label}`;
+                btn.disabled = true;
+            }
+            function restoreBtn(btn) {
+                if (!btn || !btn._orig) return;
+                btn.innerHTML = btn._orig;
+                btn.disabled = false;
+            }
+        </script>
+    </body>
+</html>
