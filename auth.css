@@ -13,7 +13,11 @@
 
 /* Dot Grid Overlay */
 .dot-grid-overlay {
-    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-image: radial-gradient(
+        circle,
+        rgba(255, 255, 255, 0.1) 1px,
+        transparent 1px
+    );
     background-size: 30px 30px;
 }
 
@@ -58,11 +62,12 @@
 }
 
 @keyframes float {
-    0%, 100% { 
-        transform: translateY(0px) rotate(0deg); 
+    0%,
+    100% {
+        transform: translateY(0px) rotate(0deg);
     }
-    50% { 
-        transform: translateY(-20px) rotate(180deg); 
+    50% {
+        transform: translateY(-20px) rotate(180deg);
     }
 }
 
@@ -76,9 +81,10 @@
 .input-group select {
     width: 100%;
     padding: 1rem;
-    border: 2px solid #e5e7eb;
+    border: 1px solid var(--cg-border-subtle);
     border-radius: 0.75rem;
-    background: #ffffff;
+    background: var(--cg-bg-elevated);
+    color: var(--cg-text-1);
     transition: all 0.3s ease;
     font-size: 1rem;
 }
@@ -95,7 +101,7 @@
     position: absolute;
     left: 1rem;
     top: 1rem;
-    color: #6b7280;
+    color: var(--cg-text-3);
     pointer-events: none;
     transition: all 0.3s ease;
     font-size: 1rem;
@@ -107,13 +113,17 @@
 .input-group select:not([value=""]) + label {
     transform: translateY(-25px) scale(0.9);
     color: var(--cg-accent);
-    background: #ffffff;
+    background: var(--cg-bg-elevated);
     padding: 0 0.5rem;
 }
 
 /* Button Styles */
 .btn-primary {
-    background: linear-gradient(135deg, var(--cg-accent) 0%, var(--cg-accent-hover) 100%);
+    background: linear-gradient(
+        135deg,
+        var(--cg-accent) 0%,
+        var(--cg-accent-hover) 100%
+    );
     color: white;
     border: none;
     padding: 1rem 2rem;
@@ -137,13 +147,18 @@
 }
 
 .btn-primary::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, var(--cg-border), transparent);
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--cg-border),
+        transparent
+    );
     transition: left 0.5s;
 }
 
@@ -152,9 +167,9 @@
 }
 
 .btn-secondary {
-    background: #ffffff;
-    color: #374151;
-    border: 2px solid #d1d5db;
+    background: var(--cg-bg-surface);
+    color: var(--cg-text-1);
+    border: 1px solid var(--cg-border-subtle);
     padding: 1rem 2rem;
     border-radius: 0.75rem;
     font-weight: 600;
@@ -165,8 +180,8 @@
 }
 
 .btn-secondary:hover {
-    background: #f9fafb;
-    border-color: #9ca3af;
+    background: var(--cg-bg-elevated);
+    border-color: var(--cg-border-subtle);
     transform: translateY(-1px);
 }
 
@@ -178,23 +193,23 @@
     margin-top: 0.5rem;
 }
 
-.strength-weak { 
-    background: #ef4444; 
+.strength-weak {
+    background: var(--cg-danger);
     width: 20%;
 }
 
-.strength-fair { 
-    background: #f59e0b; 
+.strength-fair {
+    background: var(--cg-warning);
     width: 40%;
 }
 
-.strength-good { 
-    background: #10b981; 
+.strength-good {
+    background: var(--cg-success);
     width: 70%;
 }
 
-.strength-strong { 
-    background: #059669; 
+.strength-strong {
+    background: var(--cg-success);
     width: 100%;
 }
 
@@ -209,13 +224,13 @@
 }
 
 @keyframes fadeIn {
-    from { 
-        opacity: 0; 
-        transform: translateX(20px); 
+    from {
+        opacity: 0;
+        transform: translateX(20px);
     }
-    to { 
-        opacity: 1; 
-        transform: translateX(0); 
+    to {
+        opacity: 1;
+        transform: translateX(0);
     }
 }
 
@@ -231,7 +246,7 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: #e5e7eb;
+    background: var(--cg-border-subtle);
     transition: all 0.3s ease;
     cursor: pointer;
 }
@@ -242,17 +257,17 @@
 }
 
 .step.completed {
-    background: #10b981;
+    background: var(--cg-success);
 }
 
 .step.completed::after {
-    content: '✓';
+    content: "✓";
     position: absolute;
     top: -2px;
     left: -2px;
     width: 16px;
     height: 16px;
-    background: #10b981;
+    background: var(--cg-success);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -282,11 +297,12 @@
 }
 
 @keyframes pulse {
-    0%, 100% { 
-        opacity: 1; 
+    0%,
+    100% {
+        opacity: 1;
     }
-    50% { 
-        opacity: 0.7; 
+    50% {
+        opacity: 0.7;
     }
 }
 
@@ -296,14 +312,15 @@
 }
 
 @keyframes shake {
-    0%, 100% { 
-        transform: translateX(0); 
+    0%,
+    100% {
+        transform: translateX(0);
     }
-    25% { 
-        transform: translateX(-5px); 
+    25% {
+        transform: translateX(-5px);
     }
-    75% { 
-        transform: translateX(5px); 
+    75% {
+        transform: translateX(5px);
     }
 }
 
@@ -312,14 +329,18 @@
 }
 
 @keyframes bounce {
-    0%, 20%, 50%, 80%, 100% { 
-        transform: translateY(0); 
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
     }
-    40% { 
-        transform: translateY(-10px); 
+    40% {
+        transform: translateY(-10px);
     }
-    60% { 
-        transform: translateY(-5px); 
+    60% {
+        transform: translateY(-5px);
     }
 }
 
@@ -348,11 +369,11 @@
 }
 
 @keyframes spin {
-    0% { 
-        transform: rotate(0deg); 
+    0% {
+        transform: rotate(0deg);
     }
-    100% { 
-        transform: rotate(360deg); 
+    100% {
+        transform: rotate(360deg);
     }
 }
 
@@ -366,20 +387,21 @@
 }
 
 .message-box {
-    background: white;
+    background: var(--cg-bg-surface);
+    color: var(--cg-text-1);
     border-radius: 0.75rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
     padding: 1rem;
     margin-bottom: 0.5rem;
     border-left: 4px solid var(--cg-accent);
 }
 
 .message-box.success {
-    border-left-color: #10b981;
+    border-left-color: var(--cg-success);
 }
 
 .message-box.error {
-    border-left-color: #ef4444;
+    border-left-color: var(--cg-danger);
 }
 
 /* Social Login Buttons */
@@ -395,27 +417,27 @@
     align-items: center;
     justify-content: center;
     padding: 0.75rem 1rem;
-    border: 2px solid #e5e7eb;
+    border: 1px solid var(--cg-border-subtle);
     border-radius: 0.75rem;
-    background: white;
-    color: #374151;
+    background: var(--cg-bg-elevated);
+    color: var(--cg-text-1);
     text-decoration: none;
     font-weight: 500;
     transition: all 0.3s ease;
 }
 
 .social-btn:hover {
-    background: #f9fafb;
-    border-color: #d1d5db;
+    background: var(--cg-bg-surface);
+    border-color: var(--cg-border-subtle);
     transform: translateY(-1px);
 }
 
 .social-btn.google {
-    color: #dc2626;
+    color: var(--cg-danger);
 }
 
 .social-btn.microsoft {
-    color: #2563eb;
+    color: var(--cg-info);
 }
 
 /* Checkbox Styles */
@@ -429,9 +451,9 @@
 .checkbox-group input[type="checkbox"] {
     width: 1.25rem;
     height: 1.25rem;
-    border: 2px solid #d1d5db;
+    border: 1px solid var(--cg-border-subtle);
     border-radius: 0.375rem;
-    background: white;
+    background: var(--cg-bg-elevated);
     cursor: pointer;
     transition: all 0.3s ease;
 }
@@ -448,22 +470,22 @@
 
 .checkbox-group label {
     font-size: 0.875rem;
-    color: #6b7280;
+    color: var(--cg-text-3);
     cursor: pointer;
     line-height: 1.4;
 }
 
 /* Security Features Panel */
 .security-features {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-    border: 1px solid #bae6fd;
+    background: var(--cg-bg-surface);
+    border: 1px solid var(--cg-border-subtle);
     border-radius: 0.75rem;
     padding: 1.5rem;
     margin-top: 2rem;
 }
 
 .security-features h3 {
-    color: #0369a1;
+    color: var(--cg-info);
     font-weight: 600;
     margin-bottom: 1rem;
     display: flex;
@@ -483,11 +505,11 @@
     gap: 0.5rem;
     margin-bottom: 0.5rem;
     font-size: 0.875rem;
-    color: #0369a1;
+    color: var(--cg-text-2);
 }
 
 .security-features li i {
-    color: #10b981;
+    color: var(--cg-success);
     font-size: 0.75rem;
 }
 
@@ -497,15 +519,15 @@
         margin: 1rem;
         padding: 1.5rem;
     }
-    
+
     .social-login {
         grid-template-columns: 1fr;
     }
-    
+
     .step-indicator {
         gap: 0.5rem;
     }
-    
+
     .message-container {
         top: 0.5rem;
         right: 0.5rem;
@@ -513,66 +535,10 @@
     }
 }
 
-/* Dark Mode Support */
+/* Dark Mode Support — base styles are already dark-first; this block is a no-op kept for
+   system-level dark-mode compliance (e.g. form autofill on Safari) */
 @media (prefers-color-scheme: dark) {
-    .auth-container {
-        background: var(--cg-bg-surface);
-        border-color: var(--cg-border-subtle);
-    }
-    
-    .input-group input,
-    .input-group select {
-        background: #1e293b;
-        border-color: #334155;
-        color: #e2e8f0;
-    }
-    
-    .input-group input:focus,
-    .input-group select:focus {
-        border-color: var(--cg-accent);
-    }
-    
-    .input-group label {
-        color: #94a3b8;
-    }
-    
-    .btn-secondary {
-        background: #1e293b;
-        color: #e2e8f0;
-        border-color: #334155;
-    }
-    
-    .btn-secondary:hover {
-        background: #334155;
-    }
-    
-    .social-btn {
-        background: #1e293b;
-        color: #e2e8f0;
-        border-color: #334155;
-    }
-    
-    .social-btn:hover {
-        background: #334155;
-    }
-    
-    .message-box {
-        background: #1e293b;
-        color: #e2e8f0;
-    }
-    
-    .security-features {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        border-color: #334155;
-    }
-    
-    .security-features h3 {
-        color: #60a5fa;
-    }
-    
-    .security-features li {
-        color: #94a3b8;
-    }
+    /* All base styles already use var(--cg-*) tokens — no overrides needed */
 }
 
 /* Accessibility Improvements */
@@ -599,20 +565,19 @@
     .auth-container {
         border: 2px solid #000000;
     }
-    
+
     .input-group input,
     .input-group select {
         border: 2px solid #000000;
     }
-    
+
     .btn-primary {
         background: #000000;
         color: #ffffff;
     }
-    
+
     .btn-secondary {
         border: 2px solid #000000;
         color: #000000;
     }
 }
-
