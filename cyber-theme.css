@@ -528,6 +528,7 @@ select.cyber-input option { background: var(--cg-bg-surface); color: var(--cg-te
   background: var(--cg-bg-elevated);
   color: var(--cg-text-1);
   border-color: var(--cg-border-subtle);
+  box-shadow: 0 0 40px var(--cg-border-subtle);
 }
 
 .cyber-btn-danger {
