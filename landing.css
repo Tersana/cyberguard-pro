@@ -109,7 +109,7 @@ body::before {
 }
 
 .logo-text {
-  background: linear-gradient(135deg, #fff 0%, var(--cg-accent) 100%);
+  background: linear-gradient(135deg, var(--cg-text-1) 0%, var(--cg-accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1423,7 +1423,7 @@ body::before {
 }
 
 .footer-brand .logo-text {
-  background: linear-gradient(135deg, #fff 0%, var(--cg-accent) 100%);
+  background: linear-gradient(135deg, var(--cg-text-1) 0%, var(--cg-accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
