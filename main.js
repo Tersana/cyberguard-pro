@@ -11,12 +11,14 @@
 let apiClient;
 
 // Initialize API client when DOM is ready
-if (typeof APIClient !== 'undefined') {
+if (typeof APIClient !== "undefined") {
   apiClient = new APIClient();
   window.apiClient = apiClient; // Expose globally
-  console.log('[CyberGuard] API Client initialized');
+  console.log("[CyberGuard] API Client initialized");
 } else {
-  console.error('[CyberGuard] APIClient class not found. Ensure api-client.js is loaded before main.js');
+  console.error(
+    "[CyberGuard] APIClient class not found. Ensure api-client.js is loaded before main.js",
+  );
 }
 
 // ===== PROJECT MANAGER INITIALIZATION =====
@@ -31,12 +33,14 @@ if (typeof APIClient !== 'undefined') {
 let projectManager;
 
 // Initialize Project Manager when DOM is ready
-if (typeof ProjectManager !== 'undefined' && apiClient) {
+if (typeof ProjectManager !== "undefined" && apiClient) {
   projectManager = new ProjectManager(apiClient);
   window.projectManager = projectManager; // Expose globally
-  console.log('[CyberGuard] Project Manager initialized');
+  console.log("[CyberGuard] Project Manager initialized");
 } else {
-  console.error('[CyberGuard] ProjectManager class not found or apiClient not initialized. Ensure project-manager.js is loaded before main.js');
+  console.error(
+    "[CyberGuard] ProjectManager class not found or apiClient not initialized. Ensure project-manager.js is loaded before main.js",
+  );
 }
 
 // ===== INPUT VALIDATION FUNCTIONS =====
@@ -92,12 +96,12 @@ function validateTargetInput(target, toolName) {
  */
 function mapStatusToSeverity(status) {
   const severityMap = {
-    'threat': 'critical',
-    'warning': 'warning',
-    'safe': 'info',
-    'system': 'info'
+    threat: "critical",
+    warning: "warning",
+    safe: "info",
+    system: "info",
   };
-  return severityMap[status] || 'info';
+  return severityMap[status] || "info";
 }
 
 /**
@@ -107,47 +111,51 @@ function mapStatusToSeverity(status) {
  * @param {number} scanEndTime - Timestamp when scan ended (milliseconds)
  * @returns {Object} Summary metrics object with counts and formatted time
  */
-function calculateSummaryMetrics(results, scanStartTime = null, scanEndTime = null) {
+function calculateSummaryMetrics(
+  results,
+  scanStartTime = null,
+  scanEndTime = null,
+) {
   // Calculate total issues
   const totalIssues = results.length;
-  
+
   // Calculate severity counts
   let criticalCount = 0;
   let warningCount = 0;
   let infoCount = 0;
-  
-  results.forEach(result => {
+
+  results.forEach((result) => {
     const severity = mapStatusToSeverity(result.status);
-    if (severity === 'critical') {
+    if (severity === "critical") {
       criticalCount++;
-    } else if (severity === 'warning') {
+    } else if (severity === "warning") {
       warningCount++;
-    } else if (severity === 'info') {
+    } else if (severity === "info") {
       infoCount++;
     }
   });
-  
+
   // Format time taken as human-readable string
-  let timeTaken = '--';
+  let timeTaken = "--";
   if (scanStartTime && scanEndTime) {
     const durationMs = scanEndTime - scanStartTime;
     const seconds = Math.floor(durationMs / 1000);
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    
+
     if (minutes > 0) {
       timeTaken = `${minutes}m ${remainingSeconds}s`;
     } else {
       timeTaken = `${seconds}s`;
     }
   }
-  
+
   return {
     totalIssues,
     criticalCount,
     warningCount,
     infoCount,
-    timeTaken
+    timeTaken,
   };
 }
 
@@ -159,21 +167,23 @@ function calculateSummaryMetrics(results, scanStartTime = null, scanEndTime = nu
  */
 function updateSummaryBar(totalIssues, timeTaken, target) {
   // Update Total Issues count
-  const totalIssuesElement = document.getElementById('total-issues-count');
+  const totalIssuesElement = document.getElementById("total-issues-count");
   if (totalIssuesElement) {
     totalIssuesElement.textContent = totalIssues;
   }
-  
+
   // Update Time Taken display with formatted time
-  const scanTimeElement = document.getElementById('scan-time-display');
+  const scanTimeElement = document.getElementById("scan-time-display");
   if (scanTimeElement) {
     scanTimeElement.textContent = timeTaken;
   }
-  
+
   // Update Scanned Target display with monospace styling
-  const scannedTargetElement = document.getElementById('scanned-target-display');
+  const scannedTargetElement = document.getElementById(
+    "scanned-target-display",
+  );
   if (scannedTargetElement) {
-    scannedTargetElement.textContent = target || '--';
+    scannedTargetElement.textContent = target || "--";
   }
 }
 
@@ -187,7 +197,7 @@ const CyberGuardHashTools = {
   // Track initialization state
   _initialized: false,
   _eventListenersAttached: false,
-  
+
   /**
    * Initialize the Hash Tools module
    * Sets up event listeners and prepares all four tool components
@@ -196,42 +206,43 @@ const CyberGuardHashTools = {
   init() {
     // Prevent multiple initializations
     if (this._initialized) {
-      console.log('CyberGuardHashTools: Already initialized, skipping');
+      console.log("CyberGuardHashTools: Already initialized, skipping");
       return;
     }
-    
-    console.log('CyberGuardHashTools: Initializing...');
-    
+
+    console.log("CyberGuardHashTools: Initializing...");
+
     // Check if CryptoJS is available (Requirement 14.1)
-    if (typeof CryptoJS === 'undefined') {
-      console.error('CyberGuardHashTools: CryptoJS library not loaded');
+    if (typeof CryptoJS === "undefined") {
+      console.error("CyberGuardHashTools: CryptoJS library not loaded");
       this.displayCryptoJSError();
       return;
     }
-    
+
     try {
       this.setupHashGenerator();
       this.setupPasswordAnalyzer();
       this.setupHashIdentifier();
       this.setupFileChecker();
-      
+
       this._initialized = true;
-      console.log('CyberGuardHashTools: Initialization complete');
+      console.log("CyberGuardHashTools: Initialization complete");
     } catch (error) {
-      console.error('CyberGuardHashTools: Initialization error:', error);
+      console.error("CyberGuardHashTools: Initialization error:", error);
       this.displayInitializationError(error);
     }
   },
-  
+
   /**
    * Display error when CryptoJS library is unavailable (Requirement 14.1)
    */
   displayCryptoJSError() {
-    const container = document.getElementById('hash-tools');
+    const container = document.getElementById("hash-tools");
     if (!container) return;
-    
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400';
+
+    const errorDiv = document.createElement("div");
+    errorDiv.className =
+      "bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400";
     errorDiv.innerHTML = `
       <div class="flex items-center gap-2 mb-2">
         <span class="material-symbols-outlined">error</span>
@@ -241,17 +252,18 @@ const CyberGuardHashTools = {
     `;
     container.insertBefore(errorDiv, container.firstChild);
   },
-  
+
   /**
    * Display initialization error
    */
   displayInitializationError(error) {
-    console.error('Initialization error details:', error);
-    const container = document.getElementById('hash-tools');
+    console.error("Initialization error details:", error);
+    const container = document.getElementById("hash-tools");
     if (!container) return;
-    
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400';
+
+    const errorDiv = document.createElement("div");
+    errorDiv.className =
+      "bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400";
     errorDiv.innerHTML = `
       <div class="flex items-center gap-2 mb-2">
         <span class="material-symbols-outlined">error</span>
@@ -261,206 +273,221 @@ const CyberGuardHashTools = {
     `;
     container.insertBefore(errorDiv, container.firstChild);
   },
-  
+
   /**
    * Setup Multi-Hash Generator component
    */
   setupHashGenerator() {
-    const input = document.getElementById('ht-hash-input');
+    const input = document.getElementById("ht-hash-input");
     if (!input) return;
-    
+
     // Debounced hash calculation
     const calculateHashes = this.debounce(() => {
       const text = input.value;
-      
+
       if (!text) {
         // Clear all hash fields
-        document.getElementById('ht-hash-md5').textContent = '';
-        document.getElementById('ht-hash-sha1').textContent = '';
-        document.getElementById('ht-hash-sha256').textContent = '';
-        document.getElementById('ht-hash-sha512').textContent = '';
+        document.getElementById("ht-hash-md5").textContent = "";
+        document.getElementById("ht-hash-sha1").textContent = "";
+        document.getElementById("ht-hash-sha256").textContent = "";
+        document.getElementById("ht-hash-sha512").textContent = "";
         return;
       }
-      
+
       try {
         // Calculate all hashes (Requirement 14.2)
         const md5 = CryptoJS.MD5(text).toString();
         const sha1 = CryptoJS.SHA1(text).toString();
         const sha256 = CryptoJS.SHA256(text).toString();
         const sha512 = CryptoJS.SHA512(text).toString();
-        
+
         // Display hashes
-        document.getElementById('ht-hash-md5').textContent = md5;
-        document.getElementById('ht-hash-sha1').textContent = sha1;
-        document.getElementById('ht-hash-sha256').textContent = sha256;
-        document.getElementById('ht-hash-sha512').textContent = sha512;
+        document.getElementById("ht-hash-md5").textContent = md5;
+        document.getElementById("ht-hash-sha1").textContent = sha1;
+        document.getElementById("ht-hash-sha256").textContent = sha256;
+        document.getElementById("ht-hash-sha512").textContent = sha512;
       } catch (error) {
-        console.error('Hash calculation error:', error);
+        console.error("Hash calculation error:", error);
         // Display error in hash fields (Requirement 14.2, 14.5)
-        const errorMsg = 'Error calculating hash';
-        document.getElementById('ht-hash-md5').textContent = errorMsg;
-        document.getElementById('ht-hash-sha1').textContent = errorMsg;
-        document.getElementById('ht-hash-sha256').textContent = errorMsg;
-        document.getElementById('ht-hash-sha512').textContent = errorMsg;
-        
+        const errorMsg = "Error calculating hash";
+        document.getElementById("ht-hash-md5").textContent = errorMsg;
+        document.getElementById("ht-hash-sha1").textContent = errorMsg;
+        document.getElementById("ht-hash-sha256").textContent = errorMsg;
+        document.getElementById("ht-hash-sha512").textContent = errorMsg;
+
         // Apply error styling
-        ['ht-hash-md5', 'ht-hash-sha1', 'ht-hash-sha256', 'ht-hash-sha512'].forEach(id => {
+        [
+          "ht-hash-md5",
+          "ht-hash-sha1",
+          "ht-hash-sha256",
+          "ht-hash-sha512",
+        ].forEach((id) => {
           const el = document.getElementById(id);
-          if (el) el.className = 'font-mono text-xs bg-slate-950/50 p-2.5 rounded-lg border border-red-500/30 text-red-400';
+          if (el)
+            el.className =
+              "font-mono text-xs bg-slate-950/50 p-2.5 rounded-lg border border-red-500/30 text-red-400";
         });
       }
     }, 150);
-    
-    input.addEventListener('input', calculateHashes);
-    
+
+    input.addEventListener("input", calculateHashes);
+
     // Setup copy buttons
-    this.setupCopyButton('ht-copy-md5', 'ht-hash-md5');
-    this.setupCopyButton('ht-copy-sha1', 'ht-hash-sha1');
-    this.setupCopyButton('ht-copy-sha256', 'ht-hash-sha256');
-    this.setupCopyButton('ht-copy-sha512', 'ht-hash-sha512');
+    this.setupCopyButton("ht-copy-md5", "ht-hash-md5");
+    this.setupCopyButton("ht-copy-sha1", "ht-hash-sha1");
+    this.setupCopyButton("ht-copy-sha256", "ht-hash-sha256");
+    this.setupCopyButton("ht-copy-sha512", "ht-hash-sha512");
   },
-  
+
   /**
    * Setup copy button functionality
    */
   setupCopyButton(buttonId, targetId) {
     const button = document.getElementById(buttonId);
     const target = document.getElementById(targetId);
-    
+
     if (!button || !target) return;
-    
-    button.addEventListener('click', async () => {
+
+    button.addEventListener("click", async () => {
       const text = target.textContent;
       if (!text) return;
-      
+
       try {
         await navigator.clipboard.writeText(text);
-        
+
         // Visual feedback
         const originalHTML = button.innerHTML;
-        button.innerHTML = '<span class="material-symbols-outlined text-[14px]">check</span> Copied!';
-        button.classList.add('text-green-400');
-        
+        button.innerHTML =
+          '<span class="material-symbols-outlined text-[14px]">check</span> Copied!';
+        button.classList.add("text-green-400");
+
         setTimeout(() => {
           button.innerHTML = originalHTML;
-          button.classList.remove('text-green-400');
+          button.classList.remove("text-green-400");
         }, 2000);
       } catch (error) {
-        console.error('Clipboard error:', error);
+        console.error("Clipboard error:", error);
         // Display error feedback (Requirement 14.4, 14.5, 14.6)
         const originalHTML = button.innerHTML;
-        button.innerHTML = '<span class="material-symbols-outlined text-[14px]">error</span> Failed';
-        button.classList.add('text-red-400');
-        
+        button.innerHTML =
+          '<span class="material-symbols-outlined text-[14px]">error</span> Failed';
+        button.classList.add("text-red-400");
+
         setTimeout(() => {
           button.innerHTML = originalHTML;
-          button.classList.remove('text-red-400');
+          button.classList.remove("text-red-400");
         }, 2000);
-        
+
         // Show user-friendly message
-        console.error('Clipboard copy failed:', error);
-        CyberNotify.alert('Failed to copy to clipboard. Clipboard access may be denied. Please copy manually or check browser permissions.', { type: 'error' });
+        console.error("Clipboard copy failed:", error);
+        CyberNotify.alert(
+          "Failed to copy to clipboard. Clipboard access may be denied. Please copy manually or check browser permissions.",
+          { type: "error" },
+        );
       }
     });
   },
-  
+
   /**
    * Setup Password Analyzer component
    */
   setupPasswordAnalyzer() {
-    const input = document.getElementById('ht-password-input');
-    const toggle = document.getElementById('ht-password-toggle');
-    
+    const input = document.getElementById("ht-password-input");
+    const toggle = document.getElementById("ht-password-toggle");
+
     if (!input) return;
-    
+
     // Password visibility toggle
     if (toggle) {
-      toggle.addEventListener('click', () => {
-        const isPassword = input.type === 'password';
-        input.type = isPassword ? 'text' : 'password';
-        toggle.querySelector('.material-symbols-outlined').textContent = isPassword ? 'visibility_off' : 'visibility';
+      toggle.addEventListener("click", () => {
+        const isPassword = input.type === "password";
+        input.type = isPassword ? "text" : "password";
+        toggle.querySelector(".material-symbols-outlined").textContent =
+          isPassword ? "visibility_off" : "visibility";
       });
     }
-    
+
     // Debounced password analysis
     const analyzePassword = this.debounce(() => {
       const password = input.value;
-      
+
       if (!password) {
         this.resetPasswordAnalysis();
         return;
       }
-      
+
       // Calculate entropy
       const entropy = this.calculateEntropy(password);
-      
+
       // Determine strength and bar color based on entropy ranges
       // Requirements 3.8, 3.9, 3.10: red (0-35), yellow (36-59), green (60+)
-      let strength = 'WEAK';
-      let strengthColor = 'text-red-500';
-      let barColor = 'bg-red-500';
+      let strength = "WEAK";
+      let strengthColor = "text-red-500";
+      let barColor = "bg-red-500";
       let barWidth = 0;
-      
+
       if (entropy >= 80) {
-        strength = 'EXCELLENT';
-        strengthColor = 'text-green-400';
-        barColor = 'bg-green-400';
+        strength = "EXCELLENT";
+        strengthColor = "text-green-400";
+        barColor = "bg-green-400";
         barWidth = 100;
       } else if (entropy >= 60) {
-        strength = 'GOOD';
-        strengthColor = 'text-green-400';
-        barColor = 'bg-green-400';
+        strength = "GOOD";
+        strengthColor = "text-green-400";
+        barColor = "bg-green-400";
         barWidth = (entropy / 128) * 100;
       } else if (entropy >= 36) {
-        strength = 'FAIR';
-        strengthColor = 'text-yellow-500';
-        barColor = 'bg-yellow-500';
+        strength = "FAIR";
+        strengthColor = "text-yellow-500";
+        barColor = "bg-yellow-500";
         barWidth = (entropy / 128) * 100;
       } else {
-        strength = 'WEAK';
-        strengthColor = 'text-red-500';
-        barColor = 'bg-red-500';
+        strength = "WEAK";
+        strengthColor = "text-red-500";
+        barColor = "bg-red-500";
         barWidth = (entropy / 128) * 100;
       }
-      
+
       // Update UI
-      const progressBar = document.getElementById('ht-password-bar');
-      document.getElementById('ht-password-strength').textContent = strength;
-      document.getElementById('ht-password-strength').className = `text-xl font-bold ${strengthColor}`;
-      document.getElementById('ht-password-entropy').textContent = `${Math.round(entropy)} bits`;
-      
+      const progressBar = document.getElementById("ht-password-bar");
+      document.getElementById("ht-password-strength").textContent = strength;
+      document.getElementById("ht-password-strength").className =
+        `text-xl font-bold ${strengthColor}`;
+      document.getElementById("ht-password-entropy").textContent =
+        `${Math.round(entropy)} bits`;
+
       // Update progress bar width and color (Requirements 3.7, 3.8, 3.9, 3.10)
       progressBar.style.width = `${barWidth}%`;
       progressBar.className = `${barColor} h-full rounded-full transition-all duration-300`;
-      
+
       // Update composition checks
       this.updatePasswordChecks(password);
     }, 150);
-    
-    input.addEventListener('input', analyzePassword);
+
+    input.addEventListener("input", analyzePassword);
   },
-  
+
   /**
    * Calculate password entropy using Hartley formula
    */
   calculateEntropy(password) {
     if (!password) return 0;
-    
+
     const length = password.length;
     let poolSize = 0;
-    
+
     // Check character composition
     if (/[a-z]/.test(password)) poolSize += 26; // lowercase
     if (/[A-Z]/.test(password)) poolSize += 26; // uppercase
     if (/[0-9]/.test(password)) poolSize += 10; // numbers
     if (/[^a-zA-Z0-9]/.test(password)) poolSize += 32; // special symbols
-    
+
     if (poolSize === 0) return 0;
-    
+
     // E = log2(PoolSize^Length)
     return length * Math.log2(poolSize);
   },
-  
+
   /**
    * Update password composition checks
    */
@@ -469,338 +496,468 @@ const CyberGuardHashTools = {
     const hasSpecial = /[^a-zA-Z0-9]/.test(password);
     const hasMixed = /[a-z]/.test(password) && /[A-Z]/.test(password);
     const isCommon = this.isCommonPassword(password);
-    
-    this.updateCheck('ht-check-numbers', hasNumbers);
-    this.updateCheck('ht-check-special', hasSpecial);
-    this.updateCheck('ht-check-mixed', hasMixed);
-    this.updateCheck('ht-check-common', !isCommon); // Inverted: good if NOT common
+
+    this.updateCheck("ht-check-numbers", hasNumbers);
+    this.updateCheck("ht-check-special", hasSpecial);
+    this.updateCheck("ht-check-mixed", hasMixed);
+    this.updateCheck("ht-check-common", !isCommon); // Inverted: good if NOT common
   },
-  
+
   /**
    * Update individual check indicator
    */
   updateCheck(elementId, isPassing) {
     const element = document.getElementById(elementId);
     if (!element) return;
-    
-    const icon = element.querySelector('.material-symbols-outlined');
-    
+
+    const icon = element.querySelector(".material-symbols-outlined");
+
     if (isPassing) {
-      icon.textContent = 'check_circle';
-      element.className = 'flex items-center gap-1.5 text-green-400/80';
+      icon.textContent = "check_circle";
+      element.className = "flex items-center gap-1.5 text-green-400/80";
     } else {
-      icon.textContent = 'cancel';
-      element.className = 'flex items-center gap-1.5 text-red-400/60';
+      icon.textContent = "cancel";
+      element.className = "flex items-center gap-1.5 text-red-400/60";
     }
   },
-  
+
   /**
    * Check if password is in common passwords list
    */
   isCommonPassword(password) {
     const commonPasswords = [
-      'password', '123456', '12345678', 'qwerty', 'abc123', 'monkey', '1234567', 'letmein',
-      'trustno1', 'dragon', 'baseball', 'iloveyou', 'master', 'sunshine', 'ashley', 'bailey',
-      'passw0rd', 'shadow', '123123', '654321', 'superman', 'qazwsx', 'michael', 'football',
-      'welcome', 'jesus', 'ninja', 'mustang', 'password1', '123456789', 'adobe123', 'admin',
-      'azerty', 'loveme', 'whatever', 'donald', 'batman', 'zaq1zaq1', 'Password', 'princess',
-      'starwars', 'solo', 'hello', 'freedom', 'charlie', 'aa123456', 'qwertyuiop', 'access',
-      'login', 'passw0rd', 'admin123', 'root', 'toor', 'pass', 'test', 'guest', 'oracle',
-      'changeme', 'welcome1', 'password123', '1q2w3e4r', 'qwerty123', 'abc123456', 'letmein123',
-      'password!', 'P@ssw0rd', 'P@ssword', 'Password1', 'Password123', 'Welcome1', 'Welcome123',
-      '1234', '12345', '123456', '1234567', '12345678', '123456789', '1234567890', 'password1234',
-      'qwerty12345', 'abc12345', 'password12345', 'admin1234', 'root1234', 'test1234', 'user1234',
-      'demo', 'demo123', 'sample', 'sample123', 'temp', 'temp123', 'default', 'default123',
-      'secret', 'secret123', 'private', 'private123', 'public', 'public123', 'system', 'system123'
+      "password",
+      "123456",
+      "12345678",
+      "qwerty",
+      "abc123",
+      "monkey",
+      "1234567",
+      "letmein",
+      "trustno1",
+      "dragon",
+      "baseball",
+      "iloveyou",
+      "master",
+      "sunshine",
+      "ashley",
+      "bailey",
+      "passw0rd",
+      "shadow",
+      "123123",
+      "654321",
+      "superman",
+      "qazwsx",
+      "michael",
+      "football",
+      "welcome",
+      "jesus",
+      "ninja",
+      "mustang",
+      "password1",
+      "123456789",
+      "adobe123",
+      "admin",
+      "azerty",
+      "loveme",
+      "whatever",
+      "donald",
+      "batman",
+      "zaq1zaq1",
+      "Password",
+      "princess",
+      "starwars",
+      "solo",
+      "hello",
+      "freedom",
+      "charlie",
+      "aa123456",
+      "qwertyuiop",
+      "access",
+      "login",
+      "passw0rd",
+      "admin123",
+      "root",
+      "toor",
+      "pass",
+      "test",
+      "guest",
+      "oracle",
+      "changeme",
+      "welcome1",
+      "password123",
+      "1q2w3e4r",
+      "qwerty123",
+      "abc123456",
+      "letmein123",
+      "password!",
+      "P@ssw0rd",
+      "P@ssword",
+      "Password1",
+      "Password123",
+      "Welcome1",
+      "Welcome123",
+      "1234",
+      "12345",
+      "123456",
+      "1234567",
+      "12345678",
+      "123456789",
+      "1234567890",
+      "password1234",
+      "qwerty12345",
+      "abc12345",
+      "password12345",
+      "admin1234",
+      "root1234",
+      "test1234",
+      "user1234",
+      "demo",
+      "demo123",
+      "sample",
+      "sample123",
+      "temp",
+      "temp123",
+      "default",
+      "default123",
+      "secret",
+      "secret123",
+      "private",
+      "private123",
+      "public",
+      "public123",
+      "system",
+      "system123",
     ];
-    
+
     return commonPasswords.includes(password.toLowerCase());
   },
-  
+
   /**
    * Reset password analysis UI
    */
   resetPasswordAnalysis() {
-    const progressBar = document.getElementById('ht-password-bar');
-    document.getElementById('ht-password-strength').textContent = '--';
-    document.getElementById('ht-password-strength').className = 'text-xl font-bold text-slate-500';
-    document.getElementById('ht-password-entropy').textContent = '-- bits';
-    progressBar.style.width = '0%';
-    progressBar.className = 'bg-red-500 h-full rounded-full transition-all duration-300';
-    
+    const progressBar = document.getElementById("ht-password-bar");
+    document.getElementById("ht-password-strength").textContent = "--";
+    document.getElementById("ht-password-strength").className =
+      "text-xl font-bold text-slate-500";
+    document.getElementById("ht-password-entropy").textContent = "-- bits";
+    progressBar.style.width = "0%";
+    progressBar.className =
+      "bg-red-500 h-full rounded-full transition-all duration-300";
+
     // Reset all checks
-    ['ht-check-numbers', 'ht-check-special', 'ht-check-mixed', 'ht-check-common'].forEach(id => {
+    [
+      "ht-check-numbers",
+      "ht-check-special",
+      "ht-check-mixed",
+      "ht-check-common",
+    ].forEach((id) => {
       const element = document.getElementById(id);
       if (element) {
-        element.querySelector('.material-symbols-outlined').textContent = 'cancel';
-        element.className = 'flex items-center gap-1.5 text-slate-500';
+        element.querySelector(".material-symbols-outlined").textContent =
+          "cancel";
+        element.className = "flex items-center gap-1.5 text-slate-500";
       }
     });
   },
-  
+
   /**
    * Setup Smart Hash Identifier component
    */
   setupHashIdentifier() {
-    const input = document.getElementById('ht-identifier-input');
+    const input = document.getElementById("ht-identifier-input");
     if (!input) return;
-    
+
     // Use 50ms debounce for hash identifier (Requirement 13.3)
     const identifyHash = this.debounce(() => {
       const hash = input.value.trim();
-      
+
       if (!hash) {
         this.resetHashIdentifier();
         return;
       }
-      
+
       // Validate hexadecimal
       if (!/^[0-9a-fA-F]+$/.test(hash)) {
-        this.displayHashIdentification('Invalid Format', 'Hash must contain only hexadecimal characters (0-9, a-f, A-F).', 0);
+        this.displayHashIdentification(
+          "Invalid Format",
+          "Hash must contain only hexadecimal characters (0-9, a-f, A-F).",
+          0,
+        );
         return;
       }
-      
+
       // Identify based on length
       const length = hash.length;
-      let algorithm = 'Unknown Algorithm';
+      let algorithm = "Unknown Algorithm";
       let confidence = 0;
-      let reasoning = 'Hash length does not match known algorithms.';
-      
+      let reasoning = "Hash length does not match known algorithms.";
+
       if (length === 32) {
-        algorithm = 'MD5';
+        algorithm = "MD5";
         confidence = 98;
-        reasoning = 'Confidence: 98% based on 32-character hexadecimal format.';
+        reasoning = "Confidence: 98% based on 32-character hexadecimal format.";
       } else if (length === 40) {
-        algorithm = 'SHA-1';
+        algorithm = "SHA-1";
         confidence = 98;
-        reasoning = 'Confidence: 98% based on 40-character hexadecimal format.';
+        reasoning = "Confidence: 98% based on 40-character hexadecimal format.";
       } else if (length === 64) {
-        algorithm = 'SHA-256';
+        algorithm = "SHA-256";
         confidence = 98;
-        reasoning = 'Confidence: 98% based on 64-character hexadecimal format.';
+        reasoning = "Confidence: 98% based on 64-character hexadecimal format.";
       } else if (length === 128) {
-        algorithm = 'SHA-512';
+        algorithm = "SHA-512";
         confidence = 98;
-        reasoning = 'Confidence: 98% based on 128-character hexadecimal format.';
+        reasoning =
+          "Confidence: 98% based on 128-character hexadecimal format.";
       } else {
         confidence = 10;
       }
-      
+
       this.displayHashIdentification(algorithm, reasoning, confidence);
     }, 50); // 50ms for hash identifier (Requirement 13.3)
-    
-    input.addEventListener('input', identifyHash);
+
+    input.addEventListener("input", identifyHash);
   },
-  
+
   /**
    * Display hash identification result
    */
   displayHashIdentification(algorithm, reasoning, confidence) {
-    const resultEl = document.getElementById('ht-identifier-result');
-    const reasoningEl = document.getElementById('ht-identifier-reasoning');
-    
+    const resultEl = document.getElementById("ht-identifier-result");
+    const reasoningEl = document.getElementById("ht-identifier-reasoning");
+
     if (!resultEl || !reasoningEl) return;
-    
+
     resultEl.textContent = algorithm;
     reasoningEl.textContent = reasoning;
-    
+
     // Update styling based on confidence
     if (confidence >= 90) {
-      resultEl.className = 'px-6 py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-white font-bold text-sm shadow-[0_0_15px_rgba(124,58,237,0.4)]';
+      resultEl.className =
+        "px-6 py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-white font-bold text-sm shadow-[0_0_15px_rgba(124,58,237,0.4)]";
     } else if (confidence >= 50) {
-      resultEl.className = 'px-6 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 font-bold text-sm';
+      resultEl.className =
+        "px-6 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 font-bold text-sm";
     } else {
-      resultEl.className = 'px-6 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-400 font-bold text-sm';
+      resultEl.className =
+        "px-6 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-400 font-bold text-sm";
     }
   },
-  
+
   /**
    * Reset hash identifier UI
    */
   resetHashIdentifier() {
-    const resultEl = document.getElementById('ht-identifier-result');
-    const reasoningEl = document.getElementById('ht-identifier-reasoning');
-    
+    const resultEl = document.getElementById("ht-identifier-result");
+    const reasoningEl = document.getElementById("ht-identifier-reasoning");
+
     if (resultEl) {
-      resultEl.textContent = 'Awaiting Input';
-      resultEl.className = 'px-6 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-500 font-bold text-sm';
+      resultEl.textContent = "Awaiting Input";
+      resultEl.className =
+        "px-6 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-500 font-bold text-sm";
     }
-    
+
     if (reasoningEl) {
-      reasoningEl.textContent = 'Enter a hash to identify its algorithm type.';
+      reasoningEl.textContent = "Enter a hash to identify its algorithm type.";
     }
   },
-  
+
   /**
    * Setup File Integrity Checker component
    */
   setupFileChecker() {
-    const dropzone = document.getElementById('ht-file-dropzone');
-    const fileInput = document.getElementById('ht-file-input');
-    const expectedInput = document.getElementById('ht-file-expected');
-    
+    const dropzone = document.getElementById("ht-file-dropzone");
+    const fileInput = document.getElementById("ht-file-input");
+    const expectedInput = document.getElementById("ht-file-expected");
+
     if (!dropzone || !fileInput) return;
-    
+
     // Click to browse
-    dropzone.addEventListener('click', () => fileInput.click());
-    
+    dropzone.addEventListener("click", () => fileInput.click());
+
     // Keyboard navigation support (Requirement 15.1)
-    dropzone.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
+    dropzone.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         fileInput.click();
       }
     });
-    
+
     // Drag and drop
-    dropzone.addEventListener('dragover', (e) => {
+    dropzone.addEventListener("dragover", (e) => {
       e.preventDefault();
-      dropzone.classList.add('border-cyan-500/60', 'bg-slate-950');
+      dropzone.classList.add("border-cyan-500/60", "bg-slate-950");
     });
-    
-    dropzone.addEventListener('dragleave', () => {
-      dropzone.classList.remove('border-cyan-500/60', 'bg-slate-950');
+
+    dropzone.addEventListener("dragleave", () => {
+      dropzone.classList.remove("border-cyan-500/60", "bg-slate-950");
     });
-    
-    dropzone.addEventListener('drop', (e) => {
+
+    dropzone.addEventListener("drop", (e) => {
       e.preventDefault();
-      dropzone.classList.remove('border-cyan-500/60', 'bg-slate-950');
-      
+      dropzone.classList.remove("border-cyan-500/60", "bg-slate-950");
+
       const files = e.dataTransfer.files;
       if (files.length > 0) {
         this.processFile(files[0]);
       }
     });
-    
+
     // File input change
-    fileInput.addEventListener('change', (e) => {
+    fileInput.addEventListener("change", (e) => {
       if (e.target.files.length > 0) {
         this.processFile(e.target.files[0]);
       }
     });
-    
+
     // Expected hash comparison
     if (expectedInput) {
-      expectedInput.addEventListener('input', () => {
+      expectedInput.addEventListener("input", () => {
         this.compareHashes();
       });
     }
   },
-  
+
   /**
    * Process uploaded file
    */
   processFile(file) {
     const maxSize = 100 * 1024 * 1024; // 100MB
     const largeFileThreshold = 10 * 1024 * 1024; // 10MB (Requirement 13.4)
-    
+
     if (file.size > maxSize) {
-      this.displayFileStatus('error', 'File too large. Maximum size is 100MB.');
+      this.displayFileStatus("error", "File too large. Maximum size is 100MB.");
       return;
     }
-    
+
     // Show progress feedback for large files (Requirement 13.4)
     if (file.size > largeFileThreshold) {
-      this.displayFileStatus('loading', `Processing large file (${(file.size / 1024 / 1024).toFixed(1)}MB)...`);
+      this.displayFileStatus(
+        "loading",
+        `Processing large file (${(file.size / 1024 / 1024).toFixed(1)}MB)...`,
+      );
     } else {
-      this.displayFileStatus('loading', 'Processing file...');
+      this.displayFileStatus("loading", "Processing file...");
     }
-    
+
     const reader = new FileReader();
-    
+
     reader.onload = (e) => {
       try {
         const wordArray = CryptoJS.lib.WordArray.create(e.target.result);
         const hash = CryptoJS.SHA256(wordArray).toString();
-        
-        document.getElementById('ht-file-hash').textContent = hash;
-        document.getElementById('ht-file-hash').className = 'font-mono text-[10px] bg-slate-950/50 p-2.5 rounded-lg border border-white/5 text-cyan-400';
-        
+
+        document.getElementById("ht-file-hash").textContent = hash;
+        document.getElementById("ht-file-hash").className =
+          "font-mono text-[10px] bg-slate-950/50 p-2.5 rounded-lg border border-white/5 text-cyan-400";
+
         this.compareHashes();
       } catch (error) {
-        console.error('File hashing error:', error);
+        console.error("File hashing error:", error);
         // Display specific error message (Requirement 14.3, 14.5, 14.6)
-        this.displayFileStatus('error', `Failed to calculate hash: ${error.message || 'Unknown error'}`);
-        document.getElementById('ht-file-hash').textContent = 'Error processing file';
-        document.getElementById('ht-file-hash').className = 'font-mono text-[10px] bg-slate-950/50 p-2.5 rounded-lg border border-red-500/30 text-red-400';
+        this.displayFileStatus(
+          "error",
+          `Failed to calculate hash: ${error.message || "Unknown error"}`,
+        );
+        document.getElementById("ht-file-hash").textContent =
+          "Error processing file";
+        document.getElementById("ht-file-hash").className =
+          "font-mono text-[10px] bg-slate-950/50 p-2.5 rounded-lg border border-red-500/30 text-red-400";
       }
     };
-    
+
     // Progress monitoring for large files (Requirement 13.4)
     if (file.size > largeFileThreshold) {
       reader.onprogress = (e) => {
         if (e.lengthComputable) {
           const percentComplete = Math.round((e.loaded / e.total) * 100);
-          this.displayFileStatus('loading', `Processing: ${percentComplete}%`);
+          this.displayFileStatus("loading", `Processing: ${percentComplete}%`);
         }
       };
     }
-    
+
     reader.onerror = () => {
       // Display specific error message (Requirement 14.3, 14.5, 14.6)
-      console.error('File reading error:', reader.error);
-      this.displayFileStatus('error', `Failed to read file: ${reader.error?.message || 'Unknown error'}`);
+      console.error("File reading error:", reader.error);
+      this.displayFileStatus(
+        "error",
+        `Failed to read file: ${reader.error?.message || "Unknown error"}`,
+      );
     };
-    
+
     reader.readAsArrayBuffer(file);
   },
-  
+
   /**
    * Compare calculated and expected hashes
    */
   compareHashes() {
-    const calculated = document.getElementById('ht-file-hash').textContent.trim();
-    const expected = document.getElementById('ht-file-expected').value.trim();
-    
-    if (!calculated || calculated === 'Select a file to compute hash...') {
-      this.displayFileStatus('info', 'Awaiting Input');
+    const calculated = document
+      .getElementById("ht-file-hash")
+      .textContent.trim();
+    const expected = document.getElementById("ht-file-expected").value.trim();
+
+    if (!calculated || calculated === "Select a file to compute hash...") {
+      this.displayFileStatus("info", "Awaiting Input");
       return;
     }
-    
+
     if (!expected) {
-      this.displayFileStatus('info', 'Enter expected hash to compare');
+      this.displayFileStatus("info", "Enter expected hash to compare");
       return;
     }
-    
+
     // Case-insensitive comparison
     if (calculated.toLowerCase() === expected.toLowerCase()) {
-      this.displayFileStatus('success', 'Hashes Match - File Integrity Verified');
+      this.displayFileStatus(
+        "success",
+        "Hashes Match - File Integrity Verified",
+      );
     } else {
-      this.displayFileStatus('error', 'Hashes Do Not Match - File May Be Corrupted');
+      this.displayFileStatus(
+        "error",
+        "Hashes Do Not Match - File May Be Corrupted",
+      );
     }
   },
-  
+
   /**
    * Display file status message
    */
   displayFileStatus(type, message) {
-    const statusEl = document.getElementById('ht-file-status');
+    const statusEl = document.getElementById("ht-file-status");
     if (!statusEl) return;
-    
-    let icon = 'info';
-    let className = 'flex items-center gap-1.5 mt-1 text-[10px] font-bold text-slate-500 uppercase tracking-wide';
-    
+
+    let icon = "info";
+    let className =
+      "flex items-center gap-1.5 mt-1 text-[10px] font-bold text-slate-500 uppercase tracking-wide";
+
     switch (type) {
-      case 'success':
-        icon = 'check_circle';
-        className = 'flex items-center gap-1.5 mt-1 text-[10px] font-bold text-green-400 uppercase tracking-wide';
+      case "success":
+        icon = "check_circle";
+        className =
+          "flex items-center gap-1.5 mt-1 text-[10px] font-bold text-green-400 uppercase tracking-wide";
         break;
-      case 'error':
-        icon = 'cancel';
-        className = 'flex items-center gap-1.5 mt-1 text-[10px] font-bold text-red-400 uppercase tracking-wide';
+      case "error":
+        icon = "cancel";
+        className =
+          "flex items-center gap-1.5 mt-1 text-[10px] font-bold text-red-400 uppercase tracking-wide";
         break;
-      case 'loading':
-        icon = 'progress_activity';
-        className = 'flex items-center gap-1.5 mt-1 text-[10px] font-bold text-cyan-400 uppercase tracking-wide';
+      case "loading":
+        icon = "progress_activity";
+        className =
+          "flex items-center gap-1.5 mt-1 text-[10px] font-bold text-cyan-400 uppercase tracking-wide";
         break;
       default:
-        icon = 'info';
+        icon = "info";
     }
-    
+
     statusEl.innerHTML = `<span class="material-symbols-outlined text-[14px]">${icon}</span> ${message}`;
     statusEl.className = className;
   },
-  
+
   /**
    * Debounce utility function
    */
@@ -814,7 +971,7 @@ const CyberGuardHashTools = {
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
     };
-  }
+  },
 };
 
 // ===== CYBERNOTIFY MODAL CONTROLLER =====
@@ -824,34 +981,44 @@ const CyberNotify = {
   _currentCallback: null,
 
   _resolveIcon(type) {
-    const _v = (n, fb) => { try { return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || fb; } catch(_) { return fb; } };
-    const ICON_MAP = {
-      warning: { icon: 'warning', color: _v('--cg-warning', '#FBBF24') },
-      error:   { icon: 'error',   color: _v('--cg-danger',  '#F87171') },
-      info:    { icon: 'info',    color: _v('--cg-info',    '#38BDF8') },
+    const _v = (n, fb) => {
+      try {
+        return (
+          getComputedStyle(document.documentElement)
+            .getPropertyValue(n)
+            .trim() || fb
+        );
+      } catch (_) {
+        return fb;
+      }
     };
-    return ICON_MAP[type] || ICON_MAP['info'];
+    const ICON_MAP = {
+      warning: { icon: "warning", color: _v("--cg-warning", "#FBBF24") },
+      error: { icon: "error", color: _v("--cg-danger", "#F87171") },
+      info: { icon: "info", color: _v("--cg-info", "#38BDF8") },
+    };
+    return ICON_MAP[type] || ICON_MAP["info"];
   },
 
   _hide() {
-    const modal = document.getElementById('cyber-notify-modal');
+    const modal = document.getElementById("cyber-notify-modal");
     if (!modal) return;
-    modal.classList.remove('cyber-notify-open');
+    modal.classList.remove("cyber-notify-open");
     setTimeout(() => {
-      modal.classList.add('hidden');
+      modal.classList.add("hidden");
     }, 300);
     this._currentCallback = null;
   },
 
   _show(message, mode, callback, type) {
-    const modal    = document.getElementById('cyber-notify-modal');
-    const iconEl   = document.getElementById('cyber-notify-icon');
-    const msgEl    = document.getElementById('cyber-notify-message');
-    const confirmBtn = document.getElementById('cyber-notify-confirm-btn');
-    const cancelBtn  = document.getElementById('cyber-notify-cancel-btn');
+    const modal = document.getElementById("cyber-notify-modal");
+    const iconEl = document.getElementById("cyber-notify-icon");
+    const msgEl = document.getElementById("cyber-notify-message");
+    const confirmBtn = document.getElementById("cyber-notify-confirm-btn");
+    const cancelBtn = document.getElementById("cyber-notify-cancel-btn");
 
     if (!modal || !iconEl || !msgEl || !confirmBtn || !cancelBtn) {
-      console.error('CyberNotify: Required DOM elements not found');
+      console.error("CyberNotify: Required DOM elements not found");
       return;
     }
 
@@ -859,57 +1026,57 @@ const CyberNotify = {
     iconEl.textContent = icon;
     iconEl.style.color = color;
 
-    msgEl.textContent = String(message ?? '');
+    msgEl.textContent = String(message ?? "");
 
-    if (mode === 'alert') {
-      confirmBtn.textContent = 'OK';
-      confirmBtn.style.display = '';
-      cancelBtn.style.display = 'none';
+    if (mode === "alert") {
+      confirmBtn.textContent = "OK";
+      confirmBtn.style.display = "";
+      cancelBtn.style.display = "none";
 
       const okHandler = () => {
-        confirmBtn.removeEventListener('click', okHandler);
+        confirmBtn.removeEventListener("click", okHandler);
         this._hide();
       };
-      confirmBtn.addEventListener('click', okHandler);
+      confirmBtn.addEventListener("click", okHandler);
     } else {
-      confirmBtn.textContent = 'Confirm';
-      cancelBtn.textContent  = 'Cancel';
-      confirmBtn.style.display = '';
-      cancelBtn.style.display  = '';
+      confirmBtn.textContent = "Confirm";
+      cancelBtn.textContent = "Cancel";
+      confirmBtn.style.display = "";
+      cancelBtn.style.display = "";
 
       const confirmHandler = () => {
-        confirmBtn.removeEventListener('click', confirmHandler);
-        cancelBtn.removeEventListener('click', cancelHandler);
+        confirmBtn.removeEventListener("click", confirmHandler);
+        cancelBtn.removeEventListener("click", cancelHandler);
         this._hide();
-        if (typeof callback === 'function') callback(true);
+        if (typeof callback === "function") callback(true);
       };
       const cancelHandler = () => {
-        confirmBtn.removeEventListener('click', confirmHandler);
-        cancelBtn.removeEventListener('click', cancelHandler);
+        confirmBtn.removeEventListener("click", confirmHandler);
+        cancelBtn.removeEventListener("click", cancelHandler);
         this._hide();
-        if (typeof callback === 'function') callback(false);
+        if (typeof callback === "function") callback(false);
       };
-      confirmBtn.addEventListener('click', confirmHandler);
-      cancelBtn.addEventListener('click', cancelHandler);
+      confirmBtn.addEventListener("click", confirmHandler);
+      cancelBtn.addEventListener("click", cancelHandler);
     }
 
-    modal.classList.remove('hidden');
+    modal.classList.remove("hidden");
     requestAnimationFrame(() => {
-      modal.classList.add('cyber-notify-open');
+      modal.classList.add("cyber-notify-open");
     });
   },
 
   alert(message, options = {}) {
-    this._show(message, 'alert', null, options.type);
+    this._show(message, "alert", null, options.type);
   },
 
   confirm(message, callback, options = {}) {
-    if (typeof callback !== 'function') {
-      console.warn('CyberNotify.confirm: callback is not a function');
+    if (typeof callback !== "function") {
+      console.warn("CyberNotify.confirm: callback is not a function");
       this._hide();
       return;
     }
-    this._show(message, 'confirm', callback, options.type);
+    this._show(message, "confirm", callback, options.type);
   },
 };
 
@@ -927,7 +1094,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== PERFORMANCE UTILITIES =====
   // Utility functions for performance optimization
-  
+
   /**
    * Debounce function to limit the rate at which a function can fire
    * @param {Function} func - The function to debounce
@@ -985,39 +1152,41 @@ document.addEventListener("DOMContentLoaded", () => {
   function clearResults() {
     // Show themed confirmation modal
     CyberNotify.confirm(
-      'Are you sure you want to clear all results? This will remove all scan data and activity logs.',
+      "Are you sure you want to clear all results? This will remove all scan data and activity logs.",
       (confirmed) => {
         if (confirmed) {
           // Clear the results data array
           resultsData = [];
-          
+
           // Clear the activity log container
-          const activityLogContainer = document.getElementById('activity-log-container');
+          const activityLogContainer = document.getElementById(
+            "activity-log-container",
+          );
           if (activityLogContainer) {
-            activityLogContainer.innerHTML = '';
+            activityLogContainer.innerHTML = "";
           }
-          
+
           // Reset active filters
           activeFilters.clear();
           updateFilterUI();
-          
+
           // Reset scan timing variables
           scanStartTime = null;
           scanEndTime = null;
           currentScanTarget = null;
-          
+
           // Update the Summary Bar with default values
-          updateSummaryBar(0, '--', '--');
-          
+          updateSummaryBar(0, "--", "--");
+
           // Re-render results (will show empty state)
           renderResults();
-          
+
           // Log the clear action
-          addActivityLog('All results cleared by user', 'System');
+          addActivityLog("All results cleared by user", "System");
         }
         // If !confirmed, do nothing — state is unchanged
       },
-      { type: 'warning' }
+      { type: "warning" },
     );
   }
 
@@ -1027,14 +1196,18 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   function updateFilterUI() {
     // Get all filter pill buttons
-    const filterButtons = document.querySelectorAll('.filter-pill');
-    
-    filterButtons.forEach(button => {
+    const filterButtons = document.querySelectorAll(".filter-pill");
+
+    filterButtons.forEach((button) => {
       const severity = button.dataset.severity;
-      
+
       // Remove all active classes first
-      button.classList.remove('active-critical', 'active-warning', 'active-info');
-      
+      button.classList.remove(
+        "active-critical",
+        "active-warning",
+        "active-info",
+      );
+
       // Add appropriate active class if filter is active
       if (activeFilters.has(severity)) {
         button.classList.add(`active-${severity}`);
@@ -1051,9 +1224,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (activeFilters.size === 0) {
       return resultsData;
     }
-    
+
     // Filter results by active severity levels
-    return resultsData.filter(result => {
+    return resultsData.filter((result) => {
       const severity = mapStatusToSeverity(result.status);
       return activeFilters.has(severity);
     });
@@ -1066,34 +1239,35 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   function createAccordionItem(result) {
     const severity = mapStatusToSeverity(result.status);
-    const item = document.createElement('div');
-    item.className = 'result-accordion-item border-b border-white/5 transition-all';
+    const item = document.createElement("div");
+    item.className =
+      "result-accordion-item border-b border-white/5 transition-all";
     item.dataset.severity = severity;
     item.dataset.resultId = result.id;
-    
+
     // Severity badge text
     const severityText = severity.toUpperCase();
-    
+
     // Extract short summary from message (first line or first 100 chars)
-    const shortSummary = result.message.split('\n')[0].substring(0, 100);
-    
+    const shortSummary = result.message.split("\n")[0].substring(0, 100);
+
     // Extract description, evidence, and remediation from message or details
     let description = result.description || result.message;
-    let evidence = result.evidence || '';
+    let evidence = result.evidence || "";
     let remediation = result.remediation || [];
-    
+
     // If remediation is a string, convert to array
-    if (typeof remediation === 'string') {
-      remediation = remediation.split('\n').filter(line => line.trim());
+    if (typeof remediation === "string") {
+      remediation = remediation.split("\n").filter((line) => line.trim());
     }
-    
+
     // Build the HTML structure
     item.innerHTML = `
       <div class="accordion-header flex items-center justify-between p-4 cursor-pointer hover:bg-white/5">
         <div class="flex items-center gap-4 flex-1">
           <span class="severity-badge severity-${severity}">${severityText}</span>
           <div class="flex-1">
-            <div class="text-sm font-semibold text-white">${result.feature || result.tool || 'Scanner'}</div>
+            <div class="text-sm font-semibold text-white">${result.feature || result.tool || "Scanner"}</div>
             <div class="text-xs text-slate-400 mt-1">${shortSummary}</div>
           </div>
         </div>
@@ -1101,23 +1275,29 @@ document.addEventListener("DOMContentLoaded", () => {
           <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
         </svg>
       </div>
-      
+
       <div class="accordion-content hidden p-4 pt-0 space-y-4">
         <div class="description-section">
           <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Description</h4>
           <p class="text-sm text-slate-400 leading-relaxed whitespace-pre-wrap">${description}</p>
         </div>
-        
-        ${evidence ? `
+
+        ${
+          evidence
+            ? `
         <div class="evidence-section">
           <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Evidence</h4>
           <div class="evidence-box bg-black/40 border border-white/10 rounded-lg p-4 font-mono text-xs text-green-300 overflow-x-auto">
             <pre>${evidence}</pre>
           </div>
         </div>
-        ` : ''}
-        
-        ${remediation.length > 0 ? `
+        `
+            : ""
+        }
+
+        ${
+          remediation.length > 0
+            ? `
         <div class="remediation-section">
           <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-2">
             <svg class="w-4 h-4 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -1126,17 +1306,19 @@ document.addEventListener("DOMContentLoaded", () => {
             How to Fix
           </h4>
           <ul class="text-sm text-slate-400 space-y-2 list-disc list-inside">
-            ${remediation.map(step => `<li>${step}</li>`).join('')}
+            ${remediation.map((step) => `<li>${step}</li>`).join("")}
           </ul>
         </div>
-        ` : ''}
+        `
+            : ""
+        }
       </div>
     `;
-    
+
     // Add click handler for expand/collapse
-    const header = item.querySelector('.accordion-header');
-    header.addEventListener('click', () => toggleAccordion(item));
-    
+    const header = item.querySelector(".accordion-header");
+    header.addEventListener("click", () => toggleAccordion(item));
+
     return item;
   }
 
@@ -1145,17 +1327,17 @@ document.addEventListener("DOMContentLoaded", () => {
    * @param {HTMLElement} item - The accordion item element to toggle
    */
   function toggleAccordion(item) {
-    const content = item.querySelector('.accordion-content');
-    const icon = item.querySelector('.accordion-icon');
-    
-    if (item.classList.contains('expanded')) {
-      item.classList.remove('expanded');
-      content.classList.add('hidden');
-      icon.style.transform = 'rotate(0deg)';
+    const content = item.querySelector(".accordion-content");
+    const icon = item.querySelector(".accordion-icon");
+
+    if (item.classList.contains("expanded")) {
+      item.classList.remove("expanded");
+      content.classList.add("hidden");
+      icon.style.transform = "rotate(0deg)";
     } else {
-      item.classList.add('expanded');
-      content.classList.remove('hidden');
-      icon.style.transform = 'rotate(180deg)';
+      item.classList.add("expanded");
+      content.classList.remove("hidden");
+      icon.style.transform = "rotate(180deg)";
     }
   }
 
@@ -1168,27 +1350,30 @@ document.addEventListener("DOMContentLoaded", () => {
    * @param {boolean} hasActiveFilters - Whether any filters are currently active
    */
   function updateEmptyState(resultCount, hasActiveFilters) {
-    const emptyState = document.getElementById('empty-results-state');
+    const emptyState = document.getElementById("empty-results-state");
     if (!emptyState) return;
-    
+
     if (resultCount === 0) {
       // Show empty state
-      emptyState.style.display = 'flex';
-      
+      emptyState.style.display = "flex";
+
       // Update message based on whether filters are active
-      const emptyTitle = emptyState.querySelector('h3');
-      const emptyText = emptyState.querySelector('p');
-      
+      const emptyTitle = emptyState.querySelector("h3");
+      const emptyText = emptyState.querySelector("p");
+
       if (hasActiveFilters) {
-        if (emptyTitle) emptyTitle.textContent = 'No Results Match Filters';
-        if (emptyText) emptyText.textContent = 'Try adjusting your filter selection';
+        if (emptyTitle) emptyTitle.textContent = "No Results Match Filters";
+        if (emptyText)
+          emptyText.textContent = "Try adjusting your filter selection";
       } else {
-        if (emptyTitle) emptyTitle.textContent = 'No Scans Performed';
-        if (emptyText) emptyText.textContent = 'Run a security scan to see detailed results here';
+        if (emptyTitle) emptyTitle.textContent = "No Scans Performed";
+        if (emptyText)
+          emptyText.textContent =
+            "Run a security scan to see detailed results here";
       }
     } else {
       // Hide empty state when results are displayed
-      emptyState.style.display = 'none';
+      emptyState.style.display = "none";
     }
   }
 
@@ -1198,29 +1383,29 @@ document.addEventListener("DOMContentLoaded", () => {
    * Optimized with document fragments for better performance with large result sets
    */
   function renderResults() {
-    const container = document.getElementById('accordion-items-container');
-    
+    const container = document.getElementById("accordion-items-container");
+
     if (!container) return;
-    
+
     // Get filtered results
     const filteredResults = getFilteredResults();
-    
+
     // Clear container (but keep empty state element)
-    const accordionItems = container.querySelectorAll('.result-accordion-item');
-    accordionItems.forEach(item => item.remove());
-    
+    const accordionItems = container.querySelectorAll(".result-accordion-item");
+    accordionItems.forEach((item) => item.remove());
+
     // Update empty state display
     updateEmptyState(filteredResults.length, activeFilters.size > 0);
-    
+
     // Render accordion items for filtered results using document fragment for performance
     if (filteredResults.length > 0) {
       const fragment = document.createDocumentFragment();
-      
-      filteredResults.forEach(result => {
+
+      filteredResults.forEach((result) => {
         const accordionItem = createAccordionItem(result);
         fragment.appendChild(accordionItem);
       });
-      
+
       // Append all items at once for better performance
       container.appendChild(fragment);
     }
@@ -1243,36 +1428,36 @@ document.addEventListener("DOMContentLoaded", () => {
    * @param {string} message - The log message to display
    * @param {string} scanner - The scanner name (default: 'System')
    */
-  function addActivityLog(message, scanner = 'System') {
+  function addActivityLog(message, scanner = "System") {
     // Format timestamp as HH:MM (24-hour format)
-    const timestamp = new Date().toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: false 
+    const timestamp = new Date().toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
     });
-    
+
     // Create log entry element
-    const logEntry = document.createElement('div');
-    logEntry.className = 'log-entry text-slate-400';
+    const logEntry = document.createElement("div");
+    logEntry.className = "log-entry text-slate-400";
     logEntry.innerHTML = `
       <span class="text-cyan-400">[${timestamp}]</span>
       <span class="text-purple-300">${scanner}:</span>
       <span>${message}</span>
     `;
-    
+
     // Get the activity log container
-    const container = document.getElementById('activity-log-container');
+    const container = document.getElementById("activity-log-container");
     if (!container) return;
-    
+
     // Append the log entry
     container.appendChild(logEntry);
-    
+
     // Auto-scroll to bottom
     const feedContainer = container.parentElement;
     if (feedContainer) {
       feedContainer.scrollTop = feedContainer.scrollHeight;
     }
-    
+
     // Limit to last 100 entries
     if (container.children.length > 100) {
       container.removeChild(container.firstChild);
@@ -1291,7 +1476,7 @@ document.addEventListener("DOMContentLoaded", () => {
       for (let i = 0; i < key.length; i++) {
         encrypted += String.fromCharCode(
           key.charCodeAt(i) ^
-            ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length)
+            ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length),
         );
       }
       return btoa(encrypted); // Base64 encode
@@ -1309,7 +1494,7 @@ document.addEventListener("DOMContentLoaded", () => {
       for (let i = 0; i < decoded.length; i++) {
         decrypted += String.fromCharCode(
           decoded.charCodeAt(i) ^
-            ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length)
+            ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length),
         );
       }
       return decrypted;
@@ -1362,22 +1547,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== SIMPLIFIED ANIMATION SYSTEM =====
   // Removed complex Framer Motion system for better performance
   let currentTheme = "light";
-  
+
   // Threat feed feature removed - moved inside DOMContentLoaded
   // (Button event listeners are now attached after DOM is ready)
 
   async function whoisLookup(target) {
-    addActivityLog(`Starting WHOIS lookup for ${target}`, 'WHOIS Lookup');
+    addActivityLog(`Starting WHOIS lookup for ${target}`, "WHOIS Lookup");
     logResult(new Date(), "WHOIS Lookup", `📜 Fetching WHOIS for ${target}...`);
     try {
       // Check if API key is available
       if (!whoisApiKey) {
-        addActivityLog('API key not configured', 'WHOIS Lookup');
+        addActivityLog("API key not configured", "WHOIS Lookup");
         logResult(
           new Date(),
           "WHOIS Lookup",
           `❌ [ERROR] WhoisXML API key not set. Please configure it in the sidebar.`,
-          "danger"
+          "danger",
         );
         return;
       }
@@ -1387,12 +1572,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const isDomain = isValidDomain(target);
 
       if (!isIP && !isDomain) {
-        addActivityLog('Invalid target format', 'WHOIS Lookup');
+        addActivityLog("Invalid target format", "WHOIS Lookup");
         logResult(
           new Date(),
           "WHOIS Lookup",
           `❌ [ERROR] Invalid input format. Please enter a valid IP address (e.g., 8.8.8.8) or domain name (e.g., google.com).`,
-          "danger"
+          "danger",
         );
         return;
       }
@@ -1403,9 +1588,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (isIP) {
         // For IP addresses, use IP geolocation API
         queryType = "IP Geolocation";
-        addActivityLog('Querying IP geolocation data...', 'WHOIS Lookup');
+        addActivityLog("Querying IP geolocation data...", "WHOIS Lookup");
         apiUrl = `https://ip-geolocation.whoisxmlapi.com/api/v1?apiKey=${whoisApiKey}&ipAddress=${encodeURIComponent(
-          target
+          target,
         )}`;
       } else {
         // For domains, normalize domain name
@@ -1424,9 +1609,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         queryType = "Domain WHOIS";
-        addActivityLog('Querying domain WHOIS data...', 'WHOIS Lookup');
+        addActivityLog("Querying domain WHOIS data...", "WHOIS Lookup");
         apiUrl = `https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey=${whoisApiKey}&domainName=${encodeURIComponent(
-          normalizedDomain
+          normalizedDomain,
         )}&outputFormat=JSON`;
       }
 
@@ -1436,22 +1621,22 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) {
         if (res.status === 401) {
           throw new Error(
-            "Invalid API key. Please check your WHOISXML API key."
+            "Invalid API key. Please check your WHOISXML API key.",
           );
         } else if (res.status === 403) {
           throw new Error(
-            "API quota exceeded or access denied. Please check your WHOISXML subscription."
+            "API quota exceeded or access denied. Please check your WHOISXML subscription.",
           );
         } else if (res.status === 404) {
           throw new Error("Domain not found in WHOIS database.");
         } else {
           throw new Error(
-            `WHOISXML API error: ${res.status} ${res.statusText}`
+            `WHOISXML API error: ${res.status} ${res.statusText}`,
           );
         }
       }
 
-      addActivityLog('Processing WHOIS data...', 'WHOIS Lookup');
+      addActivityLog("Processing WHOIS data...", "WHOIS Lookup");
       const data = await res.json();
 
       if (isIP) {
@@ -1462,7 +1647,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const asn = data.asn || {};
           const security = data.security || {};
 
-          addActivityLog(`WHOIS lookup complete for ${ip}`, 'WHOIS Lookup');
+          addActivityLog(`WHOIS lookup complete for ${ip}`, "WHOIS Lookup");
           const lines = [
             `✅ [IP WHOIS DATA] IP: ${ip}`,
             `🌍 Country: ${location.country || "N/A"}`,
@@ -1533,7 +1718,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           };
 
-          addActivityLog(`WHOIS lookup complete for ${domainName}`, 'WHOIS Lookup');
+          addActivityLog(
+            `WHOIS lookup complete for ${domainName}`,
+            "WHOIS Lookup",
+          );
           const lines = [
             `✅ [DOMAIN WHOIS DATA] Domain: ${domainName}`,
             `📅 Created: ${formatDate(createdDate)}`,
@@ -1571,13 +1759,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     } catch (e) {
-      addActivityLog(`Lookup failed: ${e.message}`, 'WHOIS Lookup');
+      addActivityLog(`Lookup failed: ${e.message}`, "WHOIS Lookup");
       updateStatus("WHOIS lookup failed");
       logResult(
         new Date(),
         "WHOIS Lookup",
         `❌ [ERROR] WHOIS lookup failed: ${e.message}`,
-        "danger"
+        "danger",
       );
     }
   }
@@ -1606,9 +1794,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const apiKeysToggle = document.getElementById("api-keys-toggle");
   const apiKeysModal = document.getElementById("api-keys-modal");
   const apiKeysClose = document.getElementById("api-keys-close");
-  const floatingSidebarToggle = document.getElementById(
-    "sidebar-toggle-btn"
-  );
+  const floatingSidebarToggle = document.getElementById("sidebar-toggle-btn");
 
   const VT_BASE_URL = "https://www.virustotal.com/api/v3";
   const ABUSE_BASE_URL = "https://api.abuseipdb.com/api/v2";
@@ -1675,10 +1861,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // - Mobile responsive behavior
   // - Full accessibility support
   // See dashboard.html (lines ~1780-1980) for the new implementation
-  
+
   // Keep the floating button reference for backward compatibility
   // but don't add event listener since it's handled in dashboard.html
-  
+
   apiKeysToggle.addEventListener("click", toggleApiKeysModal);
   apiKeysClose.addEventListener("click", hideApiKeysModal);
   // floatingSidebarToggle event listener is now in dashboard.html
@@ -1698,7 +1884,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const twofaSetupClose = document.getElementById("twofa-setup-close");
   const twofaCancelBtn = document.getElementById("twofa-cancel-btn");
   const twofaEnableBtn = document.getElementById("twofa-enable-btn");
-  const twofaVerificationCode = document.getElementById("twofa-verification-code");
+  const twofaVerificationCode = document.getElementById(
+    "twofa-verification-code",
+  );
   const twofaQrCode = document.getElementById("twofa-qr-code");
   const twofaSecretKey = document.getElementById("twofa-secret-key");
   const copySecretBtn = document.getElementById("copy-secret-btn");
@@ -1712,41 +1900,42 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       // Show modal with loading state
       twofaSetupModal.classList.remove("hidden");
-      twofaQrCode.innerHTML = '<div class="text-slate-400 text-sm">Loading QR code...</div>';
-      twofaSecretKey.textContent = '';
-      twofaVerificationCode.value = '';
+      twofaQrCode.innerHTML =
+        '<div class="text-slate-400 text-sm">Loading QR code...</div>';
+      twofaSecretKey.textContent = "";
+      twofaVerificationCode.value = "";
       twofaErrorMessage.classList.add("hidden");
-      twofaErrorMessage.textContent = '';
+      twofaErrorMessage.textContent = "";
 
       // Call authManager.setup2FA to get QR code and secret
       const response = await authManager.setup2FA();
 
       if (response.success) {
         // Display secret key text (show immediately as fallback)
-        twofaSecretKey.textContent = response.secret || '';
+        twofaSecretKey.textContent = response.secret || "";
 
         // Build the image src — handle raw Base64 strings and full data URIs
-        let qrSrc = response.qrCode || '';
-        if (qrSrc && !qrSrc.startsWith('data:') && !qrSrc.startsWith('http')) {
+        let qrSrc = response.qrCode || "";
+        if (qrSrc && !qrSrc.startsWith("data:") && !qrSrc.startsWith("http")) {
           // Raw Base64 string without data URI prefix
           qrSrc = `data:image/png;base64,${qrSrc}`;
         }
 
         if (qrSrc) {
-          const img = document.createElement('img');
+          const img = document.createElement("img");
           img.src = qrSrc;
-          img.alt = '2FA QR Code';
-          img.className = 'w-48 h-48';
+          img.alt = "2FA QR Code";
+          img.className = "w-48 h-48";
           img.onerror = () => {
             // QR image failed to load — show manual key fallback
             twofaQrCode.innerHTML = `
               <div class="text-amber-400 text-sm text-center">
                 <p class="mb-2">QR code could not be displayed.</p>
                 <p>Enter this key manually in your authenticator app:</p>
-                <code class="block mt-2 text-white font-mono tracking-wider text-base">${response.secret || 'N/A'}</code>
+                <code class="block mt-2 text-white font-mono tracking-wider text-base">${response.secret || "N/A"}</code>
               </div>`;
           };
-          twofaQrCode.innerHTML = '';
+          twofaQrCode.innerHTML = "";
           twofaQrCode.appendChild(img);
         } else {
           // No QR code URL at all — show manual key only
@@ -1754,7 +1943,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="text-amber-400 text-sm text-center">
               <p class="mb-2">QR code not available.</p>
               <p>Enter this key manually in your authenticator app:</p>
-              <code class="block mt-2 text-white font-mono tracking-wider text-base">${response.secret || 'N/A'}</code>
+              <code class="block mt-2 text-white font-mono tracking-wider text-base">${response.secret || "N/A"}</code>
             </div>`;
         }
 
@@ -1762,19 +1951,20 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "System",
           "🔐 2FA setup initiated. Scan QR code with your authenticator app.",
-          "info"
+          "info",
         );
       } else {
-        throw new Error(response.message || 'Failed to setup 2FA');
+        throw new Error(response.message || "Failed to setup 2FA");
       }
     } catch (error) {
       console.error("2FA setup error:", error);
-      twofaQrCode.innerHTML = '<div class="text-red-400 text-sm">Failed to load QR code. Please try again.</div>';
-      
+      twofaQrCode.innerHTML =
+        '<div class="text-red-400 text-sm">Failed to load QR code. Please try again.</div>';
+
       // Show error message
       CyberNotify.alert(
-        error.message || 'Failed to setup 2FA. Please try again.',
-        { type: 'error' }
+        error.message || "Failed to setup 2FA. Please try again.",
+        { type: "error" },
       );
     }
   }
@@ -1784,9 +1974,9 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   function hide2FASetup() {
     twofaSetupModal.classList.add("hidden");
-    twofaVerificationCode.value = '';
+    twofaVerificationCode.value = "";
     twofaErrorMessage.classList.add("hidden");
-    twofaErrorMessage.textContent = '';
+    twofaErrorMessage.textContent = "";
   }
 
   /**
@@ -1798,7 +1988,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Validate code format
     if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
-      twofaErrorMessage.textContent = 'Please enter a valid 6-digit code';
+      twofaErrorMessage.textContent = "Please enter a valid 6-digit code";
       twofaErrorMessage.classList.remove("hidden");
       return;
     }
@@ -1821,44 +2011,48 @@ document.addEventListener("DOMContentLoaded", () => {
       if (response.success) {
         // Update UI to show 2FA enabled status
         const enable2FABtn = document.getElementById("enable-2fa-btn");
-        const twofaEnabledSection = document.getElementById("twofa-enabled-section");
-        
+        const twofaEnabledSection = document.getElementById(
+          "twofa-enabled-section",
+        );
+
         if (enable2FABtn) {
           enable2FABtn.classList.add("hidden");
         }
-        
+
         if (twofaEnabledSection) {
           twofaEnabledSection.classList.remove("hidden");
         }
 
         // Show success message
         CyberNotify.alert(
-          response.message || '2FA enabled successfully! Your account is now more secure.',
-          { type: 'success' }
+          response.message ||
+            "2FA enabled successfully! Your account is now more secure.",
+          { type: "success" },
         );
 
         logResult(
           new Date(),
           "System",
           "✅ Two-factor authentication enabled successfully.",
-          "success"
+          "success",
         );
 
         // Hide modal
         hide2FASetup();
       } else {
-        throw new Error(response.message || 'Failed to enable 2FA');
+        throw new Error(response.message || "Failed to enable 2FA");
       }
     } catch (error) {
       console.error("2FA enable error:", error);
-      
+
       // Show error message
-      twofaErrorMessage.textContent = error.message || 'Invalid verification code. Please try again.';
+      twofaErrorMessage.textContent =
+        error.message || "Invalid verification code. Please try again.";
       twofaErrorMessage.classList.remove("hidden");
     } finally {
       // Restore button state
       twofaEnableBtn.disabled = false;
-      twofaEnableBtn.innerHTML = 'Enable 2FA';
+      twofaEnableBtn.innerHTML = "Enable 2FA";
     }
   }
 
@@ -1867,14 +2061,14 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   async function copySecretKey() {
     const secret = twofaSecretKey.textContent;
-    
+
     if (!secret) {
       return;
     }
 
     try {
       await navigator.clipboard.writeText(secret);
-      
+
       // Show visual feedback
       const originalHTML = copySecretBtn.innerHTML;
       copySecretBtn.innerHTML = `
@@ -1882,7 +2076,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
         </svg>
       `;
-      
+
       setTimeout(() => {
         copySecretBtn.innerHTML = originalHTML;
       }, 2000);
@@ -1891,11 +2085,13 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "System",
         "📋 Secret key copied to clipboard.",
-        "info"
+        "info",
       );
     } catch (error) {
       console.error("Failed to copy secret key:", error);
-      CyberNotify.alert("Failed to copy to clipboard. Please copy manually.", { type: 'error' });
+      CyberNotify.alert("Failed to copy to clipboard. Please copy manually.", {
+        type: "error",
+      });
     }
   }
 
@@ -1931,136 +2127,288 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- 2FA Disable Flow ---
-  // Task 8.4: Implement 2FA disable functionality
   const disable2FABtn = document.getElementById("disable-2fa-btn");
 
-  /**
-   * Handle 2FA disable request
-   * Shows confirmation prompt and calls authManager.disable2FA
-   */
-  async function handleDisable2FA() {
-    // Show confirmation prompt using CyberNotify
-    CyberNotify.confirm(
-      'Are you sure you want to disable two-factor authentication? This will make your account less secure.',
-      async (confirmed) => {
-        if (!confirmed) {
-          return;
-        }
+  // DOM refs for the disable modal (inserted in dashboard.html)
+  const twofaDisableModal = document.getElementById("twofa-disable-modal");
+  const twofaDisableCode = document.getElementById("twofa-disable-code");
+  const twofaDisableError = document.getElementById("twofa-disable-error");
+  const twofaDisableConfirmBtn = document.getElementById(
+    "twofa-disable-confirm-btn",
+  );
+  const twofaDisableCancelBtn = document.getElementById(
+    "twofa-disable-cancel-btn",
+  );
+  const twofaDisableClose = document.getElementById("twofa-disable-close");
 
-        try {
-          // Call authManager.disable2FA
-          const response = await authManager.disable2FA();
-
-          if (response.success) {
-            // Update UI to show 2FA disabled status
-            const enable2FABtn = document.getElementById("enable-2fa-btn");
-            const twofaEnabledSection = document.getElementById("twofa-enabled-section");
-            
-            if (enable2FABtn) {
-              enable2FABtn.classList.remove("hidden");
-            }
-            
-            if (twofaEnabledSection) {
-              twofaEnabledSection.classList.add("hidden");
-            }
-
-            // Show success message
-            CyberNotify.alert(
-              response.message || '2FA has been disabled. You can re-enable it anytime from your profile.',
-              { type: 'info' }
-            );
-
-            logResult(
-              new Date(),
-              "System",
-              "🔓 Two-factor authentication disabled.",
-              "info"
-            );
-          } else {
-            throw new Error(response.message || 'Failed to disable 2FA');
-          }
-        } catch (error) {
-          console.error("2FA disable error:", error);
-          
-          // Show error message
-          CyberNotify.alert(
-            error.message || 'Failed to disable 2FA. Please try again.',
-            { type: 'error' }
-          );
-        }
-      },
-      { type: 'warning' }
-    );
+  /** Open the disable-2FA modal and reset its state */
+  function show2FADisableModal() {
+    if (!twofaDisableModal) return;
+    twofaDisableModal.classList.remove("hidden");
+    if (twofaDisableCode) {
+      twofaDisableCode.value = "";
+      twofaDisableCode.focus();
+    }
+    if (twofaDisableError) {
+      twofaDisableError.textContent = "";
+      twofaDisableError.classList.add("hidden");
+    }
+    if (twofaDisableConfirmBtn) {
+      twofaDisableConfirmBtn.disabled = false;
+      twofaDisableConfirmBtn.textContent = "Disable 2FA";
+    }
   }
 
-  // Event listener for disable 2FA button
+  /** Close the disable-2FA modal */
+  function hide2FADisableModal() {
+    if (!twofaDisableModal) return;
+    twofaDisableModal.classList.add("hidden");
+    if (twofaDisableCode) twofaDisableCode.value = "";
+    if (twofaDisableError) {
+      twofaDisableError.textContent = "";
+      twofaDisableError.classList.add("hidden");
+    }
+  }
+
+  /**
+   * Show an error inside the disable modal.
+   * On 401 (invalid code) we clear the input and allow retry — never lock the user out.
+   */
+  function showDisableModalError(message, clearInput = false) {
+    if (twofaDisableError) {
+      twofaDisableError.textContent = message;
+      twofaDisableError.classList.remove("hidden");
+    }
+    if (clearInput && twofaDisableCode) {
+      twofaDisableCode.value = "";
+      twofaDisableCode.focus();
+    }
+  }
+
+  /**
+   * Submit handler for the disable modal.
+   * UI flow:
+   *  1. Validate the 6-digit code is present.
+   *  2. POST /api/auth/2fa/disable  { code }
+   *  3. 200  → hide modal, update UI, show success toast.
+   *  4. 400  → show "2FA is not currently enabled".
+   *  5. 401  → show "Invalid code. Please try again." — clear input, allow retry.
+   *  6. 422  → log full body + show "Validation failed" with detail.
+   *  7. 500  → show "Server error. Please try again later."
+   */
+  async function handleDisableCodeSubmit() {
+    const code = twofaDisableCode ? twofaDisableCode.value.trim() : "";
+
+    // Client-side validation
+    if (!code || !/^\d{6}$/.test(code)) {
+      showDisableModalError("Please enter your 6-digit authenticator code.");
+      return;
+    }
+
+    // Show loading state
+    if (twofaDisableConfirmBtn) {
+      twofaDisableConfirmBtn.disabled = true;
+      twofaDisableConfirmBtn.innerHTML = `
+        <svg class="w-4 h-4 animate-spin inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Disabling...
+      `;
+    }
+    if (twofaDisableError) twofaDisableError.classList.add("hidden");
+
+    try {
+      const response = await authManager.disable2FA(code);
+
+      if (response.success) {
+        // Update UI: swap sections
+        const enable2FABtn = document.getElementById("enable-2fa-btn");
+        const twofaEnabledSection = document.getElementById(
+          "twofa-enabled-section",
+        );
+        if (enable2FABtn) enable2FABtn.classList.remove("hidden");
+        if (twofaEnabledSection) twofaEnabledSection.classList.add("hidden");
+
+        hide2FADisableModal();
+
+        CyberNotify.alert(
+          response.message ||
+            "2FA has been disabled. You can re-enable it anytime.",
+          { type: "info" },
+        );
+
+        logResult(
+          new Date(),
+          "System",
+          "🔓 Two-factor authentication disabled.",
+          "info",
+        );
+      }
+    } catch (error) {
+      // Always log full error — never swallow silently
+      console.error(
+        "[2FA] Disable failed:",
+        error.status,
+        error.name,
+        error.data || error.errors,
+      );
+
+      const status = error.status;
+
+      if (status === 400) {
+        // 2FA was not enabled
+        showDisableModalError(error.message || "2FA is not currently enabled.");
+      } else if (status === 401) {
+        // Wrong code — clear input, allow retry
+        showDisableModalError("Invalid code. Please try again.", true);
+      } else if (status === 422 || error.name === "ValidationError") {
+        // Validation failure — show detail
+        const detail = (error.errors || [])
+          .map((e) => e.message || JSON.stringify(e))
+          .join(", ");
+        console.error(
+          "[2FA] 422 body:",
+          JSON.stringify(error.data || error.errors, null, 2),
+        );
+        showDisableModalError(
+          "Validation failed" +
+            (detail ? ": " + detail : ". Please check your code."),
+        );
+      } else if (status >= 500) {
+        showDisableModalError("Server error. Please try again later.");
+      } else {
+        showDisableModalError(
+          error.message || "Failed to disable 2FA. Please try again.",
+        );
+      }
+    } finally {
+      // Restore button state
+      if (twofaDisableConfirmBtn) {
+        twofaDisableConfirmBtn.disabled = false;
+        twofaDisableConfirmBtn.textContent = "Disable 2FA";
+      }
+    }
+  }
+
+  /**
+   * Entry point: clicking the sidebar "Disable 2FA" button.
+   * Opens the modal with warning + code input (no immediate action).
+   */
+  function handleDisable2FA() {
+    show2FADisableModal();
+  }
+
+  // --- Wire up disable modal event listeners ---
   if (disable2FABtn) {
     disable2FABtn.addEventListener("click", handleDisable2FA);
   }
+  if (twofaDisableConfirmBtn) {
+    twofaDisableConfirmBtn.addEventListener("click", handleDisableCodeSubmit);
+  }
+  if (twofaDisableCancelBtn) {
+    twofaDisableCancelBtn.addEventListener("click", hide2FADisableModal);
+  }
+  if (twofaDisableClose) {
+    twofaDisableClose.addEventListener("click", hide2FADisableModal);
+  }
+  // Allow Enter key inside the code input to submit
+  if (twofaDisableCode) {
+    twofaDisableCode.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleDisableCodeSubmit();
+      }
+    });
+  }
+  // Click-outside to close disable modal
+  if (twofaDisableModal) {
+    twofaDisableModal.addEventListener("click", (e) => {
+      if (e.target === twofaDisableModal) hide2FADisableModal();
+    });
+  }
 
-  // Close modal on ESC key
+  // Close EITHER setup or disable modal on ESC
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !twofaSetupModal.classList.contains("hidden")) {
-      hide2FASetup();
+    if (e.key === "Escape") {
+      if (twofaSetupModal && !twofaSetupModal.classList.contains("hidden")) {
+        hide2FASetup();
+      }
+      if (
+        twofaDisableModal &&
+        !twofaDisableModal.classList.contains("hidden")
+      ) {
+        hide2FADisableModal();
+      }
     }
   });
 
-  // Close modal when clicking outside
+  // Close setup modal when clicking outside it
   twofaSetupModal.addEventListener("click", (e) => {
     if (e.target === twofaSetupModal) {
       hide2FASetup();
     }
   });
 
-  // Initialize 2FA UI based on current user status
-  function update2FAStatus() {
-    const currentUser = authManager.getCurrentUser();
+  // --- 2FA Status (always fetch from API, never guess from local state) ---
+
+  /**
+   * Fetch live 2FA status from GET /api/auth/2fa/status and update the UI.
+   * Falls back to local cached user state on API failure so the page still renders.
+   *
+   * @returns {Promise<void>}
+   */
+  async function update2FAStatus() {
     const enable2FABtn = document.getElementById("enable-2fa-btn");
-    const twofaEnabledSection = document.getElementById("twofa-enabled-section");
-    
-    if (currentUser && currentUser.twoFactorEnabled) {
-      // 2FA is enabled - show disable button
-      if (enable2FABtn) {
-        enable2FABtn.classList.add("hidden");
+    const twofaEnabledSection = document.getElementById(
+      "twofa-enabled-section",
+    );
+
+    const applyStatus = (enabled) => {
+      if (enabled) {
+        enable2FABtn?.classList.add("hidden");
+        twofaEnabledSection?.classList.remove("hidden");
+      } else {
+        enable2FABtn?.classList.remove("hidden");
+        twofaEnabledSection?.classList.add("hidden");
       }
-      if (twofaEnabledSection) {
-        twofaEnabledSection.classList.remove("hidden");
-      }
-    } else {
-      // 2FA is disabled - show enable button
-      if (enable2FABtn) {
-        enable2FABtn.classList.remove("hidden");
-      }
-      if (twofaEnabledSection) {
-        twofaEnabledSection.classList.add("hidden");
-      }
+    };
+
+    try {
+      // Always fetch fresh status from the API
+      const result = await authManager.fetch2FAStatus();
+      applyStatus(result.twoFactorEnabled);
+    } catch (error) {
+      // API call failed — fall back to local cached state so the UI still works
+      console.warn(
+        "[2FA] Could not fetch live status from API, using cached user state:",
+        error.message,
+      );
+      const currentUser = authManager.getCurrentUser();
+      applyStatus(currentUser?.twoFactorEnabled === true);
     }
   }
 
-  // Async dashboard initialization with event-driven 2FA UI update
+  // Async dashboard initialization
   async function initializeDashboard() {
-    // Add loading state for 2FA toggle area during session restoration
     const enable2FABtn = document.getElementById("enable-2fa-btn");
-    const twofaEnabledSection = document.getElementById("twofa-enabled-section");
-    
-    // Hide both buttons initially to show loading state
-    if (enable2FABtn) {
-      enable2FABtn.classList.add("hidden");
-    }
-    if (twofaEnabledSection) {
-      twofaEnabledSection.classList.add("hidden");
-    }
-    
-    // Wait for session restoration to complete
+    const twofaEnabledSection = document.getElementById(
+      "twofa-enabled-section",
+    );
+
+    // Hide both buttons during the loading state
+    if (enable2FABtn) enable2FABtn.classList.add("hidden");
+    if (twofaEnabledSection) twofaEnabledSection.classList.add("hidden");
+
+    // Wait for session restoration
     await authManager.loadUserSession();
-    
-    // Update 2FA status after session restoration completes
-    // This ensures the UI is updated even if the event doesn't fire
-    update2FAStatus();
+
+    // Fetch live 2FA status from the API (not local state)
+    await update2FAStatus();
   }
 
   // Listen for session restoration completion event
-  document.addEventListener('cyberguard:sessionRestored', (event) => {
+  document.addEventListener("cyberguard:sessionRestored", () => {
     update2FAStatus();
   });
 
@@ -2077,14 +2425,16 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "System",
         "✅ VirusTotal API Key saved securely.",
-        "success"
+        "success",
       );
       // Show success notification
-      CyberNotify.alert("VirusTotal API Key saved successfully!", { type: 'success' });
+      CyberNotify.alert("VirusTotal API Key saved successfully!", {
+        type: "success",
+      });
       vtApiKeyInput.value = ""; // Clear for security
     } else {
       console.error("Invalid VirusTotal API key provided");
-      CyberNotify.alert("Please enter a valid API key.", { type: 'warning' });
+      CyberNotify.alert("Please enter a valid API key.", { type: "warning" });
     }
   });
   function loadVtKey() {
@@ -2094,7 +2444,7 @@ document.addEventListener("DOMContentLoaded", () => {
       logResult(
         new Date(),
         "System",
-        "ℹ️ VirusTotal API Key loaded from secure storage."
+        "ℹ️ VirusTotal API Key loaded from secure storage.",
       );
     }
   }
@@ -2109,14 +2459,16 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "System",
         "✅ AbuseIPDB API Key saved securely.",
-        "success"
+        "success",
       );
       // Show success notification
-      CyberNotify.alert("AbuseIPDB API Key saved successfully!", { type: 'success' });
+      CyberNotify.alert("AbuseIPDB API Key saved successfully!", {
+        type: "success",
+      });
       abuseApiKeyInput.value = "";
     } else {
       console.error("Invalid AbuseIPDB API key provided");
-      CyberNotify.alert("Please enter a valid API key.", { type: 'warning' });
+      CyberNotify.alert("Please enter a valid API key.", { type: "warning" });
     }
   });
   function loadAbuseKey() {
@@ -2129,7 +2481,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!sessionName) {
       sessionName = prompt(
         "Enter a name for this session:",
-        `Session ${new Date().toLocaleDateString()}`
+        `Session ${new Date().toLocaleDateString()}`,
       );
       if (!sessionName) return false;
     }
@@ -2155,19 +2507,19 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       // Get existing sessions
       const existingSessions = JSON.parse(
-        localStorage.getItem("cyberGuardSessions") || "{}"
+        localStorage.getItem("cyberGuardSessions") || "{}",
       );
       existingSessions[sessionName] = sessionData;
       localStorage.setItem(
         "cyberGuardSessions",
-        JSON.stringify(existingSessions)
+        JSON.stringify(existingSessions),
       );
 
       logResult(
         new Date(),
         "System",
         `💾 Session "${sessionName}" saved successfully.`,
-        "success"
+        "success",
       );
       updateStatus(); // Update status bar to show session saved
       return true;
@@ -2176,7 +2528,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "System",
         `❌ [ERROR] Failed to save session: ${e.message}`,
-        "danger"
+        "danger",
       );
       return false;
     }
@@ -2188,7 +2540,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showSessionSelector() {
     const sessions = JSON.parse(
-      localStorage.getItem("cyberGuardSessions") || "{}"
+      localStorage.getItem("cyberGuardSessions") || "{}",
     );
     const sessionNames = Object.keys(sessions);
 
@@ -2216,7 +2568,7 @@ document.addEventListener("DOMContentLoaded", () => {
                       .map((name) => {
                         const session = sessions[name];
                         const sessionDate = new Date(
-                          session.timestamp
+                          session.timestamp,
                         ).toLocaleString();
                         const resultCount = session.history
                           ? session.history.length
@@ -2299,7 +2651,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function loadSpecificSession(sessionName) {
     try {
       const sessions = JSON.parse(
-        localStorage.getItem("cyberGuardSessions") || "{}"
+        localStorage.getItem("cyberGuardSessions") || "{}",
       );
       const session = sessions[sessionName];
 
@@ -2308,7 +2660,7 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "System",
           `❌ Session "${sessionName}" not found.`,
-          "danger"
+          "danger",
         );
         return false;
       }
@@ -2350,7 +2702,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Restore history and results
       if (session.history && session.history.length > 0) {
         history = session.history;
-        
+
         // Restore resultsData for accordion view (backward compatible)
         if (session.resultsData && session.resultsData.length > 0) {
           resultsData = session.resultsData;
@@ -2364,17 +2716,22 @@ document.addEventListener("DOMContentLoaded", () => {
             feature: item.feature,
             tool: item.feature,
             message: item.message,
-            status: item.status === 'success' ? 'safe' : 
-                   item.status === 'danger' ? 'threat' : 
-                   item.status === 'warning' ? 'warning' : 'system',
+            status:
+              item.status === "success"
+                ? "safe"
+                : item.status === "danger"
+                  ? "threat"
+                  : item.status === "warning"
+                    ? "warning"
+                    : "system",
             description: item.message,
-            evidence: '',
-            remediation: []
+            evidence: "",
+            remediation: [],
           }));
           renderResults();
           updateResultsStats();
         }
-        
+
         restoreResultsDisplay();
         updateHistoryList();
 
@@ -2383,9 +2740,9 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "System",
           `🔄 Session "${sessionName}" restored from ${sessionTime} (${hoursOld.toFixed(
-            1
+            1,
           )} hours ago).`,
-          "success"
+          "success",
         );
         return true;
       } else {
@@ -2393,7 +2750,7 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "System",
           `ℹ️ Session "${sessionName}" found but no scan results to restore.`,
-          "info"
+          "info",
         );
         return false;
       }
@@ -2402,7 +2759,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "System",
         `❌ [ERROR] Failed to load session: ${e.message}`,
-        "danger"
+        "danger",
       );
       return false;
     }
@@ -2411,7 +2768,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function deleteSession(sessionName) {
     try {
       const sessions = JSON.parse(
-        localStorage.getItem("cyberGuardSessions") || "{}"
+        localStorage.getItem("cyberGuardSessions") || "{}",
       );
       delete sessions[sessionName];
       localStorage.setItem("cyberGuardSessions", JSON.stringify(sessions));
@@ -2419,7 +2776,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "System",
         `🗑️ Session "${sessionName}" deleted successfully.`,
-        "success"
+        "success",
       );
       return true;
     } catch (e) {
@@ -2427,7 +2784,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "System",
         `❌ [ERROR] Failed to delete session: ${e.message}`,
-        "danger"
+        "danger",
       );
       return false;
     }
@@ -2460,7 +2817,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function clearSession() {
     if (
       confirm(
-        "Are you sure you want to clear ALL saved sessions? This action cannot be undone."
+        "Are you sure you want to clear ALL saved sessions? This action cannot be undone.",
       )
     ) {
       try {
@@ -2469,7 +2826,7 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "System",
           "🗑️ All sessions cleared successfully.",
-          "success"
+          "success",
         );
         updateStatus(); // Update status bar to show no session
         return true;
@@ -2478,7 +2835,7 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "System",
           `❌ [ERROR] Failed to clear sessions: ${e.message}`,
-          "danger"
+          "danger",
         );
         return false;
       }
@@ -2500,7 +2857,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Modal classes after:", welcomeModal.className);
     console.log(
       "Modal display style:",
-      window.getComputedStyle(welcomeModal).display
+      window.getComputedStyle(welcomeModal).display,
     );
 
     // Add event listener for close button
@@ -2533,7 +2890,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "System",
         "🛡️ CyberGuard Pro initialized successfully! Ready for cybersecurity analysis.",
-        "success"
+        "success",
       );
     }, 300);
   }
@@ -2549,14 +2906,16 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "System",
         "✅ WhoisXML API Key saved securely.",
-        "success"
+        "success",
       );
       // Show success notification
-      CyberNotify.alert("WhoisXML API Key saved successfully!", { type: 'success' });
+      CyberNotify.alert("WhoisXML API Key saved successfully!", {
+        type: "success",
+      });
       whoisApiKeyInput.value = "";
     } else {
       console.error("Invalid WhoisXML API key provided");
-      CyberNotify.alert("Please enter a valid API key.", { type: 'warning' });
+      CyberNotify.alert("Please enter a valid API key.", { type: "warning" });
     }
   });
   function loadWhoisKey() {
@@ -2566,7 +2925,7 @@ document.addEventListener("DOMContentLoaded", () => {
       logResult(
         new Date(),
         "System",
-        "ℹ️ WhoisXML API Key loaded from secure storage."
+        "ℹ️ WhoisXML API Key loaded from secure storage.",
       );
     }
     return whoisApiKey || "";
@@ -2583,14 +2942,16 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "System",
         "✅ Shodan API Key saved securely.",
-        "success"
+        "success",
       );
       // Show success notification
-      CyberNotify.alert("Shodan API Key saved successfully!", { type: 'success' });
+      CyberNotify.alert("Shodan API Key saved successfully!", {
+        type: "success",
+      });
       shodanApiKeyInput.value = "";
     } else {
       console.error("Invalid Shodan API key provided");
-      CyberNotify.alert("Please enter a valid API key.", { type: 'warning' });
+      CyberNotify.alert("Please enter a valid API key.", { type: "warning" });
     }
   });
   function loadShodanKey() {
@@ -2600,7 +2961,7 @@ document.addEventListener("DOMContentLoaded", () => {
       logResult(
         new Date(),
         "System",
-        "ℹ️ Shodan API Key loaded from secure storage."
+        "ℹ️ Shodan API Key loaded from secure storage.",
       );
     }
     return shodanApiKey || "";
@@ -2609,7 +2970,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // URLScan key management
   const urlscanApiKeyInput = document.getElementById("urlscan-api-key");
   const saveUrlscanKeyBtn = document.getElementById("save-urlscan-key-btn");
-  
+
   if (saveUrlscanKeyBtn) {
     saveUrlscanKeyBtn.addEventListener("click", () => {
       const key = urlscanApiKeyInput.value.trim();
@@ -2620,14 +2981,16 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "System",
           "✅ URLScan API Key saved securely.",
-          "success"
+          "success",
         );
         // Show success notification
-        CyberNotify.alert("URLScan API Key saved successfully!", { type: 'success' });
+        CyberNotify.alert("URLScan API Key saved successfully!", {
+          type: "success",
+        });
         urlscanApiKeyInput.value = "";
       } else {
         console.error("Invalid URLScan API key provided");
-        CyberNotify.alert("Please enter a valid API key.", { type: 'warning' });
+        CyberNotify.alert("Please enter a valid API key.", { type: "warning" });
       }
     });
   }
@@ -2637,7 +3000,7 @@ document.addEventListener("DOMContentLoaded", () => {
       logResult(
         new Date(),
         "System",
-        "ℹ️ URLScan API Key loaded from secure storage."
+        "ℹ️ URLScan API Key loaded from secure storage.",
       );
     }
     return storedKey ? decryptApiKey(storedKey) : "";
@@ -2647,7 +3010,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function clearAllApiKeys() {
     if (
       confirm(
-        "⚠️ Are you sure you want to clear ALL API keys? This action cannot be undone."
+        "⚠️ Are you sure you want to clear ALL API keys? This action cannot be undone.",
       )
     ) {
       // Clear from localStorage
@@ -2673,7 +3036,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "System",
         "🗑️ All API keys cleared from secure storage.",
-        "success"
+        "success",
       );
     }
   }
@@ -2692,7 +3055,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Button State Management ---
   function disableAllButtons() {
     const toolButtons = document.querySelectorAll(
-      'button[id$="-btn"]:not(#save-results-btn):not(#export-csv-btn):not(#export-pdf-btn):not(#sidebar-toggle):not(#stop-scan-btn):not(#execute-scan-btn)'
+      'button[id$="-btn"]:not(#save-results-btn):not(#export-csv-btn):not(#export-pdf-btn):not(#sidebar-toggle):not(#stop-scan-btn):not(#execute-scan-btn)',
     );
     toolButtons.forEach((button) => {
       button.classList.add("button-disabled");
@@ -2703,7 +3066,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function enableAllButtons() {
     const toolButtons = document.querySelectorAll(
-      'button[id$="-btn"]:not(#save-results-btn):not(#export-csv-btn):not(#export-pdf-btn):not(#sidebar-toggle):not(#stop-scan-btn):not(#execute-scan-btn)'
+      'button[id$="-btn"]:not(#save-results-btn):not(#export-csv-btn):not(#export-pdf-btn):not(#sidebar-toggle):not(#stop-scan-btn):not(#execute-scan-btn)',
     );
     toolButtons.forEach((button) => {
       button.classList.remove("button-disabled", "button-loading");
@@ -2729,7 +3092,7 @@ document.addEventListener("DOMContentLoaded", () => {
       minute: "2-digit",
     });
     const sessions = JSON.parse(
-      localStorage.getItem("cyberGuardSessions") || "{}"
+      localStorage.getItem("cyberGuardSessions") || "{}",
     );
     const sessionCount = Object.keys(sessions).length;
     const sessionStatus =
@@ -2769,22 +3132,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Initialize filter controls for professional results section
-    const filterButtons = document.querySelectorAll('.filter-pill');
-    const clearFiltersBtn = document.getElementById('clear-filters-btn');
-    
+    const filterButtons = document.querySelectorAll(".filter-pill");
+    const clearFiltersBtn = document.getElementById("clear-filters-btn");
+
     // Add click event listeners to filter buttons
-    filterButtons.forEach(button => {
-      button.addEventListener('click', () => {
+    filterButtons.forEach((button) => {
+      button.addEventListener("click", () => {
         const severity = button.dataset.severity;
         if (severity) {
           toggleFilter(severity);
         }
       });
     });
-    
+
     // Add click event listener to clear filters button
     if (clearFiltersBtn) {
-      clearFiltersBtn.addEventListener('click', () => {
+      clearFiltersBtn.addEventListener("click", () => {
         clearFilters();
       });
     }
@@ -2873,8 +3236,8 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>
         <div class="result-status ${result.status}" style="background: ${
-      statusColor.background
-    }; color: ${statusColor.text}; border-color: ${statusColor.border};">
+          statusColor.background
+        }; color: ${statusColor.text}; border-color: ${statusColor.border};">
           <span class="status-indicator ${result.status}"></span>
           <span class="font-semibold">${statusText}</span>
         </div>
@@ -2943,26 +3306,36 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getStatusColor(status) {
-    const _v = (n, fb) => { try { return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || fb; } catch(_) { return fb; } };
+    const _v = (n, fb) => {
+      try {
+        return (
+          getComputedStyle(document.documentElement)
+            .getPropertyValue(n)
+            .trim() || fb
+        );
+      } catch (_) {
+        return fb;
+      }
+    };
     const colors = {
       safe: {
         background: "rgba(52, 211, 153, 0.15)",
-        text: _v('--cg-success', '#34D399'),
+        text: _v("--cg-success", "#34D399"),
         border: "rgba(52, 211, 153, 0.4)",
       },
       warning: {
         background: "rgba(251, 191, 36, 0.15)",
-        text: _v('--cg-warning', '#FBBF24'),
+        text: _v("--cg-warning", "#FBBF24"),
         border: "rgba(251, 191, 36, 0.4)",
       },
       threat: {
         background: "rgba(248, 113, 113, 0.15)",
-        text: _v('--cg-danger', '#F87171'),
+        text: _v("--cg-danger", "#F87171"),
         border: "rgba(248, 113, 113, 0.4)",
       },
       system: {
         background: "rgba(167, 139, 250, 0.15)",
-        text: _v('--cg-accent', '#A78BFA'),
+        text: _v("--cg-accent", "#A78BFA"),
         border: "rgba(167, 139, 250, 0.4)",
       },
     };
@@ -3029,7 +3402,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Apply status filter
     if (currentFilter !== "all") {
       filteredResults = filteredResults.filter(
-        (result) => result.status === currentFilter
+        (result) => result.status === currentFilter,
       );
     }
 
@@ -3076,7 +3449,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (groupedResults[status].length > 0) {
           const groupSection = createResultGroup(
             status,
-            groupedResults[status]
+            groupedResults[status],
           );
           resultsWrapper.appendChild(groupSection);
         }
@@ -3145,12 +3518,38 @@ document.addEventListener("DOMContentLoaded", () => {
     const group = document.createElement("div");
     group.className = `result-group result-group-${status}`;
 
-    const _v = (n, fb) => { try { return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || fb; } catch(_) { return fb; } };
+    const _v = (n, fb) => {
+      try {
+        return (
+          getComputedStyle(document.documentElement)
+            .getPropertyValue(n)
+            .trim() || fb
+        );
+      } catch (_) {
+        return fb;
+      }
+    };
     const statusInfo = {
-      threat: { title: "🚨 Security Threats", icon: "🚨", color: _v('--cg-danger', '#F87171') },
-      warning: { title: "⚠️ Security Warnings", icon: "⚠️", color: _v('--cg-warning', '#FBBF24') },
-      safe: { title: "🛡️ Safe Results", icon: "🛡️", color: _v('--cg-success', '#34D399') },
-      system: { title: "⚙️ System Information", icon: "⚙️", color: _v('--cg-accent', '#A78BFA') },
+      threat: {
+        title: "🚨 Security Threats",
+        icon: "🚨",
+        color: _v("--cg-danger", "#F87171"),
+      },
+      warning: {
+        title: "⚠️ Security Warnings",
+        icon: "⚠️",
+        color: _v("--cg-warning", "#FBBF24"),
+      },
+      safe: {
+        title: "🛡️ Safe Results",
+        icon: "🛡️",
+        color: _v("--cg-success", "#34D399"),
+      },
+      system: {
+        title: "⚙️ System Information",
+        icon: "⚙️",
+        color: _v("--cg-accent", "#A78BFA"),
+      },
     };
 
     const info = statusInfo[status] || statusInfo.system;
@@ -3212,7 +3611,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (filterSelect) {
       const selectedOption = filterSelect.options[filterSelect.selectedIndex];
       const filterCount = resultsData.filter(
-        (result) => result.status === currentFilter
+        (result) => result.status === currentFilter,
       ).length;
 
       // Update option text to show count
@@ -3227,7 +3626,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateResultsStats() {
     const safeCount = resultsData.filter((r) => r.status === "safe").length;
     const warningCount = resultsData.filter(
-      (r) => r.status === "warning"
+      (r) => r.status === "warning",
     ).length;
     const threatCount = resultsData.filter((r) => r.status === "threat").length;
 
@@ -3245,7 +3644,7 @@ document.addEventListener("DOMContentLoaded", () => {
     feature,
     message,
     status = "info",
-    details = null
+    details = null,
   ) {
     // Map old status to new status system
     let newStatus = status;
@@ -3266,7 +3665,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     resultsData.push(result);
     updateResultsStats();
-    
+
     // Render results in the new accordion view
     renderResults();
 
@@ -3276,11 +3675,13 @@ document.addEventListener("DOMContentLoaded", () => {
     updateHistoryList();
 
     // Scroll accordion container to bottom to show new results
-    const accordionContainer = document.getElementById("accordion-items-container");
+    const accordionContainer = document.getElementById(
+      "accordion-items-container",
+    );
     if (accordionContainer) {
       accordionContainer.scrollTop = accordionContainer.scrollHeight;
     }
-    
+
     // Also scroll the old results container for backward compatibility
     const container = document.getElementById("results-container");
     if (container) {
@@ -3308,7 +3709,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.toggleGroup = function (status) {
     const groupContent = document.getElementById(`group-${status}`);
     const toggleButton = document.querySelector(
-      `[onclick="toggleGroup('${status}')"]`
+      `[onclick="toggleGroup('${status}')"]`,
     );
 
     if (groupContent && toggleButton) {
@@ -3335,7 +3736,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const button = event.target;
         const originalText = button.textContent;
         button.textContent = "Copied!";
-        button.style.background = getComputedStyle(document.documentElement).getPropertyValue('--cg-success').trim() || '#34D399';
+        button.style.background =
+          getComputedStyle(document.documentElement)
+            .getPropertyValue("--cg-success")
+            .trim() || "#34D399";
         button.style.color = "white";
         setTimeout(() => {
           button.textContent = originalText;
@@ -3377,7 +3781,9 @@ document.addEventListener("DOMContentLoaded", () => {
       .slice(0, 10)
       .forEach((item) => {
         const div = document.createElement("div");
-        div.className = "p-2 rounded-md" ; div.style.cssText = "background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07)";
+        div.className = "p-2 rounded-md";
+        div.style.cssText =
+          "background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07)";
         const truncatedMessage =
           item.message.split("\n")[0].substring(0, 30) +
           (item.message.length > 30 ? "..." : "");
@@ -3390,16 +3796,18 @@ document.addEventListener("DOMContentLoaded", () => {
     saveResultsBtn.addEventListener("click", () => {
       if (history.length === 0) {
         console.error("No results available to save");
-        CyberNotify.alert("No results to save.", { type: 'info' });
+        CyberNotify.alert("No results to save.", { type: "info" });
         return;
       }
       const textContent = history
         .map(
           (h) =>
-            `[${h.timestamp}] ${h.feature}\n-----------------\n${h.message}\n`
+            `[${h.timestamp}] ${h.feature}\n-----------------\n${h.message}\n`,
         )
         .join("\n\n");
-      const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
+      const blob = new Blob([textContent], {
+        type: "text/plain;charset=utf-8",
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -3431,24 +3839,24 @@ document.addEventListener("DOMContentLoaded", () => {
   // Task 10.2: Create CSV export function (exportToCSV() to generate CSV format)
   function exportToCSV() {
     const results = getFilteredResults();
-    const headers = ['Timestamp', 'Scanner', 'Severity', 'Finding', 'Status'];
-    
-    let csv = headers.join(',') + '\n';
-    
-    results.forEach(result => {
+    const headers = ["Timestamp", "Scanner", "Severity", "Finding", "Status"];
+
+    let csv = headers.join(",") + "\n";
+
+    results.forEach((result) => {
       const row = [
         result.timestamp || new Date().toISOString(),
-        result.tool || result.feature || 'Unknown',
+        result.tool || result.feature || "Unknown",
         mapStatusToSeverity(result.status),
-        `"${(result.message || '').replace(/"/g, '""')}"`,
-        result.status || 'unknown'
+        `"${(result.message || "").replace(/"/g, '""')}"`,
+        result.status || "unknown",
       ];
-      csv += row.join(',') + '\n';
+      csv += row.join(",") + "\n";
     });
-    
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `cyberguard-report-${Date.now()}.csv`;
     a.click();
@@ -3459,10 +3867,10 @@ document.addEventListener("DOMContentLoaded", () => {
   exportCsvBtn.addEventListener("click", () => {
     if (resultsData.length === 0) {
       console.error("No results available to export");
-      CyberNotify.alert("No results to export.", { type: 'info' });
+      CyberNotify.alert("No results to export.", { type: "info" });
       return;
     }
-    
+
     // Show loading state
     const originalText = exportCsvBtn.innerHTML;
     exportCsvBtn.disabled = true;
@@ -3473,13 +3881,20 @@ document.addEventListener("DOMContentLoaded", () => {
       </svg>
       Exporting...
     `;
-    
+
     try {
       exportToCSV();
-      logResult(new Date(), "System", "📄 CSV report exported successfully.", "system");
+      logResult(
+        new Date(),
+        "System",
+        "📄 CSV report exported successfully.",
+        "system",
+      );
     } catch (error) {
       console.error("CSV export failed:", error);
-      CyberNotify.alert("Failed to export CSV. Please try again.", { type: 'error' });
+      CyberNotify.alert("Failed to export CSV. Please try again.", {
+        type: "error",
+      });
     } finally {
       // Restore button state
       setTimeout(() => {
@@ -3494,43 +3909,44 @@ document.addEventListener("DOMContentLoaded", () => {
   function exportToPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    
+
     // Add title
     doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    doc.text('CyberGuard Pro Security Report', 20, 20);
-    
+    doc.setFont("helvetica", "bold");
+    doc.text("CyberGuard Pro Security Report", 20, 20);
+
     // Add metadata
     doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont("helvetica", "normal");
     doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 30);
     doc.text(`Total Issues: ${getFilteredResults().length}`, 20, 36);
-    doc.text(`Scanned Target: ${currentScanTarget || '--'}`, 20, 42);
-    
+    doc.text(`Scanned Target: ${currentScanTarget || "--"}`, 20, 42);
+
     // Add results table
     const results = getFilteredResults();
-    const tableData = results.map(result => [
-      result.tool || result.feature || 'Unknown',
+    const tableData = results.map((result) => [
+      result.tool || result.feature || "Unknown",
       mapStatusToSeverity(result.status),
-      (result.message || '').substring(0, 60) + (result.message && result.message.length > 60 ? '...' : ''),
-      result.timestamp || new Date().toISOString()
+      (result.message || "").substring(0, 60) +
+        (result.message && result.message.length > 60 ? "..." : ""),
+      result.timestamp || new Date().toISOString(),
     ]);
-    
+
     doc.autoTable({
       startY: 50,
-      head: [['Scanner', 'Severity', 'Finding', 'Timestamp']],
+      head: [["Scanner", "Severity", "Finding", "Timestamp"]],
       body: tableData,
-      theme: 'grid',
+      theme: "grid",
       headStyles: { fillColor: [124, 58, 237] }, // Purple color matching cyber theme
       styles: { fontSize: 9, cellPadding: 4 },
       columnStyles: {
         0: { cellWidth: 40 },
         1: { cellWidth: 30 },
         2: { cellWidth: 80 },
-        3: { cellWidth: 40 }
-      }
+        3: { cellWidth: 40 },
+      },
     });
-    
+
     doc.save(`cyberguard-report-${Date.now()}.pdf`);
   }
 
@@ -3538,16 +3954,16 @@ document.addEventListener("DOMContentLoaded", () => {
   exportPdfBtn.addEventListener("click", async () => {
     if (resultsData.length === 0) {
       console.error("No results available to export");
-      CyberNotify.alert("No results to export.", { type: 'info' });
+      CyberNotify.alert("No results to export.", { type: "info" });
       return;
     }
     const { jsPDF } = window.jspdf || {};
     if (!jsPDF || !window.jspdf) {
       console.error("PDF library not loaded");
-      CyberNotify.alert("PDF library not loaded.", { type: 'error' });
+      CyberNotify.alert("PDF library not loaded.", { type: "error" });
       return;
     }
-    
+
     // Show loading state
     const originalText = exportPdfBtn.innerHTML;
     exportPdfBtn.disabled = true;
@@ -3558,13 +3974,20 @@ document.addEventListener("DOMContentLoaded", () => {
       </svg>
       Exporting...
     `;
-    
+
     try {
       exportToPDF();
-      logResult(new Date(), "System", "📑 PDF report exported successfully.", "system");
+      logResult(
+        new Date(),
+        "System",
+        "📑 PDF report exported successfully.",
+        "system",
+      );
     } catch (error) {
       console.error("PDF export failed:", error);
-      CyberNotify.alert("Failed to export PDF. Please try again.", { type: 'error' });
+      CyberNotify.alert("Failed to export PDF. Please try again.", {
+        type: "error",
+      });
     } finally {
       // Restore button state
       setTimeout(() => {
@@ -3578,36 +4001,45 @@ document.addEventListener("DOMContentLoaded", () => {
   // Derives scan data from the current resultsData array and fires the
   // cyberguard:scanResult event so risk-gauge.js can update the card.
   function _dispatchRiskGaugeUpdate() {
-    const threats  = resultsData.filter(r => r.status === "threat").length;
-    const warnings = resultsData.filter(r => r.status === "warning").length;
+    const threats = resultsData.filter((r) => r.status === "threat").length;
+    const warnings = resultsData.filter((r) => r.status === "warning").length;
 
     // Estimate latency from any TCP/port result messages
     let latency = 0;
-    resultsData.forEach(r => {
+    resultsData.forEach((r) => {
       const match = r.message && r.message.match(/(\d+)\s*ms/i);
       if (match) latency = Math.max(latency, parseInt(match[1]));
     });
 
     // Estimate open ports from port scanner results
     let openPorts = 0;
-    resultsData.forEach(r => {
+    resultsData.forEach((r) => {
       if (r.feature && r.feature.toLowerCase().includes("port")) {
         const match = r.message && r.message.match(/(\d+)\s*open/i);
         if (match) openPorts = Math.max(openPorts, parseInt(match[1]));
       }
     });
 
-    const type = threats > 3 ? "critical" : threats > 1 ? "high" : warnings > 2 ? "medium" : "low";
+    const type =
+      threats > 3
+        ? "critical"
+        : threats > 1
+          ? "high"
+          : warnings > 2
+            ? "medium"
+            : "low";
 
-    document.dispatchEvent(new CustomEvent("cyberguard:scanResult", {
-      detail: {
-        vulnerabilities: threats,
-        latency:         latency || Math.floor(Math.random() * 80 + 20), // fallback estimate
-        openPorts:       openPorts,
-        warnings:        warnings,
-        type:            type,
-      }
-    }));
+    document.dispatchEvent(
+      new CustomEvent("cyberguard:scanResult", {
+        detail: {
+          vulnerabilities: threats,
+          latency: latency || Math.floor(Math.random() * 80 + 20), // fallback estimate
+          openPorts: openPorts,
+          warnings: warnings,
+          type: type,
+        },
+      }),
+    );
   }
 
   async function runTool(
@@ -3615,12 +4047,12 @@ document.addEventListener("DOMContentLoaded", () => {
     toolFunction,
     inputProvider,
     validationMessage,
-    buttonId = null
+    buttonId = null,
   ) {
     if (isRunning) return;
     const inputValue = inputProvider ? inputProvider() : "N/A";
     if (inputProvider && !inputValue) {
-      CyberNotify.alert(validationMessage, { type: 'error' });
+      CyberNotify.alert(validationMessage, { type: "error" });
       return;
     }
 
@@ -3635,7 +4067,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ) {
       const validation = validateTargetInput(inputValue, feature);
       if (!validation.valid) {
-        CyberNotify.alert(validation.message, { type: 'error' });
+        CyberNotify.alert(validation.message, { type: "error" });
         return;
       }
     }
@@ -3656,9 +4088,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Track scan start time and target for Summary Bar
     scanStartTime = Date.now();
     currentScanTarget = inputValue || "N/A";
-    
+
     // Update Summary Bar when scan starts (show target, reset time)
-    updateSummaryBar(resultsData.length, '--', currentScanTarget);
+    updateSummaryBar(resultsData.length, "--", currentScanTarget);
 
     // Simple scanning indicator
     // Notify risk gauge that a scan has started
@@ -3679,7 +4111,7 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           feature,
           `❌ [ERROR] An unexpected error occurred: ${error.message}`,
-          "danger"
+          "danger",
         );
       }
     } finally {
@@ -3700,8 +4132,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Track scan end time and update Summary Bar with duration
       scanEndTime = Date.now();
-      const metrics = calculateSummaryMetrics(resultsData, scanStartTime, scanEndTime);
-      updateSummaryBar(metrics.totalIssues, metrics.timeTaken, currentScanTarget);
+      const metrics = calculateSummaryMetrics(
+        resultsData,
+        scanStartTime,
+        scanEndTime,
+      );
+      updateSummaryBar(
+        metrics.totalIssues,
+        metrics.timeTaken,
+        currentScanTarget,
+      );
 
       // Update risk gauge with aggregated results from current scan data
       if (!shouldStopScan) {
@@ -3711,7 +4151,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Tool Implementations (Web-safe versions) ---
-  
+
   // WHOIS Lookup button
   document
     .getElementById("whois-btn")
@@ -3721,22 +4161,22 @@ document.addEventListener("DOMContentLoaded", () => {
         whoisLookup,
         () => document.getElementById("target-ip").value,
         "Please enter a domain name.",
-        "whois-btn"
-      )
+        "whois-btn",
+      ),
     );
 
   async function whoisLookup(target) {
-    addActivityLog(`Starting WHOIS lookup for ${target}`, 'WHOIS Lookup');
+    addActivityLog(`Starting WHOIS lookup for ${target}`, "WHOIS Lookup");
     logResult(new Date(), "WHOIS Lookup", `📜 Fetching WHOIS for ${target}...`);
     try {
       // Check if API key is available
       if (!whoisApiKey) {
-        addActivityLog('API key not configured', 'WHOIS Lookup');
+        addActivityLog("API key not configured", "WHOIS Lookup");
         logResult(
           new Date(),
           "WHOIS Lookup",
           `❌ [ERROR] WhoisXML API key not set. Please configure it in the sidebar.`,
-          "danger"
+          "danger",
         );
         return;
       }
@@ -3746,12 +4186,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const isDomain = isValidDomain(target);
 
       if (!isIP && !isDomain) {
-        addActivityLog('Invalid target format', 'WHOIS Lookup');
+        addActivityLog("Invalid target format", "WHOIS Lookup");
         logResult(
           new Date(),
           "WHOIS Lookup",
           `❌ [ERROR] Invalid input format. Please enter a valid IP address (e.g., 8.8.8.8) or domain name (e.g., google.com).`,
-          "danger"
+          "danger",
         );
         return;
       }
@@ -3762,9 +4202,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (isIP) {
         // For IP addresses, use IP geolocation API
         queryType = "IP Geolocation";
-        addActivityLog('Querying IP geolocation data...', 'WHOIS Lookup');
+        addActivityLog("Querying IP geolocation data...", "WHOIS Lookup");
         apiUrl = `https://ip-geolocation.whoisxmlapi.com/api/v1?apiKey=${whoisApiKey}&ipAddress=${encodeURIComponent(
-          target
+          target,
         )}`;
       } else {
         // For domains, normalize domain name
@@ -3783,9 +4223,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         queryType = "Domain WHOIS";
-        addActivityLog('Querying domain WHOIS data...', 'WHOIS Lookup');
+        addActivityLog("Querying domain WHOIS data...", "WHOIS Lookup");
         apiUrl = `https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey=${whoisApiKey}&domainName=${encodeURIComponent(
-          normalizedDomain
+          normalizedDomain,
         )}&outputFormat=JSON`;
       }
 
@@ -3795,22 +4235,22 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) {
         if (res.status === 401) {
           throw new Error(
-            "Invalid API key. Please check your WHOISXML API key."
+            "Invalid API key. Please check your WHOISXML API key.",
           );
         } else if (res.status === 403) {
           throw new Error(
-            "API quota exceeded or access denied. Please check your WHOISXML subscription."
+            "API quota exceeded or access denied. Please check your WHOISXML subscription.",
           );
         } else if (res.status === 404) {
           throw new Error("Domain not found in WHOIS database.");
         } else {
           throw new Error(
-            `WHOISXML API error: ${res.status} ${res.statusText}`
+            `WHOISXML API error: ${res.status} ${res.statusText}`,
           );
         }
       }
 
-      addActivityLog('Processing WHOIS data...', 'WHOIS Lookup');
+      addActivityLog("Processing WHOIS data...", "WHOIS Lookup");
       const data = await res.json();
 
       if (isIP) {
@@ -3821,7 +4261,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const asn = data.asn || {};
           const security = data.security || {};
 
-          addActivityLog(`WHOIS lookup complete for ${ip}`, 'WHOIS Lookup');
+          addActivityLog(`WHOIS lookup complete for ${ip}`, "WHOIS Lookup");
           const lines = [
             `✅ [IP WHOIS DATA] IP: ${ip}`,
             `🌍 Country: ${location.country || "N/A"}`,
@@ -3892,7 +4332,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           };
 
-          addActivityLog(`WHOIS lookup complete for ${domainName}`, 'WHOIS Lookup');
+          addActivityLog(
+            `WHOIS lookup complete for ${domainName}`,
+            "WHOIS Lookup",
+          );
           const lines = [
             `✅ [DOMAIN WHOIS DATA] Domain: ${domainName}`,
             `📅 Created: ${formatDate(createdDate)}`,
@@ -3930,17 +4373,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     } catch (e) {
-      addActivityLog(`Lookup failed: ${e.message}`, 'WHOIS Lookup');
+      addActivityLog(`Lookup failed: ${e.message}`, "WHOIS Lookup");
       updateStatus("WHOIS lookup failed");
       logResult(
         new Date(),
         "WHOIS Lookup",
         `❌ [ERROR] WHOIS lookup failed: ${e.message}`,
-        "danger"
+        "danger",
       );
     }
   }
-  
+
   document
     .getElementById("reverse-dns-btn")
     .addEventListener("click", () =>
@@ -3949,20 +4392,20 @@ document.addEventListener("DOMContentLoaded", () => {
         reverseDns,
         () => document.getElementById("target-ip").value,
         "Please enter an IP or hostname.",
-        "reverse-dns-btn"
-      )
+        "reverse-dns-btn",
+      ),
     );
   async function reverseDns(target) {
     logResult(
       new Date(),
       "Reverse DNS",
-      `🔄 Advanced DNS analysis for ${target}...`
+      `🔄 Advanced DNS analysis for ${target}...`,
     );
     try {
       // Check if target is an IP address
       const isIP =
         /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
-          target
+          target,
         );
 
       if (isIP) {
@@ -4022,14 +4465,14 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "Reverse DNS",
           `🔍 Querying PTR record: ${reverseIP}`,
-          "info"
+          "info",
         );
 
         const r = await fetch(
           `https://cloudflare-dns.com/dns-query?name=${reverseIP}&type=PTR`,
           {
             headers: { accept: "application/dns-json" },
-          }
+          },
         );
         const d = await r.json();
 
@@ -4045,7 +4488,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (d.Answer && d.Answer.length > 0) {
           const hostnames = d.Answer.map((a) => a.data.replace(/\.$/, "")).join(
-            "\n - "
+            "\n - ",
           );
           result += `🌐 Hostname(s):\n - ${hostnames}`;
 
@@ -4074,14 +4517,14 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "Reverse DNS",
           `🔍 Querying A record for: ${target}`,
-          "info"
+          "info",
         );
 
         const r = await fetch(
           `https://cloudflare-dns.com/dns-query?name=${target}`,
           {
             headers: { accept: "application/dns-json" },
-          }
+          },
         );
         const d = await r.json();
 
@@ -4182,13 +4625,13 @@ document.addEventListener("DOMContentLoaded", () => {
           ];
 
           const isCloudflare = ips.some((ip) =>
-            cloudflareRanges.some((range) => ip.startsWith(range))
+            cloudflareRanges.some((range) => ip.startsWith(range)),
           );
           const isGoogle = ips.some((ip) =>
-            googleRanges.some((range) => ip.startsWith(range))
+            googleRanges.some((range) => ip.startsWith(range)),
           );
           const isAWS = ips.some((ip) =>
-            awsRanges.some((range) => ip.startsWith(range))
+            awsRanges.some((range) => ip.startsWith(range)),
           );
 
           if (isCloudflare) result += `\n☁️ Hosted on Cloudflare CDN`;
@@ -4207,7 +4650,7 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "Reverse DNS",
             `⚠️ [WARNING] Could not resolve: ${target}`,
-            "warning"
+            "warning",
           );
         }
       }
@@ -4216,7 +4659,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "Reverse DNS",
         `❌ [ERROR] DNS lookup failed. ${e.message}`,
-        "danger"
+        "danger",
       );
     }
   }
@@ -4228,14 +4671,14 @@ document.addEventListener("DOMContentLoaded", () => {
         threatIntelCheck,
         () => document.getElementById("target-ip").value,
         "Please enter an IP or domain.",
-        "threat-intel-btn"
-      )
+        "threat-intel-btn",
+      ),
     );
   async function threatIntelCheck(target) {
     logResult(
       new Date(),
       "Threat Intelligence",
-      `🚨 Checking ${target} against VT and AbuseIPDB...`
+      `🚨 Checking ${target} against VT and AbuseIPDB...`,
     );
     const results = [];
     const errs = [];
@@ -4250,7 +4693,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       if (virusTotalApiKey) {
         const vtUrl = `${PROXY_URL}${encodeURIComponent(
-          `${VT_BASE_URL}/urls`
+          `${VT_BASE_URL}/urls`,
         )}`;
         const res = await fetch(vtUrl, {
           method: "POST",
@@ -4269,9 +4712,9 @@ document.addEventListener("DOMContentLoaded", () => {
             // fetch analysis once (best effort single fetch)
             const ares = await fetch(
               `${PROXY_URL}${encodeURIComponent(
-                `${VT_BASE_URL}/analyses/${id}`
+                `${VT_BASE_URL}/analyses/${id}`,
               )}`,
-              { headers: { "x-apikey": virusTotalApiKey } }
+              { headers: { "x-apikey": virusTotalApiKey } },
             );
             if (ares.ok) {
               const a = await ares.json();
@@ -4298,7 +4741,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const abuseKey = loadAbuseKey();
         if (abuseKey) {
           const url = `${PROXY_URL}${encodeURIComponent(
-            `${ABUSE_BASE_URL}/check`
+            `${ABUSE_BASE_URL}/check`,
           )}?ipAddress=${encodeURIComponent(host)}&maxAgeInDays=90`;
           const res = await fetch(url, {
             headers: { Key: abuseKey, Accept: "application/json" },
@@ -4327,14 +4770,14 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "Threat Intelligence",
         `${msg}${errs.length ? `\nNotes: ${errs.join(", ")}` : ""}`,
-        "warning"
+        "warning",
       );
     } else {
       logResult(
         new Date(),
         "Threat Intelligence",
         `${msg}${errs.length ? `\nNotes: ${errs.join(", ")}` : ""}`,
-        "info"
+        "info",
       );
     }
   }
@@ -4347,8 +4790,8 @@ document.addEventListener("DOMContentLoaded", () => {
         portScan,
         () => document.getElementById("target-ip").value,
         "Please enter an IP or hostname.",
-        "port-scan-btn"
-      )
+        "port-scan-btn",
+      ),
     );
 
   // ===== SHODAN-BASED PORT SCANNER =====
@@ -4368,7 +4811,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const timeSinceLastRequest = now - this.lastRequestTime;
       if (timeSinceLastRequest < this.rateLimitDelay) {
         await new Promise((resolve) =>
-          setTimeout(resolve, this.rateLimitDelay - timeSinceLastRequest)
+          setTimeout(resolve, this.rateLimitDelay - timeSinceLastRequest),
         );
       }
       this.lastRequestTime = Date.now();
@@ -4412,7 +4855,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!response.ok) {
           throw new Error(
-            `Proxy Error: ${response.status} - ${response.statusText}`
+            `Proxy Error: ${response.status} - ${response.statusText}`,
           );
         }
 
@@ -4454,7 +4897,7 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "Shodan Scanner",
             `🔄 Trying CORS proxy ${i + 1}/${proxyOptions.length}...`,
-            "info"
+            "info",
           );
 
           const response = await fetch(`${proxyUrl}${encodedUrl}`, {
@@ -4468,7 +4911,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!response.ok) {
             if (i === proxyOptions.length - 1) {
               throw new Error(
-                `All proxies failed. Last error: ${response.status} - ${response.statusText}`
+                `All proxies failed. Last error: ${response.status} - ${response.statusText}`,
               );
             }
             continue; // Try next proxy
@@ -4484,7 +4927,7 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "Shodan Scanner",
             `✅ Successfully connected via CORS proxy ${i + 1}`,
-            "success"
+            "success",
           );
 
           return data;
@@ -4495,7 +4938,7 @@ document.addEventListener("DOMContentLoaded", () => {
               new Date(),
               "Shodan Scanner",
               `⚠️ All CORS proxies failed, trying JSONP approach...`,
-              "warning"
+              "warning",
             );
             return await this.makeShodanRequestJSONP(targetUrl);
           }
@@ -4563,7 +5006,7 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "Shodan Scanner",
           `🔍 Querying Shodan for host information: ${target}...`,
-          "info"
+          "info",
         );
 
         const hostInfo = await this.makeShodanRequest(`/shodan/host/${target}`);
@@ -4644,38 +5087,44 @@ document.addEventListener("DOMContentLoaded", () => {
   async function portScan(target) {
     // Initialize Shodan scanner
     const shodanScanner = new ShodanPortScanner(
-      "oL1wHP4qa2zzeF08o31ZIACZQqkb3Rzw"
+      "oL1wHP4qa2zzeF08o31ZIACZQqkb3Rzw",
     );
     const scanStartTime = Date.now();
 
     try {
       // Log scan start
-      addActivityLog(`Starting port scan for ${target}`, 'Port Scanner');
-      
+      addActivityLog(`Starting port scan for ${target}`, "Port Scanner");
+
       // Get host information from Shodan
       updateStatus("Querying Shodan database...");
-      addActivityLog('Querying Shodan database...', 'Port Scanner');
+      addActivityLog("Querying Shodan database...", "Port Scanner");
       const hostResult = await shodanScanner.getHostInfo(target);
 
       if (!hostResult.success) {
-        addActivityLog(`Shodan query failed: ${hostResult.error}`, 'Port Scanner');
+        addActivityLog(
+          `Shodan query failed: ${hostResult.error}`,
+          "Port Scanner",
+        );
         logResult(
           new Date(),
           "Shodan Scanner",
           `❌ [ERROR] Shodan query failed: ${hostResult.error}`,
-          "danger"
+          "danger",
         );
         return;
       }
 
       // Process the host data
-      addActivityLog('Processing host data...', 'Port Scanner');
+      addActivityLog("Processing host data...", "Port Scanner");
       const processedData = shodanScanner.processHostData(hostResult.data);
       const report = shodanScanner.generateReport(processedData, scanStartTime);
 
       // Log individual open ports and services
       if (processedData.services.length > 0) {
-        addActivityLog(`Found ${processedData.services.length} open ports`, 'Port Scanner');
+        addActivityLog(
+          `Found ${processedData.services.length} open ports`,
+          "Port Scanner",
+        );
         for (const service of processedData.services) {
           const serviceInfo =
             service.service !== "Unknown"
@@ -4693,7 +5142,7 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "Shodan Scanner",
             `✅ Port ${service.port} is OPEN${serviceInfo}${versionInfo}${protocolInfo}${vulnInfo}`,
-            "success"
+            "success",
           );
 
           // Log banner if available
@@ -4706,7 +5155,7 @@ document.addEventListener("DOMContentLoaded", () => {
               new Date(),
               "Shodan Scanner",
               `📋 Banner: ${bannerPreview}`,
-              "info"
+              "info",
             );
           }
         }
@@ -4714,7 +5163,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Generate comprehensive final report
       if (report.totalPorts > 0) {
-        addActivityLog(`Generating report for ${report.totalPorts} ports`, 'Port Scanner');
+        addActivityLog(
+          `Generating report for ${report.totalPorts} ports`,
+          "Port Scanner",
+        );
         const portList = report.services
           .map((s) => {
             const serviceInfo =
@@ -4736,7 +5188,10 @@ document.addEventListener("DOMContentLoaded", () => {
             ? report.organization
             : "Unknown organization";
 
-        addActivityLog('Scan complete - vulnerabilities detected', 'Port Scanner');
+        addActivityLog(
+          "Scan complete - vulnerabilities detected",
+          "Port Scanner",
+        );
         logResult(
           new Date(),
           "Shodan Scanner",
@@ -4755,24 +5210,24 @@ document.addEventListener("DOMContentLoaded", () => {
           }\n - Scan duration: ${report.scanDuration}ms\n - Data freshness: ${
             report.lastUpdate
           }`,
-          "danger"
+          "danger",
         );
       } else {
-        addActivityLog('Scan complete - no open ports found', 'Port Scanner');
+        addActivityLog("Scan complete - no open ports found", "Port Scanner");
         logResult(
           new Date(),
           "Shodan Scanner",
           `✅ [SCAN COMPLETE] No open ports found in Shodan database for ${target}\n\n📊 Scan Statistics:\n - Scan duration: ${report.scanDuration}ms\n - Data source: Shodan database\n - Last update: ${report.lastUpdate}`,
-          "success"
+          "success",
         );
       }
     } catch (error) {
-      addActivityLog(`Scan failed: ${error.message}`, 'Port Scanner');
+      addActivityLog(`Scan failed: ${error.message}`, "Port Scanner");
       logResult(
         new Date(),
         "Shodan Scanner",
         `❌ [ERROR] Scan failed: ${error.message}`,
-        "danger"
+        "danger",
       );
     } finally {
       updateStatus("Shodan scan completed");
@@ -4786,24 +5241,27 @@ document.addEventListener("DOMContentLoaded", () => {
         ipGeolocation,
         () => document.getElementById("target-ip").value,
         "Please enter an IP address.",
-        "ip-geo-btn"
-      )
+        "ip-geo-btn",
+      ),
     );
   async function ipGeolocation(target) {
-    addActivityLog(`Starting geolocation lookup for ${target}`, 'IP Geolocation');
+    addActivityLog(
+      `Starting geolocation lookup for ${target}`,
+      "IP Geolocation",
+    );
     logResult(
       new Date(),
       "IP Geolocation",
-      `🌍 Fetching geolocation for ${target}...`
+      `🌍 Fetching geolocation for ${target}...`,
     );
     try {
-      addActivityLog('Querying geolocation API...', 'IP Geolocation');
+      addActivityLog("Querying geolocation API...", "IP Geolocation");
       const r = await fetch(`https://ipapi.co/${target}/json/`);
       if (!r.ok) throw new Error(`API error ${r.status}`);
       const d = await r.json();
       if (d.error) throw new Error(d.reason);
 
-      addActivityLog('Processing geolocation data...', 'IP Geolocation');
+      addActivityLog("Processing geolocation data...", "IP Geolocation");
       // Format comprehensive geolocation information
       let result = `✅ [INFO] Detailed Geolocation for ${target}:\n\n`;
       result += `📍 Location Details:\n`;
@@ -4834,15 +5292,15 @@ document.addEventListener("DOMContentLoaded", () => {
       result += `  Threat Level: ${d.threat || "Low"}\n`;
       result += `  Is EU Country: ${d.in_eu ? "Yes" : "No"}\n`;
 
-      addActivityLog('Geolocation lookup complete', 'IP Geolocation');
+      addActivityLog("Geolocation lookup complete", "IP Geolocation");
       logResult(new Date(), "IP Geolocation", result, "success");
     } catch (e) {
-      addActivityLog(`Lookup failed: ${e.message}`, 'IP Geolocation');
+      addActivityLog(`Lookup failed: ${e.message}`, "IP Geolocation");
       logResult(
         new Date(),
         "IP Geolocation",
         `❌ [ERROR] Geolocation fetch failed. ${e.message}`,
-        "danger"
+        "danger",
       );
     }
   }
@@ -4854,8 +5312,8 @@ document.addEventListener("DOMContentLoaded", () => {
         detectPhishing,
         () => document.getElementById("target-url").value,
         "Please enter a URL.",
-        "phishing-btn"
-      )
+        "phishing-btn",
+      ),
     );
   // ML-based Phishing Detection Model
   let phishingModel = null;
@@ -4867,7 +5325,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "URL Phishing Analyzer",
         "🧠 Loading phishing dataset and training ML model...",
-        "info"
+        "info",
       );
 
       const response = await fetch("phishing_dataset.csv");
@@ -4900,14 +5358,14 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "URL Phishing Analyzer",
         `✅ ML Model trained on ${features.length} samples`,
-        "success"
+        "success",
       );
     } catch (error) {
       logResult(
         new Date(),
         "URL Phishing Analyzer",
         `❌ Failed to load model: ${error.message}`,
-        "danger"
+        "danger",
       );
       // Fallback to rule-based model
       phishingModel = createFallbackModel();
@@ -5154,7 +5612,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Check if this is a legitimate domain first
         const hostname = features.hostname || "";
         const isLegitimateDomain = legitimateDomains.some(
-          (domain) => hostname === domain || hostname.endsWith("." + domain)
+          (domain) => hostname === domain || hostname.endsWith("." + domain),
         );
 
         // If it's a legitimate domain, return very low risk
@@ -5302,7 +5760,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Check if this is a legitimate domain first
         const hostname = features.hostname || "";
         const isLegitimateDomain = legitimateDomains.some(
-          (domain) => hostname === domain || hostname.endsWith("." + domain)
+          (domain) => hostname === domain || hostname.endsWith("." + domain),
         );
 
         // If it's a legitimate domain, return very low risk
@@ -5376,7 +5834,7 @@ document.addEventListener("DOMContentLoaded", () => {
     logResult(
       new Date(),
       "URL Phishing Analyzer",
-      `🤖 ML Model analyzing: ${url}`
+      `🤖 ML Model analyzing: ${url}`,
     );
     await new Promise((r) => setTimeout(r, 1500));
 
@@ -5490,7 +5948,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "URL Phishing Analyzer",
         `❌ [ERROR] Analysis failed: ${error.message}`,
-        "danger"
+        "danger",
       );
     }
   }
@@ -5502,8 +5960,8 @@ document.addEventListener("DOMContentLoaded", () => {
         testXss,
         () => document.getElementById("target-url").value,
         "Please enter a URL.",
-        "xss-btn"
-      )
+        "xss-btn",
+      ),
     );
   // OWASP ZAP API Configuration
   const ZAP_API_BASE = "http://localhost:3001/zap"; // Using local proxy server
@@ -5515,87 +5973,90 @@ document.addEventListener("DOMContentLoaded", () => {
   const USE_CORS_PROXY = false; // Set to true if CORS issues persist
 
   async function testXss(url) {
-    addActivityLog(`Starting XSS scan on ${url}`, 'XSS Scanner');
+    addActivityLog(`Starting XSS scan on ${url}`, "XSS Scanner");
     logResult(
       new Date(),
       "XSS Test",
-      `🔍 Starting comprehensive XSS scan on: ${url}`
+      `🔍 Starting comprehensive XSS scan on: ${url}`,
     );
 
     try {
       // Validate URL
       if (!url || (!url.startsWith("http://") && !url.startsWith("https://"))) {
         throw new Error(
-          "Please provide a valid URL starting with http:// or https://"
+          "Please provide a valid URL starting with http:// or https://",
         );
       }
 
       // Check if ZAP is running
-      addActivityLog('Checking OWASP ZAP status...', 'XSS Scanner');
+      addActivityLog("Checking OWASP ZAP status...", "XSS Scanner");
       const zapStatus = await checkZapStatus();
       if (!zapStatus) {
-        addActivityLog('ZAP not detected, using basic simulation', 'XSS Scanner');
+        addActivityLog(
+          "ZAP not detected, using basic simulation",
+          "XSS Scanner",
+        );
         logResult(
           new Date(),
           "XSS Test",
           "⚠️ [WARNING] OWASP ZAP not detected. Running basic XSS simulation...",
-          "warning"
+          "warning",
         );
         await runBasicXssSimulation(url);
         return;
       }
 
       // Start ZAP scan
-      addActivityLog('Starting ZAP active scan...', 'XSS Scanner');
+      addActivityLog("Starting ZAP active scan...", "XSS Scanner");
       const scanId = await startZapScan(url);
       if (!scanId) {
         throw new Error("Failed to start ZAP scan");
       }
 
-      addActivityLog(`ZAP scan started (ID: ${scanId})`, 'XSS Scanner');
+      addActivityLog(`ZAP scan started (ID: ${scanId})`, "XSS Scanner");
       logResult(
         new Date(),
         "XSS Test",
-        `🚀 ZAP scan started with ID: ${scanId}. Monitoring progress...`
+        `🚀 ZAP scan started with ID: ${scanId}. Monitoring progress...`,
       );
 
       // Monitor scan progress with timeout
-      addActivityLog('Monitoring scan progress...', 'XSS Scanner');
+      addActivityLog("Monitoring scan progress...", "XSS Scanner");
       const finalProgress = await monitorScanProgress(scanId, url);
 
       // Get scan results
-      addActivityLog('Retrieving scan results...', 'XSS Scanner');
+      addActivityLog("Retrieving scan results...", "XSS Scanner");
       const results = await getZapScanResults();
       await displayXssResults(results, url);
 
       // If scan didn't complete, offer to cancel
       if (finalProgress < 100) {
-        addActivityLog('Scan incomplete', 'XSS Scanner');
+        addActivityLog("Scan incomplete", "XSS Scanner");
         logResult(
           new Date(),
           "XSS Test",
           "🔄 Scan incomplete - you can cancel it manually in ZAP if needed",
-          "info"
+          "info",
         );
       } else {
-        addActivityLog('XSS scan completed successfully', 'XSS Scanner');
+        addActivityLog("XSS scan completed successfully", "XSS Scanner");
       }
     } catch (error) {
-      addActivityLog(`Scan failed: ${error.message}`, 'XSS Scanner');
+      addActivityLog(`Scan failed: ${error.message}`, "XSS Scanner");
       logResult(
         new Date(),
         "XSS Test",
         `❌ [ERROR] XSS scan failed: ${error.message}`,
-        "danger"
+        "danger",
       );
 
       // Fallback to basic simulation
-      addActivityLog('Falling back to basic simulation', 'XSS Scanner');
+      addActivityLog("Falling back to basic simulation", "XSS Scanner");
       logResult(
         new Date(),
         "XSS Test",
         "🔄 Falling back to basic XSS simulation...",
-        "info"
+        "info",
       );
       await runBasicXssSimulation(url);
     }
@@ -5610,7 +6071,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "XSS Test",
         "🔍 Checking ZAP via proxy server...",
-        "info"
+        "info",
       );
 
       const response = await fetch(proxyUrl, {
@@ -5627,7 +6088,7 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "XSS Test",
           `✅ OWASP ZAP detected via proxy (Version: ${data.version})`,
-          "success"
+          "success",
         );
         return true;
       }
@@ -5636,7 +6097,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "XSS Test",
         `⚠️ Proxy connection failed: ${proxyError.message}`,
-        "warning"
+        "warning",
       );
     }
 
@@ -5646,7 +6107,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "XSS Test",
         "🔍 Trying direct ZAP connection...",
-        "info"
+        "info",
       );
       const directUrl = `${ZAP_DIRECT_BASE}/core/view/version/?apikey=${ZAP_API_KEY}`;
       const response = await fetch(directUrl, {
@@ -5663,7 +6124,7 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "XSS Test",
           `✅ OWASP ZAP detected directly (Version: ${data.version})`,
-          "success"
+          "success",
         );
         return true;
       }
@@ -5672,7 +6133,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "XSS Test",
         `⚠️ Direct connection failed: ${directError.message}`,
-        "warning"
+        "warning",
       );
     }
 
@@ -5680,7 +6141,7 @@ document.addEventListener("DOMContentLoaded", () => {
       new Date(),
       "XSS Test",
       "💡 Neither proxy nor direct connection worked. Please start the proxy server with: npm start",
-      "info"
+      "info",
     );
     return false;
   }
@@ -5692,22 +6153,22 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "XSS Test",
         "🔗 Adding URL to ZAP context...",
-        "info"
+        "info",
       );
 
       // Add URL to ZAP context
       const accessResponse = await fetch(
         `${ZAP_API_BASE}/core/action/accessUrl/?url=${encodeURIComponent(
-          url
+          url,
         )}&apikey=${ZAP_API_KEY}`,
         {
           method: "GET",
-        }
+        },
       );
 
       if (!accessResponse.ok) {
         throw new Error(
-          `Failed to add URL to ZAP context: ${accessResponse.status}`
+          `Failed to add URL to ZAP context: ${accessResponse.status}`,
         );
       }
 
@@ -5715,17 +6176,17 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "XSS Test",
         "🚀 Starting ZAP active scan...",
-        "info"
+        "info",
       );
 
       // Start active scan with limited scope for faster results
       const scanResponse = await fetch(
         `${ZAP_API_BASE}/ascan/action/scan/?url=${encodeURIComponent(
-          url
+          url,
         )}&apikey=${ZAP_API_KEY}&recurse=true&inScopeOnly=false&scanPolicyName=Default Policy`,
         {
           method: "GET",
-        }
+        },
       );
 
       if (scanResponse.ok) {
@@ -5735,7 +6196,7 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "XSS Test",
             `✅ Scan initiated successfully (ID: ${data.scan})`,
-            "success"
+            "success",
           );
           return data.scan;
         } else {
@@ -5761,13 +6222,13 @@ document.addEventListener("DOMContentLoaded", () => {
       new Date(),
       "XSS Test",
       "⏱️ Starting progress monitoring (2.5 min timeout)...",
-      "info"
+      "info",
     );
 
     while (progress < 100 && attempts < maxAttempts) {
       try {
         const response = await fetch(
-          `${ZAP_API_BASE}/ascan/view/status/?scanId=${scanId}&apikey=${ZAP_API_KEY}`
+          `${ZAP_API_BASE}/ascan/view/status/?scanId=${scanId}&apikey=${ZAP_API_KEY}`,
         );
         if (response.ok) {
           const data = await response.json();
@@ -5781,7 +6242,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 new Date(),
                 "XSS Test",
                 "⚠️ Scan appears stuck - attempting to continue...",
-                "warning"
+                "warning",
               );
               stuckCount = 0; // Reset counter
             }
@@ -5795,7 +6256,7 @@ document.addEventListener("DOMContentLoaded", () => {
               new Date(),
               "XSS Test",
               `📊 Scan progress: ${progress}%`,
-              "info"
+              "info",
             );
             lastProgress = progress;
           }
@@ -5805,7 +6266,7 @@ document.addEventListener("DOMContentLoaded", () => {
               new Date(),
               "XSS Test",
               "✅ ZAP scan completed successfully!",
-              "success"
+              "success",
             );
             break;
           }
@@ -5814,7 +6275,7 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "XSS Test",
             `⚠️ Failed to get scan status (attempt ${attempts + 1})`,
-            "warning"
+            "warning",
           );
         }
 
@@ -5827,7 +6288,7 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "XSS Test",
             "⏰ Scan taking longer than expected - will timeout soon...",
-            "warning"
+            "warning",
           );
         }
       } catch (error) {
@@ -5835,7 +6296,7 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "XSS Test",
           `⚠️ Progress monitoring error: ${error.message}`,
-          "warning"
+          "warning",
         );
         attempts++;
 
@@ -5845,7 +6306,7 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "XSS Test",
             "❌ Too many connection errors - stopping scan monitoring",
-            "danger"
+            "danger",
           );
           break;
         }
@@ -5857,13 +6318,13 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "XSS Test",
         "⏰ Scan timeout reached - retrieving partial results",
-        "warning"
+        "warning",
       );
       logResult(
         new Date(),
         "XSS Test",
         "💡 For faster scans, try smaller websites or use the basic simulation",
-        "info"
+        "info",
       );
     }
 
@@ -5874,7 +6335,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function getZapScanResults() {
     try {
       const response = await fetch(
-        `${ZAP_API_BASE}/core/view/alerts/?apikey=${ZAP_API_KEY}`
+        `${ZAP_API_BASE}/core/view/alerts/?apikey=${ZAP_API_KEY}`,
       );
       if (response.ok) {
         const data = await response.json();
@@ -5885,7 +6346,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "XSS Test",
         `⚠️ Failed to retrieve scan results: ${error.message}`,
-        "warning"
+        "warning",
       );
     }
     return [];
@@ -5897,7 +6358,7 @@ document.addEventListener("DOMContentLoaded", () => {
       (alert) =>
         alert.name.toLowerCase().includes("xss") ||
         alert.name.toLowerCase().includes("cross-site") ||
-        (alert.risk === "High" && alert.name.toLowerCase().includes("script"))
+        (alert.risk === "High" && alert.name.toLowerCase().includes("script")),
     );
 
     if (xssAlerts.length === 0) {
@@ -5905,14 +6366,14 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "XSS Test",
         "✅ [SECURE] No XSS vulnerabilities detected by OWASP ZAP",
-        "success"
+        "success",
       );
     } else {
       logResult(
         new Date(),
         "XSS Test",
         `🚨 [VULNERABILITY] Found ${xssAlerts.length} potential XSS issues:`,
-        "danger"
+        "danger",
       );
 
       xssAlerts.forEach((alert, index) => {
@@ -5920,15 +6381,15 @@ document.addEventListener("DOMContentLoaded", () => {
           alert.risk === "High"
             ? "danger"
             : alert.risk === "Medium"
-            ? "warning"
-            : "info";
+              ? "warning"
+              : "info";
         logResult(
           new Date(),
           "XSS Test",
           `🔍 ${index + 1}. ${alert.name} (Risk: ${alert.risk}) - ${
             alert.description
           }`,
-          riskColor
+          riskColor,
         );
 
         if (alert.solution) {
@@ -5936,7 +6397,7 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "XSS Test",
             `💡 Solution: ${alert.solution}`,
-            "info"
+            "info",
           );
         }
       });
@@ -5948,25 +6409,25 @@ document.addEventListener("DOMContentLoaded", () => {
       new Date(),
       "XSS Test",
       "• Implement Content Security Policy (CSP) headers",
-      "info"
+      "info",
     );
     logResult(
       new Date(),
       "XSS Test",
       "• Use input validation and output encoding",
-      "info"
+      "info",
     );
     logResult(
       new Date(),
       "XSS Test",
       "• Enable X-XSS-Protection header",
-      "info"
+      "info",
     );
     logResult(
       new Date(),
       "XSS Test",
       "• Regular security testing with OWASP ZAP",
-      "info"
+      "info",
     );
   }
 
@@ -5977,14 +6438,14 @@ document.addEventListener("DOMContentLoaded", () => {
         `${ZAP_API_BASE}/ascan/action/stop/?scanId=${scanId}&apikey=${ZAP_API_KEY}`,
         {
           method: "GET",
-        }
+        },
       );
       if (response.ok) {
         logResult(
           new Date(),
           "XSS Test",
           "🛑 Scan cancelled successfully",
-          "info"
+          "info",
         );
         return true;
       }
@@ -5993,7 +6454,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "XSS Test",
         `⚠️ Failed to cancel scan: ${error.message}`,
-        "warning"
+        "warning",
       );
     }
     return false;
@@ -6004,7 +6465,7 @@ document.addEventListener("DOMContentLoaded", () => {
     logResult(
       new Date(),
       "XSS Test",
-      `⚡ Running basic XSS simulation on: ${url}`
+      `⚡ Running basic XSS simulation on: ${url}`,
     );
     await new Promise((r) => setTimeout(r, 2000));
 
@@ -6025,13 +6486,13 @@ document.addEventListener("DOMContentLoaded", () => {
       new Date(),
       "XSS Test",
       "✅ [SIMULATION] Basic XSS check completed. For comprehensive testing, please run OWASP ZAP.",
-      "success"
+      "success",
     );
     logResult(
       new Date(),
       "XSS Test",
       "💡 Tip: Install OWASP ZAP and set ZAP_API_KEY in the code for real vulnerability scanning.",
-      "info"
+      "info",
     );
   }
   document
@@ -6042,8 +6503,8 @@ document.addEventListener("DOMContentLoaded", () => {
         checkSsl,
         () => document.getElementById("target-url").value,
         "Please enter a URL.",
-        "ssl-btn"
-      )
+        "ssl-btn",
+      ),
     );
   async function checkSsl(url) {
     logResult(new Date(), "SSL/TLS Check", `🔐 Checking SSL/TLS for ${url}...`);
@@ -6055,14 +6516,14 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "SSL/TLS Check",
         `✅ [INFO] SSL Certificate for ${new URL(url).hostname} appears valid.`,
-        "success"
+        "success",
       );
     } catch (e) {
       logResult(
         new Date(),
         "SSL/TLS Check",
         `❌ [ERROR] SSL/TLS check failed: ${e.message}`,
-        "danger"
+        "danger",
       );
     }
   }
@@ -6074,8 +6535,8 @@ document.addEventListener("DOMContentLoaded", () => {
         checkDnsSpoof,
         () => document.getElementById("target-url").value,
         "Please enter a URL.",
-        "dns-spoof-btn"
-      )
+        "dns-spoof-btn",
+      ),
     );
   // AI-Enhanced DNS Spoofing Detection System
   let dnsSpoofingModel = null;
@@ -6118,7 +6579,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Check consistency across resolvers
     const dnssecResolvers = resolvers.filter(
-      (r) => dnssecResults[r].hasDNSKEY || dnssecResults[r].hasRRSIG
+      (r) => dnssecResults[r].hasDNSKEY || dnssecResults[r].hasRRSIG,
     );
     if (
       dnssecResolvers.length > 0 &&
@@ -7461,7 +7922,7 @@ document.addEventListener("DOMContentLoaded", () => {
           resolverIPs,
           allIPs,
           uniqueIPs,
-          dnssecAnalysis
+          dnssecAnalysis,
         ) {
           let riskScore = 0;
           let warnings = [];
@@ -7478,7 +7939,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // Check if IPs match expected ranges
             const expectedIPs = domainInfo.expectedIPs;
             const matchingIPs = uniqueIPs.filter((ip) =>
-              expectedIPs.some((expected) => ip.startsWith(expected))
+              expectedIPs.some((expected) => ip.startsWith(expected)),
             );
 
             if (matchingIPs.length > 0) {
@@ -7487,10 +7948,10 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
               riskScore += 20;
               warnings.push(
-                "⚠️ IPs do not match expected ranges for this domain"
+                "⚠️ IPs do not match expected ranges for this domain",
               );
               recommendations.push(
-                "Verify domain authenticity through official channels"
+                "Verify domain authenticity through official channels",
               );
             }
 
@@ -7510,7 +7971,7 @@ document.addEventListener("DOMContentLoaded", () => {
           let detectedCDNs = [];
           for (const [cdnName, ranges] of Object.entries(this.cdnRanges)) {
             const cdnIPs = uniqueIPs.filter((ip) =>
-              ranges.some((range) => ip.startsWith(range))
+              ranges.some((range) => ip.startsWith(range)),
             );
             if (cdnIPs.length > 0) {
               detectedCDNs.push(cdnName);
@@ -7521,7 +7982,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // 3. Suspicious IP Detection
           const suspiciousIPs = uniqueIPs.filter((ip) =>
-            this.suspiciousRanges.some((range) => ip.startsWith(range))
+            this.suspiciousRanges.some((range) => ip.startsWith(range)),
           );
 
           if (suspiciousIPs.length > 0) {
@@ -7529,7 +7990,7 @@ document.addEventListener("DOMContentLoaded", () => {
             warnings.push("🚨 Suspicious IP addresses detected");
             details.push(`Suspicious IPs: ${suspiciousIPs.join(", ")}`);
             recommendations.push(
-              "DO NOT access this domain - contains suspicious IP addresses"
+              "DO NOT access this domain - contains suspicious IP addresses",
             );
             recommendations.push("Report this as potential DNS spoofing");
           }
@@ -7549,7 +8010,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             const consistentIPs = Object.entries(resolverConsistency).filter(
-              ([ip, resolvers]) => resolvers.length > 1
+              ([ip, resolvers]) => resolvers.length > 1,
             );
 
             const consistencyRatio = consistentIPs.length / uniqueIPs.length;
@@ -7558,10 +8019,10 @@ document.addEventListener("DOMContentLoaded", () => {
               riskScore += 40;
               warnings.push("🚨 High IP inconsistency across resolvers");
               details.push(
-                "Different resolvers return significantly different IP addresses"
+                "Different resolvers return significantly different IP addresses",
               );
               recommendations.push(
-                "Use alternative DNS resolvers for verification"
+                "Use alternative DNS resolvers for verification",
               );
               recommendations.push("Clear DNS cache and retry analysis");
             } else if (consistencyRatio < 0.6) {
@@ -7584,22 +8045,22 @@ document.addEventListener("DOMContentLoaded", () => {
             warnings.push("🚨 Too few resolvers responded");
             details.push("Insufficient data for reliable analysis");
             recommendations.push(
-              "Retry analysis when more resolvers are available"
+              "Retry analysis when more resolvers are available",
             );
             confidence = Math.max(0, confidence - 20);
           } else if (successfulResolvers >= 3) {
             confidence += 15;
             details.push(
-              `✅ ${successfulResolvers} resolvers responded (good coverage)`
+              `✅ ${successfulResolvers} resolvers responded (good coverage)`,
             );
           } else {
             riskScore += 10;
             warnings.push("⚠️ Limited resolver responses");
             details.push(
-              "Only 2 resolvers responded - analysis may be less reliable"
+              "Only 2 resolvers responded - analysis may be less reliable",
             );
             recommendations.push(
-              "Consider retrying for more comprehensive analysis"
+              "Consider retrying for more comprehensive analysis",
             );
           }
 
@@ -7614,19 +8075,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 ips.length > 0 &&
                 ips.some((ip) =>
                   Object.values(resolverIPs).some((otherIPs) =>
-                    otherIPs.includes(ip)
-                  )
-                )
+                    otherIPs.includes(ip),
+                  ),
+                ),
             );
 
           // Pattern Analysis
           if (isKnownDomain && hasCDN && hasMultipleIPs && hasHighConsistency) {
             confidence += 25;
             details.push(
-              "✅ Pattern: Known domain with consistent CDN responses"
+              "✅ Pattern: Known domain with consistent CDN responses",
             );
             recommendations.push(
-              "Domain appears legitimate with proper CDN setup"
+              "Domain appears legitimate with proper CDN setup",
             );
           } else if (
             isKnownDomain &&
@@ -7638,14 +8099,14 @@ document.addEventListener("DOMContentLoaded", () => {
             warnings.push("⚠️ Known domain but inconsistent CDN responses");
             details.push("CDN responses vary significantly across resolvers");
             recommendations.push(
-              "Monitor for potential CDN configuration issues"
+              "Monitor for potential CDN configuration issues",
             );
           } else if (!isKnownDomain && hasMultipleIPs && !hasCDN) {
             riskScore += 25;
             warnings.push("⚠️ Unknown domain with multiple IPs but no CDN");
             details.push("This pattern is often associated with spoofing");
             recommendations.push(
-              "Exercise extreme caution - verify domain authenticity"
+              "Exercise extreme caution - verify domain authenticity",
             );
             recommendations.push("Check domain registration details");
           } else if (!isKnownDomain && hasMultipleIPs && hasCDN) {
@@ -7660,7 +8121,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (dnssecAnalysis.enabled) {
               confidence += 20;
               details.push(
-                `✅ DNSSEC enabled (${dnssecAnalysis.confidence}% confidence)`
+                `✅ DNSSEC enabled (${dnssecAnalysis.confidence}% confidence)`,
               );
 
               if (dnssecAnalysis.consistent) {
@@ -7675,7 +8136,7 @@ document.addEventListener("DOMContentLoaded", () => {
               if (dnssecAnalysis.adFlagCount > 0) {
                 confidence += 5;
                 details.push(
-                  `🔒 ${dnssecAnalysis.adFlagCount}/${dnssecAnalysis.totalResolvers} resolvers show authenticated data`
+                  `🔒 ${dnssecAnalysis.adFlagCount}/${dnssecAnalysis.totalResolvers} resolvers show authenticated data`,
                 );
               }
             } else {
@@ -7683,7 +8144,7 @@ document.addEventListener("DOMContentLoaded", () => {
               warnings.push("⚠️ DNSSEC not enabled");
               details.push("❌ No DNSSEC protection detected");
               recommendations.push(
-                "Consider enabling DNSSEC for better security"
+                "Consider enabling DNSSEC for better security",
               );
             }
 
@@ -7696,13 +8157,13 @@ document.addEventListener("DOMContentLoaded", () => {
           // 8. Domain-specific analysis
           if (hostname.includes("ietf.org")) {
             details.push(
-              "ℹ️ IETF domain - should have consistent authoritative responses"
+              "ℹ️ IETF domain - should have consistent authoritative responses",
             );
             if (hasMultipleIPs && !hasHighConsistency) {
               riskScore += 15;
               warnings.push("⚠️ IETF domain showing inconsistent responses");
               recommendations.push(
-                "IETF domains should have stable DNS - investigate inconsistencies"
+                "IETF domains should have stable DNS - investigate inconsistencies",
               );
             }
 
@@ -7711,7 +8172,7 @@ document.addEventListener("DOMContentLoaded", () => {
               riskScore += 20;
               warnings.push("⚠️ IETF domain should have DNSSEC enabled");
               recommendations.push(
-                "IETF domains typically use DNSSEC - verify configuration"
+                "IETF domains typically use DNSSEC - verify configuration",
               );
             }
           }
@@ -7732,7 +8193,7 @@ document.addEventListener("DOMContentLoaded", () => {
           } else if (finalRisk >= 30) {
             recommendations.unshift("Exercise extreme caution");
             recommendations.unshift(
-              "Verify through multiple independent sources"
+              "Verify through multiple independent sources",
             );
           } else if (finalRisk >= 10) {
             recommendations.unshift("Proceed with caution");
@@ -7771,14 +8232,14 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "DNS Spoof Check",
         "🧠 AI DNS spoofing model loaded successfully",
-        "success"
+        "success",
       );
     } catch (error) {
       logResult(
         new Date(),
         "DNS Spoof Check",
         `❌ Failed to load AI model: ${error.message}`,
-        "danger"
+        "danger",
       );
       dnsSpoofingModel = null;
     }
@@ -7788,7 +8249,7 @@ document.addEventListener("DOMContentLoaded", () => {
     logResult(
       new Date(),
       "DNS Spoof Check",
-      `🕵️ AI-Enhanced DNS spoofing analysis for ${url}...`
+      `🕵️ AI-Enhanced DNS spoofing analysis for ${url}...`,
     );
 
     try {
@@ -7806,7 +8267,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Check if input is an IP address
       const isIP =
         /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
-          url
+          url,
         );
 
       let hostname;
@@ -7817,7 +8278,7 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "DNS Spoof Check",
           `🔄 IP detected: ${url}. Performing reverse DNS lookup...`,
-          "info"
+          "info",
         );
 
         const reverseIP = url.split(".").reverse().join(".") + ".in-addr.arpa";
@@ -7825,7 +8286,7 @@ document.addEventListener("DOMContentLoaded", () => {
           `https://cloudflare-dns.com/dns-query?name=${reverseIP}&type=PTR`,
           {
             headers: { accept: "application/dns-json" },
-          }
+          },
         );
         const reverseData = await reverseResponse.json();
 
@@ -7835,7 +8296,7 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "DNS Spoof Check",
             `✅ Reverse DNS: ${url} → ${hostname}`,
-            "info"
+            "info",
           );
         } else {
           // If no reverse DNS, use the IP as hostname for analysis
@@ -7844,7 +8305,7 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "DNS Spoof Check",
             `⚠️ No reverse DNS record for ${url}. Analyzing IP directly.`,
-            "warning"
+            "warning",
           );
         }
       } else {
@@ -7867,7 +8328,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "DNS Spoof Check",
         `🔍 Querying ${resolvers.length} DNS resolvers...`,
-        "info"
+        "info",
       );
 
       // Query all resolvers in parallel with progress tracking
@@ -7880,18 +8341,18 @@ document.addEventListener("DOMContentLoaded", () => {
             updateStatus(
               `Querying ${resolver.name} A records (${index + 1}/${
                 resolvers.length
-              })...`
+              })...`,
             );
             const aResponse = await fetch(
               `${resolver.url}?name=${hostname}&type=A`,
               {
                 headers: { accept: "application/dns-json" },
-              }
+              },
             );
             const aData = await aResponse.json();
             completedQueries++;
             updateStatus(
-              `Querying ${resolver.name} DNSSEC (${completedQueries}/${totalQueries})...`
+              `Querying ${resolver.name} DNSSEC (${completedQueries}/${totalQueries})...`,
             );
 
             // Query DNSSEC records (DNSKEY and RRSIG)
@@ -7899,12 +8360,12 @@ document.addEventListener("DOMContentLoaded", () => {
               `${resolver.url}?name=${hostname}&type=DNSKEY`,
               {
                 headers: { accept: "application/dns-json" },
-              }
+              },
             );
             const dnssecData = await dnssecResponse.json();
             completedQueries++;
             updateStatus(
-              `Completed ${completedQueries}/${totalQueries} queries...`
+              `Completed ${completedQueries}/${totalQueries} queries...`,
             );
 
             return {
@@ -7916,7 +8377,7 @@ document.addEventListener("DOMContentLoaded", () => {
           } catch (error) {
             completedQueries += 2;
             updateStatus(
-              `Completed ${completedQueries}/${totalQueries} queries...`
+              `Completed ${completedQueries}/${totalQueries} queries...`,
             );
             return {
               resolver: resolver.name,
@@ -7924,7 +8385,7 @@ document.addEventListener("DOMContentLoaded", () => {
               error: error.message,
             };
           }
-        })
+        }),
       );
 
       // Process results and analyze for spoofing
@@ -7997,7 +8458,7 @@ document.addEventListener("DOMContentLoaded", () => {
             resolverIPs,
             allIPs,
             uniqueIPs,
-            dnssecAnalysis
+            dnssecAnalysis,
           )
         : {
             riskScore: 0,
@@ -8120,7 +8581,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "DNS Spoof Check",
         `❌ [ERROR] DNS spoofing check failed: ${error.message}`,
-        "danger"
+        "danger",
       );
     }
   }
@@ -8134,20 +8595,20 @@ document.addEventListener("DOMContentLoaded", () => {
         realTcpPortScan,
         () => document.getElementById("target-ip").value,
         "Please enter an IP address or hostname.",
-        "tcp-scan-btn"
-      )
+        "tcp-scan-btn",
+      ),
     );
   async function realTcpPortScan(target) {
     logResult(
       new Date(),
       "TCP Port Scan",
-      `🔌 Starting REAL TCP connectivity test of ${target}...`
+      `🔌 Starting REAL TCP connectivity test of ${target}...`,
     );
     logResult(
       new Date(),
       "TCP Port Scan",
       `⚠️ Note: Browser security limits direct socket access. Using available APIs for real connectivity testing.`,
-      "info"
+      "info",
     );
 
     try {
@@ -8185,7 +8646,7 @@ document.addEventListener("DOMContentLoaded", () => {
         `🔌 Testing ${
           testablePorts.length + wsTestPorts.length
         } ports with real connectivity checks on ${hostname}...`,
-        "info"
+        "info",
       );
 
       const openPorts = [];
@@ -8197,7 +8658,7 @@ document.addEventListener("DOMContentLoaded", () => {
         updateStatus(
           `Testing ${portInfo.protocol.toUpperCase()} on port ${
             portInfo.port
-          }...`
+          }...`,
         );
 
         try {
@@ -8225,7 +8686,7 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "TCP Port Scan",
             `✅ ${portInfo.port}/tcp OPEN ${portInfo.service} (${responseTime}ms)`,
-            "success"
+            "success",
           );
         } catch (error) {
           if (error.name === "AbortError") {
@@ -8234,7 +8695,7 @@ document.addEventListener("DOMContentLoaded", () => {
               new Date(),
               "TCP Port Scan",
               `⏱️ ${portInfo.port}/tcp TIMEOUT ${portInfo.service} (5000ms)`,
-              "warning"
+              "warning",
             );
           } else {
             closedPorts.push({ ...portInfo, error: error.message });
@@ -8242,7 +8703,7 @@ document.addEventListener("DOMContentLoaded", () => {
               new Date(),
               "TCP Port Scan",
               `❌ ${portInfo.port}/tcp CLOSED/FILTERED ${portInfo.service}`,
-              "info"
+              "info",
             );
           }
         }
@@ -8287,7 +8748,7 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "TCP Port Scan",
             `✅ ${portInfo.port}/tcp OPEN ${portInfo.service} WebSocket (${wsTest.time}ms)`,
-            "success"
+            "success",
           );
         } catch (error) {
           if (error.message.includes("timeout")) {
@@ -8296,7 +8757,7 @@ document.addEventListener("DOMContentLoaded", () => {
               new Date(),
               "TCP Port Scan",
               `⏱️ ${portInfo.port}/tcp TIMEOUT ${portInfo.service} WebSocket`,
-              "warning"
+              "warning",
             );
           } else {
             closedPorts.push({ ...portInfo, error: error.message });
@@ -8304,7 +8765,7 @@ document.addEventListener("DOMContentLoaded", () => {
               new Date(),
               "TCP Port Scan",
               `❌ ${portInfo.port}/tcp CLOSED/FILTERED ${portInfo.service} WebSocket`,
-              "info"
+              "info",
             );
           }
         }
@@ -8331,13 +8792,13 @@ document.addEventListener("DOMContentLoaded", () => {
           const method = port.protocol.toUpperCase();
           scanReport.push(
             `${port.port.toString().padEnd(7)} ${port.service.padEnd(
-              15
-            )} ${method.padEnd(9)} ${port.responseTime}ms      ${port.status}`
+              15,
+            )} ${method.padEnd(9)} ${port.responseTime}ms      ${port.status}`,
           );
         });
       } else {
         scanReport.push(
-          `No accessible ports detected with available browser methods`
+          `No accessible ports detected with available browser methods`,
         );
       }
 
@@ -8359,7 +8820,7 @@ document.addEventListener("DOMContentLoaded", () => {
       scanReport.push(``);
       scanReport.push(`REAL CONNECTIVITY SUMMARY:`);
       scanReport.push(
-        `Total ports tested: ${testablePorts.length + wsTestPorts.length}`
+        `Total ports tested: ${testablePorts.length + wsTestPorts.length}`,
       );
       scanReport.push(`Accessible: ${openPorts.length}`);
       scanReport.push(`Timeout/Filtered: ${timeoutPorts.length}`);
@@ -8377,7 +8838,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "TCP Port Scan",
         `❌ [ERROR] Real TCP connectivity test failed: ${error.message}`,
-        "danger"
+        "danger",
       );
     }
   }
@@ -8391,20 +8852,20 @@ document.addEventListener("DOMContentLoaded", () => {
         realUdpConnectivityTest,
         () => document.getElementById("target-ip").value,
         "Please enter an IP address or hostname.",
-        "udp-scan-btn"
-      )
+        "udp-scan-btn",
+      ),
     );
   async function realUdpConnectivityTest(target) {
     logResult(
       new Date(),
       "UDP Port Scan",
-      `📡 Starting REAL UDP-based service connectivity test of ${target}...`
+      `📡 Starting REAL UDP-based service connectivity test of ${target}...`,
     );
     logResult(
       new Date(),
       "UDP Port Scan",
       `⚠️ Note: Browsers cannot directly test UDP ports. Testing UDP-based services via available APIs.`,
-      "info"
+      "info",
     );
 
     try {
@@ -8421,7 +8882,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "UDP Port Scan",
         `📡 Testing UDP-based services on ${hostname}...`,
-        "info"
+        "info",
       );
 
       const testedServices = [];
@@ -8439,7 +8900,7 @@ document.addEventListener("DOMContentLoaded", () => {
           {
             method: "GET",
             headers: { Accept: "application/dns-json" },
-          }
+          },
         );
 
         const responseTime = Date.now() - startTime;
@@ -8453,14 +8914,14 @@ document.addEventListener("DOMContentLoaded", () => {
             responseTime,
             status: "DNS Resolution Working",
             details: `Resolved to ${dnsData.Answer.map((a) => a.data).join(
-              ", "
+              ", ",
             )}`,
           });
           logResult(
             new Date(),
             "UDP Port Scan",
             `✅ DNS (UDP 53) - Service responding (${responseTime}ms)`,
-            "success"
+            "success",
           );
         } else {
           failedServices.push({
@@ -8472,7 +8933,7 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "UDP Port Scan",
             `❌ DNS (UDP 53) - Service not responding`,
-            "info"
+            "info",
           );
         }
 
@@ -8483,7 +8944,7 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "UDP Port Scan",
           `❌ DNS (UDP 53) - Test failed: ${error.message}`,
-          "info"
+          "info",
         );
         testedServices.push({ port: 53, service: "DNS", tested: true });
       }
@@ -8501,7 +8962,7 @@ document.addEventListener("DOMContentLoaded", () => {
           {
             method: "GET",
             signal: AbortSignal.timeout(5000),
-          }
+          },
         );
 
         const responseTime = Date.now() - startTime;
@@ -8520,7 +8981,7 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "UDP Port Scan",
             `✅ NTP/Time (UDP 123) - Time service responding (${responseTime}ms)`,
-            "success"
+            "success",
           );
         } else {
           failedServices.push({
@@ -8532,7 +8993,7 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "UDP Port Scan",
             `❌ NTP (UDP 123) - Time service not available`,
-            "info"
+            "info",
           );
         }
 
@@ -8547,7 +9008,7 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "UDP Port Scan",
           `❌ NTP (UDP 123) - Test failed: ${error.message}`,
-          "info"
+          "info",
         );
         testedServices.push({ port: 123, service: "NTP", tested: true });
       }
@@ -8578,14 +9039,14 @@ document.addEventListener("DOMContentLoaded", () => {
             new Date(),
             "UDP Port Scan",
             `✅ DHCP (UDP 67/68) - Network connection indicates DHCP usage`,
-            "success"
+            "success",
           );
         } else {
           logResult(
             new Date(),
             "UDP Port Scan",
             `ℹ️ DHCP (UDP 67/68) - Network connection info unavailable`,
-            "info"
+            "info",
           );
         }
 
@@ -8595,7 +9056,7 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "UDP Port Scan",
           `❌ DHCP (UDP 67/68) - Test failed: ${error.message}`,
-          "info"
+          "info",
         );
         testedServices.push({ port: 67, service: "DHCP", tested: true });
       }
@@ -8624,7 +9085,7 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "UDP Port Scan",
           `✅ mDNS (UDP 5353) - Local network discovery working`,
-          "success"
+          "success",
         );
       } catch (error) {
         failedServices.push({
@@ -8636,7 +9097,7 @@ document.addEventListener("DOMContentLoaded", () => {
           new Date(),
           "UDP Port Scan",
           `❌ mDNS (UDP 5353) - Local network discovery failed`,
-          "info"
+          "info",
         );
       }
 
@@ -8664,10 +9125,10 @@ document.addEventListener("DOMContentLoaded", () => {
               : "N/A";
           scanReport.push(
             `${service.port.toString().padEnd(7)} ${service.service.padEnd(
-              10
+              10,
             )} ${service.protocol.padEnd(11)} ${response.padEnd(11)} ${
               service.status
-            }`
+            }`,
           );
           if (service.details) {
             scanReport.push(`        Details: ${service.details}`);
@@ -8675,7 +9136,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       } else {
         scanReport.push(
-          `No UDP services detected with available browser methods`
+          `No UDP services detected with available browser methods`,
         );
       }
 
@@ -8684,7 +9145,7 @@ document.addEventListener("DOMContentLoaded", () => {
         scanReport.push(`FAILED/UNAVAILABLE UDP SERVICES:`);
         failedServices.forEach((service) => {
           scanReport.push(
-            `${service.port}/udp ${service.service} - ${service.error}`
+            `${service.port}/udp ${service.service} - ${service.error}`,
           );
         });
       }
@@ -8696,7 +9157,7 @@ document.addEventListener("DOMContentLoaded", () => {
       scanReport.push(`• DNS, NTP, and network info are testable`);
       scanReport.push(`• Direct UDP port scanning requires native tools`);
       scanReport.push(
-        `• Results indicate service availability, not port status`
+        `• Results indicate service availability, not port status`,
       );
 
       scanReport.push(``);
@@ -8718,7 +9179,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "UDP Port Scan",
         `❌ [ERROR] Real UDP service test failed: ${error.message}`,
-        "danger"
+        "danger",
       );
     }
   }
@@ -8727,7 +9188,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function checkVtApiKey() {
     if (!virusTotalApiKey) {
       console.error("VirusTotal API key not configured");
-      CyberNotify.alert("Please enter your VirusTotal API Key in the sidebar first.", { type: 'warning' });
+      CyberNotify.alert(
+        "Please enter your VirusTotal API Key in the sidebar first.",
+        { type: "warning" },
+      );
       return false;
     }
     return true;
@@ -8742,14 +9206,14 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         feature,
         `🚨 [WARNING] Scan Results:\n  ${s.replace(/\n/g, "\n  ")}`,
-        "danger"
+        "danger",
       );
     else
       logResult(
         new Date(),
         feature,
         `✅ [SUCCESS] Scan Results:\n  ${s.replace(/\n/g, "\n  ")}`,
-        "success"
+        "success",
       );
   }
 
@@ -8799,18 +9263,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const maliciousDetections = Object.entries(analysis)
         .filter(([engine, result]) => result.category === "malicious")
         .map(
-          ([engine, result]) => `🚨 ${engine}: ${result.result || "Malicious"}`
+          ([engine, result]) => `🚨 ${engine}: ${result.result || "Malicious"}`,
         );
 
       const suspiciousDetections = Object.entries(analysis)
         .filter(([engine, result]) => result.category === "suspicious")
         .map(
-          ([engine, result]) => `⚠️ ${engine}: ${result.result || "Suspicious"}`
+          ([engine, result]) =>
+            `⚠️ ${engine}: ${result.result || "Suspicious"}`,
         );
 
       if (maliciousDetections.length > 0) {
         detections.push(
-          `\n🚨 Malicious Detections (${maliciousDetections.length}):`
+          `\n🚨 Malicious Detections (${maliciousDetections.length}):`,
         );
         detections.push(...maliciousDetections.slice(0, 10)); // Show top 10
         if (maliciousDetections.length > 10) {
@@ -8820,7 +9285,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (suspiciousDetections.length > 0) {
         detections.push(
-          `\n⚠️ Suspicious Detections (${suspiciousDetections.length}):`
+          `\n⚠️ Suspicious Detections (${suspiciousDetections.length}):`,
         );
         detections.push(...suspiciousDetections.slice(0, 5)); // Show top 5
         if (suspiciousDetections.length > 5) {
@@ -8835,17 +9300,17 @@ document.addEventListener("DOMContentLoaded", () => {
       behavior.push(`\n🔍 File Behavior:`);
       if (attributes.behaviour_analysis.network) {
         behavior.push(
-          `🌐 Network Activity: ${attributes.behaviour_analysis.network.length} network connections`
+          `🌐 Network Activity: ${attributes.behaviour_analysis.network.length} network connections`,
         );
       }
       if (attributes.behaviour_analysis.files) {
         behavior.push(
-          `📁 File Operations: ${attributes.behaviour_analysis.files.length} file operations`
+          `📁 File Operations: ${attributes.behaviour_analysis.files.length} file operations`,
         );
       }
       if (attributes.behaviour_analysis.processes) {
         behavior.push(
-          `⚙️ Process Activity: ${attributes.behaviour_analysis.processes.length} processes`
+          `⚙️ Process Activity: ${attributes.behaviour_analysis.processes.length} processes`,
         );
       }
     }
@@ -8877,7 +9342,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         feature,
         `🚨 [THREAT DETECTED]\n${allInfo}`,
-        "danger"
+        "danger",
       );
     } else {
       logResult(new Date(), feature, `✅ [CLEAN]\n${allInfo}`, "success");
@@ -8890,8 +9355,8 @@ document.addEventListener("DOMContentLoaded", () => {
       feature,
       `ℹ️ Analysis submitted. Waiting for results... (ID: ${id.substring(
         0,
-        20
-      )}...)`
+        20,
+      )}...)`,
     );
     for (let i = 0; i < 15; i++) {
       // Poll for max ~75 seconds
@@ -8899,7 +9364,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const res = await fetch(
           `${PROXY_URL}${encodeURIComponent(`${VT_BASE_URL}/analyses/${id}`)}`,
-          { headers: { "x-apikey": virusTotalApiKey } }
+          { headers: { "x-apikey": virusTotalApiKey } },
         );
         if (!res.ok) continue;
         const data = await res.json();
@@ -8915,7 +9380,7 @@ document.addEventListener("DOMContentLoaded", () => {
       new Date(),
       feature,
       "⚠️ [WARNING] Timed out waiting for VirusTotal analysis to complete.",
-      "warning"
+      "warning",
     );
   }
 
@@ -8927,8 +9392,8 @@ document.addEventListener("DOMContentLoaded", () => {
         scanHashVirusTotal,
         () => document.getElementById("vt-hash-input").value,
         "Please enter a file hash.",
-        "vt-hash-btn"
-      )
+        "vt-hash-btn",
+      ),
     );
   async function scanHashVirusTotal(hash) {
     if (!checkVtApiKey()) return;
@@ -8936,14 +9401,14 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const res = await fetch(
         `${PROXY_URL}${encodeURIComponent(`${VT_BASE_URL}/files/${hash}`)}`,
-        { headers: { "x-apikey": virusTotalApiKey } }
+        { headers: { "x-apikey": virusTotalApiKey } },
       );
       if (res.status === 404) {
         logResult(
           new Date(),
           "VT Hash Check",
           `ℹ️ Hash not found in VirusTotal database.`,
-          "info"
+          "info",
         );
         return;
       }
@@ -8957,7 +9422,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "VT Hash Check",
         `❌ [ERROR] API request failed: ${e.message}`,
-        "danger"
+        "danger",
       );
     }
   }
@@ -8970,15 +9435,15 @@ document.addEventListener("DOMContentLoaded", () => {
         scanUrlVirusTotal,
         () => document.getElementById("target-url").value,
         "Please enter a URL.",
-        "vt-url-btn"
-      )
+        "vt-url-btn",
+      ),
     );
   async function scanUrlVirusTotal(url) {
     if (!checkVtApiKey()) return;
     logResult(
       new Date(),
       "VT URL Scan",
-      `🦠 Submitting URL to VirusTotal: ${url}`
+      `🦠 Submitting URL to VirusTotal: ${url}`,
     );
     try {
       const res = await fetch(
@@ -8990,7 +9455,7 @@ document.addEventListener("DOMContentLoaded", () => {
             "Content-Type": "application/x-www-form-urlencoded",
           },
           body: new URLSearchParams({ url: url }),
-        }
+        },
       );
       if (!res.ok) throw new Error(`API returned status ${res.status}`);
       const data = await res.json();
@@ -9002,7 +9467,7 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "VT URL Scan",
         `❌ [ERROR] API request failed: ${e.message}`,
-        "danger"
+        "danger",
       );
     }
   }
@@ -9015,20 +9480,25 @@ document.addEventListener("DOMContentLoaded", () => {
         scanFileVirusTotal,
         () => document.getElementById("vt-file-input").files[0],
         "Please select a file to scan.",
-        "vt-file-btn"
-      )
+        "vt-file-btn",
+      ),
     );
   async function scanFileVirusTotal(file) {
     if (!checkVtApiKey()) return;
     if (file.size > 32 * 1024 * 1024) {
-      console.error("File size exceeds VirusTotal public API limit:", file.size);
-      CyberNotify.alert("File is too large for the public API (> 32MB).", { type: 'warning' });
+      console.error(
+        "File size exceeds VirusTotal public API limit:",
+        file.size,
+      );
+      CyberNotify.alert("File is too large for the public API (> 32MB).", {
+        type: "warning",
+      });
       return;
     }
     logResult(
       new Date(),
       "VT File Scan",
-      `🦠 Uploading file to VirusTotal: ${file.name}`
+      `🦠 Uploading file to VirusTotal: ${file.name}`,
     );
     try {
       const formData = new FormData();
@@ -9039,7 +9509,7 @@ document.addEventListener("DOMContentLoaded", () => {
           method: "POST",
           headers: { "x-apikey": virusTotalApiKey },
           body: formData,
-        }
+        },
       );
       if (!res.ok) throw new Error(`API returned status ${res.status}`);
       const data = await res.json();
@@ -9051,34 +9521,41 @@ document.addEventListener("DOMContentLoaded", () => {
         new Date(),
         "VT File Scan",
         `❌ [ERROR] API request failed: ${e.message}`,
-        "danger"
+        "danger",
       );
     }
   }
 
   // ===== TOOL REGISTRY =====
   // Maps tool button IDs to their corresponding scanning functions
-  
+
   /**
    * Tool Registry - Maps tool button IDs to their scanning functions
    * Provides centralized tool configuration for selective execution
    */
   const ToolRegistry = {
     // Network Tools - Map tool IDs to arrow functions that execute the scanning functions
-    'port-scan-btn': () => portScan(document.getElementById('target-ip').value),
-    'tcp-scan-btn': () => realTcpPortScan(document.getElementById('target-ip').value),
-    'udp-scan-btn': () => realUdpConnectivityTest(document.getElementById('target-ip').value),
-    'ip-geo-btn': () => ipGeolocation(document.getElementById('target-ip').value),
-    'reverse-dns-btn': () => reverseDns(document.getElementById('target-ip').value),
-    'whois-btn': () => whoisLookup(document.getElementById('target-ip').value),
-    'threat-intel-btn': () => threatIntelCheck(document.getElementById('target-ip').value),
-    
+    "port-scan-btn": () => portScan(document.getElementById("target-ip").value),
+    "tcp-scan-btn": () =>
+      realTcpPortScan(document.getElementById("target-ip").value),
+    "udp-scan-btn": () =>
+      realUdpConnectivityTest(document.getElementById("target-ip").value),
+    "ip-geo-btn": () =>
+      ipGeolocation(document.getElementById("target-ip").value),
+    "reverse-dns-btn": () =>
+      reverseDns(document.getElementById("target-ip").value),
+    "whois-btn": () => whoisLookup(document.getElementById("target-ip").value),
+    "threat-intel-btn": () =>
+      threatIntelCheck(document.getElementById("target-ip").value),
+
     // Web Security Tools - Map tool IDs to arrow functions that execute the scanning functions
-    'xss-btn': () => testXss(document.getElementById('target-url').value),
-    'ssl-btn': () => checkSsl(document.getElementById('target-url').value),
-    'phishing-btn': () => detectPhishing(document.getElementById('target-url').value),
-    'dns-spoof-btn': () => checkDnsSpoof(document.getElementById('target-url').value),
-    
+    "xss-btn": () => testXss(document.getElementById("target-url").value),
+    "ssl-btn": () => checkSsl(document.getElementById("target-url").value),
+    "phishing-btn": () =>
+      detectPhishing(document.getElementById("target-url").value),
+    "dns-spoof-btn": () =>
+      checkDnsSpoof(document.getElementById("target-url").value),
+
     /**
      * Gets the function reference for a tool ID
      * @param {string} toolId - The tool button ID
@@ -9087,20 +9564,20 @@ document.addEventListener("DOMContentLoaded", () => {
     getToolFunction(toolId) {
       return this[toolId] || null;
     },
-    
+
     /**
      * Checks if a tool ID exists in the registry and verifies it's a function
      * @param {string} toolId - The tool button ID
      * @returns {boolean} True if tool exists and is a function
      */
     hasToolFunction(toolId) {
-      return toolId in this && typeof this[toolId] === 'function';
-    }
+      return toolId in this && typeof this[toolId] === "function";
+    },
   };
 
   // ===== SELECTION MANAGER =====
   // Manages tool card selection state for selective execution
-  
+
   /**
    * Selection Manager - Manages tool card selection state
    */
@@ -9113,27 +9590,27 @@ document.addEventListener("DOMContentLoaded", () => {
       this.restoreSelections();
       this.updateSelectionCount();
     },
-    
+
     /**
      * Attaches click event listeners to all tool cards
      */
     attachEventListeners() {
-      const toolCards = document.querySelectorAll('.cyber-tool-card');
-      
-      toolCards.forEach(card => {
-        card.addEventListener('click', (e) => {
+      const toolCards = document.querySelectorAll(".cyber-tool-card");
+
+      toolCards.forEach((card) => {
+        card.addEventListener("click", (e) => {
           // Prevent toggle if clicking on the tool button itself
           // Check if the click target is a button or inside a button
           if (e.target.closest('button[id$="-btn"]')) {
             return;
           }
-          
+
           // Toggle selection for this card
           this.toggleSelection(card);
         });
       });
     },
-    
+
     /**
      * Toggles selection state for a tool card
      * @param {HTMLElement} card - The tool card element
@@ -9141,27 +9618,27 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleSelection(card) {
       const isSelected = card.dataset.selected === "true";
       card.dataset.selected = (!isSelected).toString();
-      
+
       this.updateVisuals(card);
       this.saveToLocalStorage();
       this.updateSelectionCount();
     },
-    
+
     /**
      * Updates visual indicators for a card
      * @param {HTMLElement} card - The tool card element
      */
     updateVisuals(card) {
-      const indicator = card.querySelector('.selection-indicator');
+      const indicator = card.querySelector(".selection-indicator");
       const isSelected = card.dataset.selected === "true";
-      
+
       if (isSelected) {
-        indicator?.classList.remove('hidden');
+        indicator?.classList.remove("hidden");
       } else {
-        indicator?.classList.add('hidden');
+        indicator?.classList.add("hidden");
       }
     },
-    
+
     /**
      * Gets all selected tool IDs in the specified tab
      * @param {string} tabId - The tab ID ('network-tools' or 'web-security')
@@ -9170,95 +9647,106 @@ document.addEventListener("DOMContentLoaded", () => {
     getSelectedTools(tabId) {
       const tab = document.getElementById(tabId);
       if (!tab) return [];
-      
-      const selectedCards = tab.querySelectorAll('.cyber-tool-card[data-selected="true"]');
+
+      const selectedCards = tab.querySelectorAll(
+        '.cyber-tool-card[data-selected="true"]',
+      );
       const toolIds = [];
-      
-      selectedCards.forEach(card => {
+
+      selectedCards.forEach((card) => {
         const toolId = card.dataset.toolId;
         if (toolId) {
           toolIds.push(toolId);
         }
       });
-      
+
       return toolIds;
     },
-    
+
     /**
      * Updates the selection count display
      */
     updateSelectionCount() {
-      const activeTab = document.querySelector('.tab-pane.active');
+      const activeTab = document.querySelector(".tab-pane.active");
       if (!activeTab) return;
-      
-      const selectedCount = activeTab.querySelectorAll('.cyber-tool-card[data-selected="true"]').length;
-      
+
+      const selectedCount = activeTab.querySelectorAll(
+        '.cyber-tool-card[data-selected="true"]',
+      ).length;
+
       // Determine which count display to update based on active tab
-      const isNetworkTab = activeTab.id === 'network-tools';
-      const countDisplay = document.getElementById(isNetworkTab ? 'selection-count-display' : 'selection-count-display-web');
-      
+      const isNetworkTab = activeTab.id === "network-tools";
+      const countDisplay = document.getElementById(
+        isNetworkTab
+          ? "selection-count-display"
+          : "selection-count-display-web",
+      );
+
       if (countDisplay) {
         if (selectedCount === 0) {
-          countDisplay.textContent = 'No tools selected';
-          countDisplay.className = 'text-xs text-slate-500';
+          countDisplay.textContent = "No tools selected";
+          countDisplay.className = "text-xs text-slate-500";
         } else {
-          countDisplay.textContent = `${selectedCount} tool${selectedCount > 1 ? 's' : ''} selected`;
-          countDisplay.className = 'text-xs text-purple-400 font-semibold';
+          countDisplay.textContent = `${selectedCount} tool${selectedCount > 1 ? "s" : ""} selected`;
+          countDisplay.className = "text-xs text-purple-400 font-semibold";
         }
       }
     },
-    
+
     /**
      * Saves selection state to localStorage
      */
     saveToLocalStorage() {
       const selections = {};
-      const toolCards = document.querySelectorAll('.cyber-tool-card');
-      
-      toolCards.forEach(card => {
+      const toolCards = document.querySelectorAll(".cyber-tool-card");
+
+      toolCards.forEach((card) => {
         const toolId = card.dataset.toolId;
         const isSelected = card.dataset.selected === "true";
         if (toolId) {
           selections[toolId] = isSelected;
         }
       });
-      
+
       try {
-        localStorage.setItem('cyberguard-tool-selections', JSON.stringify(selections));
+        localStorage.setItem(
+          "cyberguard-tool-selections",
+          JSON.stringify(selections),
+        );
       } catch (e) {
-        console.error('Failed to save selections to localStorage:', e);
+        console.error("Failed to save selections to localStorage:", e);
       }
     },
-    
+
     /**
      * Restores selection state from localStorage
      */
     restoreSelections() {
       try {
-        const saved = localStorage.getItem('cyberguard-tool-selections');
+        const saved = localStorage.getItem("cyberguard-tool-selections");
         if (!saved) return;
-        
+
         const selections = JSON.parse(saved);
-        const toolCards = document.querySelectorAll('.cyber-tool-card');
-        
-        toolCards.forEach(card => {
+        const toolCards = document.querySelectorAll(".cyber-tool-card");
+
+        toolCards.forEach((card) => {
           const toolId = card.dataset.toolId;
           if (toolId && selections[toolId] !== undefined) {
             card.dataset.selected = selections[toolId].toString();
             this.updateVisuals(card);
           }
         });
-        
+
         this.updateSelectionCount();
       } catch (e) {
-        console.error('Failed to restore selections from localStorage:', e);
+        console.error("Failed to restore selections from localStorage:", e);
       }
-    }
+    },
   };
 
   // ===== SELECT ALL TOGGLE =====
   // Handles Select All / Deselect All toggle functionality
-  
+
   /**
    * SelectAllToggle - Manages bulk selection operations
    */
@@ -9267,75 +9755,84 @@ document.addEventListener("DOMContentLoaded", () => {
      * Initializes the toggle buttons for both tabs
      */
     init() {
-      const toggleBtnNetwork = document.getElementById('select-all-toggle-btn');
-      const toggleBtnWeb = document.getElementById('select-all-toggle-btn-web');
-      
+      const toggleBtnNetwork = document.getElementById("select-all-toggle-btn");
+      const toggleBtnWeb = document.getElementById("select-all-toggle-btn-web");
+
       if (toggleBtnNetwork) {
-        toggleBtnNetwork.addEventListener('click', () => {
+        toggleBtnNetwork.addEventListener("click", () => {
           this.toggleAll();
         });
       }
-      
+
       if (toggleBtnWeb) {
-        toggleBtnWeb.addEventListener('click', () => {
+        toggleBtnWeb.addEventListener("click", () => {
           this.toggleAll();
         });
       }
-      
+
       this.updateButtonLabel();
     },
-    
+
     /**
      * Toggles all tool cards in the active tab
      */
     toggleAll() {
-      const activeTab = document.querySelector('.tab-pane.active');
+      const activeTab = document.querySelector(".tab-pane.active");
       if (!activeTab) return;
-      
-      const toolCards = activeTab.querySelectorAll('.cyber-tool-card');
-      const hasAnySelected = Array.from(toolCards).some(card => card.dataset.selected === "true");
-      
+
+      const toolCards = activeTab.querySelectorAll(".cyber-tool-card");
+      const hasAnySelected = Array.from(toolCards).some(
+        (card) => card.dataset.selected === "true",
+      );
+
       // If any are selected, deselect all. Otherwise, select all.
       const newState = !hasAnySelected;
-      
+
       toolCards.forEach((card, index) => {
         setTimeout(() => {
           card.dataset.selected = newState.toString();
           SelectionManager.updateVisuals(card);
         }, index * 50); // Staggered animation
       });
-      
+
       // Save and update after all animations
-      setTimeout(() => {
-        SelectionManager.saveToLocalStorage();
-        SelectionManager.updateSelectionCount();
-        this.updateButtonLabel();
-      }, toolCards.length * 50 + 100);
+      setTimeout(
+        () => {
+          SelectionManager.saveToLocalStorage();
+          SelectionManager.updateSelectionCount();
+          this.updateButtonLabel();
+        },
+        toolCards.length * 50 + 100,
+      );
     },
-    
+
     /**
      * Updates the toggle button label based on current state
      */
     updateButtonLabel() {
-      const activeTab = document.querySelector('.tab-pane.active');
+      const activeTab = document.querySelector(".tab-pane.active");
       if (!activeTab) return;
-      
+
       // Determine which button to update based on active tab
-      const isNetworkTab = activeTab.id === 'network-tools';
-      const toggleBtn = document.getElementById(isNetworkTab ? 'select-all-toggle-btn' : 'select-all-toggle-btn-web');
-      
+      const isNetworkTab = activeTab.id === "network-tools";
+      const toggleBtn = document.getElementById(
+        isNetworkTab ? "select-all-toggle-btn" : "select-all-toggle-btn-web",
+      );
+
       if (!toggleBtn) return;
-      
-      const toolCards = activeTab.querySelectorAll('.cyber-tool-card');
-      const hasAnySelected = Array.from(toolCards).some(card => card.dataset.selected === "true");
-      
-      toggleBtn.textContent = hasAnySelected ? 'Deselect All' : 'Select All';
-    }
+
+      const toolCards = activeTab.querySelectorAll(".cyber-tool-card");
+      const hasAnySelected = Array.from(toolCards).some(
+        (card) => card.dataset.selected === "true",
+      );
+
+      toggleBtn.textContent = hasAnySelected ? "Deselect All" : "Select All";
+    },
   };
 
   // ===== EXECUTION CONTROLLER =====
   // Handles selective tool execution with validation
-  
+
   /**
    * ExecutionController - Manages selective tool execution
    */
@@ -9346,17 +9843,18 @@ document.addEventListener("DOMContentLoaded", () => {
      * @returns {Promise<void>}
      */
     delay(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
+      return new Promise((resolve) => setTimeout(resolve, ms));
     },
-    
+
     /**
      * Shows a toast notification
      * @param {string} message - The message to display
      */
     showToast(message) {
       // Create toast element
-      const toast = document.createElement('div');
-      toast.className = 'cyber-toast fixed top-20 right-6 bg-slate-800 border border-purple-500/30 rounded-lg p-4 shadow-lg z-50 flex items-center gap-3';
+      const toast = document.createElement("div");
+      toast.className =
+        "cyber-toast fixed top-20 right-6 bg-slate-800 border border-purple-500/30 rounded-lg p-4 shadow-lg z-50 flex items-center gap-3";
       toast.innerHTML = `
         <svg class="w-5 h-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
@@ -9368,21 +9866,21 @@ document.addEventListener("DOMContentLoaded", () => {
           </svg>
         </button>
       `;
-      
+
       document.body.appendChild(toast);
-      
+
       // Add dismiss handler
-      const dismissBtn = toast.querySelector('button');
-      dismissBtn.addEventListener('click', () => {
+      const dismissBtn = toast.querySelector("button");
+      dismissBtn.addEventListener("click", () => {
         toast.remove();
       });
-      
+
       // Auto-dismiss after 3 seconds
       setTimeout(() => {
         toast.remove();
       }, 3000);
     },
-    
+
     /**
      * Focuses the first tool card in a tab
      * @param {string} tabId - The tab ID
@@ -9390,14 +9888,14 @@ document.addEventListener("DOMContentLoaded", () => {
     focusFirstToolCard(tabId) {
       const tab = document.getElementById(tabId);
       if (!tab) return;
-      
-      const firstCard = tab.querySelector('.cyber-tool-card');
+
+      const firstCard = tab.querySelector(".cyber-tool-card");
       if (firstCard) {
         firstCard.focus();
-        firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstCard.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     },
-    
+
     /**
      * Executes selected network tools
      * @param {string} target - The target IP or domain
@@ -9405,31 +9903,33 @@ document.addEventListener("DOMContentLoaded", () => {
      */
     async executeNetworkScan(target) {
       // Validate target
-      const validation = validateTargetInput(target, 'Network Scan');
+      const validation = validateTargetInput(target, "Network Scan");
       if (!validation.valid) {
         this.showToast(validation.message);
         return;
       }
-      
+
       // Get selected tools
-      const selectedTools = SelectionManager.getSelectedTools('network-tools');
-      
+      const selectedTools = SelectionManager.getSelectedTools("network-tools");
+
       // Validate selection
       if (selectedTools.length === 0) {
-        this.showToast('Please select at least one tool');
-        this.focusFirstToolCard('network-tools');
+        this.showToast("Please select at least one tool");
+        this.focusFirstToolCard("network-tools");
         return;
       }
-      
+
       // Dispatch scan start event
-      document.dispatchEvent(new CustomEvent('cyberguard:scanStart', {
-        detail: { target, toolCount: selectedTools.length }
-      }));
-      
+      document.dispatchEvent(
+        new CustomEvent("cyberguard:scanStart", {
+          detail: { target, toolCount: selectedTools.length },
+        }),
+      );
+
       // Execute selected tools sequentially
       for (const toolId of selectedTools) {
         if (shouldStopScan) break;
-        
+
         const toolFunction = ToolRegistry.getToolFunction(toolId);
         if (toolFunction) {
           try {
@@ -9437,16 +9937,16 @@ document.addEventListener("DOMContentLoaded", () => {
           } catch (error) {
             console.error(`Error executing ${toolId}:`, error);
           }
-          
+
           // 200ms delay between tools
           await this.delay(200);
         }
       }
-      
+
       // Dispatch scan result event with calculated risk metrics
       _dispatchRiskGaugeUpdate();
     },
-    
+
     /**
      * Executes selected web security tools
      * @param {string} url - The target URL
@@ -9454,25 +9954,25 @@ document.addEventListener("DOMContentLoaded", () => {
      */
     async executeWebSecurityScan(url) {
       // Validate URL
-      if (!url || url.trim() === '') {
-        this.showToast('Please enter a target URL');
+      if (!url || url.trim() === "") {
+        this.showToast("Please enter a target URL");
         return;
       }
-      
+
       // Get selected tools
-      const selectedTools = SelectionManager.getSelectedTools('web-security');
-      
+      const selectedTools = SelectionManager.getSelectedTools("web-security");
+
       // Validate selection
       if (selectedTools.length === 0) {
-        this.showToast('Please select at least one web security tool');
-        this.focusFirstToolCard('web-security');
+        this.showToast("Please select at least one web security tool");
+        this.focusFirstToolCard("web-security");
         return;
       }
-      
+
       // Execute selected tools sequentially
       for (const toolId of selectedTools) {
         if (shouldStopScan) break;
-        
+
         const toolFunction = ToolRegistry.getToolFunction(toolId);
         if (toolFunction) {
           try {
@@ -9480,15 +9980,15 @@ document.addEventListener("DOMContentLoaded", () => {
           } catch (error) {
             console.error(`Error executing ${toolId}:`, error);
           }
-          
+
           // 200ms delay between tools
           await this.delay(200);
         }
       }
-      
+
       // Dispatch risk gauge update after scan completion
       _dispatchRiskGaugeUpdate();
-    }
+    },
   };
 
   // --- Initial setup ---
@@ -9500,10 +10000,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initialize modern results system
   initializeModernResults();
-  
+
   // Initialize SelectionManager
   SelectionManager.init();
-  
+
   // Initialize SelectAllToggle
   SelectAllToggle.init();
 
@@ -9517,29 +10017,37 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Execute Scan button clicked!"); // Debug log
       const target = document.getElementById("target-ip")?.value?.trim();
       console.log("Target value:", target); // Debug log
-      
+
       // Disable button during scan
       executeScanBtn.disabled = true;
       executeScanBtn.classList.add("button-disabled");
-      
+
       // Reset stop flag
       shouldStopScan = false;
-      
+
       // Track scan start time and target for Summary Bar
       scanStartTime = Date.now();
       currentScanTarget = target;
-      
+
       // Update Summary Bar when scan starts (show target, reset time)
-      updateSummaryBar(resultsData.length, '--', currentScanTarget);
-      
+      updateSummaryBar(resultsData.length, "--", currentScanTarget);
+
       // Execute selective network scan via ExecutionController
       await ExecutionController.executeNetworkScan(target);
-      
+
       // Track scan end time and update Summary Bar with duration
       scanEndTime = Date.now();
-      const metrics = calculateSummaryMetrics(resultsData, scanStartTime, scanEndTime);
-      updateSummaryBar(metrics.totalIssues, metrics.timeTaken, currentScanTarget);
-      
+      const metrics = calculateSummaryMetrics(
+        resultsData,
+        scanStartTime,
+        scanEndTime,
+      );
+      updateSummaryBar(
+        metrics.totalIssues,
+        metrics.timeTaken,
+        currentScanTarget,
+      );
+
       // Re-enable button after scan
       executeScanBtn.disabled = false;
       executeScanBtn.classList.remove("button-disabled");
@@ -9554,11 +10062,16 @@ document.addEventListener("DOMContentLoaded", () => {
     stopScanBtn.addEventListener("click", () => {
       if (isRunning) {
         shouldStopScan = true;
-        logResult(new Date(), "System", "🛑 Stopping scan... Please wait for current operation to complete.", "warning");
+        logResult(
+          new Date(),
+          "System",
+          "🛑 Stopping scan... Please wait for current operation to complete.",
+          "warning",
+        );
         updateStatus("Stopping scan...");
-        
+
         // Dispatch scan error event to reset dashboard
-        document.dispatchEvent(new CustomEvent('cyberguard:scanError'));
+        document.dispatchEvent(new CustomEvent("cyberguard:scanError"));
       }
     });
   }
@@ -9568,29 +10081,37 @@ document.addEventListener("DOMContentLoaded", () => {
   if (runAnalysisBtn) {
     runAnalysisBtn.addEventListener("click", async () => {
       const url = document.getElementById("target-url")?.value?.trim();
-      
+
       // Disable button during scan
       runAnalysisBtn.disabled = true;
       runAnalysisBtn.classList.add("button-disabled");
-      
+
       // Reset stop flag
       shouldStopScan = false;
-      
+
       // Track scan start time and target for Summary Bar
       scanStartTime = Date.now();
       currentScanTarget = url;
-      
+
       // Update Summary Bar when scan starts (show target, reset time)
-      updateSummaryBar(resultsData.length, '--', currentScanTarget);
-      
+      updateSummaryBar(resultsData.length, "--", currentScanTarget);
+
       // Execute selective web security scan via ExecutionController
       await ExecutionController.executeWebSecurityScan(url);
-      
+
       // Track scan end time and update Summary Bar with duration
       scanEndTime = Date.now();
-      const metrics = calculateSummaryMetrics(resultsData, scanStartTime, scanEndTime);
-      updateSummaryBar(metrics.totalIssues, metrics.timeTaken, currentScanTarget);
-      
+      const metrics = calculateSummaryMetrics(
+        resultsData,
+        scanStartTime,
+        scanEndTime,
+      );
+      updateSummaryBar(
+        metrics.totalIssues,
+        metrics.timeTaken,
+        currentScanTarget,
+      );
+
       // Re-enable button after scan
       runAnalysisBtn.disabled = false;
       runAnalysisBtn.classList.remove("button-disabled");
@@ -9611,9 +10132,17 @@ document.addEventListener("DOMContentLoaded", () => {
       switchToTab("network-tools");
       setTimeout(() => {
         const targetInput = document.getElementById("target-ip");
-        if (targetInput) { targetInput.value = ""; targetInput.focus(); }
+        if (targetInput) {
+          targetInput.value = "";
+          targetInput.focus();
+        }
       }, 150);
-      logResult(new Date(), "System", "🔄 New scan session started. Enter a target to begin.", "system");
+      logResult(
+        new Date(),
+        "System",
+        "🔄 New scan session started. Enter a target to begin.",
+        "system",
+      );
     });
   }
 
@@ -9638,35 +10167,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
 */
 (function initAIAssistant() {
-
-
   // OpenRouter free model (Llama 4 Scout via Meta)
   const OPENROUTER_API_KEY = "";
-  const OPENROUTER_MODEL   = "";
+  const OPENROUTER_MODEL = "";
 
   // Groq free model (alternative — uncomment USE_GROQ to switch)
   const GROQ_API_KEY = "";
-  const GROQ_MODEL   = "";
+  const GROQ_MODEL = "";
 
   // Set to true to use Groq instead of OpenRouter
   const USE_GROQ = false;
 
-  const SYSTEM_PROMPT = `You are a helpful AI assistant built into CyberGuard Pro, a cybersecurity dashboard. 
+  const SYSTEM_PROMPT = `You are a helpful AI assistant built into CyberGuard Pro, a cybersecurity dashboard.
 You help users understand and use the dashboard's tools:
 - Network Scanner: reverse DNS, IP geolocation, WHOIS lookup, port scanner (TCP/UDP), threat intelligence
 - Web Security: URL phishing analyser, XSS tester, SSL/TLS checker, DNS spoofing detector, VirusTotal integration
 - Hash & Crypto: MD5/SHA hash generation, file hashing, password strength analyser
 
 You also answer general cybersecurity questions.
-Keep answers concise, clear, and practical. Use bullet points for lists. 
+Keep answers concise, clear, and practical. Use bullet points for lists.
 If asked about something unrelated to cybersecurity, politely redirect.`;
 
   // ─── DOM REFERENCES ─────────────────────────────────────────────
-  const messagesEl  = document.getElementById("ai-messages");
-  const inputEl     = document.getElementById("ai-input");
-  const sendBtn     = document.getElementById("ai-send-btn");
-  const clearBtn    = document.getElementById("ai-clear-btn");
-  const suggestEl   = document.getElementById("ai-suggestions");
+  const messagesEl = document.getElementById("ai-messages");
+  const inputEl = document.getElementById("ai-input");
+  const sendBtn = document.getElementById("ai-send-btn");
+  const clearBtn = document.getElementById("ai-clear-btn");
+  const suggestEl = document.getElementById("ai-suggestions");
 
   // Guard: elements must exist
   if (!messagesEl || !inputEl || !sendBtn) return;
@@ -9769,8 +10296,14 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
     } catch (err) {
       removeTyping(typingId);
       const fallbackReply = localFallback(text);
-      appendMessage("ai", `⚠️ *API error — using offline mode:*\n\n${fallbackReply}`);
-      console.warn("[AI Assistant] API call failed, using fallback:", err.message);
+      appendMessage(
+        "ai",
+        `⚠️ *API error — using offline mode:*\n\n${fallbackReply}`,
+      );
+      console.warn(
+        "[AI Assistant] API call failed, using fallback:",
+        err.message,
+      );
     } finally {
       setWaiting(false);
     }
@@ -9790,7 +10323,7 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
       url = "https://api.groq.com/openai/v1/chat/completions";
       headers = {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${GROQ_API_KEY}`,
+        Authorization: `Bearer ${GROQ_API_KEY}`,
       };
       body = JSON.stringify({
         model: GROQ_MODEL,
@@ -9803,7 +10336,7 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
       url = "https://openrouter.ai/api/v1/chat/completions";
       headers = {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
         "HTTP-Referer": window.location.href,
         "X-Title": "CyberGuard Pro AI Assistant",
       };
@@ -9823,7 +10356,10 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
     }
 
     const data = await res.json();
-    return data.choices?.[0]?.message?.content?.trim() || "I couldn't generate a response. Please try again.";
+    return (
+      data.choices?.[0]?.message?.content?.trim() ||
+      "I couldn't generate a response. Please try again."
+    );
   }
 
   // ─── LOCAL FALLBACK (keyword matching) ──────────────────────────
@@ -9864,7 +10400,10 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
   // ─── UI HELPERS ─────────────────────────────────────────────────
   function appendMessage(role, text) {
     const isUser = role === "user";
-    const time   = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const time = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
     const wrap = document.createElement("div");
     wrap.className = `ai-msg ${role}`;
@@ -9961,10 +10500,16 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
     const out = [];
     for (let line of lines) {
       if (/^[-•]\s/.test(line)) {
-        if (!inList) { out.push("<ul>"); inList = true; }
+        if (!inList) {
+          out.push("<ul>");
+          inList = true;
+        }
         out.push(`<li>${line.replace(/^[-•]\s/, "")}</li>`);
       } else {
-        if (inList) { out.push("</ul>"); inList = false; }
+        if (inList) {
+          out.push("</ul>");
+          inList = false;
+        }
         if (line.trim() === "") {
           out.push("<br>");
         } else {
@@ -9976,7 +10521,6 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
 
     return out.join("");
   }
-
 })(); // end initAIAssistant IIFE
 
 // ===== PROJECT MANAGEMENT UI =====
@@ -9995,9 +10539,12 @@ function editProject(projectId) {
   if (window.projectManager) {
     window.projectManager.showEditProjectModal(projectId);
   } else {
-    console.error('[editProject] ProjectManager not initialized');
+    console.error("[editProject] ProjectManager not initialized");
     if (window.CyberNotify) {
-      window.CyberNotify.alert('Project manager not ready. Please refresh the page.', { type: 'error' });
+      window.CyberNotify.alert(
+        "Project manager not ready. Please refresh the page.",
+        { type: "error" },
+      );
     }
   }
 }
@@ -10010,41 +10557,45 @@ function deleteProject(projectId) {
   if (window.projectManager) {
     window.projectManager.deleteProjectConfirm(projectId);
   } else {
-    console.error('[deleteProject] ProjectManager not initialized');
+    console.error("[deleteProject] ProjectManager not initialized");
     if (window.CyberNotify) {
-      window.CyberNotify.alert('Project manager not ready. Please refresh the page.', { type: 'error' });
+      window.CyberNotify.alert(
+        "Project manager not ready. Please refresh the page.",
+        { type: "error" },
+      );
     }
   }
 }
 
 function renderProjectCard(project) {
   // Validate project object
-  if (!project || typeof project !== 'object') {
-    console.error('[renderProjectCard] Invalid project object:', project);
-    return '';
+  if (!project || typeof project !== "object") {
+    console.error("[renderProjectCard] Invalid project object:", project);
+    return "";
   }
 
   // Extract project data with defaults
   const {
-    id = '',
-    name = 'Untitled Project',
-    description = 'No description provided',
-    status = 'active',
+    id = "",
+    name = "Untitled Project",
+    description = "No description provided",
+    status = "active",
     targets_count = 0,
     collaborators = [],
-    active_collaborators = []
+    active_collaborators = [],
   } = project;
 
   // Use active_collaborators from API if collaborators is empty
-  const collabList = collaborators.length > 0 ? collaborators : active_collaborators;
+  const collabList =
+    collaborators.length > 0 ? collaborators : active_collaborators;
 
   // Map status to badge class
   const statusBadgeMap = {
-    'active': 'cyber-badge-safe',
-    'completed': 'cyber-badge-info',
-    'archived': 'cyber-badge-warning'
+    active: "cyber-badge-safe",
+    completed: "cyber-badge-info",
+    archived: "cyber-badge-warning",
   };
-  const badgeClass = statusBadgeMap[status] || 'cyber-badge-info';
+  const badgeClass = statusBadgeMap[status] || "cyber-badge-info";
 
   // Capitalize status for display
   const statusDisplay = status.charAt(0).toUpperCase() + status.slice(1);
@@ -10054,32 +10605,36 @@ function renderProjectCard(project) {
   const visibleCollaborators = collabList.slice(0, maxVisibleCollaborators);
   const remainingCount = collabList.length - maxVisibleCollaborators;
 
-  const collaboratorAvatarsHTML = visibleCollaborators.map(collaborator => {
-    // Generate initials from full_name
-    const initials = collaborator.full_name
-      ? collaborator.full_name
-          .split(' ')
-          .map(word => word.charAt(0).toUpperCase())
-          .join('')
-          .slice(0, 2)
-      : '??';
+  const collaboratorAvatarsHTML = visibleCollaborators
+    .map((collaborator) => {
+      // Generate initials from full_name
+      const initials = collaborator.full_name
+        ? collaborator.full_name
+            .split(" ")
+            .map((word) => word.charAt(0).toUpperCase())
+            .join("")
+            .slice(0, 2)
+        : "??";
 
-    return `
-      <div class="cyber-avatar-sm text-xs font-bold text-white" title="${collaborator.full_name || 'Unknown'}">
+      return `
+      <div class="cyber-avatar-sm text-xs font-bold text-white" title="${collaborator.full_name || "Unknown"}">
         ${initials}
       </div>
     `;
-  }).join('');
+    })
+    .join("");
 
   // Add remaining count indicator if there are more collaborators
-  const remainingCountHTML = remainingCount > 0
-    ? `<div class="cyber-avatar-sm text-xs font-bold text-slate-400 bg-slate-700/50">+${remainingCount}</div>`
-    : '';
+  const remainingCountHTML =
+    remainingCount > 0
+      ? `<div class="cyber-avatar-sm text-xs font-bold text-slate-400 bg-slate-700/50">+${remainingCount}</div>`
+      : "";
 
   // Collaborator count text
-  const collaboratorCountText = collabList.length === 1
-    ? '1 collaborator'
-    : `${collabList.length} collaborators`;
+  const collaboratorCountText =
+    collabList.length === 1
+      ? "1 collaborator"
+      : `${collabList.length} collaborators`;
 
   // Escape ID for safe inline use (UUIDs are strings, need quotes)
   const escapedId = String(id).replace(/'/g, "\\'");
@@ -10094,14 +10649,14 @@ function renderProjectCard(project) {
         </div>
         <span class="${badgeClass} ml-2 flex-shrink-0">${statusDisplay}</span>
       </div>
-      
+
       <div class="flex items-center gap-2 text-xs text-slate-500 mb-3">
         <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25" />
         </svg>
-        <span class="font-mono truncate">${targets_count} target${targets_count !== 1 ? 's' : ''}</span>
+        <span class="font-mono truncate">${targets_count} target${targets_count !== 1 ? "s" : ""}</span>
       </div>
-      
+
       <div class="flex items-center justify-between pt-3 border-t border-white/5">
         <div class="flex items-center gap-2 min-w-0">
           <div class="flex -space-x-2">
@@ -10110,7 +10665,7 @@ function renderProjectCard(project) {
           </div>
           <span class="text-xs text-slate-500 truncate">${collaboratorCountText}</span>
         </div>
-        
+
         <div class="flex gap-1 flex-shrink-0">
           <button class="cyber-btn-ghost text-xs px-2 py-1 rounded" onclick="editProject('${escapedId}'); event.stopPropagation();" title="Edit Project">
             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -10134,11 +10689,11 @@ function renderProjectCard(project) {
  * **Validates: Requirements 10.1, 10.2**
  */
 async function renderProjectsList() {
-  const projectsListContainer = document.getElementById('projects-list');
-  const emptyStateContainer = document.getElementById('projects-empty-state');
-  
+  const projectsListContainer = document.getElementById("projects-list");
+  const emptyStateContainer = document.getElementById("projects-empty-state");
+
   if (!projectsListContainer || !emptyStateContainer) {
-    console.error('[renderProjectsList] Required DOM elements not found');
+    console.error("[renderProjectsList] Required DOM elements not found");
     return;
   }
 
@@ -10152,13 +10707,13 @@ async function renderProjectsList() {
         </div>
       </div>
     `;
-    emptyStateContainer.classList.add('hidden');
+    emptyStateContainer.classList.add("hidden");
 
     // Initialize API client and project manager if not already done
-    if (typeof window.apiClient === 'undefined') {
+    if (typeof window.apiClient === "undefined") {
       window.apiClient = new APIClient();
     }
-    if (typeof window.projectManager === 'undefined') {
+    if (typeof window.projectManager === "undefined") {
       window.projectManager = new ProjectManager(window.apiClient);
     }
 
@@ -10167,28 +10722,27 @@ async function renderProjectsList() {
     const projects = response.projects || [];
 
     // Clear loading state
-    projectsListContainer.innerHTML = '';
+    projectsListContainer.innerHTML = "";
 
     // Check if there are projects
     if (projects.length === 0) {
       // Show empty state
-      projectsListContainer.classList.add('hidden');
-      emptyStateContainer.classList.remove('hidden');
+      projectsListContainer.classList.add("hidden");
+      emptyStateContainer.classList.remove("hidden");
     } else {
       // Hide empty state and show projects
-      projectsListContainer.classList.remove('hidden');
-      emptyStateContainer.classList.add('hidden');
+      projectsListContainer.classList.remove("hidden");
+      emptyStateContainer.classList.add("hidden");
 
       // Render each project card
-      projects.forEach(project => {
+      projects.forEach((project) => {
         const cardHTML = renderProjectCard(project);
-        projectsListContainer.insertAdjacentHTML('beforeend', cardHTML);
+        projectsListContainer.insertAdjacentHTML("beforeend", cardHTML);
       });
     }
-
   } catch (error) {
-    console.error('[renderProjectsList] Error fetching projects:', error);
-    
+    console.error("[renderProjectsList] Error fetching projects:", error);
+
     // Show error state
     projectsListContainer.innerHTML = `
       <div class="col-span-full cyber-card p-8 text-center">
@@ -10198,12 +10752,12 @@ async function renderProjectsList() {
           </svg>
         </div>
         <h3 class="text-lg font-semibold text-white mb-2">Failed to Load Projects</h3>
-        <p class="text-sm text-slate-400 mb-4">${error.message || 'An error occurred while fetching projects'}</p>
+        <p class="text-sm text-slate-400 mb-4">${error.message || "An error occurred while fetching projects"}</p>
         <button onclick="renderProjectsList()" class="cyber-btn-primary px-4 py-2 rounded-lg text-sm font-semibold">
           Try Again
         </button>
       </div>
     `;
-    emptyStateContainer.classList.add('hidden');
+    emptyStateContainer.classList.add("hidden");
   }
 }

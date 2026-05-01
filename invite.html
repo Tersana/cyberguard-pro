@@ -745,7 +745,7 @@
                         margin-bottom: 1.75rem;
                     "
                 >
-                    You're already a collaborator on this project.
+                    You are already a member of this project.
                 </p>
                 <div
                     style="
@@ -781,7 +781,7 @@
                                 d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
                             />
                         </svg>
-                        View Project
+                        Go to Project
                     </a>
                     <a href="/dashboard.html" class="btn-link">Dashboard</a>
                 </div>
@@ -844,6 +844,12 @@
                         id="link-login"
                         href="/login.html"
                         class="btn-primary-link"
+                        onclick="
+                            sessionStorage.setItem(
+                                'invite_redirect',
+                                location.href,
+                            )
+                        "
                     >
                         <svg
                             width="13"
@@ -1114,7 +1120,9 @@
                     pEl.textContent = inv.project_name || "Unnamed Project";
 
                 // ── Role badge + description ────────────────────────────
-                const role = (inv.role || "viewer").toLowerCase();
+                // BUG 1 FIX: read role EXACTLY from API — no default/fallback
+                const rawRole = inv.role; // null if not returned
+                const role = rawRole ? rawRole.toLowerCase() : "";
                 const ROLES = {
                     editor: {
                         color: "#38BDF8",
@@ -1129,12 +1137,20 @@
                         desc: "Read-only access to project data",
                     },
                 };
-                const r = ROLES[role] || ROLES.viewer;
+                // Do NOT fall back to ROLES.viewer — use a neutral style for unknown roles
+                const r = ROLES[role] || {
+                    color: "#94A3B8",
+                    bg: "rgba(148,163,184,.10)",
+                    border: "rgba(148,163,184,.30)",
+                    desc: "",
+                };
 
                 const badge = document.getElementById("inv-role-badge");
                 if (badge) {
-                    badge.textContent =
-                        role.charAt(0).toUpperCase() + role.slice(1);
+                    badge.textContent = rawRole
+                        ? rawRole.charAt(0).toUpperCase() +
+                          rawRole.slice(1).toLowerCase()
+                        : "—";
                     badge.style.color = r.color;
                     badge.style.background = r.bg;
                     badge.style.borderColor = r.border;
@@ -1190,7 +1206,13 @@
                     );
 
                     if (res.status === 401) {
-                        show("auth");
+                        // BUG 5 FIX: expired/invalid token — clear it, save URL, redirect to login
+                        localStorage.removeItem(JWT);
+                        sessionStorage.setItem(
+                            "invite_redirect",
+                            window.location.href,
+                        );
+                        window.location.href = "/login.html";
                         return;
                     }
                     if (res.status === 404) {
@@ -1296,11 +1318,12 @@
                 }
             }
 
-            /* ═══════════════════════════════════════════════════════════
+            /* ╔════════════════════════════════════════════════════════════
                FLOW 4 — Decline Invitation
                DELETE /api/invitations/{token}/reject
-                 200 → confirmation toast + navigate to /projects
+                 200 → confirmation toast + navigate (logged-in→/projects, else→/login)
                  404 → treat same as expired link (show s-404), per spec
+                 409 → do NOT show "already a member"; navigate silently
             ═══════════════════════════════════════════════════════════ */
             async function decline() {
                 const btn = document.getElementById("btn-decline");
@@ -1311,10 +1334,19 @@
                     });
                     console.log("[invite] DELETE reject →", res.status);
 
-                    // 404 on reject → treat the same as an expired/invalid link
+                    // 404 → expired/invalid link
                     if (res.status === 404) {
                         idle(btn);
                         show("404");
+                        return;
+                    }
+
+                    // BUG 2 FIX: 409 on decline → silently navigate, NEVER show "already a member"
+                    if (res.status === 409) {
+                        idle(btn);
+                        window.location.href = localStorage.getItem(JWT)
+                            ? "/dashboard.html"
+                            : "/login.html";
                         return;
                     }
 
@@ -1328,10 +1360,12 @@
                         return;
                     }
 
-                    // 200 → declined; show confirmation toast and navigate to projects
+                    // BUG 2 FIX: 200 → navigate based on auth state
                     toast("Invitation declined.", "info");
                     setTimeout(() => {
-                        window.location.href = "/dashboard.html";
+                        window.location.href = localStorage.getItem(JWT)
+                            ? "/dashboard.html"
+                            : "/login.html";
                     }, 1100);
                 } catch (e) {
                     console.error("[invite] decline error", e);
@@ -1366,14 +1400,14 @@
                     return;
                 }
 
-                // Not logged in → redirect to login, then back here after login
+                // BUG 5 FIX: not logged in → save invite URL to sessionStorage and
+                // immediately redirect to login (full URL stored so login can return here)
                 if (!localStorage.getItem(JWT)) {
-                    const lnk = document.getElementById("link-login");
-                    if (lnk)
-                        lnk.href =
-                            "/login.html?redirect=" +
-                            encodeURIComponent(window.location.href);
-                    show("auth");
+                    sessionStorage.setItem(
+                        "invite_redirect",
+                        window.location.href,
+                    );
+                    window.location.href = "/login.html";
                     return;
                 }
 

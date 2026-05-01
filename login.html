@@ -883,17 +883,43 @@
                             // Show 2FA modal
                             show2FAModal();
                         } else if (result.success) {
-                            // Honor ?redirect= so invite links work:
-                            // after login the user returns to the original page
-                            const redirectParam = new URLSearchParams(
-                                window.location.search,
-                            ).get("redirect");
-                            // Only follow the redirect if it is a same-origin
-                            // relative path (starts with /) to prevent open redirect
-                            const dest =
-                                redirectParam && redirectParam.startsWith("/")
-                                    ? redirectParam
-                                    : "dashboard.html";
+                            // BUG 5 FIX: check sessionStorage first (set by invite page
+                            // before auto-redirecting here — full URL, not path-only).
+                            // Fall back to ?redirect= param, then default to dashboard.
+                            // Priority 1: sessionStorage set by invite page auto-redirect
+                            const sessionRedirect =
+                                sessionStorage.getItem("invite_redirect");
+                            let dest;
+                            if (sessionRedirect) {
+                                sessionStorage.removeItem("invite_redirect"); // consume once
+                                dest = sessionRedirect;
+                            } else {
+                                // Priority 2: ?redirect= URL param
+                                // Accept relative paths (/…) OR full same-origin URLs
+                                // (old invite page wrote full https:// URLs into this param)
+                                const redirectParam = new URLSearchParams(
+                                    window.location.search,
+                                ).get("redirect");
+                                if (redirectParam) {
+                                    try {
+                                        const target = new URL(
+                                            redirectParam,
+                                            window.location.origin,
+                                        );
+                                        dest =
+                                            target.origin ===
+                                            window.location.origin
+                                                ? redirectParam
+                                                : "dashboard.html";
+                                    } catch (_) {
+                                        dest = redirectParam.startsWith("/")
+                                            ? redirectParam
+                                            : "dashboard.html";
+                                    }
+                                } else {
+                                    dest = "dashboard.html";
+                                }
+                            }
                             showMessage(
                                 "success",
                                 "Welcome back!",
@@ -1042,14 +1068,37 @@
                         hide2FAModal();
 
                         if (result.success) {
-                            // Honor ?redirect= for the 2FA path as well
-                            const redirectParam = new URLSearchParams(
-                                window.location.search,
-                            ).get("redirect");
-                            const dest =
-                                redirectParam && redirectParam.startsWith("/")
-                                    ? redirectParam
-                                    : "dashboard.html";
+                            // Same three-tier redirect logic as the password path
+                            const sessionRedirect =
+                                sessionStorage.getItem("invite_redirect");
+                            let dest;
+                            if (sessionRedirect) {
+                                sessionStorage.removeItem("invite_redirect"); // consume once
+                                dest = sessionRedirect;
+                            } else {
+                                const redirectParam = new URLSearchParams(
+                                    window.location.search,
+                                ).get("redirect");
+                                if (redirectParam) {
+                                    try {
+                                        const target = new URL(
+                                            redirectParam,
+                                            window.location.origin,
+                                        );
+                                        dest =
+                                            target.origin ===
+                                            window.location.origin
+                                                ? redirectParam
+                                                : "dashboard.html";
+                                    } catch (_) {
+                                        dest = redirectParam.startsWith("/")
+                                            ? redirectParam
+                                            : "dashboard.html";
+                                    }
+                                } else {
+                                    dest = "dashboard.html";
+                                }
+                            }
                             showMessage(
                                 "success",
                                 "Verification Successful",
