@@ -10,9 +10,13 @@ SECURITY_TEST_DATA.md
 node_modules/
 .vscode/
 .kiro/
-
+.cursor/
+.zed/
 # --- Backups & Temp Files ---
-
+*.rar
+*.zip
+*.7z
+*.old
 *.backup
 main-original.js
 main.js.backup
@@ -20,7 +24,7 @@ docs/
 *.md
 !README.md
 # --- Testing Artifacts ---
-
+test-results.json
 test-accordion-styles.html
 test-color-function.html
 test-dashboard-integration.html
