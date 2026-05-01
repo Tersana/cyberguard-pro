@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/invitations/:token*",
+      "destination": "/invite.html"
+    },
+    {
       "source": "/invite/:token*",
       "destination": "/invite.html"
     }

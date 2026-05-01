@@ -4,48 +4,26 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Project Invitation — CyberGuard Pro</title>
-
         <!--
-    IMPORTANT: All paths are ROOT-RELATIVE (/file.css not file.css).
-    When Vercel rewrites /invite/TOKEN → invite.html, the browser URL
-    stays at /invite/TOKEN, so relative paths would look for
-    /invite/theme-tokens.css (which doesn't exist).
-    Root-relative paths always resolve from the domain root.
+    NOTE: NO external CSS files are linked here on purpose.
+    When Vercel rewrites /invite/TOKEN → invite.html the browser URL stays
+    at /invite/TOKEN, so any path (relative OR root-relative) may be affected
+    by CDN edge-caching returning wrong content or timing issues.
+    This page is intentionally 100% self-contained.
+    The only external file is api-client.js which is only used for CyberNotify
+    (optional – the page works without it).
   -->
-        <script src="https://cdn.tailwindcss.com"></script>
         <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
             rel="stylesheet"
         />
-        <link rel="stylesheet" href="/theme-tokens.css" />
-        <link rel="stylesheet" href="/cyber-theme.css" />
-
         <style>
-            /*
-      Critical dark-theme fallbacks — hard-coded hex values so the page
-      looks correct even if theme-tokens.css fails to load (e.g. cache miss).
-    */
-            :root {
-                --cg-bg-base: #0b0f19;
-                --cg-bg-surface: #111827;
-                --cg-bg-elevated: #1f2937;
-                --cg-border: #1f2937;
-                --cg-border-subtle: #374151;
-                --cg-text-1: #f1f5f9;
-                --cg-text-2: #94a3b8;
-                --cg-text-3: #64748b;
-                --cg-accent: #a78bfa;
-                --cg-accent-hover: #8b5cf6;
-                --cg-accent-dark: #6d28d9;
-                --cg-accent-muted: rgba(167, 139, 250, 0.15);
-                --cg-success: #34d399;
-                --cg-warning: #fbbf24;
-                --cg-danger: #f87171;
-                --cg-info: #38bdf8;
-                --cg-focus-ring: rgba(167, 139, 250, 0.35);
-                --cg-font-sans:
-                    "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-            }
+            /* ─── Hard-coded palette (no CSS variables) ──────────────── */
+            /* bg-base:    #0B0F19  |  surface:  #111827  |  elevated: #1F2937 */
+            /* text-1:     #F1F5F9  |  text-2:   #94A3B8  |  text-3:   #64748B */
+            /* accent:     #A78BFA  |  a-dark:   #6d28d9                       */
+            /* success:    #34D399  |  warning:  #FBBF24  |  danger:   #F87171 */
+            /* info:       #38BDF8                                              */
 
             *,
             *::before,
@@ -55,52 +33,64 @@
                 padding: 0;
             }
 
+            html,
             body {
-                font-family: var(--cg-font-sans);
-                background-color: var(--cg-bg-base);
+                height: 100%;
+            }
+
+            body {
+                font-family:
+                    "Inter",
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    sans-serif;
+                min-height: 100vh;
+                /* Always dark — no CSS variable, pure hex */
+                background-color: #0b0f19;
                 background-image:
                     radial-gradient(
-                        ellipse 70% 50% at 50% 0%,
-                        rgba(167, 139, 250, 0.11) 0%,
-                        transparent 65%
+                        ellipse 80% 55% at 50% 0%,
+                        rgba(167, 139, 250, 0.13) 0%,
+                        transparent 62%
                     ),
                     radial-gradient(
-                        ellipse 50% 40% at 80% 90%,
-                        rgba(56, 189, 248, 0.06) 0%,
+                        ellipse 55% 45% at 82% 92%,
+                        rgba(56, 189, 248, 0.07) 0%,
                         transparent 55%
                     );
-                min-height: 100vh;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                padding: 1.5rem;
-                color: var(--cg-text-1);
+                padding: 2rem 1rem;
+                color: #f1f5f9;
+                -webkit-font-smoothing: antialiased;
             }
 
-            /* ── Utility ── */
+            /* ─── utilities ─────────────────────────────────────────── */
             .hidden {
                 display: none !important;
             }
 
-            /* ── Card ── */
-            .inv-card {
+            /* ─── card ──────────────────────────────────────────────── */
+            .card {
                 width: 100%;
                 max-width: 460px;
-                background: var(--cg-bg-surface);
-                border: 1px solid var(--cg-border-subtle);
-                border-radius: 1.25rem;
+                background: #111827;
+                border: 1px solid #374151;
+                border-radius: 18px;
                 overflow: hidden;
                 box-shadow:
-                    0 0 0 1px rgba(167, 139, 250, 0.08),
-                    0 0 48px rgba(167, 139, 250, 0.1),
-                    0 24px 48px rgba(0, 0, 0, 0.55);
-                animation: slideUp 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+                    0 0 0 1px rgba(167, 139, 250, 0.09),
+                    0 0 48px rgba(167, 139, 250, 0.11),
+                    0 24px 56px rgba(0, 0, 0, 0.6);
+                animation: rise 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
             }
-            @keyframes slideUp {
+            @keyframes rise {
                 from {
                     opacity: 0;
-                    transform: translateY(28px) scale(0.97);
+                    transform: translateY(30px) scale(0.97);
                 }
                 to {
                     opacity: 1;
@@ -108,7 +98,7 @@
                 }
             }
 
-            /* ── Accent top strip ── */
+            /* ─── accent strip ──────────────────────────────────────── */
             .strip {
                 height: 4px;
                 background: linear-gradient(90deg, #a78bfa, #38bdf8);
@@ -135,9 +125,9 @@
                 );
             }
 
-            /* ── Shimmer skeleton ── */
+            /* ─── shimmer skeleton ──────────────────────────────────── */
             .shimmer {
-                border-radius: 6px;
+                border-radius: 8px;
                 background: linear-gradient(
                     90deg,
                     rgba(167, 139, 250, 0.06) 25%,
@@ -156,152 +146,178 @@
                 }
             }
 
-            /* ── Detail row ── */
-            .detail-row {
-                background: var(--cg-bg-elevated);
-                border: 1px solid var(--cg-border);
-                border-radius: 0.625rem;
-                padding: 0.75rem 1rem;
+            /* ─── detail row ────────────────────────────────────────── */
+            .row {
+                background: #1f2937;
+                border: 1px solid #374151;
+                border-radius: 10px;
+                padding: 12px 15px;
             }
-            .detail-label {
-                font-size: 0.625rem;
-                color: var(--cg-text-3);
+            .row-label {
+                font-size: 10px;
+                font-weight: 600;
+                color: #64748b;
                 text-transform: uppercase;
                 letter-spacing: 0.1em;
-                margin-bottom: 0.25rem;
+                margin-bottom: 5px;
             }
 
-            /* ── Primary action button (Join Project) ── */
-            .btn-primary {
+            /* ─── buttons ───────────────────────────────────────────── */
+            .btn-accept {
                 flex: 1;
-                padding: 0.75rem 1rem;
-                border-radius: 0.625rem;
-                border: none;
-                cursor: pointer;
-                font-size: 0.875rem;
-                font-weight: 700;
-                color: #ffffff;
-                /* hard-coded gradient as fallback — no CSS var dependency */
-                background: linear-gradient(135deg, #a78bfa 0%, #6d28d9 100%);
-                box-shadow: 0 0 20px rgba(167, 139, 250, 0.35);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 0.4rem;
+                gap: 7px;
+                padding: 11px 14px;
+                border-radius: 10px;
+                border: none;
+                cursor: pointer;
+                font-family: inherit;
+                font-size: 14px;
+                font-weight: 700;
+                color: #ffffff;
+                background: linear-gradient(135deg, #a78bfa 0%, #6d28d9 100%);
+                box-shadow: 0 0 20px rgba(167, 139, 250, 0.3);
                 transition:
                     opacity 0.18s,
                     transform 0.12s;
             }
-            .btn-primary:hover:not(:disabled) {
-                opacity: 0.88;
+            .btn-accept:hover:not(:disabled) {
+                opacity: 0.87;
             }
-            .btn-primary:active:not(:disabled) {
+            .btn-accept:active:not(:disabled) {
                 transform: scale(0.97);
             }
-            .btn-primary:disabled {
-                opacity: 0.55;
+            .btn-accept:disabled {
+                opacity: 0.5;
                 cursor: not-allowed;
             }
 
-            /* ── Ghost action button (Decline) ── */
-            .btn-ghost {
+            .btn-decline {
                 flex: 1;
-                padding: 0.75rem 1rem;
-                border-radius: 0.625rem;
-                border: 1px solid var(--cg-border-subtle);
-                cursor: pointer;
-                font-size: 0.875rem;
-                font-weight: 600;
-                color: var(--cg-text-2);
-                background: rgba(255, 255, 255, 0.04);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 0.4rem;
+                gap: 7px;
+                padding: 11px 14px;
+                border-radius: 10px;
+                border: 1px solid #374151;
+                cursor: pointer;
+                font-family: inherit;
+                font-size: 14px;
+                font-weight: 600;
+                color: #94a3b8;
+                background: rgba(255, 255, 255, 0.04);
                 transition:
                     background 0.18s,
                     border-color 0.18s,
                     color 0.18s;
             }
-            .btn-ghost:hover:not(:disabled) {
-                background: var(--cg-bg-elevated);
-                border-color: var(--cg-accent);
-                color: var(--cg-text-1);
+            .btn-decline:hover:not(:disabled) {
+                background: #1f2937;
+                border-color: #a78bfa;
+                color: #f1f5f9;
             }
-            .btn-ghost:disabled {
-                opacity: 0.55;
+            .btn-decline:disabled {
+                opacity: 0.5;
                 cursor: not-allowed;
             }
 
-            /* ── Inline link-button (ghost look) ── */
+            /* ghost anchor button */
             .btn-link {
                 display: inline-flex;
                 align-items: center;
-                gap: 0.35rem;
-                padding: 0.6rem 1.25rem;
-                border-radius: 0.625rem;
-                border: 1px solid var(--cg-border-subtle);
+                gap: 6px;
+                padding: 9px 18px;
+                border-radius: 10px;
+                border: 1px solid #374151;
                 background: rgba(255, 255, 255, 0.04);
-                color: var(--cg-text-1);
-                font-size: 0.85rem;
+                color: #f1f5f9;
+                font-size: 13px;
                 font-weight: 600;
                 text-decoration: none;
-                transition: background 0.18s;
+                font-family: inherit;
                 cursor: pointer;
+                transition: background 0.18s;
             }
             .btn-link:hover {
-                background: var(--cg-bg-elevated);
+                background: #1f2937;
             }
 
-            /* ── Role badge ── */
-            .role-badge {
-                display: inline-block;
-                font-size: 0.75rem;
+            /* primary anchor button */
+            .btn-primary-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 9px 18px;
+                border-radius: 10px;
+                border: none;
+                background: linear-gradient(135deg, #a78bfa 0%, #6d28d9 100%);
+                color: #ffffff;
+                font-size: 13px;
                 font-weight: 700;
-                padding: 0.2rem 0.7rem;
+                text-decoration: none;
+                font-family: inherit;
+                cursor: pointer;
+                transition: opacity 0.18s;
+            }
+            .btn-primary-link:hover {
+                opacity: 0.87;
+            }
+
+            /* ─── role badge ────────────────────────────────────────── */
+            .badge {
+                display: inline-block;
+                font-size: 12px;
+                font-weight: 700;
+                padding: 3px 11px;
                 border-radius: 999px;
                 border: 1px solid;
             }
 
-            /* ── Expiry row ── */
-            .expiry-row {
+            /* ─── icon box ──────────────────────────────────────────── */
+            .icon-box {
+                width: 52px;
+                height: 52px;
+                border-radius: 14px;
+                margin: 0 auto 18px;
                 display: flex;
                 align-items: center;
-                gap: 0.5rem;
-                padding: 0.25rem 0.15rem;
+                justify-content: center;
             }
 
-            /* ── Button spinner ── */
+            /* ─── button spinner ────────────────────────────────────── */
             @keyframes spin {
                 to {
                     transform: rotate(360deg);
                 }
             }
-            .spin-icon {
+            .spin {
                 display: inline-block;
-                width: 14px;
-                height: 14px;
+                width: 13px;
+                height: 13px;
                 border: 2px solid currentColor;
                 border-top-color: transparent;
                 border-radius: 50%;
-                animation: spin 0.7s linear infinite;
+                animation: spin 0.65s linear infinite;
             }
 
-            /* ── State icon box ── */
-            .icon-box {
-                width: 56px;
-                height: 56px;
-                border-radius: 14px;
-                margin: 0 auto 1.25rem;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+            /* ─── logo animation ────────────────────────────────────── */
+            @keyframes glow {
+                0%,
+                100% {
+                    box-shadow: 0 0 26px rgba(167, 139, 250, 0.45);
+                }
+                50% {
+                    box-shadow: 0 0 44px rgba(167, 139, 250, 0.7);
+                }
             }
         </style>
     </head>
     <body>
-        <!-- ── Logo Header ─────────────────────────────── -->
-        <div style="margin-bottom: 2rem; text-align: center">
+        <!-- ── Logo ───────────────────────────────────────────── -->
+        <div style="text-align: center; margin-bottom: 2rem">
             <div
                 style="
                     width: 52px;
@@ -312,8 +328,8 @@
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    box-shadow: 0 0 28px rgba(167, 139, 250, 0.45);
-                    animation: logoPulse 3s ease-in-out infinite;
+                    box-shadow: 0 0 26px rgba(167, 139, 250, 0.45);
+                    animation: glow 3s ease-in-out infinite;
                 "
             >
                 <svg
@@ -356,47 +372,33 @@
                 Security Platform
             </p>
         </div>
-        <style>
-            @keyframes logoPulse {
-                0%,
-                100% {
-                    box-shadow: 0 0 28px rgba(167, 139, 250, 0.45);
-                }
-                50% {
-                    box-shadow: 0 0 46px rgba(167, 139, 250, 0.7);
-                }
-            }
-        </style>
 
-        <!-- ═══════════════════════════════════════════
-       STATE: LOADING
-  ═══════════════════════════════════════════ -->
-        <div id="state-loading" class="inv-card">
+        <!-- ══════════════════════════════════════════════════
+       LOADING skeleton
+  ══════════════════════════════════════════════════ -->
+        <div id="s-loading" class="card">
             <div class="strip"></div>
             <div style="padding: 2rem">
-                <!-- title skeleton -->
                 <div
                     class="shimmer"
-                    style="height: 18px; width: 58%; margin: 0 auto 8px"
+                    style="height: 17px; width: 55%; margin: 0 auto 8px"
                 ></div>
                 <div
                     class="shimmer"
-                    style="height: 13px; width: 38%; margin: 0 auto 2rem"
-                ></div>
-                <!-- row skeletons -->
-                <div
-                    class="shimmer"
-                    style="height: 62px; margin-bottom: 10px"
+                    style="height: 12px; width: 36%; margin: 0 auto 2rem"
                 ></div>
                 <div
                     class="shimmer"
-                    style="height: 62px; margin-bottom: 10px"
+                    style="height: 60px; margin-bottom: 10px"
                 ></div>
                 <div
                     class="shimmer"
-                    style="height: 62px; margin-bottom: 1.75rem"
+                    style="height: 60px; margin-bottom: 10px"
                 ></div>
-                <!-- button skeletons -->
+                <div
+                    class="shimmer"
+                    style="height: 60px; margin-bottom: 1.75rem"
+                ></div>
                 <div style="display: flex; gap: 10px">
                     <div
                         class="shimmer"
@@ -410,30 +412,30 @@
             </div>
         </div>
 
-        <!-- ═══════════════════════════════════════════
-       STATE: SUCCESS — invitation preview
-  ═══════════════════════════════════════════ -->
-        <div id="state-success" class="inv-card hidden">
+        <!-- ══════════════════════════════════════════════════
+       SUCCESS — invitation preview
+  ══════════════════════════════════════════════════ -->
+        <div id="s-success" class="card hidden">
             <div class="strip"></div>
             <div style="padding: 1.75rem 1.75rem 2rem">
-                <!-- ── Icon + title ── -->
+                <!-- header -->
                 <div style="text-align: center; margin-bottom: 1.5rem">
                     <div
                         style="
-                            width: 48px;
-                            height: 48px;
+                            width: 46px;
+                            height: 46px;
                             border-radius: 12px;
-                            margin: 0 auto 14px;
-                            background: rgba(167, 139, 250, 0.15);
-                            border: 1px solid rgba(167, 139, 250, 0.3);
+                            margin: 0 auto 13px;
+                            background: rgba(167, 139, 250, 0.14);
+                            border: 1px solid rgba(167, 139, 250, 0.32);
                             display: flex;
                             align-items: center;
                             justify-content: center;
                         "
                     >
                         <svg
-                            width="22"
-                            height="22"
+                            width="21"
+                            height="21"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="#A78BFA"
@@ -454,7 +456,7 @@
                     </div>
                     <h1
                         style="
-                            font-size: 1.25rem;
+                            font-size: 1.2rem;
                             font-weight: 800;
                             color: #f1f5f9;
                             margin-bottom: 4px;
@@ -467,7 +469,7 @@
                     </p>
                 </div>
 
-                <!-- ── Detail rows ── -->
+                <!-- rows -->
                 <div
                     style="
                         display: flex;
@@ -476,9 +478,9 @@
                         margin-bottom: 1.5rem;
                     "
                 >
-                    <!-- Project -->
-                    <div class="detail-row">
-                        <p class="detail-label">Project</p>
+                    <!-- project -->
+                    <div class="row">
+                        <p class="row-label">Project</p>
                         <p
                             id="inv-project"
                             style="
@@ -492,9 +494,9 @@
                         </p>
                     </div>
 
-                    <!-- Role -->
+                    <!-- role -->
                     <div
-                        class="detail-row"
+                        class="row"
                         style="
                             display: flex;
                             align-items: center;
@@ -503,10 +505,8 @@
                         "
                     >
                         <div style="min-width: 0">
-                            <p class="detail-label">Your Role</p>
-                            <span id="inv-role-badge" class="role-badge"
-                                >—</span
-                            >
+                            <p class="row-label">Your Role</p>
+                            <span id="inv-role-badge" class="badge">—</span>
                         </div>
                         <p
                             id="inv-role-desc"
@@ -515,16 +515,16 @@
                                 color: #64748b;
                                 text-align: right;
                                 flex-shrink: 0;
-                                max-width: 160px;
+                                max-width: 155px;
                             "
                         >
                             —
                         </p>
                     </div>
 
-                    <!-- Invited by -->
-                    <div class="detail-row">
-                        <p class="detail-label">Invited By</p>
+                    <!-- invited by -->
+                    <div class="row">
+                        <p class="row-label">Invited By</p>
                         <p
                             id="inv-by"
                             style="
@@ -540,16 +540,23 @@
                             style="
                                 font-size: 0.75rem;
                                 color: #64748b;
-                                margin-top: 2px;
+                                margin-top: 3px;
                             "
                         ></p>
                     </div>
 
-                    <!-- Expiry -->
-                    <div class="expiry-row">
+                    <!-- expiry -->
+                    <div
+                        style="
+                            display: flex;
+                            align-items: center;
+                            gap: 7px;
+                            padding: 2px 3px;
+                        "
+                    >
                         <svg
-                            width="14"
-                            height="14"
+                            width="13"
+                            height="13"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="#64748B"
@@ -570,12 +577,12 @@
                     </div>
                 </div>
 
-                <!-- ── Action buttons ── -->
+                <!-- action buttons -->
                 <div style="display: flex; gap: 10px">
-                    <button id="btn-accept" class="btn-primary">
+                    <button id="btn-accept" class="btn-accept">
                         <svg
-                            width="15"
-                            height="15"
+                            width="14"
+                            height="14"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -589,7 +596,7 @@
                         </svg>
                         Join Project
                     </button>
-                    <button id="btn-decline" class="btn-ghost">
+                    <button id="btn-decline" class="btn-decline">
                         <svg
                             width="13"
                             height="13"
@@ -610,10 +617,10 @@
             </div>
         </div>
 
-        <!-- ═══════════════════════════════════════════
-       STATE: 404 — expired / invalid
-  ═══════════════════════════════════════════ -->
-        <div id="state-404" class="inv-card hidden">
+        <!-- ══════════════════════════════════════════════════
+       404 — expired / invalid link
+  ══════════════════════════════════════════════════ -->
+        <div id="s-404" class="card hidden">
             <div class="strip strip-danger"></div>
             <div style="padding: 2.5rem 2rem; text-align: center">
                 <div
@@ -624,8 +631,8 @@
                     "
                 >
                     <svg
-                        width="26"
-                        height="26"
+                        width="24"
+                        height="24"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="#F87171"
@@ -642,7 +649,7 @@
                 </div>
                 <h2
                     style="
-                        font-size: 1.2rem;
+                        font-size: 1.15rem;
                         font-weight: 800;
                         color: #f1f5f9;
                         margin-bottom: 8px;
@@ -655,11 +662,11 @@
                         font-size: 0.85rem;
                         color: #94a3b8;
                         line-height: 1.65;
-                        margin-bottom: 0.5rem;
+                        margin-bottom: 6px;
                     "
                 >
-                    This invitation link is no longer valid. It may have expired
-                    or already been used.
+                    This invitation link is no longer valid.<br />It may have
+                    expired or already been used.
                 </p>
                 <p
                     style="
@@ -690,10 +697,10 @@
             </div>
         </div>
 
-        <!-- ═══════════════════════════════════════════
-       STATE: 409 — already a member
-  ═══════════════════════════════════════════ -->
-        <div id="state-409" class="inv-card hidden">
+        <!-- ══════════════════════════════════════════════════
+       409 — already a member
+  ══════════════════════════════════════════════════ -->
+        <div id="s-409" class="card hidden">
             <div class="strip strip-success"></div>
             <div style="padding: 2.5rem 2rem; text-align: center">
                 <div
@@ -704,8 +711,8 @@
                     "
                 >
                     <svg
-                        width="26"
-                        height="26"
+                        width="24"
+                        height="24"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="#34D399"
@@ -723,7 +730,7 @@
                 </div>
                 <h2
                     style="
-                        font-size: 1.2rem;
+                        font-size: 1.15rem;
                         font-weight: 800;
                         color: #f1f5f9;
                         margin-bottom: 8px;
@@ -749,27 +756,9 @@
                     "
                 >
                     <a
-                        id="link-409-project"
+                        id="link-409"
                         href="/dashboard.html"
-                        style="
-                            display: inline-flex;
-                            align-items: center;
-                            gap: 6px;
-                            padding: 0.6rem 1.25rem;
-                            border-radius: 0.625rem;
-                            font-size: 0.85rem;
-                            font-weight: 700;
-                            background: linear-gradient(
-                                135deg,
-                                #a78bfa,
-                                #6d28d9
-                            );
-                            color: #fff;
-                            text-decoration: none;
-                            transition: opacity 0.18s;
-                        "
-                        onmouseover="this.style.opacity = '.85'"
-                        onmouseout="this.style.opacity = '1'"
+                        class="btn-primary-link"
                     >
                         <svg
                             width="13"
@@ -799,10 +788,10 @@
             </div>
         </div>
 
-        <!-- ═══════════════════════════════════════════
-       STATE: unauthenticated
-  ═══════════════════════════════════════════ -->
-        <div id="state-auth" class="inv-card hidden">
+        <!-- ══════════════════════════════════════════════════
+       AUTH — not logged in
+  ══════════════════════════════════════════════════ -->
+        <div id="s-auth" class="card hidden">
             <div class="strip strip-warning"></div>
             <div style="padding: 2.5rem 2rem; text-align: center">
                 <div
@@ -813,8 +802,8 @@
                     "
                 >
                     <svg
-                        width="26"
-                        height="26"
+                        width="24"
+                        height="24"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="#FBBF24"
@@ -824,14 +813,14 @@
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0
-               0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25
-               2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+               0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0
+               -2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
                         />
                     </svg>
                 </div>
                 <h2
                     style="
-                        font-size: 1.2rem;
+                        font-size: 1.15rem;
                         font-weight: 800;
                         color: #f1f5f9;
                         margin-bottom: 8px;
@@ -854,33 +843,35 @@
                     <a
                         id="link-login"
                         href="/login.html"
-                        style="
-                            padding: 0.65rem 1.35rem;
-                            border-radius: 0.625rem;
-                            font-size: 0.875rem;
-                            font-weight: 700;
-                            background: linear-gradient(
-                                135deg,
-                                #a78bfa,
-                                #6d28d9
-                            );
-                            color: #fff;
-                            text-decoration: none;
-                            transition: opacity 0.18s;
-                        "
-                        onmouseover="this.style.opacity = '.85'"
-                        onmouseout="this.style.opacity = '1'"
-                        >Log In to Accept</a
+                        class="btn-primary-link"
                     >
+                        <svg
+                            width="13"
+                            height="13"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25
+                 v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15
+                 M12 9l-3 3m0 0 3 3m-3-3h12.75"
+                            />
+                        </svg>
+                        Log In to Accept
+                    </a>
                     <a href="/signup.html" class="btn-link">Sign Up</a>
                 </div>
             </div>
         </div>
 
-        <!-- ═══════════════════════════════════════════
-       STATE: generic error
-  ═══════════════════════════════════════════ -->
-        <div id="state-error" class="inv-card hidden">
+        <!-- ══════════════════════════════════════════════════
+       ERROR — generic
+  ══════════════════════════════════════════════════ -->
+        <div id="s-error" class="card hidden">
             <div class="strip strip-danger"></div>
             <div style="padding: 2.5rem 2rem; text-align: center">
                 <div
@@ -891,8 +882,8 @@
                     "
                 >
                     <svg
-                        width="26"
-                        height="26"
+                        width="24"
+                        height="24"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="#F87171"
@@ -909,7 +900,7 @@
                 </div>
                 <h2
                     style="
-                        font-size: 1.2rem;
+                        font-size: 1.15rem;
                         font-weight: 800;
                         color: #f1f5f9;
                         margin-bottom: 8px;
@@ -918,7 +909,7 @@
                     Something Went Wrong
                 </h2>
                 <p
-                    id="error-msg"
+                    id="err-msg"
                     style="
                         font-size: 0.85rem;
                         color: #94a3b8;
@@ -932,18 +923,19 @@
                     <button
                         onclick="boot()"
                         style="
-                            padding: 0.65rem 1.35rem;
-                            border-radius: 0.625rem;
-                            font-size: 0.875rem;
+                            padding: 9px 18px;
+                            border-radius: 10px;
+                            border: none;
+                            cursor: pointer;
+                            font-size: 13px;
                             font-weight: 700;
+                            font-family: inherit;
                             background: linear-gradient(
                                 135deg,
                                 #a78bfa,
                                 #6d28d9
                             );
-                            border: none;
                             color: #fff;
-                            cursor: pointer;
                             transition: opacity 0.18s;
                         "
                         onmouseover="this.style.opacity = '.85'"
@@ -972,18 +964,21 @@
             "
         ></div>
 
-        <!-- ROOT-RELATIVE script path -->
+        <!--
+    api-client.js is OPTIONAL here — only used if CyberNotify is defined on it.
+    The page works fully without it because we have our own apiFetch + toast.
+  -->
         <script src="/api-client.js"></script>
 
         <script>
             "use strict";
 
-            /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     CONFIG
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-            const API_BASE =
+            /* ═══════════════════════════════════════════════════════════
+               CONFIG
+            ═══════════════════════════════════════════════════════════ */
+            const BASE =
                 "https://peptonelike-lelia-interdepartmentally.ngrok-free.dev/api/";
-            const JWT_KEY = "cyberguard_jwt";
+            const JWT = "cyberguard_jwt";
             const STATES = [
                 "loading",
                 "success",
@@ -993,52 +988,56 @@
                 "error",
             ];
 
-            /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     TOKEN EXTRACTION
-     Handles: /invite/TOKEN  or  /invite/TOKEN/
-     Fallback: ?token=TOKEN
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-            function extractToken() {
-                const p = window.location.pathname; // "/invite/TOKEN"
-                const m = p.match(/^\/invite\/([^\/\s]+)\/?$/); // capture between slashes
-                if (m && m[1]) return decodeURIComponent(m[1]);
-
-                // Query-param fallback (?token=TOKEN)
+            /* ═══════════════════════════════════════════════════════════
+               TOKEN EXTRACTION
+               Supports:
+                 /invitations/TOKEN   ← spec-canonical route
+                 /invite/TOKEN        ← legacy / vercel alias
+                 ?token=TOKEN         ← query-string fallback
+            ═══════════════════════════════════════════════════════════ */
+            function getToken() {
+                // Match /invitations/TOKEN or /invite/TOKEN (optional trailing slash)
+                const m = window.location.pathname.match(
+                    /^\/(invitations|invite)\/([^\/\s?#]+)\/?$/,
+                );
+                if (m) return decodeURIComponent(m[2]);
+                // Fallback: query string ?token=TOKEN
                 return (
                     new URLSearchParams(window.location.search).get("token") ||
                     null
                 );
             }
 
-            /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     STATE MACHINE
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-            function showState(name) {
-                STATES.forEach((s) => {
-                    const el = document.getElementById("state-" + s);
-                    if (el) el.classList.toggle("hidden", s !== name);
+            /* ═══════════════════════════════════════════════════════════
+               STATE — show exactly one panel, hide all others
+            ═══════════════════════════════════════════════════════════ */
+            function show(name) {
+                STATES.forEach((id) => {
+                    const el = document.getElementById("s-" + id);
+                    if (el) el.classList.toggle("hidden", id !== name);
                 });
             }
 
-            /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     API HELPER  (auto Bearer token)
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-            function apiFetch(endpoint, opts) {
-                const jwt = localStorage.getItem(JWT_KEY);
-                return fetch(API_BASE + endpoint.replace(/^\//, ""), {
+            /* ═══════════════════════════════════════════════════════════
+               FETCH — Bearer auth token auto-attached from localStorage
+            ═══════════════════════════════════════════════════════════ */
+            function req(path, opts) {
+                const jwt = localStorage.getItem(JWT);
+                return fetch(BASE + path, {
                     headers: {
                         Accept: "application/json",
                         "Content-Type": "application/json",
                         "ngrok-skip-browser-warning": "true",
                         ...(jwt ? { Authorization: "Bearer " + jwt } : {}),
                     },
-                    ...opts,
+                    ...(opts || {}),
                 });
             }
 
-            /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     TOAST
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+            /* ═══════════════════════════════════════════════════════════
+               TOAST — delegates to CyberNotify when available,
+               falls back to a hand-rolled inline banner.
+            ═══════════════════════════════════════════════════════════ */
             function toast(msg, type) {
                 if (window.CyberNotify) {
                     window.CyberNotify.alert(msg, { type });
@@ -1051,38 +1050,48 @@
                     warning: "#FBBF24",
                 };
                 const c = COLORS[type] || COLORS.info;
-                const el = document.createElement("div");
-                el.style.cssText = `
-      padding:.75rem 1rem; border-radius:.625rem; font-size:.85rem; font-weight:500;
-      background:#111827; border:1px solid ${c}40; color:${c};
-      box-shadow:0 4px 16px rgba(0,0,0,.5); pointer-events:auto;
-    `;
-                el.textContent = String(msg);
-                document.getElementById("toasts").appendChild(el);
+                const el = Object.assign(document.createElement("div"), {
+                    textContent: String(msg),
+                });
+                Object.assign(el.style, {
+                    padding: "11px 15px",
+                    borderRadius: "10px",
+                    border: `1px solid ${c}44`,
+                    background: "#111827",
+                    color: c,
+                    fontSize: "13px",
+                    fontWeight: "500",
+                    fontFamily: "inherit",
+                    boxShadow: "0 4px 16px rgba(0,0,0,.55)",
+                    pointerEvents: "auto",
+                });
+                document.getElementById("toasts")?.appendChild(el);
                 setTimeout(() => el.remove(), 4200);
             }
 
-            /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     BUTTON STATE HELPERS
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-            function setBusy(btn, label) {
+            /* ═══════════════════════════════════════════════════════════
+               BUTTON HELPERS — show/restore loading state
+            ═══════════════════════════════════════════════════════════ */
+            function busy(btn, label) {
                 if (!btn) return;
                 btn._orig = btn.innerHTML;
                 btn.disabled = true;
-                btn.innerHTML = `<span class="spin-icon"></span>${label}`;
+                btn.innerHTML = `<span class="spin"></span>${label}`;
             }
-            function setIdle(btn) {
+            function idle(btn) {
                 if (!btn || !btn._orig) return;
                 btn.innerHTML = btn._orig;
                 btn.disabled = false;
+                delete btn._orig;
             }
 
-            /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     DATE FORMATTING
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-            function fmtDate(iso) {
+            /* ═══════════════════════════════════════════════════════════
+               DATE FORMAT — converts ISO string to human-readable date
+            ═══════════════════════════════════════════════════════════ */
+            function fmt(iso) {
                 if (!iso) return "—";
-                const d = new Date(iso);
+                // Append time component so Date doesn't shift by timezone offset
+                const d = new Date(iso.includes("T") ? iso : iso + "T00:00:00");
                 return isNaN(d)
                     ? iso
                     : d.toLocaleDateString("en-US", {
@@ -1092,19 +1101,24 @@
                       });
             }
 
-            /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     RENDER invitation data
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-            function renderInvitation(inv) {
-                // Project name
-                setText("inv-project", inv.project_name || "Unnamed Project");
+            /* ═══════════════════════════════════════════════════════════
+               RENDER — populate the invitation preview panel
+               Fields per API spec §5:
+                 project_name, role, expires_at,
+                 invited_by, job_tittle, avatar_url
+            ═══════════════════════════════════════════════════════════ */
+            function render(inv) {
+                // ── Project name ────────────────────────────────────────
+                const pEl = document.getElementById("inv-project");
+                if (pEl)
+                    pEl.textContent = inv.project_name || "Unnamed Project";
 
-                // Role badge
+                // ── Role badge + description ────────────────────────────
                 const role = (inv.role || "viewer").toLowerCase();
                 const ROLES = {
                     editor: {
                         color: "#38BDF8",
-                        bg: "rgba(56,189,248,.14)",
+                        bg: "rgba(56,189,248,.13)",
                         border: "rgba(56,189,248,.35)",
                         desc: "Can view and modify project data",
                     },
@@ -1116,6 +1130,7 @@
                     },
                 };
                 const r = ROLES[role] || ROLES.viewer;
+
                 const badge = document.getElementById("inv-role-badge");
                 if (badge) {
                     badge.textContent =
@@ -1124,153 +1139,149 @@
                     badge.style.background = r.bg;
                     badge.style.borderColor = r.border;
                 }
-                setText("inv-role-desc", r.desc);
+                const descEl = document.getElementById("inv-role-desc");
+                if (descEl) descEl.textContent = r.desc;
 
-                // Invited by
-                setText("inv-by", inv.invited_by || "A team member");
+                // ── Invited by + job title ──────────────────────────────
+                const byEl = document.getElementById("inv-by");
+                if (byEl) byEl.textContent = inv.invited_by || "A team member";
+
                 const jobEl = document.getElementById("inv-job");
                 if (jobEl) {
+                    // API returns the field as 'job_tittle' (API typo preserved intentionally)
                     const job = inv.job_tittle || inv.job_title || "";
                     jobEl.textContent = job;
                     jobEl.style.display = job ? "" : "none";
                 }
 
-                // Expiry
+                // ── Expiry ──────────────────────────────────────────────
                 const expEl = document.getElementById("inv-expiry");
                 if (expEl) {
                     if (inv.expires_at) {
                         const expired = new Date(inv.expires_at) < new Date();
                         expEl.textContent =
                             (expired ? "Expired on " : "Expires ") +
-                            fmtDate(inv.expires_at);
+                            fmt(inv.expires_at);
                         expEl.style.color = expired ? "#F87171" : "#64748B";
                     } else {
-                        expEl.textContent = "No expiry date";
+                        expEl.textContent = "No expiry information";
+                        expEl.style.color = "#64748B";
                     }
                 }
             }
 
-            function setText(id, val) {
-                const el = document.getElementById(id);
-                if (el) el.textContent = val;
-            }
+            /* ═══════════════════════════════════════════════════════════
+               FLOW 2 — Load Invitation on page mount
+               GET /api/invitations/{token}
+                 200 → render preview, show s-success
+                 401 → not logged in, show s-auth
+                 404 → expired/invalid, show s-404
+                 other → show s-error with message
+            ═══════════════════════════════════════════════════════════ */
+            let TOKEN = null; // invitation token read from URL — never hardcoded
 
-            /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     LOAD  GET /api/invitations/{token}
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-            let _token = null; // shared between functions
-
-            async function loadInvitation(token) {
-                showState("loading");
+            async function load(token) {
+                show("loading");
                 try {
-                    const res = await apiFetch("invitations/" + token);
-
+                    const res = await req("invitations/" + token);
                     console.log(
-                        "[invite] GET invitations/" + token,
-                        "→",
+                        "[invite] GET invitations/" + token + " →",
                         res.status,
                     );
 
                     if (res.status === 401) {
-                        showState("auth");
+                        show("auth");
                         return;
                     }
                     if (res.status === 404) {
-                        showState("404");
+                        show("404");
                         return;
                     }
 
                     if (!res.ok) {
                         const d = await res.json().catch(() => ({}));
-                        document.getElementById("error-msg").textContent =
-                            d.message ||
-                            "Server responded with " +
-                                res.status +
-                                ". Please try again.";
-                        showState("error");
+                        const errEl = document.getElementById("err-msg");
+                        if (errEl)
+                            errEl.textContent =
+                                d.message ||
+                                "Server returned " +
+                                    res.status +
+                                    ". Please try again.";
+                        show("error");
                         return;
                     }
 
                     const data = await res.json();
-                    const inv = data.invitation || data;
-                    renderInvitation(inv);
-                    showState("success");
-                } catch (err) {
-                    console.error("[invite] Network error:", err);
-                    document.getElementById("error-msg").textContent =
-                        "Could not reach the server. Please check your connection and try again.";
-                    showState("error");
+                    render(data.invitation || data);
+                    show("success");
+                } catch (e) {
+                    console.error("[invite] network error", e);
+                    const errEl = document.getElementById("err-msg");
+                    if (errEl)
+                        errEl.textContent =
+                            "Could not reach the server. Check your connection and try again.";
+                    show("error");
                 }
             }
 
-            /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     ACCEPT  POST /api/invitations/{token}/accept
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-            async function acceptInvitation() {
+            /* ═══════════════════════════════════════════════════════════
+               FLOW 3 — Accept Invitation
+               POST /api/invitations/{token}/accept
+                 200 → navigate to project using project.id from response
+                 401 → not logged in, show s-auth
+                 404 → expired/invalid, show s-404
+                 409 → already a member; navigate to project if id present
+            ═══════════════════════════════════════════════════════════ */
+            async function accept() {
                 const btn = document.getElementById("btn-accept");
-                setBusy(btn, "Joining…");
-
+                busy(btn, "Joining…");
                 try {
-                    const res = await apiFetch(
-                        "invitations/" + _token + "/accept",
-                        { method: "POST" },
-                    );
-
+                    const res = await req("invitations/" + TOKEN + "/accept", {
+                        method: "POST",
+                    });
                     console.log("[invite] POST accept →", res.status);
 
-                    // ── 401: session expired mid-flow ──
                     if (res.status === 401) {
-                        setIdle(btn);
-                        showState("auth");
+                        idle(btn);
+                        show("auth");
                         return;
                     }
 
-                    // ── 404: link expired between preview and accept ──
+                    // 404 → link is expired or invalid
                     if (res.status === 404) {
-                        setIdle(btn);
-                        showState("404");
+                        idle(btn);
+                        show("404");
                         return;
                     }
 
-                    // ── 409: already a member ──
+                    // 409 → already a member; navigate to project if id is available
                     if (res.status === 409) {
                         const d = await res.json().catch(() => ({}));
-                        console.log("[invite] 409 body:", d);
-
-                        // Try to get a project ID so we can link directly to the project
                         const pid = d.project?.id || d.project_id || null;
-                        const linkEl =
-                            document.getElementById("link-409-project");
-                        if (linkEl && pid) {
-                            linkEl.href =
+                        const lnk = document.getElementById("link-409");
+                        if (lnk && pid)
+                            lnk.href =
                                 "/project-detail.html?id=" +
                                 encodeURIComponent(pid);
-                            linkEl.textContent = "View Project";
-                        }
-                        setIdle(btn);
-                        showState("409");
+                        idle(btn);
+                        show("409");
                         return;
                     }
 
-                    // ── Other non-OK ──
                     if (!res.ok) {
                         const d = await res.json().catch(() => ({}));
                         toast(
                             d.message ||
-                                "Failed to join. Server returned " +
-                                    res.status +
-                                    ".",
+                                "Failed to join (HTTP " + res.status + ").",
                             "error",
                         );
-                        setIdle(btn);
+                        idle(btn);
                         return;
                     }
 
-                    // ── 200 success ──
+                    // 200 → success: navigate to the project using project.id
                     const data = await res.json();
-                    console.log("[invite] Accept success:", data);
                     const pid = data.project?.id || null;
-
                     toast("Successfully joined the project!", "success");
                     setTimeout(() => {
                         window.location.href = pid
@@ -1278,34 +1289,32 @@
                               encodeURIComponent(pid)
                             : "/dashboard.html";
                     }, 1100);
-                } catch (err) {
-                    console.error("[invite] Accept network error:", err);
+                } catch (e) {
+                    console.error("[invite] accept error", e);
                     toast("Network error. Please try again.", "error");
-                    setIdle(btn);
+                    idle(btn);
                 }
             }
 
-            /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     DECLINE  DELETE /api/invitations/{token}/reject
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-            async function declineInvitation() {
+            /* ═══════════════════════════════════════════════════════════
+               FLOW 4 — Decline Invitation
+               DELETE /api/invitations/{token}/reject
+                 200 → confirmation toast + navigate to /projects
+                 404 → treat same as expired link (show s-404), per spec
+            ═══════════════════════════════════════════════════════════ */
+            async function decline() {
                 const btn = document.getElementById("btn-decline");
-                setBusy(btn, "Declining…");
-
+                busy(btn, "Declining…");
                 try {
-                    const res = await apiFetch(
-                        "invitations/" + _token + "/reject",
-                        { method: "DELETE" },
-                    );
-
+                    const res = await req("invitations/" + TOKEN + "/reject", {
+                        method: "DELETE",
+                    });
                     console.log("[invite] DELETE reject →", res.status);
 
+                    // 404 on reject → treat the same as an expired/invalid link
                     if (res.status === 404) {
-                        // Already gone — treat as graceful decline
-                        toast("Invitation declined.", "info");
-                        setTimeout(() => {
-                            window.location.href = "/dashboard.html";
-                        }, 1000);
+                        idle(btn);
+                        show("404");
                         return;
                     }
 
@@ -1315,68 +1324,72 @@
                             d.message || "Could not decline. Please try again.",
                             "error",
                         );
-                        setIdle(btn);
+                        idle(btn);
                         return;
                     }
 
+                    // 200 → declined; show confirmation toast and navigate to projects
                     toast("Invitation declined.", "info");
                     setTimeout(() => {
                         window.location.href = "/dashboard.html";
                     }, 1100);
-                } catch (err) {
-                    console.error("[invite] Decline network error:", err);
+                } catch (e) {
+                    console.error("[invite] decline error", e);
                     toast("Network error. Please try again.", "error");
-                    setIdle(btn);
+                    idle(btn);
                 }
             }
 
-            /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     BOOT — entry point, runs on load
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+            /* ═══════════════════════════════════════════════════════════
+               BOOT — runs on page load
+               1. Extract token from URL (never hardcoded)
+               2. If not logged in → redirect to login with redirect_back
+               3. If logged in → call load() to fetch invitation
+            ═══════════════════════════════════════════════════════════ */
             function boot() {
-                _token = extractToken();
+                TOKEN = getToken();
                 console.log(
-                    "[invite] pathname:",
+                    "[invite] path:",
                     window.location.pathname,
                     "→ token:",
-                    _token,
+                    TOKEN,
                 );
 
-                // ── No token in URL ──
-                if (!_token) {
-                    document.getElementById("error-msg").textContent =
-                        "No invitation token found in this URL. " +
-                        "Make sure you opened the full link shared with you.";
-                    showState("error");
+                // No token in URL — show error
+                if (!TOKEN) {
+                    const errEl = document.getElementById("err-msg");
+                    if (errEl)
+                        errEl.textContent =
+                            "No invitation token found in this URL. " +
+                            "Make sure you opened the full link shared with you.";
+                    show("error");
                     return;
                 }
 
-                // ── Not authenticated ──
-                const jwt = localStorage.getItem(JWT_KEY);
-                if (!jwt) {
-                    const loginEl = document.getElementById("link-login");
-                    if (loginEl) {
-                        // Preserve the full invite URL so login can redirect back here
-                        loginEl.href =
+                // Not logged in → redirect to login, then back here after login
+                if (!localStorage.getItem(JWT)) {
+                    const lnk = document.getElementById("link-login");
+                    if (lnk)
+                        lnk.href =
                             "/login.html?redirect=" +
                             encodeURIComponent(window.location.href);
-                    }
-                    showState("auth");
+                    show("auth");
                     return;
                 }
 
-                loadInvitation(_token);
+                // Logged in → fetch invitation from server
+                load(TOKEN);
             }
 
-            /* ── Wire up buttons ── */
+            // Wire up action buttons
             document
                 .getElementById("btn-accept")
-                .addEventListener("click", acceptInvitation);
+                ?.addEventListener("click", accept);
             document
                 .getElementById("btn-decline")
-                .addEventListener("click", declineInvitation);
+                ?.addEventListener("click", decline);
 
-            /* ── Go ── */
+            // Kick off
             boot();
         </script>
     </body>
