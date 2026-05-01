@@ -854,9 +854,11 @@
                     p.created_at ? fmtRelative(p.created_at) : "—",
                 );
                 _set("ov-project-id", p.id || "—");
+                // BUG 3 FIX: "Member" is never a valid role label.
+                // Use "—" as placeholder; loadTeam() will overwrite with the real role.
                 _set(
                     "ov-role-badge",
-                    _isOwner ? "Owner" : p.role ? cap(p.role) : "Member",
+                    _isOwner ? "Owner" : p.role ? cap(p.role) : "—",
                 );
 
                 // Settings form
@@ -912,6 +914,24 @@
 
                     // Update team count on overview
                     _set("ov-team-size", String(members.length));
+
+                    // BUG 3 FIX: derive the current user's actual role from the
+                    // collaborators list — never show a generic "Member" label.
+                    // Owner badge is already set by renderProject(); only update
+                    // if the current user is a collaborator (not owner).
+                    if (!_isOwner && _currentUser) {
+                        const me = members.find((m) => {
+                            const user = m.user || m;
+                            const uid = user.id || m.user_id || m.id;
+                            return (
+                                uid != null &&
+                                String(uid) === String(_currentUser.id)
+                            );
+                        });
+                        if (me && me.role) {
+                            _set("ov-role-badge", cap(me.role));
+                        }
+                    }
 
                     if (!listEl) return;
                     if (members.length === 0) {
