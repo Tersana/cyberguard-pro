@@ -337,6 +337,109 @@ class ProjectManager {
     }
   }
 
+  // ─── Targets API Methods ──────────────────────────────────────────────────
+
+  /**
+   * GET /api/projects/{id}/targets
+   * @param {string|number} projectId
+   * @returns {Promise<Array>} Array of target objects
+   */
+  async fetchTargets(projectId) {
+    try {
+      const response = await this.apiClient.get(
+        `/projects/${projectId}/targets`,
+      );
+      return Array.isArray(response.targets)
+        ? response.targets
+        : Array.isArray(response)
+          ? response
+          : [];
+    } catch (error) {
+      console.error("[ProjectManager] fetchTargets error:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * POST /api/projects/{id}/targets
+   * @param {string|number} projectId
+   * @param {Object} data - { type, label, value }
+   * @returns {Promise<Object>} Created target object
+   */
+  async createTarget(projectId, data) {
+    try {
+      if (typeof showLoading !== "undefined") showLoading("Adding target…");
+      const response = await this.apiClient.post(
+        `/projects/${projectId}/targets`,
+        data,
+      );
+      return response.target || response;
+    } catch (error) {
+      console.error("[ProjectManager] createTarget error:", error);
+      throw error;
+    } finally {
+      if (typeof hideLoading !== "undefined") hideLoading();
+    }
+  }
+
+  /**
+   * GET /api/targets/{id}
+   * @param {string|number} targetId
+   * @returns {Promise<Object>} Target detail object
+   */
+  async fetchTarget(targetId) {
+    try {
+      const response = await this.apiClient.get(`/targets/${targetId}`);
+      return response.target || response;
+    } catch (error) {
+      console.error("[ProjectManager] fetchTarget error:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * PATCH /api/projects/{id}/targets/{targetId}
+   * @param {string|number} projectId
+   * @param {string|number} targetId
+   * @param {Object} data - { label?, value? }
+   * @returns {Promise<Object>} Updated target object
+   */
+  async updateTarget(projectId, targetId, data) {
+    try {
+      if (typeof showLoading !== "undefined") showLoading("Updating target…");
+      const response = await this.apiClient.patch(
+        `/projects/${projectId}/targets/${targetId}`,
+        data,
+      );
+      return response.target || response;
+    } catch (error) {
+      console.error("[ProjectManager] updateTarget error:", error);
+      throw error;
+    } finally {
+      if (typeof hideLoading !== "undefined") hideLoading();
+    }
+  }
+
+  /**
+   * DELETE /api/projects/{id}/targets/{targetId}
+   * @param {string|number} projectId
+   * @param {string|number} targetId
+   * @returns {Promise<Object>} Deletion confirmation
+   */
+  async deleteTarget(projectId, targetId) {
+    try {
+      if (typeof showLoading !== "undefined") showLoading("Deleting target…");
+      return await this.apiClient.delete(
+        `/projects/${projectId}/targets/${targetId}`,
+      );
+    } catch (error) {
+      console.error("[ProjectManager] deleteTarget error:", error);
+      throw error;
+    } finally {
+      if (typeof hideLoading !== "undefined") hideLoading();
+    }
+  }
+
   // ─── UI: Projects Tab Sub-navigation ──────────────────────────────────────
 
   /**
