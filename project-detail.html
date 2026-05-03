@@ -226,6 +226,32 @@
                     </svg>
                     Settings
                 </button>
+                <button
+                    id="targets-tab-btn"
+                    class="detail-tab px-5 py-2 rounded-lg text-sm font-semibold border border-transparent text-[var(--cg-text-2)]"
+                    onclick="switchDetailTab('targets')"
+                    aria-label="Targets tab"
+                >
+                    <svg
+                        class="w-4 h-4 inline-block mr-1.5 -mt-0.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 10.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z"
+                        />
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
+                        />
+                    </svg>
+                    Targets
+                </button>
             </div>
 
             <!-- ── Overview Tab ────────────────────────────────────────────────────── -->
@@ -701,11 +727,321 @@
                     </button>
                 </div>
             </div>
+
+            <!-- ── Targets Tab ──────────────────────────────────────────────────────── -->
+            <div id="tab-targets" class="hidden space-y-4">
+                <!-- Header row -->
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-white">
+                        Security Targets
+                    </h2>
+                    <button
+                        id="add-target-btn"
+                        onclick="showAddTargetModal()"
+                        aria-label="Add new security target"
+                        class="cyber-btn-primary px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
+                    >
+                        <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M12 4.5v15m7.5-7.5h-15"
+                            />
+                        </svg>
+                        Add Target
+                    </button>
+                </div>
+
+                <!-- Targets list -->
+                <div id="targets-list" class="space-y-2">
+                    <!-- Shimmer placeholders shown on first load -->
+                    <div class="shimmer h-14 rounded-xl"></div>
+                    <div class="shimmer h-14 rounded-xl"></div>
+                </div>
+            </div>
         </main>
+
+        <!-- ─── Add Target Modal ───────────────────────────────────────────────── -->
+        <div
+            id="add-target-modal"
+            class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-target-modal-title"
+        >
+            <div class="cyber-card w-full max-w-md p-6 rounded-2xl space-y-5">
+                <h3
+                    id="add-target-modal-title"
+                    class="text-base font-bold text-white"
+                >
+                    Add Security Target
+                </h3>
+                <form
+                    id="add-target-form"
+                    onsubmit="handleAddTargetSubmit(event)"
+                    class="space-y-4"
+                    novalidate
+                >
+                    <!-- Type Selector -->
+                    <div>
+                        <label
+                            for="at-type"
+                            class="block text-sm font-semibold text-slate-300 mb-1.5"
+                            >Target Type
+                            <span class="text-red-400">*</span></label
+                        >
+                        <select
+                            id="at-type"
+                            class="cyber-input w-full p-3 rounded-lg text-sm"
+                            aria-label="Target type"
+                            onchange="handleTargetTypeChange(this.value)"
+                        >
+                            <option value="domain">Domain (hostname)</option>
+                            <option value="ip">IP Address (IPv4)</option>
+                            <option value="network">Network (CIDR)</option>
+                        </select>
+                    </div>
+
+                    <!-- Label -->
+                    <div>
+                        <label
+                            for="at-label"
+                            class="block text-sm font-semibold text-slate-300 mb-1.5"
+                            >Label <span class="text-red-400">*</span></label
+                        >
+                        <input
+                            type="text"
+                            id="at-label"
+                            class="cyber-input w-full p-3 rounded-lg text-sm"
+                            placeholder="e.g. Production API Gateway"
+                            aria-required="true"
+                            aria-describedby="at-label-error"
+                            maxlength="255"
+                        />
+                        <p
+                            id="at-label-error"
+                            class="text-xs text-red-400 mt-1 hidden"
+                            role="alert"
+                        ></p>
+                    </div>
+
+                    <!-- Value -->
+                    <div>
+                        <label
+                            for="at-value"
+                            class="block text-sm font-semibold text-slate-300 mb-1.5"
+                            >Value <span class="text-red-400">*</span></label
+                        >
+                        <input
+                            type="text"
+                            id="at-value"
+                            class="cyber-input w-full p-3 rounded-lg text-sm font-mono"
+                            placeholder="e.g. example.com  (no https:// or www.)"
+                            aria-required="true"
+                            aria-describedby="at-value-hint at-value-error"
+                            maxlength="255"
+                        />
+                        <p
+                            id="at-value-hint"
+                            class="text-xs text-slate-500 mt-1"
+                        >
+                            Enter a valid hostname without protocol or www
+                            prefix.
+                        </p>
+                        <p
+                            id="at-value-error"
+                            class="text-xs text-red-400 mt-1 hidden"
+                            role="alert"
+                        ></p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-3 pt-1">
+                        <button
+                            type="submit"
+                            id="at-submit-btn"
+                            class="cyber-btn-primary px-5 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2"
+                        >
+                            Add Target
+                        </button>
+                        <button
+                            type="button"
+                            onclick="hideAddTargetModal()"
+                            class="cyber-btn-ghost px-4 py-2.5 rounded-lg text-sm"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ─── Edit Target Modal ──────────────────────────────────────────────── -->
+        <div
+            id="edit-target-modal"
+            class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-target-modal-title"
+        >
+            <div class="cyber-card w-full max-w-md p-6 rounded-2xl space-y-5">
+                <h3
+                    id="edit-target-modal-title"
+                    class="text-base font-bold text-white"
+                >
+                    Edit Target
+                </h3>
+                <form
+                    id="edit-target-form"
+                    onsubmit="handleEditTargetSubmit(event)"
+                    class="space-y-4"
+                    novalidate
+                >
+                    <input type="hidden" id="et-target-id" />
+
+                    <!-- Type (read-only) -->
+                    <div>
+                        <p
+                            class="block text-sm font-semibold text-slate-300 mb-1.5"
+                        >
+                            Type
+                        </p>
+                        <div
+                            class="cyber-input w-full p-3 rounded-lg text-sm text-slate-400 cursor-not-allowed"
+                        >
+                            <span id="et-type-display">—</span>
+                            <span class="ml-2 text-xs text-slate-500"
+                                >(cannot be changed)</span
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Label -->
+                    <div>
+                        <label
+                            for="et-label"
+                            class="block text-sm font-semibold text-slate-300 mb-1.5"
+                            >Label <span class="text-red-400">*</span></label
+                        >
+                        <input
+                            type="text"
+                            id="et-label"
+                            class="cyber-input w-full p-3 rounded-lg text-sm"
+                            aria-required="true"
+                            aria-describedby="et-label-error"
+                            maxlength="255"
+                        />
+                        <p
+                            id="et-label-error"
+                            class="text-xs text-red-400 mt-1 hidden"
+                            role="alert"
+                        ></p>
+                    </div>
+
+                    <!-- Value -->
+                    <div>
+                        <label
+                            for="et-value"
+                            class="block text-sm font-semibold text-slate-300 mb-1.5"
+                            >Value <span class="text-red-400">*</span></label
+                        >
+                        <input
+                            type="text"
+                            id="et-value"
+                            class="cyber-input w-full p-3 rounded-lg text-sm font-mono"
+                            aria-required="true"
+                            aria-describedby="et-value-error"
+                            maxlength="255"
+                        />
+                        <p
+                            id="et-value-error"
+                            class="text-xs text-red-400 mt-1 hidden"
+                            role="alert"
+                        ></p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-3 pt-1">
+                        <button
+                            type="submit"
+                            id="et-submit-btn"
+                            class="cyber-btn-primary px-5 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2"
+                        >
+                            Save Changes
+                        </button>
+                        <button
+                            type="button"
+                            onclick="hideEditTargetModal()"
+                            class="cyber-btn-ghost px-4 py-2.5 rounded-lg text-sm"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ─── Delete Target Confirmation Modal ─────────────────────────────── -->
+        <div
+            id="delete-target-modal"
+            class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-target-modal-title"
+        >
+            <div class="cyber-card w-full max-w-sm p-6 rounded-2xl space-y-4">
+                <h3
+                    id="delete-target-modal-title"
+                    class="text-base font-bold text-[var(--cg-danger)]"
+                >
+                    Delete Target
+                </h3>
+                <p class="text-sm text-slate-400">
+                    Are you sure you want to delete this target? This action
+                    cannot be undone.
+                </p>
+                <div
+                    class="p-3 rounded-lg bg-[rgba(248,113,113,0.07)] border border-[rgba(248,113,113,0.2)] space-y-1"
+                >
+                    <p
+                        id="dt-label"
+                        class="text-sm font-semibold text-white"
+                    ></p>
+                    <p
+                        id="dt-value"
+                        class="text-xs font-mono text-slate-400"
+                    ></p>
+                </div>
+                <div class="flex gap-3">
+                    <button
+                        id="dt-confirm-btn"
+                        onclick="handleDeleteTarget()"
+                        class="cyber-btn-danger px-5 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2"
+                        aria-label="Confirm delete target"
+                    >
+                        Delete
+                    </button>
+                    <button
+                        type="button"
+                        onclick="hideDeleteTargetModal()"
+                        class="cyber-btn-ghost px-4 py-2.5 rounded-lg text-sm"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <!-- ─── CyberNotify toast ──────────────────────────────────────────────── -->
         <script src="cyber-notify.js"></script>
         <script src="api-client.js"></script>
+        <script src="target-validator.js"></script>
 
         <script>
             "use strict";
@@ -721,6 +1057,8 @@
             let _currentUser = null;
             let _apiClient = null;
             let _currentTab = "overview";
+            let _currentUserRole = "viewer"; // updated by loadTeam()
+            let _editTargetType = ""; // type stored when Edit Target modal opens
 
             // ─── Boot ─────────────────────────────────────────────────────────────────
             (function boot() {
@@ -799,6 +1137,7 @@
 
                     renderProject();
                     loadTeam();
+                    loadTargets();
                 } catch (err) {
                     showError(
                         "Network Error",
@@ -930,8 +1269,11 @@
                         });
                         if (me && me.role) {
                             _set("ov-role-badge", cap(me.role));
+                            _currentUserRole = me.role; // track for targets permissions
                         }
                     }
+                    // Refresh Add Target button state now that role is known
+                    updateTargetsBtnState();
 
                     if (!listEl) return;
                     if (members.length === 0) {
@@ -1303,7 +1645,497 @@
                 }
             }
 
-            // ─── Tab switching ────────────────────────────────────────────────────────
+            // ─── Role helpers ────────────────────────────────────────────────────────────────────
+
+            /** Return the current user’s role on this project (task 13.1). */
+            function getUserRole() {
+                if (_isOwner) return "owner";
+                return _currentUserRole || "viewer";
+            }
+
+            /** True when the user can create / edit / delete targets (task 13.2). */
+            function canModify() {
+                const role = getUserRole();
+                return role === "owner" || role === "editor";
+            }
+
+            /** Enable/disable the Add Target button based on the current role (task 13.3). */
+            function updateTargetsBtnState() {
+                const addBtn = document.getElementById("add-target-btn");
+                if (!addBtn) return;
+                if (canModify()) {
+                    addBtn.disabled = false;
+                    addBtn.title = "";
+                    addBtn.classList.remove("opacity-40", "cursor-not-allowed");
+                } else {
+                    addBtn.disabled = true;
+                    addBtn.title = "Viewers cannot add targets.";
+                    addBtn.classList.add("opacity-40", "cursor-not-allowed");
+                }
+            }
+
+            // ─── Targets list ───────────────────────────────────────────────────────────────────
+
+            async function loadTargets() {
+                const listEl = document.getElementById("targets-list");
+                if (!listEl) return;
+
+                // Show loading shimmer
+                listEl.innerHTML = `
+                    <div class="shimmer h-14 rounded-xl"></div>
+                    <div class="shimmer h-14 rounded-xl"></div>`;
+
+                try {
+                    const res = await apiFetch(
+                        `/projects/${_projectId}/targets`,
+                    );
+                    if (!res.ok) {
+                        listEl.innerHTML = errMsg("Failed to load targets.");
+                        return;
+                    }
+                    const data = await res.json();
+                    const targets = Array.isArray(data.targets)
+                        ? data.targets
+                        : Array.isArray(data)
+                          ? data
+                          : [];
+
+                    if (targets.length === 0) {
+                        const canEdit = canModify();
+                        listEl.innerHTML = `
+                            <div class="text-center py-10 text-slate-500 space-y-3">
+                                <p class="text-sm">No targets yet.</p>
+                                ${canEdit ? `<button onclick="showAddTargetModal()" class="cyber-btn-primary px-4 py-2 rounded-lg text-sm font-semibold">Add First Target</button>` : ""}
+                            </div>`;
+                    } else {
+                        listEl.innerHTML = targets
+                            .map((t) => renderTargetRow(t))
+                            .join("");
+                    }
+
+                    updateTargetsBtnState();
+                } catch (_) {
+                    listEl.innerHTML = errMsg("Network error loading targets.");
+                }
+            }
+
+            function renderTargetRow(target) {
+                const label = esc(target.label || "");
+                const value = esc(target.value || "");
+                const type = target.type || "domain";
+                const id = esc(String(target.id || ""));
+                const canEdit = canModify();
+
+                const TYPE_BADGE = {
+                    domain: "text-[#38BDF8] bg-[rgba(56,189,248,0.15)] border-[rgba(56,189,248,0.3)]",
+                    ip: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border-[rgba(167,139,250,0.3)]",
+                    network:
+                        "text-[#FB923C] bg-[rgba(251,146,60,0.15)] border-[rgba(251,146,60,0.3)]",
+                };
+                const typeBadgeCls = TYPE_BADGE[type] || TYPE_BADGE.domain;
+
+                const editDeleteBtns = canEdit
+                    ? `
+                        <button
+                            onclick="showEditTargetModal('${id}')"
+                            title="Edit target"
+                            aria-label="Edit target ${label}"
+                            class="cyber-btn-ghost text-xs px-2 py-1.5 rounded flex items-center gap-1"
+                        >
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/>
+                            </svg>
+                        </button>
+                        <button
+                            onclick="showDeleteTargetModal('${id}', '${label}', '${value}')"
+                            title="Delete target"
+                            aria-label="Delete target ${label}"
+                            class="cyber-btn-danger text-xs px-2 py-1.5 rounded flex items-center gap-1"
+                        >
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>`
+                    : "";
+
+                return `
+                    <div class="cyber-card p-3 flex items-center gap-3" data-target-id="${id}">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-white truncate">${label}</p>
+                            <p class="text-xs text-slate-400 font-mono truncate">${value}</p>
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <span class="text-xs px-2 py-0.5 rounded-full border font-semibold ${typeBadgeCls}">${cap(type)}</span>
+                            ${editDeleteBtns}
+                        </div>
+                    </div>`;
+            }
+
+            // ─── Add Target Modal ─────────────────────────────────────────────────────────────────
+
+            function showAddTargetModal() {
+                const modal = document.getElementById("add-target-modal");
+                if (!modal) return;
+                // Reset form
+                document.getElementById("add-target-form")?.reset();
+                // Default type = domain, update placeholder + hint
+                const typeEl = document.getElementById("at-type");
+                if (typeEl) typeEl.value = "domain";
+                handleTargetTypeChange("domain");
+                clearTargetFieldErrors("at");
+                modal.classList.remove("hidden");
+                document.getElementById("at-label")?.focus();
+            }
+
+            function hideAddTargetModal() {
+                document
+                    .getElementById("add-target-modal")
+                    ?.classList.add("hidden");
+            }
+
+            function handleTargetTypeChange(type) {
+                const valueEl = document.getElementById("at-value");
+                const hintEl = document.getElementById("at-value-hint");
+                if (window.TargetValidator) {
+                    if (valueEl)
+                        valueEl.placeholder =
+                            window.TargetValidator.getPlaceholder(type);
+                    if (hintEl)
+                        hintEl.textContent =
+                            window.TargetValidator.getHint(type);
+                }
+                clearTargetField("at-value");
+            }
+
+            async function handleAddTargetSubmit(e) {
+                e.preventDefault();
+                const type =
+                    document.getElementById("at-type")?.value || "domain";
+                const label =
+                    document.getElementById("at-label")?.value.trim() || "";
+                const value =
+                    document.getElementById("at-value")?.value.trim() || "";
+
+                clearTargetFieldErrors("at");
+                let hasErrors = false;
+
+                if (!label) {
+                    showTargetFieldError("at-label", "Label is required.");
+                    hasErrors = true;
+                }
+                if (!value) {
+                    showTargetFieldError("at-value", "Value is required.");
+                    hasErrors = true;
+                } else if (window.TargetValidator) {
+                    const result = window.TargetValidator.validate(type, value);
+                    if (!result.valid) {
+                        showTargetFieldError("at-value", result.error);
+                        hasErrors = true;
+                    }
+                }
+                if (hasErrors) return;
+
+                const btn = document.getElementById("at-submit-btn");
+                setBtnLoading(btn, "Adding…");
+                try {
+                    const res = await apiFetch(
+                        `/projects/${_projectId}/targets`,
+                        {
+                            method: "POST",
+                            body: JSON.stringify({ type, label, value }),
+                        },
+                    );
+                    if (res.status === 403) {
+                        notify(
+                            "You do not have permission to add targets.",
+                            "error",
+                        );
+                        return;
+                    }
+                    if (res.status === 400 || res.status === 422) {
+                        const d = await res.json().catch(() => ({}));
+                        const errors = d.errors || {};
+                        let shown = false;
+                        Object.entries(errors).forEach(([field, msgs]) => {
+                            const msg = Array.isArray(msgs)
+                                ? msgs.join(". ")
+                                : String(msgs);
+                            showTargetFieldError(`at-${field}`, msg);
+                            shown = true;
+                        });
+                        if (!shown)
+                            notify(d.message || "Validation error.", "error");
+                        return;
+                    }
+                    if (!res.ok) {
+                        const d = await res.json().catch(() => ({}));
+                        notify(d.message || "Failed to add target.", "error");
+                        return;
+                    }
+                    hideAddTargetModal();
+                    notify("Target added successfully.", "success");
+                    loadTargets();
+                } catch (_) {
+                    notify("Network error.", "error");
+                } finally {
+                    restoreBtn(btn);
+                }
+            }
+
+            // ─── Edit Target Modal ────────────────────────────────────────────────────────────────
+
+            function showEditTargetModal(targetId) {
+                const modal = document.getElementById("edit-target-modal");
+                if (!modal) return;
+                apiFetch(`/targets/${targetId}`)
+                    .then(async (res) => {
+                        if (!res.ok) {
+                            notify("Target not found.", "error");
+                            return;
+                        }
+                        const data = await res.json();
+                        const target = data.target || data;
+                        document.getElementById("et-target-id").value =
+                            target.id || "";
+                        document.getElementById("et-label").value =
+                            target.label || "";
+                        document.getElementById("et-value").value =
+                            target.value || "";
+
+                        const type = target.type || "domain";
+                        _editTargetType = type;
+
+                        const typeDisplay =
+                            document.getElementById("et-type-display");
+                        if (typeDisplay) typeDisplay.textContent = cap(type);
+
+                        // Update value placeholder for the type
+                        if (window.TargetValidator) {
+                            const etValue = document.getElementById("et-value");
+                            if (etValue)
+                                etValue.placeholder =
+                                    window.TargetValidator.getPlaceholder(type);
+                        }
+
+                        clearTargetFieldErrors("et");
+                        modal.classList.remove("hidden");
+                        document.getElementById("et-label")?.focus();
+                    })
+                    .catch(() =>
+                        notify("Failed to load target details.", "error"),
+                    );
+            }
+
+            function hideEditTargetModal() {
+                document
+                    .getElementById("edit-target-modal")
+                    ?.classList.add("hidden");
+            }
+
+            async function handleEditTargetSubmit(e) {
+                e.preventDefault();
+                const targetId =
+                    document.getElementById("et-target-id")?.value || "";
+                const label =
+                    document.getElementById("et-label")?.value.trim() || "";
+                const value =
+                    document.getElementById("et-value")?.value.trim() || "";
+                const type = _editTargetType;
+
+                clearTargetFieldErrors("et");
+                let hasErrors = false;
+
+                if (!label) {
+                    showTargetFieldError("et-label", "Label is required.");
+                    hasErrors = true;
+                }
+                if (!value) {
+                    showTargetFieldError("et-value", "Value is required.");
+                    hasErrors = true;
+                } else if (window.TargetValidator) {
+                    const result = window.TargetValidator.validate(type, value);
+                    if (!result.valid) {
+                        showTargetFieldError("et-value", result.error);
+                        hasErrors = true;
+                    }
+                }
+                if (hasErrors) return;
+
+                const btn = document.getElementById("et-submit-btn");
+                setBtnLoading(btn, "Saving…");
+                try {
+                    const res = await apiFetch(
+                        `/projects/${_projectId}/targets/${targetId}`,
+                        {
+                            method: "PATCH",
+                            body: JSON.stringify({ label, value }),
+                        },
+                    );
+                    if (res.status === 403) {
+                        notify(
+                            "You do not have permission to edit targets.",
+                            "error",
+                        );
+                        return;
+                    }
+                    if (res.status === 404) {
+                        notify("Target not found.", "error");
+                        return;
+                    }
+                    if (res.status === 422) {
+                        const d = await res.json().catch(() => ({}));
+                        const errors = d.errors || {};
+                        let shown = false;
+                        Object.entries(errors).forEach(([field, msgs]) => {
+                            const msg = Array.isArray(msgs)
+                                ? msgs.join(". ")
+                                : String(msgs);
+                            showTargetFieldError(`et-${field}`, msg);
+                            shown = true;
+                        });
+                        if (!shown)
+                            notify(d.message || "Validation error.", "error");
+                        return;
+                    }
+                    if (!res.ok) {
+                        const d = await res.json().catch(() => ({}));
+                        notify(
+                            d.message || "Failed to update target.",
+                            "error",
+                        );
+                        return;
+                    }
+
+                    // Update row in place
+                    const data = await res.json();
+                    const updated = data.target || data;
+                    const row = document.querySelector(
+                        `[data-target-id="${targetId}"]`,
+                    );
+                    if (row) {
+                        row.outerHTML = renderTargetRow(updated);
+                    } else {
+                        loadTargets();
+                    }
+
+                    hideEditTargetModal();
+                    notify("Target updated successfully.", "success");
+                } catch (_) {
+                    notify("Network error.", "error");
+                } finally {
+                    restoreBtn(btn);
+                }
+            }
+
+            // ─── Delete Target Modal ──────────────────────────────────────────────────────────────
+
+            function showDeleteTargetModal(targetId, label, value) {
+                const modal = document.getElementById("delete-target-modal");
+                if (!modal) return;
+                modal.dataset.targetId = targetId;
+                _set("dt-label", label);
+                _set("dt-value", value);
+                modal.classList.remove("hidden");
+                document.getElementById("dt-confirm-btn")?.focus();
+            }
+
+            function hideDeleteTargetModal() {
+                document
+                    .getElementById("delete-target-modal")
+                    ?.classList.add("hidden");
+            }
+
+            async function handleDeleteTarget() {
+                const modal = document.getElementById("delete-target-modal");
+                const targetId = modal?.dataset.targetId;
+                if (!targetId) return;
+
+                const btn = document.getElementById("dt-confirm-btn");
+                setBtnLoading(btn, "Deleting…");
+                try {
+                    const res = await apiFetch(
+                        `/projects/${_projectId}/targets/${targetId}`,
+                        { method: "DELETE" },
+                    );
+                    if (res.status === 403) {
+                        notify(
+                            "You do not have permission to delete targets.",
+                            "error",
+                        );
+                        return;
+                    }
+                    if (res.status === 404) {
+                        notify("Target not found.", "error");
+                        return;
+                    }
+                    if (!res.ok) {
+                        notify("Failed to delete target.", "error");
+                        return;
+                    }
+                    // Remove the row from the DOM (requirement 9.3)
+                    const row = document.querySelector(
+                        `[data-target-id="${targetId}"]`,
+                    );
+                    if (row) row.remove();
+
+                    // Show empty state if list is now empty
+                    const listEl = document.getElementById("targets-list");
+                    if (listEl && !listEl.querySelector("[data-target-id]")) {
+                        const canEdit = canModify();
+                        listEl.innerHTML = `
+                            <div class="text-center py-10 text-slate-500 space-y-3">
+                                <p class="text-sm">No targets yet.</p>
+                                ${canEdit ? `<button onclick="showAddTargetModal()" class="cyber-btn-primary px-4 py-2 rounded-lg text-sm font-semibold">Add First Target</button>` : ""}
+                            </div>`;
+                    }
+
+                    hideDeleteTargetModal();
+                    notify("Target deleted successfully.", "success");
+                } catch (_) {
+                    notify("Network error.", "error");
+                } finally {
+                    restoreBtn(btn);
+                }
+            }
+
+            // ─── Target form field error helpers ──────────────────────────────────────────
+
+            function showTargetFieldError(inputId, message) {
+                const errEl = document.getElementById(`${inputId}-error`);
+                const inp = document.getElementById(inputId);
+                if (errEl) {
+                    errEl.textContent = message;
+                    errEl.classList.remove("hidden");
+                }
+                if (inp) inp.classList.add("border-red-400");
+            }
+
+            function clearTargetField(inputId) {
+                const errEl = document.getElementById(`${inputId}-error`);
+                const inp = document.getElementById(inputId);
+                if (errEl) {
+                    errEl.textContent = "";
+                    errEl.classList.add("hidden");
+                }
+                if (inp) inp.classList.remove("border-red-400");
+            }
+
+            function clearTargetFieldErrors(prefix) {
+                ["label", "value"].forEach((field) =>
+                    clearTargetField(`${prefix}-${field}`),
+                );
+            }
+
+            // ESC closes any open target modal
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") {
+                    hideAddTargetModal();
+                    hideEditTargetModal();
+                    hideDeleteTargetModal();
+                }
+            });
+
+            // ─── Tab switching ────────────────────────────────────────────────────────────────────
             function switchDetailTab(tab) {
                 _currentTab = tab;
                 document.querySelectorAll(".detail-tab").forEach((btn) => {
@@ -1313,7 +2145,7 @@
                     btn.classList.toggle("active", isActive);
                     if (!isActive) btn.classList.remove("active");
                 });
-                ["overview", "team", "settings"].forEach((id) => {
+                ["overview", "team", "settings", "targets"].forEach((id) => {
                     const el = document.getElementById(`tab-${id}`);
                     if (el) el.classList.toggle("hidden", id !== tab);
                 });
