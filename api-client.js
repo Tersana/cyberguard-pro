@@ -83,17 +83,19 @@ class APIClient {
   /**
    * Build request headers
    */
-  _buildHeaders(customHeaders = {}) {
+  _buildHeaders(customHeaders = {}, skipAuth = false) {
     const headers = {
       Accept: "application/json",
       ...NGROK_HEADER,
       ...customHeaders,
     };
 
-    // Add JWT token if exists
-    const token = this.getToken();
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
+    // Add JWT token if exists and auth is not skipped
+    if (!skipAuth) {
+      const token = this.getToken();
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
     }
 
     return headers;
@@ -161,18 +163,21 @@ class APIClient {
   /**
    * Handle response based on status code
    * Integrates with ErrorHandler for consistent error display
+   * @param {Response} response - Fetch response
+   * @param {boolean} skipAuth - If true, do not redirect on 401 (public endpoint)
    */
-  async _handleResponse(response) {
+  async _handleResponse(response, skipAuth = false) {
     // Handle 401 Unauthorized — read body to get the actual backend message
     if (response.status === 401) {
       const errorData = await response.json().catch(() => ({}));
       const message = errorData.message || "Unauthorized";
       const error = new APIError(message, 401, errorData);
 
-      // Only redirect to login for session expiry, not for login failures
+      // Only redirect to login for session expiry, not for login failures,
+      // and not for public endpoints (skipAuth === true)
       const isLoginEndpoint =
         response.url && response.url.includes("auth/login");
-      if (!isLoginEndpoint) {
+      if (!isLoginEndpoint && !skipAuth) {
         if (typeof ErrorHandler !== "undefined") {
           ErrorHandler.handleAPIError(error);
         } else {
@@ -244,8 +249,8 @@ class APIClient {
       // Build URL
       const url = this._buildURL(endpoint);
 
-      // Build headers
-      const headers = this._buildHeaders(options.headers || {});
+      // Build headers — skipAuth omits Authorization header for public endpoints
+      const headers = this._buildHeaders(options.headers || {}, options.skipAuth || false);
 
       // Add Content-Type for requests with body
       if (data && ["POST", "PUT", "PATCH"].includes(method)) {
@@ -277,8 +282,8 @@ class APIClient {
         await interceptor(response);
       }
 
-      // Handle response
-      return await this._handleResponse(response);
+      // Handle response — pass skipAuth so public endpoints don't trigger login redirect
+      return await this._handleResponse(response, options.skipAuth || false);
     } catch (error) {
       // Handle network errors
       if (error instanceof TypeError && error.message.includes("fetch")) {

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Processing - CyberGuard Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme-tokens.css">
+    <link rel="stylesheet" href="cyber-theme.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, var(--cg-bg-primary) 0%, var(--cg-bg-secondary) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            padding: var(--cg-space-6);
+        }
+
+        .result-container {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--cg-neutral-800);
+            border-radius: var(--cg-radius-2xl);
+            padding: var(--cg-space-12);
+            text-align: center;
+        }
+
+        .result-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto var(--cg-space-6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-icon.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 2px solid var(--cg-success-500);
+        }
+
+        .result-icon.failure {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid var(--cg-danger-500);
+        }
+
+        .result-icon.pending {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid var(--cg-info-500);
+        }
+
+        .result-icon svg {
+            width: 48px;
+            height: 48px;
+        }
+
+        .result-icon.success svg {
+            color: var(--cg-success-400);
+        }
+
+        .result-icon.failure svg {
+            color: var(--cg-danger-400);
+        }
+
+        .result-icon.pending svg {
+            color: var(--cg-info-400);
+        }
+
+        .result-title {
+            font-size: var(--cg-text-3xl);
+            font-weight: 700;
+            color: var(--cg-text-primary);
+            margin-bottom: var(--cg-space-4);
+        }
+
+        .result-amount {
+            font-size: var(--cg-text-2xl);
+            font-weight: 600;
+            color: var(--cg-primary-400);
+            margin-bottom: var(--cg-space-2);
+        }
+
+        .result-details {
+            color: var(--cg-text-secondary);
+            margin-bottom: var(--cg-space-6);
+        }
+
+        .activation-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--cg-space-3);
+            padding: var(--cg-space-4);
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: var(--cg-radius-lg);
+            margin-bottom: var(--cg-space-6);
+        }
+
+        .plan-confirmed {
+            padding: var(--cg-space-4);
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid var(--cg-success-500);
+            border-radius: var(--cg-radius-lg);
+            color: var(--cg-success-400);
+            font-weight: 600;
+            margin-bottom: var(--cg-space-6);
+        }
+
+        .button-group {
+            display: flex;
+            gap: var(--cg-space-4);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 640px) {
+            .result-container {
+                padding: var(--cg-space-8);
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .button-group button,
+            .button-group a {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="cyber-body">
+    <div class="result-container">
+        <!-- Success Screen -->
+        <div id="success-screen" class="hidden">
+            <div class="result-icon success">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+            </div>
+            <h1 class="result-title">Payment Successful!</h1>
+            <div class="result-amount" id="success-amount"></div>
+            <div class="result-details">
+                <p id="success-card-info"></p>
+                <p id="success-message"></p>
+            </div>
+            
+            <div id="activation-status" class="activation-status">
+                <div class="cyber-spinner-sm"></div>
+                <p>Activating your plan...</p>
+            </div>
+            
+            <div id="plan-confirmed" class="plan-confirmed hidden">
+                <p>✓ <span id="confirmed-plan-name"></span> Activated</p>
+            </div>
+            
+            <div class="button-group">
+                <a href="dashboard.html" class="cyber-btn-primary">Go to Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Failure Screen -->
+        <div id="failure-screen" class="hidden">
+            <div class="result-icon failure">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+            </div>
+            <h1 class="result-title">Payment Failed</h1>
+            <div class="result-details">
+                <p id="failure-reason"></p>
+            </div>
+            
+            <div class="button-group">
+                <a href="pricing.html" class="cyber-btn-primary">Try Again</a>
+                <a href="dashboard.html" class="cyber-btn-ghost">Back to Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Pending Screen -->
+        <div id="pending-screen" class="hidden">
+            <div class="result-icon pending">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                </svg>
+            </div>
+            <h1 class="result-title">Payment Received</h1>
+            <div class="result-details">
+                <p>Your plan may take a few minutes to activate.</p>
+                <p>Check your dashboard for updates.</p>
+            </div>
+            
+            <div class="button-group">
+                <a href="dashboard.html" class="cyber-btn-primary">Go to Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="api-client.js"></script>
+    <script src="cyber-notify.js"></script>
+    <script src="billing-api.js"></script>
+    <script>
+        // Parse query parameters
+        function getQueryParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                success: params.get('success'),
+                amount_cents: params.get('amount_cents'),
+                message: params.get('data.message'),
+                card_type: params.get('source_data.sub_type'),
+                card_pan: params.get('source_data.pan'),
+                txn_response_code: params.get('txn_response_code'),
+                error_occured: params.get('error_occured')
+            };
+        }
+
+        // Format amount
+        function formatAmount(amountCents) {
+            const amount = (parseInt(amountCents) / 100).toFixed(2);
+            return `${amount} EGP`;
+        }
+
+        // Capitalize first letter
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        // Process payment result
+        async function processPaymentResult() {
+            const params = getQueryParams();
+            
+            // Determine success/failure state
+            const isSuccess = params.success === 'true' && params.error_occured !== 'true';
+            const isFailure = params.success === 'false' || params.error_occured === 'true';
+
+            if (isSuccess) {
+                // Show success screen
+                document.getElementById('success-screen').classList.remove('hidden');
+                
+                // Display amount
+                if (params.amount_cents) {
+                    document.getElementById('success-amount').textContent = formatAmount(params.amount_cents);
+                }
+                
+                // Display card info
+                if (params.card_type && params.card_pan) {
+                    document.getElementById('success-card-info').textContent = 
+                        `${params.card_type} ending in ${params.card_pan}`;
+                }
+                
+                // Display message
+                if (params.message) {
+                    document.getElementById('success-message').textContent = params.message;
+                }
+                
+                // Start subscription polling (Task 7)
+                await pollSubscriptionStatus();
+                
+                // Clean up localStorage
+                localStorage.removeItem('pending_billing_order_id');
+            } else if (isFailure) {
+                // Show failure screen
+                document.getElementById('failure-screen').classList.remove('hidden');
+                
+                // Display failure reason
+                const reason = params.message || params.txn_response_code || 'Payment was declined';
+                document.getElementById('failure-reason').textContent = reason;
+                
+                // Clean up localStorage
+                localStorage.removeItem('pending_billing_order_id');
+            } else {
+                // Unknown state - show pending
+                document.getElementById('pending-screen').classList.remove('hidden');
+                localStorage.removeItem('pending_billing_order_id');
+            }
+        }
+
+        // Poll subscription status (will be implemented in Task 7)
+        async function pollSubscriptionStatus() {
+            try {
+                const subscription = await BillingAPI.pollSubscriptionUntilActive(3000, 5);
+                
+                if (subscription && subscription.status === 'active') {
+                    // Hide activation status
+                    document.getElementById('activation-status').classList.add('hidden');
+                    
+                    // Show plan confirmed
+                    const planConfirmed = document.getElementById('plan-confirmed');
+                    const planName = document.getElementById('confirmed-plan-name');
+                    planName.textContent = `${capitalize(subscription.plan)} Plan`;
+                    planConfirmed.classList.remove('hidden');
+                } else {
+                    // Polling timeout - show pending message
+                    document.getElementById('activation-status').innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; color: var(--cg-info-400);">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                        </svg>
+                        <p>Your plan may take a few minutes to activate. Check your dashboard for updates.</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error polling subscription:', error);
+                // Show pending message on error
+                document.getElementById('activation-status').innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; color: var(--cg-info-400);">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                    </svg>
+                    <p>Your plan may take a few minutes to activate. Check your dashboard for updates.</p>
+                `;
+            }
+        }
+
+        // Process payment result on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            processPaymentResult();
+        });
+    </script>
+</body>
+</html>

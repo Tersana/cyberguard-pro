@@ -12,7 +12,8 @@ const DashboardTabManager = {
     'hash-tools': false,
     'ai-assistant': false,
     'projects': false,
-    'threat-intel': false
+    'threat-intel': false,
+    'billing-history': false
   },
   
   // Current active tab
@@ -169,6 +170,9 @@ const DashboardTabManager = {
       case 'threat-intel':
         this.initializeThreatIntel();
         break;
+      case 'billing-history':
+        this.initializeBillingHistory();
+        break;
     }
     
     // Mark as initialized
@@ -270,6 +274,26 @@ const DashboardTabManager = {
       }
     } else {
       console.warn('DashboardTabManager: ThreatIntelHub not found');
+    }
+  },
+  
+  /**
+   * Initialize Billing History tab
+   * Loads billing history when the tab is first activated
+   */
+  initializeBillingHistory() {
+    console.log('DashboardTabManager: Initializing Billing History tab');
+    
+    // Check if loadBillingHistory function is available
+    if (typeof loadBillingHistory === 'function') {
+      try {
+        loadBillingHistory();
+        console.log('DashboardTabManager: Billing History loaded');
+      } catch (error) {
+        console.error('DashboardTabManager: Error loading Billing History:', error);
+      }
+    } else {
+      console.warn('DashboardTabManager: loadBillingHistory function not found');
     }
   },
   
