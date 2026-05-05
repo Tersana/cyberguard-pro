@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Test - Navbar Auth State</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #0B0F19;
+            color: #E2E8F0;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #1A1F2E;
+            border-radius: 8px;
+            border: 1px solid #2D3748;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: #8B5CF6;
+            color: white;
+        }
+        .btn-danger {
+            background: #EF4444;
+            color: white;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            background: #2D3748;
+        }
+        .success { color: #34D399; }
+        .error { color: #EF4444; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Manual Test - Navbar Authentication State</h1>
+    
+    <div class="test-section">
+        <h2>Test Instructions</h2>
+        <ol>
+            <li>Click "Simulate Login" to set a mock JWT token and user data</li>
+            <li>Open index.html in a new tab</li>
+            <li>Verify that the navbar shows your name and avatar instead of Login/Sign Up buttons</li>
+            <li>Click the dropdown to see "Go to Dashboard" and "Logout" options</li>
+            <li>On mobile view, verify the mobile menu shows authenticated options</li>
+            <li>Click "Clear Session" to test guest state</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>Session Control</h2>
+        <button class="btn-primary" onclick="simulateLogin()">Simulate Login</button>
+        <button class="btn-danger" onclick="clearSession()">Clear Session</button>
+        <div id="status" class="status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Current Session State</h2>
+        <div id="sessionInfo" class="status"></div>
+    </div>
+
+    <script>
+        function simulateLogin() {
+            // Create mock user data
+            const mockUser = {
+                id: 1,
+                email: 'test@example.com',
+                name: 'Test User',
+                fullName: 'Test User',
+                jobTitle: 'Security Analyst',
+                emailVerified: true,
+                twoFactorEnabled: false,
+                role: 'user',
+                createdAt: new Date().toISOString(),
+                lastLogin: new Date().toISOString(),
+                preferences: {}
+            };
+
+            // Set JWT token
+            localStorage.setItem('cyberguard_jwt', 'mock-jwt-token-12345');
+            
+            // Set user data
+            localStorage.setItem('cyberguard_user', JSON.stringify(mockUser));
+            
+            // Set session data
+            const sessionData = {
+                timestamp: Date.now(),
+                userAgent: navigator.userAgent,
+                ip: '127.0.0.1'
+            };
+            localStorage.setItem('cyberguard_session', JSON.stringify(sessionData));
+
+            updateStatus('✅ Login simulated! Now open index.html to see authenticated navbar.', 'success');
+            updateSessionInfo();
+        }
+
+        function clearSession() {
+            localStorage.removeItem('cyberguard_jwt');
+            localStorage.removeItem('cyberguard_user');
+            localStorage.removeItem('cyberguard_session');
+            
+            updateStatus('✅ Session cleared! Now open index.html to see guest navbar.', 'success');
+            updateSessionInfo();
+        }
+
+        function updateStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = 'status ' + type;
+        }
+
+        function updateSessionInfo() {
+            const sessionInfoEl = document.getElementById('sessionInfo');
+            const token = localStorage.getItem('cyberguard_jwt');
+            const user = localStorage.getItem('cyberguard_user');
+            
+            if (token && user) {
+                const userData = JSON.parse(user);
+                sessionInfoEl.innerHTML = `
+                    <strong>Status:</strong> Authenticated<br>
+                    <strong>User:</strong> ${userData.fullName || userData.name}<br>
+                    <strong>Email:</strong> ${userData.email}<br>
+                    <strong>Token:</strong> ${token.substring(0, 20)}...
+                `;
+            } else {
+                sessionInfoEl.innerHTML = '<strong>Status:</strong> Guest (Not authenticated)';
+            }
+        }
+
+        // Update session info on load
+        updateSessionInfo();
+    </script>
+</body>
+</html>

@@ -7,6 +7,14 @@
     {
       "source": "/invite/:token*",
       "destination": "/invite.html"
+    },
+    {
+      "source": "/billing/paymob/redirect",
+      "destination": "/paymob-redirect.html"
+    },
+    {
+      "source": "/api/billing/paymob/redirect",
+      "destination": "/paymob-redirect.html"
     }
   ]
 }

@@ -538,6 +538,47 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* Dropdown styles */
+        .dropdown-menu {
+            display: none !important;
+        }
+        .dropdown.active .dropdown-toggle {
+            background: var(--cg-accent-muted);
+            border-color: var(--cg-accent);
+        }
+        .dropdown.active .dropdown-toggle svg {
+            transform: rotate(180deg);
+        }
+        .dropdown.active .dropdown-menu {
+            display: block !important;
+        }
+        .dropdown-menu a:hover,
+        .dropdown-menu button:hover {
+            background: var(--cg-accent-muted);
+            color: var(--cg-text-1);
+        }
+        .dropdown-menu button:hover {
+            background: rgba(239, 68, 68, 0.1) !important;
+            color: var(--cg-danger) !important;
+        }
+
+        /* User info alignment */
+        #user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #user-info .user-avatar {
+            flex-shrink: 0;
+        }
+        #user-info .user-details {
+            flex-shrink: 0;
+            min-width: 0;
+        }
+        #user-info .dropdown {
+            flex-shrink: 0;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .plans-grid { grid-template-columns: 1fr; }
@@ -562,8 +603,33 @@
             <div class="pricing-nav-links">
                 <a href="index.html">Home</a>
                 <a href="dashboard.html">Dashboard</a>
-                <a href="login.html" class="cyber-btn-ghost" style="padding:0.4rem 1rem;border-radius:var(--cg-radius-md);font-size:0.85rem;">Login</a>
-                <a href="signup.html" class="cyber-btn-primary" style="padding:0.4rem 1rem;border-radius:var(--cg-radius-md);font-size:0.85rem;">Sign Up</a>
+                
+                <!-- Guest UI (shown by default, hidden when authenticated) -->
+                <div data-guest style="display: flex; align-items: center; gap: 0.75rem;">
+                    <a href="login.html" class="cyber-btn-ghost" style="padding:0.4rem 1rem;border-radius:var(--cg-radius-md);font-size:0.85rem;">Login</a>
+                    <a href="signup.html" class="cyber-btn-primary" style="padding:0.4rem 1rem;border-radius:var(--cg-radius-md);font-size:0.85rem;">Sign Up</a>
+                </div>
+                
+                <!-- Authenticated User Info (hidden by default, shown when authenticated) -->
+                <div id="user-info" data-auth class="hidden" style="display: none; align-items: center; gap: 8px;">
+                    <div class="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--cg-accent) 0%, var(--cg-accent-hover) 100%); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: white; box-shadow: 0 0 15px var(--cg-focus-ring); flex-shrink: 0;">
+                        <span id="userInitials">JD</span>
+                    </div>
+                    <div class="user-details" style="display: flex; flex-direction: column; gap: 0; flex-shrink: 0;">
+                        <p id="userName" class="user-name" style="font-size: 13px; font-weight: 600; color: var(--cg-text-1); margin: 0; line-height: 1.2; white-space: nowrap;">John Doe</p>
+                    </div>
+                    <div class="dropdown" style="position: relative; flex-shrink: 0;">
+                        <button class="dropdown-toggle" style="background: transparent; border: 1px solid var(--cg-border); border-radius: 6px; padding: 4px; cursor: pointer; display: flex; align-items: center; transition: all var(--cg-transition-fast);">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 14px; height: 14px; color: var(--cg-text-2); transition: transform var(--cg-transition-fast);">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                            </svg>
+                        </button>
+                        <div class="dropdown-menu" style="position: absolute; top: calc(100% + 8px); right: 0; background: var(--cg-bg-surface); border: 1px solid var(--cg-border); border-radius: 12px; padding: 8px; min-width: 180px; box-shadow: var(--cg-shadow-lg); z-index: 1000;">
+                            <a href="dashboard.html" style="display: block; padding: 10px 14px; color: var(--cg-text-2); text-decoration: none; font-size: 14px; font-weight: 500; border-radius: 8px; transition: all var(--cg-transition-fast);">Go to Dashboard</a>
+                            <button id="logout-btn" style="width: 100%; display: block; padding: 10px 14px; color: var(--cg-danger); text-decoration: none; font-size: 14px; font-weight: 500; border-radius: 8px; transition: all var(--cg-transition-fast); background: transparent; border: none; text-align: left; cursor: pointer;">Logout</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -698,10 +764,41 @@
 
     <!-- Scripts -->
     <script src="api-client.js"></script>
+    <script src="data-normalizer.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // Initialize AuthManager for session restoration and navbar updates
+        new AuthManager();
+    </script>
     <script src="error-handler.js"></script>
     <script src="cyber-notify.js"></script>
     <script src="billing-api.js"></script>
     <script>
+        // ===========================
+        // Account Dropdown Toggle
+        // ===========================
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropdownToggle = document.querySelector('.dropdown-toggle');
+            const dropdown = document.querySelector('.dropdown');
+            
+            if (dropdownToggle && dropdown) {
+                dropdownToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdown.classList.toggle('active');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!dropdown.contains(e.target)) {
+                        dropdown.classList.remove('active');
+                    }
+                });
+            }
+        });
+
+        // ===========================
+        // Pricing Page Logic
+        // ===========================
         // State
         let selectedPlan = null;
         let plansData = [];
