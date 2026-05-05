@@ -2845,6 +2845,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Welcome Popup Functions ---
   function showWelcomePopup() {
+    // Check if popup has already been shown in this session
+    const hasShownWelcome = sessionStorage.getItem('cyberguard_welcome_shown');
+    
+    if (hasShownWelcome === 'true') {
+      console.log("Welcome popup already shown in this session, skipping...");
+      return;
+    }
+
     const welcomeModal = document.getElementById("welcome-modal");
     const closeBtn = document.getElementById("welcome-close-btn");
 
@@ -2859,6 +2867,9 @@ document.addEventListener("DOMContentLoaded", () => {
       "Modal display style:",
       window.getComputedStyle(welcomeModal).display,
     );
+
+    // Mark as shown in this session
+    sessionStorage.setItem('cyberguard_welcome_shown', 'true');
 
     // Add event listener for close button
     closeBtn.addEventListener("click", () => {

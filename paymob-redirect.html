@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Status - CyberGuard Pro</title>
+    <meta name="description" content="Payment transaction result for CyberGuard Pro subscription.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme-tokens.css">
+    <link rel="stylesheet" href="cyber-theme.css">
+    <style>
+        /* ── Layout ── */
+        .redirect-page {
+            background: var(--cg-bg-base);
+            min-height: 100vh;
+            font-family: var(--cg-font-sans);
+            color: var(--cg-text-1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Navbar ── */
+        .redirect-nav {
+            background: var(--cg-bg-surface);
+            border-bottom: 1px solid var(--cg-border);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .redirect-nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0.875rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .redirect-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+        .redirect-logo span {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--cg-text-1);
+            letter-spacing: -0.01em;
+        }
+        .redirect-nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        .redirect-nav-links a {
+            color: var(--cg-text-2);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color var(--cg-transition-base);
+        }
+        .redirect-nav-links a:hover { color: var(--cg-accent); }
+
+        /* ── Two-column hero section ── */
+        .redirect-hero {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 5rem 1.5rem 4rem;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 5rem;
+            align-items: center;
+        }
+
+        /* ── Left column ── */
+        .hero-left {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .hero-title {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -0.04em;
+            color: var(--cg-text-1);
+            margin: 0;
+        }
+        .hero-title .gradient-word {
+            background: linear-gradient(135deg, var(--cg-accent), var(--cg-accent-hover));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-subtitle {
+            font-size: 1rem;
+            color: var(--cg-text-2);
+            line-height: 1.6;
+            max-width: 440px;
+            margin: 0;
+        }
+
+        /* ── Return / Try Again button ── */
+        .hero-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--cg-radius-md);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            width: fit-content;
+            transition: all var(--cg-transition-base);
+            background: linear-gradient(135deg, var(--cg-accent-hover), var(--cg-accent-dark));
+            color: #fff;
+            border: 1px solid var(--cg-accent-hover);
+            cursor: pointer;
+        }
+        .hero-btn:hover {
+            background: linear-gradient(135deg, var(--cg-accent), var(--cg-accent-hover));
+            box-shadow: 0 0 24px var(--cg-accent-hover);
+            transform: translateX(2px);
+        }
+        .hero-btn svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        /* ── Subscription activation spinner row ── */
+        .activation-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.85rem;
+            color: var(--cg-text-2);
+            font-weight: 500;
+        }
+        .activation-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--cg-border);
+            border-top-color: var(--cg-accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .activation-plan {
+            color: var(--cg-success);
+            font-weight: 700;
+        }
+
+        /* ── Right column — payment card ── */
+        .payment-card {
+            background: var(--cg-bg-surface);
+            border: 1px solid var(--cg-border);
+            border-radius: var(--cg-radius-xl);
+            padding: 2rem 2.25rem 2.25rem;
+            width: 340px;
+            min-width: 300px;
+            box-shadow: var(--cg-shadow-xl);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* ── Status badge at top of card ── */
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .status-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .status-badge.success-badge { color: var(--cg-success); }
+        .status-badge.success-badge .dot { background: var(--cg-success); box-shadow: 0 0 6px var(--cg-success); }
+        .status-badge.failure-badge { color: var(--cg-danger); }
+        .status-badge.failure-badge .dot { background: var(--cg-danger); box-shadow: 0 0 6px var(--cg-danger); }
+
+        /* ── Shield icon ring ── */
+        .shield-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 0;
+        }
+        .shield-ring {
+            width: 108px;
+            height: 108px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .shield-ring.success-ring {
+            border: 3px solid var(--cg-info);
+            box-shadow:
+                0 0 20px rgba(56, 189, 248, 0.35),
+                0 0 50px rgba(56, 189, 248, 0.12),
+                inset 0 0 20px rgba(56, 189, 248, 0.05);
+            animation: pulseRingCyan 3s ease-in-out infinite;
+        }
+        .shield-ring.failure-ring {
+            border: 3px solid #f97316;
+            box-shadow:
+                0 0 20px rgba(249, 115, 22, 0.40),
+                0 0 50px rgba(249, 115, 22, 0.15),
+                inset 0 0 20px rgba(249, 115, 22, 0.05);
+            animation: pulseRingOrange 3s ease-in-out infinite;
+        }
+        .shield-ring svg {
+            width: 52px;
+            height: 52px;
+        }
+        .shield-ring.success-ring svg { color: var(--cg-info); }
+        .shield-ring.failure-ring svg { color: #f97316; }
+
+        @keyframes pulseRingCyan {
+            0%, 100% { box-shadow: 0 0 20px rgba(56,189,248,0.35), 0 0 50px rgba(56,189,248,0.12), inset 0 0 20px rgba(56,189,248,0.05); }
+            50%       { box-shadow: 0 0 32px rgba(56,189,248,0.55), 0 0 80px rgba(56,189,248,0.20), inset 0 0 24px rgba(56,189,248,0.08); }
+        }
+        @keyframes pulseRingOrange {
+            0%, 100% { box-shadow: 0 0 20px rgba(249,115,22,0.40), 0 0 50px rgba(249,115,22,0.15), inset 0 0 20px rgba(249,115,22,0.05); }
+            50%       { box-shadow: 0 0 36px rgba(249,115,22,0.60), 0 0 80px rgba(249,115,22,0.22), inset 0 0 24px rgba(249,115,22,0.08); }
+        }
+
+        /* ── Transaction data grid ── */
+        .txn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: var(--cg-border);
+            border-radius: var(--cg-radius-md);
+            overflow: hidden;
+        }
+        .txn-cell {
+            background: var(--cg-bg-elevated);
+            padding: 1rem 1.1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .txn-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--cg-text-1);
+            font-family: var(--cg-font-mono);
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            word-break: break-all;
+        }
+        .txn-label {
+            font-size: 0.7rem;
+            color: var(--cg-text-2);
+            font-weight: 500;
+        }
+
+        /* ── Payment method row ── */
+        .payment-method-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.875rem 1.1rem;
+            background: var(--cg-bg-elevated);
+            border-radius: var(--cg-radius-md);
+            gap: 0.75rem;
+        }
+        .payment-method-row .pm-label {
+            font-size: 0.8rem;
+            color: var(--cg-text-2);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .payment-method-row .pm-value {
+            font-size: 0.875rem;
+            font-weight: 800;
+            color: var(--cg-text-1);
+            font-family: var(--cg-font-mono);
+            letter-spacing: 0.02em;
+            text-align: right;
+        }
+
+        /* ── Utilities ── */
+        .hidden { display: none !important; }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .redirect-hero {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+                padding: 3rem 1.25rem 3rem;
+                justify-items: center;
+                text-align: center;
+            }
+            .hero-left { align-items: center; }
+            .hero-subtitle { max-width: 100%; }
+            .payment-card { width: 100%; max-width: 400px; }
+        }
+        @media (max-width: 480px) {
+            .hero-title { font-size: 2.2rem; }
+            .payment-card { padding: 1.5rem 1.25rem 1.75rem; }
+            .txn-value { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body class="redirect-page">
+
+    <!-- Navbar -->
+    <nav class="redirect-nav" aria-label="CyberGuard Pro navigation">
+        <div class="redirect-nav-inner">
+            <a href="index.html" class="redirect-logo">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--cg-accent)" stroke-width="1.5" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6
+                           11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622
+                           5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152
+                           c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                </svg>
+                <span>CyberGuard Pro</span>
+            </a>
+            <div class="redirect-nav-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="#">Support</a>
+                <a href="#" id="nav-logout-btn"
+                   class="cyber-btn-primary"
+                   style="padding:0.4rem 1rem;border-radius:var(--cg-radius-md);font-size:0.85rem;">
+                    Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero section: two-column -->
+    <section class="redirect-hero" aria-label="Payment status">
+
+        <!-- Left column -->
+        <div class="hero-left">
+            <h1 class="hero-title">
+                Your <span class="gradient-word">Payment</span><br>
+                Status.<br>
+                Redefined.
+            </h1>
+
+            <!-- Success subtitle -->
+            <p id="success-state" class="hero-subtitle hidden">
+                Thank you for your business. Your subscription is being activated.
+            </p>
+
+            <!-- Failure subtitle -->
+            <p id="failure-state" class="hero-subtitle hidden">
+                We could not complete your transaction. Please check your details and try again.
+            </p>
+
+            <!-- Activation polling status (success only) -->
+            <div id="activation-status" class="activation-row hidden" aria-live="polite">
+                <span class="activation-spinner" id="activation-spinner"></span>
+                <span id="activation-msg">Activating your plan&hellip;</span>
+            </div>
+
+            <a href="dashboard.html" class="hero-btn" id="return-btn">
+                Return to Dashboard
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                     stroke-width="2" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                </svg>
+            </a>
+        </div>
+
+        <!-- Right column: payment result card -->
+        <div class="payment-card" role="region" aria-label="Transaction details">
+
+            <!-- Status badge -->
+            <div id="badge-success" class="status-badge success-badge hidden" aria-live="polite">
+                <span class="dot" aria-hidden="true"></span>
+                Transaction Success
+            </div>
+            <div id="badge-failure" class="status-badge failure-badge hidden" aria-live="polite">
+                <span class="dot" aria-hidden="true"></span>
+                Transaction Failed
+            </div>
+
+            <!-- Shield icon ring -->
+            <div class="shield-wrapper">
+                <!-- Success ring (cyan) -->
+                <div id="ring-success" class="shield-ring success-ring hidden" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                         stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6
+                               11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622
+                               5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152
+                               c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                    </svg>
+                </div>
+                <!-- Failure ring (orange-red) -->
+                <div id="ring-failure" class="shield-ring failure-ring hidden" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                         stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6
+                               11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622
+                               5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152
+                               c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Transaction ID + Amount grid -->
+            <div class="txn-grid">
+                <div class="txn-cell">
+                    <span class="txn-value" id="txn-id">—</span>
+                    <span class="txn-label">Transaction ID</span>
+                </div>
+                <div class="txn-cell">
+                    <span class="txn-value" id="amount">0.00 EGP</span>
+                    <span class="txn-label">Total Amount</span>
+                </div>
+            </div>
+
+            <!-- Payment method -->
+            <div class="payment-method-row">
+                <span class="pm-label">Payment Method:</span>
+                <span class="pm-value" id="payment-method">CARD (****)</span>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- Core API deps so BillingAPI is available for polling -->
+    <script src="api-client.js"></script>
+    <script src="billing-api.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params   = new URLSearchParams(window.location.search);
+            const success  = params.get('success') === 'true';
+            const txnId    = params.get('id') || '—';
+            const amount   = (parseInt(params.get('amount_cents') || '0') / 100).toFixed(2);
+            const currency = params.get('currency') || 'EGP';
+            const brand    = (params.get('source_data.sub_type') || 'CARD').toUpperCase();
+            const last4    = params.get('source_data.pan') || '****';
+
+            // ── Populate transaction data (shared between states) ──
+            document.getElementById('txn-id').textContent        = txnId;
+            document.getElementById('amount').textContent        = `${amount} ${currency}`;
+            document.getElementById('payment-method').textContent = `${brand} (${last4})`;
+
+            // ── DOM helpers ──
+            function show(id) { document.getElementById(id).classList.remove('hidden'); }
+            function hide(id) { document.getElementById(id).classList.add('hidden'); }
+
+            const returnBtn = document.getElementById('return-btn');
+
+            if (success) {
+                // ── SUCCESS STATE ──
+                show('success-state');  hide('failure-state');
+                show('badge-success');  hide('badge-failure');
+                show('ring-success');   hide('ring-failure');
+
+                // Ensure CTA points to dashboard
+                returnBtn.href        = 'dashboard.html';
+                returnBtn.textContent = '';
+                returnBtn.insertAdjacentHTML('beforeend',
+                    'Go to Dashboard <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;flex-shrink:0" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>'
+                );
+
+                // ── Poll subscription until active (max 5 × 3 s) ──
+                show('activation-status');
+
+                (async () => {
+                    try {
+                        const sub = await BillingAPI.pollSubscriptionUntilActive(5, 3000);
+                        const spinner = document.getElementById('activation-spinner');
+                        const msg     = document.getElementById('activation-msg');
+
+                        if (sub && sub.status === 'active') {
+                            // Plan confirmed active
+                            spinner.style.display = 'none';
+                            const planName = sub.plan
+                                ? (sub.plan.charAt(0).toUpperCase() + sub.plan.slice(1))
+                                : 'Your';
+                            msg.innerHTML = `<span class="activation-plan">✓ ${planName} plan activated!</span>`;
+                        } else {
+                            // Max attempts reached — still activated most likely, just slow
+                            spinner.style.display = 'none';
+                            msg.textContent = 'Plan is activating — check Dashboard shortly.';
+                        }
+
+                        // Clean up pending order id
+                        localStorage.removeItem('pending_billing_order_id');
+                    } catch (err) {
+                        console.warn('[PaymobRedirect] Polling error (non-fatal):', err);
+                        hide('activation-status');
+                    }
+                })();
+
+            } else {
+                // ── FAILURE STATE ──
+                hide('success-state');  show('failure-state');
+                hide('badge-success');  show('badge-failure');
+                hide('ring-success');   show('ring-failure');
+
+                // CTA: go back to pricing so user can try again
+                returnBtn.href        = 'pricing.html';
+                returnBtn.textContent = '';
+                returnBtn.insertAdjacentHTML('beforeend',
+                    'Try Again <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;flex-shrink:0" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>'
+                );
+            }
+
+            // ── Logout ──
+            document.getElementById('nav-logout-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                try {
+                    localStorage.removeItem('cyberguard_jwt');
+                    localStorage.removeItem('cyberguard_user');
+                    localStorage.removeItem('cyberguard_session');
+                    localStorage.removeItem('pending_billing_order_id');
+                } catch (_) {}
+                window.location.href = 'login.html';
+            });
+        });
+    </script>
+
+</body>
+</html>

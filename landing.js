@@ -16,6 +16,28 @@ document.querySelectorAll(".mobile-link").forEach((link) => {
 });
 
 // ===========================
+// Account Dropdown Toggle
+// ===========================
+document.addEventListener('DOMContentLoaded', () => {
+  const dropdownToggle = document.querySelector('.dropdown-toggle');
+  const dropdown = document.querySelector('.dropdown');
+  
+  if (dropdownToggle && dropdown) {
+    dropdownToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.toggle('active');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!dropdown.contains(e.target)) {
+        dropdown.classList.remove('active');
+      }
+    });
+  }
+});
+
+// ===========================
 // Navbar Scroll Effect
 // ===========================
 const navbar = document.querySelector(".navbar");

@@ -25,8 +25,33 @@
                     <a href="#tools" class="nav-link">Tools</a>
                     <a href="#security" class="nav-link">Security</a>
                     <a href="pricing.html" class="nav-link">Pricing</a>
-                    <a href="login.html" class="btn-login">Login</a>
-                    <a href="dashboard.html" class="btn-primary">Get Started</a>
+                    
+                    <!-- Guest UI (shown by default, hidden when authenticated) -->
+                    <div data-guest style="display: flex; align-items: center; gap: 8px;">
+                        <a href="login.html" class="btn-login" data-guest>Login</a>
+                        <a href="dashboard.html" class="btn-primary" data-guest>Get Started</a>
+                    </div>
+                    
+                    <!-- Authenticated User Info (hidden by default, shown when authenticated) -->
+                    <div id="user-info" data-auth class="hidden" style="display: flex; align-items: center; gap: 12px;">
+                        <div class="user-avatar" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--cg-accent) 0%, var(--cg-accent-hover) 100%); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: white; box-shadow: 0 0 20px var(--cg-focus-ring);">
+                            <span id="userInitials">JD</span>
+                        </div>
+                        <div class="user-details" style="display: flex; flex-direction: column; gap: 2px;">
+                            <p id="userName" class="user-name" style="font-size: 14px; font-weight: 600; color: var(--cg-text-1); margin: 0; line-height: 1;">John Doe</p>
+                        </div>
+                        <div class="dropdown" style="position: relative;">
+                            <button class="dropdown-toggle" style="background: transparent; border: 1px solid var(--cg-border); border-radius: 8px; padding: 6px; cursor: pointer; display: flex; align-items: center; transition: all var(--cg-transition-fast);">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 16px; height: 16px; color: var(--cg-text-2); transition: transform var(--cg-transition-fast);">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                </svg>
+                            </button>
+                            <div class="dropdown-menu" style="position: absolute; top: calc(100% + 8px); right: 0; background: var(--cg-bg-surface); border: 1px solid var(--cg-border); border-radius: 12px; padding: 8px; min-width: 180px; box-shadow: var(--cg-shadow-lg); z-index: 1000;">
+                                <a href="dashboard.html" style="display: block; padding: 10px 14px; color: var(--cg-text-2); text-decoration: none; font-size: 14px; font-weight: 500; border-radius: 8px; transition: all var(--cg-transition-fast);">Go to Dashboard</a>
+                                <button id="logout-btn" style="width: 100%; display: block; padding: 10px 14px; color: var(--cg-danger); text-decoration: none; font-size: 14px; font-weight: 500; border-radius: 8px; transition: all var(--cg-transition-fast); background: transparent; border: none; text-align: left; cursor: pointer;">Logout</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <button class="mobile-menu-btn" id="mobileMenuBtn">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -39,12 +64,33 @@
 
     <!-- Mobile Menu -->
     <div class="mobile-menu" id="mobileMenu">
-        <a href="#features" class="mobile-link">Features</a>
-        <a href="#tools" class="mobile-link">Tools</a>
-        <a href="#security" class="mobile-link">Security</a>
-        <a href="pricing.html" class="mobile-link">Pricing</a>
-        <a href="login.html" class="mobile-link">Login</a>
-        <a href="dashboard.html" class="btn-primary mobile-cta">Get Started</a>
+        <!-- Guest Links (shown by default, hidden when authenticated) -->
+        <div data-guest>
+            <a href="#features" class="mobile-link">Features</a>
+            <a href="#tools" class="mobile-link">Tools</a>
+            <a href="#security" class="mobile-link">Security</a>
+            <a href="pricing.html" class="mobile-link">Pricing</a>
+            <a href="login.html" class="mobile-link" data-guest>Login</a>
+            <a href="dashboard.html" class="btn-primary mobile-cta" data-guest>Get Started</a>
+        </div>
+        
+        <!-- Authenticated Links (hidden by default, shown when authenticated) -->
+        <div data-auth class="hidden">
+            <a href="#features" class="mobile-link">Features</a>
+            <a href="#tools" class="mobile-link">Tools</a>
+            <a href="#security" class="mobile-link">Security</a>
+            <a href="pricing.html" class="mobile-link">Pricing</a>
+            <div class="mobile-user-info" style="padding: 16px; background: var(--cg-bg-surface); border-radius: 12px; margin: 8px 0; border: 1px solid var(--cg-border);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                    <div class="user-avatar" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--cg-accent) 0%, var(--cg-accent-hover) 100%); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; color: white; box-shadow: 0 0 20px var(--cg-focus-ring);">
+                        <span id="mobileUserInitials">JD</span>
+                    </div>
+                    <p id="mobileUserName" style="font-size: 16px; font-weight: 600; color: var(--cg-text-1); margin: 0;">John Doe</p>
+                </div>
+            </div>
+            <a href="dashboard.html" class="btn-primary mobile-cta">Go to Dashboard</a>
+            <button id="mobile-logout-btn" class="btn-ghost mobile-cta" style="width: 100%; margin-top: 8px; background: transparent; border: 1px solid var(--cg-border); color: var(--cg-danger); cursor: pointer;">Logout</button>
+        </div>
     </div>
 
     <!-- Hero Section -->
@@ -492,6 +538,16 @@
         </div>
     </footer>
 
+    <!-- Authentication System Dependencies -->
+    <script src="api-client.js"></script>
+    <script src="data-normalizer.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // Initialize AuthManager for session restoration and navbar updates
+        new AuthManager();
+    </script>
+    
+    <!-- Landing Page Interactions -->
     <script src="landing.js"></script>
 </body>
 </html>

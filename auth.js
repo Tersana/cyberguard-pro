@@ -934,6 +934,33 @@ class AuthManager {
         userInfoEl.classList.remove("hidden");
       }
 
+      // Update landing page user initials and mobile user name
+      const userInitialsEl = document.getElementById("userInitials");
+      const mobileUserInitialsEl = document.getElementById("mobileUserInitials");
+      const mobileUserNameEl = document.getElementById("mobileUserName");
+      
+      const fullName = this.currentUser.fullName || this.currentUser.name || "";
+      const parts = fullName.trim().split(/\s+/);
+      let initials = "";
+      
+      if (parts.length >= 2) {
+        initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      } else if (parts.length === 1 && parts[0].length >= 2) {
+        initials = parts[0].substring(0, 2).toUpperCase();
+      } else {
+        initials = fullName.substring(0, 2).toUpperCase() || "U";
+      }
+      
+      if (userInitialsEl) {
+        userInitialsEl.textContent = initials;
+      }
+      if (mobileUserInitialsEl) {
+        mobileUserInitialsEl.textContent = initials;
+      }
+      if (mobileUserNameEl) {
+        mobileUserNameEl.textContent = fullName;
+      }
+
       // Update sidebar profile card with full_name and job_title
       const sidebarName = document.getElementById("sidebarUserName");
       const sidebarRole = document.getElementById("sidebarUserRole");
@@ -954,23 +981,7 @@ class AuthManager {
 
       // Calculate and display user initials from full_name
       if (sidebarInitials) {
-        const fullName =
-          this.currentUser.fullName || this.currentUser.name || "";
-        const parts = fullName.trim().split(/\s+/); // Split by whitespace
-
-        if (parts.length >= 2) {
-          // First and last name initials
-          sidebarInitials.textContent = (
-            parts[0][0] + parts[parts.length - 1][0]
-          ).toUpperCase();
-        } else if (parts.length === 1 && parts[0].length >= 2) {
-          // Single name, use first two characters
-          sidebarInitials.textContent = parts[0].substring(0, 2).toUpperCase();
-        } else {
-          // Fallback
-          sidebarInitials.textContent =
-            fullName.substring(0, 2).toUpperCase() || "U";
-        }
+        sidebarInitials.textContent = initials;
       }
     } else {
       // Mark document state for CSS overrides
@@ -1136,10 +1147,19 @@ class AuthManager {
       this.updateUI();
     }
 
-    // Logout button
+    // Logout buttons (multiple IDs for different pages)
     const logoutBtn = document.getElementById("logoutBtn");
+    const logoutBtnHyphen = document.getElementById("logout-btn");
+    const mobileLogoutBtn = document.getElementById("mobile-logout-btn");
+    
     if (logoutBtn) {
-      logoutBtn.addEventListener("click", () => this.logout());
+      logoutBtn.addEventListener("click", () => this.logoutWithAPI());
+    }
+    if (logoutBtnHyphen) {
+      logoutBtnHyphen.addEventListener("click", () => this.logoutWithAPI());
+    }
+    if (mobileLogoutBtn) {
+      mobileLogoutBtn.addEventListener("click", () => this.logoutWithAPI());
     }
 
     // Add click listeners to auth-required elements (excluding API Keys which is handled in main.js)
