@@ -117,6 +117,18 @@
                 outline: none;
             }
 
+            /* Input error state */
+            .cyber-input.border-red-500 {
+                border-color: #EF4444 !important;
+            }
+
+            .cyber-input.border-red-500:focus {
+                border-color: #EF4444 !important;
+                box-shadow:
+                    0 0 0 3px rgba(239, 68, 68, 0.2),
+                    0 0 16px rgba(239, 68, 68, 0.3);
+            }
+
             /* Neon button */
             .btn-neon {
                 background: linear-gradient(
@@ -370,6 +382,13 @@
                                     class="cyber-input w-full pl-12 pr-4 py-3 rounded-xl text-white placeholder-gray-500"
                                     required
                                 />
+                            </div>
+                            <!-- Email Error Message -->
+                            <div id="emailError" class="hidden mt-2 text-sm text-red-400 flex items-center gap-2">
+                                <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                                </svg>
+                                <span id="emailErrorText">Please enter a valid email address</span>
                             </div>
                         </div>
 
@@ -784,7 +803,6 @@
                                 <input
                                     type="checkbox"
                                     class="w-4 h-4 rounded border-gray-600 bg-gray-700 text-neon-purple focus:ring-neon-purple mt-0.5"
-                                    required
                                 />
                                 <span class="text-sm text-gray-400"
                                     >I consent to receive security alerts and
@@ -1075,11 +1093,23 @@
                     }
                 }
 
-                // Step 1: Validate job title specifically
+                // Step 1: Validate email and job title
                 if (currentStep === 1) {
+                    const email = document.getElementById("email").value.trim();
                     const jobTitle = document
                         .getElementById("jobTitle")
                         .value.trim();
+                    
+                    // Validate email format
+                    if (!validateEmail(email)) {
+                        showEmailError("Please enter a valid email address (e.g., user@example.com)");
+                        document.getElementById("email").focus();
+                        return false;
+                    } else {
+                        hideEmailError();
+                    }
+                    
+                    // Validate job title
                     if (!jobTitle) {
                         showMessage(
                             "error",
@@ -1122,6 +1152,122 @@
                 }
 
                 return true;
+            }
+
+            // Email validation function
+            function validateEmail(email) {
+                // Basic format check: must have @ symbol
+                if (!email || !email.includes('@')) {
+                    return false;
+                }
+
+                // Split into local and domain parts
+                const parts = email.split('@');
+                
+                // Must have exactly one @ symbol
+                if (parts.length !== 2) {
+                    return false;
+                }
+
+                const [localPart, domain] = parts;
+
+                // Validate local part (before @)
+                if (!localPart || localPart.length === 0 || localPart.length > 64) {
+                    return false;
+                }
+
+                // Local part cannot start or end with a dot
+                if (localPart.startsWith('.') || localPart.endsWith('.')) {
+                    return false;
+                }
+
+                // Local part cannot have consecutive dots
+                if (localPart.includes('..')) {
+                    return false;
+                }
+
+                // Local part can only contain valid characters
+                const localPartRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+$/;
+                if (!localPartRegex.test(localPart)) {
+                    return false;
+                }
+
+                // Validate domain part (after @)
+                if (!domain || domain.length === 0 || domain.length > 255) {
+                    return false;
+                }
+
+                // Domain must contain at least one dot
+                if (!domain.includes('.')) {
+                    return false;
+                }
+
+                // Domain cannot start or end with a dot or hyphen
+                if (domain.startsWith('.') || domain.endsWith('.') || 
+                    domain.startsWith('-') || domain.endsWith('-')) {
+                    return false;
+                }
+
+                // Domain cannot have consecutive dots
+                if (domain.includes('..')) {
+                    return false;
+                }
+
+                // Split domain into labels (e.g., ["example", "com"])
+                const domainLabels = domain.split('.');
+                
+                // Must have at least 2 labels (domain + TLD)
+                if (domainLabels.length < 2) {
+                    return false;
+                }
+
+                // Validate each domain label
+                for (const label of domainLabels) {
+                    // Each label must be 1-63 characters
+                    if (label.length === 0 || label.length > 63) {
+                        return false;
+                    }
+
+                    // Label cannot start or end with hyphen
+                    if (label.startsWith('-') || label.endsWith('-')) {
+                        return false;
+                    }
+
+                    // Label can only contain alphanumeric and hyphens
+                    if (!/^[a-zA-Z0-9-]+$/.test(label)) {
+                        return false;
+                    }
+                }
+
+                // TLD (last label) must be at least 2 characters and only letters
+                const tld = domainLabels[domainLabels.length - 1];
+                if (tld.length < 2 || !/^[a-zA-Z]+$/.test(tld)) {
+                    return false;
+                }
+
+                return true;
+            }
+
+            // Show email error
+            function showEmailError(message) {
+                const emailInput = document.getElementById("email");
+                const emailError = document.getElementById("emailError");
+                const emailErrorText = document.getElementById("emailErrorText");
+                
+                emailInput.classList.add("border-red-500");
+                emailInput.classList.remove("border-gray-600");
+                emailError.classList.remove("hidden");
+                emailErrorText.textContent = message;
+            }
+
+            // Hide email error
+            function hideEmailError() {
+                const emailInput = document.getElementById("email");
+                const emailError = document.getElementById("emailError");
+                
+                emailInput.classList.remove("border-red-500");
+                emailInput.classList.add("border-gray-600");
+                emailError.classList.add("hidden");
             }
 
             // Validate all previous steps before final submission
@@ -1333,6 +1479,36 @@
                         confirmPasswordField.type = "password";
                         eyeIconConfirm.innerHTML =
                             '<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />';
+                    }
+                });
+
+            // Email validation on blur (when user leaves the field)
+            document
+                .getElementById("email")
+                .addEventListener("blur", function () {
+                    const email = this.value.trim();
+                    
+                    // Only validate if user has entered something
+                    if (email.length > 0) {
+                        if (!validateEmail(email)) {
+                            showEmailError("Please enter a valid email address (e.g., user@example.com)");
+                        } else {
+                            hideEmailError();
+                        }
+                    }
+                });
+
+            // Email validation on input (real-time as user types)
+            document
+                .getElementById("email")
+                .addEventListener("input", function () {
+                    const email = this.value.trim();
+                    
+                    // Clear error if field is empty or if email becomes valid
+                    if (email.length === 0) {
+                        hideEmailError();
+                    } else if (validateEmail(email)) {
+                        hideEmailError();
                     }
                 });
 

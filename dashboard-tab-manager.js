@@ -135,6 +135,17 @@ const DashboardTabManager = {
         pane.classList.remove('active');
       }
     });
+
+    // Toggle results section visibility
+    const TABS_WITHOUT_RESULTS = ['projects', 'threat-intel', 'billing-history', 'ai-assistant'];
+    const resultsSection = document.getElementById('professional-results-section');
+    if (resultsSection) {
+      if (TABS_WITHOUT_RESULTS.includes(activeTabId)) {
+        resultsSection.style.display = 'none';
+      } else {
+        resultsSection.style.display = 'block';
+      }
+    }
   },
   
   /**
