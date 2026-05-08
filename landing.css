@@ -1121,6 +1121,306 @@ body::before {
   }
 }
 
+/* ===========================
+   How It Works Section
+   =========================== */
+.how-it-works {
+  padding: var(--section-padding) 0;
+  background: transparent;
+  position: relative;
+}
+
+.steps-grid {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.step-card {
+  flex: 1;
+  max-width: 280px;
+  text-align: center;
+  padding: 40px 28px;
+  background: var(--cg-bg-surface);
+  border: 1px solid var(--cg-border);
+  border-radius: var(--card-radius);
+  position: relative;
+  transition: all var(--cg-transition-base);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.step-card:hover {
+  background: var(--cg-bg-elevated);
+  border-color: var(--cg-focus-ring);
+  transform: translateY(-6px);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.3), 0 0 40px var(--cg-accent-muted);
+}
+
+.step-number {
+  font-size: 48px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--cg-accent) 0%, var(--cg-accent-hover) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  margin-bottom: 20px;
+  opacity: 0.4;
+}
+
+.step-card:hover .step-number {
+  opacity: 1;
+}
+
+.step-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: var(--cg-accent-muted);
+  border: 1px solid var(--cg-focus-ring);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 0 20px var(--cg-accent-muted);
+  transition: transform var(--cg-transition-base);
+}
+
+.step-card:hover .step-icon {
+  transform: scale(1.08);
+  box-shadow: 0 0 30px var(--cg-focus-ring);
+}
+
+.step-icon svg {
+  width: 28px;
+  height: 28px;
+  color: var(--cg-accent);
+}
+
+.step-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--cg-text-1);
+  margin-bottom: 10px;
+  letter-spacing: -0.015em;
+}
+
+.step-description {
+  font-size: 14px;
+  color: var(--cg-text-3);
+  line-height: 1.7;
+}
+
+.step-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 80px;
+  flex-shrink: 0;
+  width: 48px;
+}
+
+.step-connector svg {
+  width: 24px;
+  height: 24px;
+  color: var(--cg-accent);
+  opacity: 0.5;
+  filter: drop-shadow(0 0 8px var(--cg-accent));
+}
+
+/* ===========================
+   Team Collaboration Section
+   =========================== */
+.team-collaboration {
+  padding: var(--section-padding) 0;
+  background: transparent;
+  position: relative;
+}
+
+.team-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.team-text {
+  opacity: 0;
+  transform: translateX(-28px);
+}
+
+.team-text.aos-animate {
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 0.8s ease-out;
+}
+
+.team-description {
+  font-size: 17px;
+  color: var(--cg-text-3);
+  line-height: 1.8;
+  margin-bottom: 40px;
+}
+
+.team-features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.team-feature-item {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: var(--cg-bg-surface);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 14px;
+  border: 1px solid var(--cg-border);
+  transition: all var(--cg-transition-base);
+}
+
+.team-feature-item:hover {
+  background: var(--cg-bg-elevated);
+  border-color: var(--cg-focus-ring);
+  transform: translateX(6px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.team-feature-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--cg-accent-muted);
+  border: 1px solid var(--cg-focus-ring);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 20px var(--cg-accent-muted);
+}
+
+.team-feature-icon svg {
+  width: 22px;
+  height: 22px;
+  color: var(--cg-accent);
+}
+
+.team-feature-item h4 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cg-text-1);
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+
+.team-feature-item p {
+  font-size: 13.5px;
+  color: var(--cg-text-3);
+  line-height: 1.6;
+}
+
+.team-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateX(28px);
+}
+
+.team-visual.aos-animate {
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 0.8s ease-out;
+}
+
+.team-roles-display {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.role-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: var(--cg-bg-surface);
+  border: 1px solid var(--cg-border);
+  border-radius: 16px;
+  transition: all var(--cg-transition-base);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.role-card:hover {
+  transform: translateX(8px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.role-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 20px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.role-owner .role-avatar {
+  background: linear-gradient(135deg, var(--cg-accent), var(--cg-accent-hover));
+  box-shadow: 0 0 24px var(--cg-focus-ring);
+}
+
+.role-editor .role-avatar {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  box-shadow: 0 0 24px rgba(6, 182, 212, 0.3);
+}
+
+.role-viewer .role-avatar {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.3);
+}
+
+.role-owner:hover {
+  border-color: var(--cg-focus-ring);
+}
+
+.role-editor:hover {
+  border-color: rgba(6, 182, 212, 0.4);
+}
+
+.role-viewer:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.role-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.role-label {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cg-text-1);
+  letter-spacing: -0.01em;
+}
+
+.role-desc {
+  font-size: 13px;
+  color: var(--cg-text-3);
+}
 
 /* ===========================
    Security Section
@@ -1512,6 +1812,28 @@ body::before {
     gap: 48px;
   }
 
+  .team-content {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .steps-grid {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .step-card {
+    max-width: 400px;
+    width: 100%;
+  }
+
+  .step-connector {
+    padding-top: 0;
+    padding: 12px 0;
+    transform: rotate(90deg);
+  }
+
   .footer-content {
     grid-template-columns: 1fr 1fr;
   }
@@ -1562,6 +1884,22 @@ body::before {
   .features-grid,
   .tools-showcase {
     grid-template-columns: 1fr;
+  }
+
+  .steps-grid {
+    gap: 0;
+  }
+
+  .step-card {
+    padding: 28px 20px;
+  }
+
+  .team-content {
+    gap: 32px;
+  }
+
+  .team-roles-display {
+    max-width: 100%;
   }
 
   .cta-content {
