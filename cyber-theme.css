@@ -581,6 +581,33 @@ select.cyber-input option {
     box-shadow: 0 0 40px var(--cg-border-subtle);
 }
 
+/* ---- Standardized Cancel Button ---- */
+/* Use .btn-cancel on every "Cancel" button in modals / panels across all pages. */
+/* Appearance-only — never changes onclick or functionality. */
+.btn-cancel {
+    background: transparent;
+    color: var(--cg-text-2);                   /* #94A3B8 muted slate */
+    border: 1px solid var(--cg-border-subtle); /* #374151 */
+    border-radius: var(--cg-radius-md);        /* 10px */
+    font-weight: 500;
+    font-family: var(--cg-font-sans);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+.btn-cancel:hover {
+    background: var(--cg-bg-elevated);         /* #1F2937 */
+    color: var(--cg-text-1);                   /* #F1F5F9 */
+    border-color: var(--cg-border-subtle);
+    box-shadow: 0 0 12px rgba(148, 163, 184, 0.08);
+}
+.btn-cancel:active {
+    background: var(--cg-bg-surface);
+}
+
 .cyber-btn-danger {
     background: rgba(226, 2, 2, 0.15);
     color: rgb(222, 172, 172);
@@ -2108,4 +2135,134 @@ body.authenticated [data-auth-required].cyber-tool-link::after {
     background: rgba(56, 189, 248, 0.25);
     border-color: rgba(56, 189, 248, 0.5);
     box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+}
+
+/* ============================================================
+   API Key Configuration Modal — Unified Style System
+   All components use a single --cg-accent (violet) palette.
+   No per-service colors — consistent, professional, minimal.
+   ============================================================ */
+
+/* ---- Service Cards ---- */
+.api-service-card {
+    background: var(--cg-bg-elevated);
+    border: 1px solid var(--cg-border);
+    border-radius: var(--cg-radius-md);
+    padding: 16px;
+    transition: border-color 0.2s ease;
+}
+.api-service-card:hover {
+    border-color: rgba(167, 139, 250, 0.3);
+}
+
+/* ---- Icon Boxes (all 5 services — same muted accent style) ---- */
+.api-icon-box {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--cg-radius-sm);
+    background: var(--cg-accent-muted);
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cg-accent);
+    flex-shrink: 0;
+}
+
+/* ---- API Key Input ---- */
+.api-key-input {
+    width: 100%;
+    padding: 9px 12px;
+    background: var(--cg-bg-base);
+    border: 1px solid var(--cg-border-subtle);
+    border-radius: var(--cg-radius-sm);
+    color: var(--cg-text-1);
+    font-size: 13px;
+    font-family: var(--cg-font-mono);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.api-key-input::placeholder {
+    color: var(--cg-text-3);
+}
+.api-key-input:focus {
+    border-color: var(--cg-accent);
+    box-shadow: 0 0 0 2px var(--cg-focus-ring);
+}
+
+/* ---- Save Key Buttons (all 5 services — same accent style) ---- */
+.api-save-btn {
+    width: 100%;
+    padding: 10px 16px;
+    background: var(--cg-accent-muted);
+    border: 1px solid rgba(167, 139, 250, 0.3);
+    border-radius: var(--cg-radius-md);
+    color: var(--cg-accent);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--cg-font-sans);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    /* Reset any inherited button styles from color-specific classes */
+    background-image: none;
+    box-shadow: none;
+    text-align: center;
+}
+.api-save-btn:hover {
+    background: var(--cg-accent);
+    color: #ffffff;
+    border-color: var(--cg-accent);
+    box-shadow: 0 0 16px var(--cg-focus-ring);
+}
+
+/* ---- Provider Tag Links (bottom "Get Your API Keys" section) ---- */
+.api-provider-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    background: var(--cg-bg-elevated);
+    border: 1px solid var(--cg-border-subtle);
+    border-radius: 20px;
+    color: var(--cg-text-2);
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.api-provider-tag:hover {
+    border-color: var(--cg-accent);
+    color: var(--cg-accent);
+    background: var(--cg-accent-muted);
+}
+
+/* ---- Clear All Keys — danger ghost style ---- */
+.btn-clear-all-keys {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: transparent;
+    border: 1px solid rgba(248, 113, 113, 0.3);
+    border-radius: var(--cg-radius-md);
+    color: var(--cg-danger);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--cg-font-sans);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-clear-all-keys:hover {
+    background: rgba(248, 113, 113, 0.1);
+    border-color: var(--cg-danger);
+}
+.btn-clear-all-keys svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    color: currentColor;
+    transition: transform 0.2s ease;
+}
+
+.btn-clear-all-keys:hover svg {
+    transform: scale(1.1);
 }

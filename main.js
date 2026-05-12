@@ -3024,37 +3024,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Clear all API keys function
   function clearAllApiKeys() {
-    if (
-      confirm(
-        "⚠️ Are you sure you want to clear ALL API keys? This action cannot be undone.",
-      )
-    ) {
-      // Clear from localStorage
-      localStorage.removeItem("vtApiKey");
-      localStorage.removeItem("whoisApiKey");
-      localStorage.removeItem("shodanApiKey");
-      localStorage.removeItem("urlscanApiKey");
-      localStorage.removeItem("abuseipdbApiKey");
+    CyberNotify.confirm(
+      "Are you sure you want to clear ALL API keys? This action cannot be undone.",
+      (confirmed) => {
+        if (confirmed) {
+          // Clear from localStorage
+          localStorage.removeItem("vtApiKey");
+          localStorage.removeItem("whoisApiKey");
+          localStorage.removeItem("shodanApiKey");
+          localStorage.removeItem("urlscanApiKey");
+          localStorage.removeItem("abuseipdbApiKey");
 
-      // Clear from memory
-      virusTotalApiKey = "";
-      whoisApiKey = "";
-      shodanApiKey = "";
+          // Clear from memory
+          virusTotalApiKey = "";
+          whoisApiKey = "";
+          shodanApiKey = "";
 
-      // Clear input fields
-      vtApiKeyInput.value = "";
-      abuseApiKeyInput.value = "";
-      whoisApiKeyInput.value = "";
-      shodanApiKeyInput.value = "";
-      if (urlscanApiKeyInput) urlscanApiKeyInput.value = "";
+          // Clear input fields
+          vtApiKeyInput.value = "";
+          abuseApiKeyInput.value = "";
+          whoisApiKeyInput.value = "";
+          shodanApiKeyInput.value = "";
+          if (urlscanApiKeyInput) urlscanApiKeyInput.value = "";
 
-      logResult(
-        new Date(),
-        "System",
-        "🗑️ All API keys cleared from secure storage.",
-        "success",
-      );
-    }
+          logResult(
+            new Date(),
+            "System",
+            "🗑️ All API keys cleared from secure storage.",
+            "success",
+          );
+        }
+      },
+      { type: "warning" }
+    );
   }
 
   // Add event listener for clear all keys button
