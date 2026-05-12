@@ -5315,6 +5315,11 @@
              * Sets up event listeners and loads data when tab is active
              */
             function initBillingHistory() {
+                // === AUTHENTICATION CHECK ===
+                if (typeof window.runAuthGuard === 'function' && !window.runAuthGuard()) {
+                    return; // Stop initialization if not authenticated
+                }
+
                 console.log('[BillingHistory] Initializing billing history module...');
 
                 // Retry button
@@ -5448,6 +5453,11 @@
              * Loads subscription data when user is authenticated
              */
             function initSubscription() {
+                // === AUTHENTICATION CHECK ===
+                if (typeof window.runAuthGuard === 'function' && !window.runAuthGuard()) {
+                    return; // Stop initialization if not authenticated
+                }
+
                 console.log('[Subscription] Initializing subscription module...');
 
                 // Check if user is authenticated
@@ -5727,6 +5737,11 @@
              * Initialize sidebar on page load
              */
             function initSidebar() {
+                // === AUTHENTICATION CHECK ===
+                if (typeof window.runAuthGuard === 'function' && !window.runAuthGuard()) {
+                    return; // Stop initialization if not authenticated
+                }
+
                 console.log("[Sidebar Toggle] initSidebar() called");
                 console.log(
                     "[Sidebar Toggle] document.readyState:",

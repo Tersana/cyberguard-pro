@@ -581,6 +581,11 @@
 
   // ─── Bootstrap ───────────────────────────────────────────────────
   function bootstrap() {
+    // === AUTHENTICATION CHECK ===
+    if (typeof window.runAuthGuard === 'function' && !window.runAuthGuard()) {
+      return; // Stop initialization if not authenticated
+    }
+
     injectStyles();
     init();
 

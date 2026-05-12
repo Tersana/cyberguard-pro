@@ -1471,6 +1471,11 @@ if (typeof window !== "undefined") {
 
   // Auto-bootstrap on DOM ready
   function _bootstrap() {
+    // === AUTHENTICATION CHECK ===
+    if (typeof window.runAuthGuard === 'function' && !window.runAuthGuard()) {
+      return; // Stop initialization if not authenticated
+    }
+
     // Ensure APIClient + ProjectManager are initialised
     if (!window.apiClient && typeof APIClient !== "undefined") {
       window.apiClient = new APIClient();
