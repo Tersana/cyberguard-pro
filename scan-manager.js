@@ -1,66 +1,56 @@
-/**
- * scan-manager.js — CyberGuard Pro
- *
- * Full scan lifecycle for the Projects > Targets flow.
- *
- * Responsibilities:
- *   1. Load available scanners  GET /api/scanners
- *   2. Render Scanner Selection Modal (grouped by category, Select-All toggle)
- *   3. Start scan               POST /api/scan/start
- *   4. Live WebSocket feed      wss://…/app/{key}?… → channel scan.{sessionId}
- *   5. Fallback polling         GET /api/scan/{sessionId}/status  (every 5 s)
- *   6. Render finding cards (severity badges, CVSS, remediation accordion)
- *   7. Scan-complete / failed states
- *
- * Exposed as window.ScanManager — called from project-detail.html.
- */
 (function () {
   "use strict";
 
-  /* ─── Config ────────────────────────────────────────────────────────────── */
-  const API_BASE =
-    "https://peptonelike-lelia-interdepartmentally.ngrok-free.dev/api/";
-  const JWT_KEY = "cyberguard_jwt";
-  const REVERB = {
-    appKey: "p77kyuc5noyjaqc0t2te",
-    host: "peptonelike-lelia-interdepartmentally.ngrok-free.dev",
-  };
+  /* ─── Config ──────────────────────────────────────────────────────────── */
+  const API_BASE = "https://peptonelike-lelia-interdepartmentally.ngrok-free.dev/api/";
+  const JWT_KEY  = "cyberguard_jwt";
 
-  /* ─── State ─────────────────────────────────────────────────────────────── */
+  /* ─── State ───────────────────────────────────────────────────────────── */
   const scanState = {
-    sessionId: null,
-    targetId: null,
-    targetLabel: null,
-    targetValue: null,
-    targetType: null,
-    status: "idle", // idle | running | completed | failed
-    findings: [],
-    socket: null,
-    pollingInterval: null,
-    seenFindingIds: new Set(),
-    startedAt: null,
-    finishedAt: null,
+    sessionId       : null,
+    targetId        : null,
+    targetLabel     : null,
+    targetValue     : null,
+    targetType      : null,
+    status          : "idle",
+    findings        : [],
+    pollingInterval : null,
+    seenFindingIds  : new Set(),
+    startedAt       : null,
+    finishedAt      : null,
   };
 
-  let _scanners = []; // cached from GET /api/scanners
-  let _selected = new Set(); // currently-checked scanner ids
+  let _scanners = [];
+  let _selected = new Set();
 
-  /* ─── API helper ─────────────────────────────────────────────────────────── */
+  // ── Echo state ────────────────────────────────────────────────────────────
+  let activeScanChannel = null;
+  let activeScanJobId   = null;
+  let terminalLogs      = [];
+
+  // ── Completion guards ─────────────────────────────────────────────────────
+  let scanCompleted          = false;
+  let scanTimeoutId          = null;
+  let statusPollingInterval  = null;
+  const MAX_SCAN_DURATION_MS = 5 * 60 * 1000; // 5 min
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     API HELPER
+  ═══════════════════════════════════════════════════════════════════════ */
   function apiFetch(endpoint, opts = {}) {
-    const token = localStorage.getItem(JWT_KEY);
+    const token   = localStorage.getItem(JWT_KEY);
     const headers = {
-      Accept: "application/json",
-      "Content-Type": "application/json",
+      "Accept"                  : "application/json",
+      "Content-Type"            : "application/json",
       "ngrok-skip-browser-warning": "true",
     };
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    return fetch(API_BASE + endpoint.replace(/^\//, ""), {
-      headers,
-      ...opts,
-    });
+    return fetch(API_BASE + endpoint.replace(/^\//, ""), { headers, ...opts });
   }
 
-  /* ─── Load scanners ──────────────────────────────────────────────────────── */
+  /* ═══════════════════════════════════════════════════════════════════════
+     SCANNER MODAL
+  ═══════════════════════════════════════════════════════════════════════ */
   async function loadScanners() {
     try {
       const res = await apiFetch("/scanners");
@@ -73,56 +63,46 @@
     }
   }
 
-  /* ─── Open scanner-selection modal ──────────────────────────────────────── */
   async function openScanModal(buttonEl) {
     if (scanState.status === "running") {
-      notify("A scan is already running. Please wait for it to complete.", "warning");
+      notify("A scan is already running.", "warning");
       return;
     }
 
-    // Read target info from data-* attributes on the clicked button
-    scanState.targetId    = buttonEl.dataset.tid    || "";
-    scanState.targetLabel = buttonEl.dataset.lbl    || "";
-    scanState.targetValue = buttonEl.dataset.val    || "";
-    scanState.targetType  = buttonEl.dataset.typ    || "domain";
-
+    scanState.targetId    = buttonEl.dataset.tid || "";
+    scanState.targetLabel = buttonEl.dataset.lbl || "";
+    scanState.targetValue = buttonEl.dataset.val || "";
+    scanState.targetType  = buttonEl.dataset.typ || "domain";
     _selected.clear();
 
-    const modal = document.getElementById("scan-scanner-modal");
+    const modal   = document.getElementById("scan-scanner-modal");
     if (!modal) return;
 
     const titleEl  = document.getElementById("scan-modal-target-label");
     const detailEl = document.getElementById("scan-modal-target-detail");
     if (titleEl)  titleEl.textContent  = scanState.targetLabel || "Target";
-    if (detailEl) detailEl.textContent =
-      `${scanState.targetValue} (${scanState.targetType})`;
+    if (detailEl) detailEl.textContent = `${scanState.targetValue} (${scanState.targetType})`;
 
-    // Show loading state in scanner body
     const bodyEl = document.getElementById("scan-modal-scanner-body");
-    if (bodyEl)
-      bodyEl.innerHTML = `
-        <div class="flex items-center justify-center py-10 text-slate-400 text-sm gap-3">
-          <span class="cyber-spinner-sm"></span>Loading scanners…
-        </div>`;
+    if (bodyEl) bodyEl.innerHTML = `
+      <div class="flex items-center justify-center py-10 text-slate-400 text-sm gap-3">
+        <span class="cyber-spinner-sm"></span>Loading scanners…
+      </div>`;
 
     modal.classList.remove("hidden");
-
     await loadScanners();
     renderScannerList();
   }
 
-  /* ─── Render grouped scanner list ────────────────────────────────────────── */
   function renderScannerList() {
     const bodyEl = document.getElementById("scan-modal-scanner-body");
     if (!bodyEl) return;
 
     if (_scanners.length === 0) {
-      bodyEl.innerHTML = `
-        <p class="text-sm text-slate-400 text-center py-8">No scanners available.</p>`;
+      bodyEl.innerHTML = `<p class="text-sm text-slate-400 text-center py-8">No scanners available.</p>`;
       return;
     }
 
-    // Group by category
     const groups = {};
     _scanners.forEach((s) => {
       const cat = (s.category || "other").toLowerCase();
@@ -135,44 +115,36 @@
       html += `
         <div class="mb-5" data-scan-group="${escAttr(cat)}">
           <div class="flex items-center justify-between mb-3">
-            <span class="text-xs font-bold uppercase tracking-widest text-[var(--cg-accent)]">${escHtml(cat)}</span>
-            <button
-              type="button"
+            <span class="text-xs font-bold uppercase tracking-widest text-[var(--cg-accent)]">
+              ${escHtml(cat)}
+            </span>
+            <button type="button"
               class="text-xs text-[var(--cg-info)] hover:underline focus:outline-none"
-              onclick="window.ScanManager._toggleGroup('${escAttr(cat)}')"
-            >Select All</button>
+              onclick="window.ScanManager._toggleGroup('${escAttr(cat)}')">
+              Select All
+            </button>
           </div>
-          <div class="space-y-2">
-            ${list.map(renderScannerCard).join("")}
-          </div>
+          <div class="space-y-2">${list.map(renderScannerCard).join("")}</div>
         </div>`;
     }
     bodyEl.innerHTML = html;
   }
 
   function renderScannerCard(s) {
-    const id   = escAttr(s.id   || "");
+    const id   = escAttr(s.id || "");
     const name = escHtml(s.name || "");
-    const catBadgeCls =
-      {
-        recon: "text-[#38BDF8] bg-[rgba(56,189,248,0.1)] border-[rgba(56,189,248,0.25)]",
-        vuln:  "text-[#FB923C] bg-[rgba(251,146,60,0.1)] border-[rgba(251,146,60,0.25)]",
-        audit: "text-[#A78BFA] bg-[rgba(167,139,250,0.1)] border-[rgba(167,139,250,0.25)]",
-      }[s.category] ||
-      "text-slate-400 bg-slate-800/50 border-slate-700";
+    const catBadgeCls = ({
+      recon: "text-[#38BDF8] bg-[rgba(56,189,248,0.1)] border-[rgba(56,189,248,0.25)]",
+      vuln : "text-[#FB923C] bg-[rgba(251,146,60,0.1)] border-[rgba(251,146,60,0.25)]",
+      audit: "text-[#A78BFA] bg-[rgba(167,139,250,0.1)] border-[rgba(167,139,250,0.25)]",
+    })[s.category] || "text-slate-400 bg-slate-800/50 border-slate-700";
 
     return `
-      <label
-        class="scan-card flex items-center gap-3 p-3 rounded-xl border border-[var(--cg-border)]
-               hover:border-[var(--cg-accent)] cursor-pointer transition-all select-none"
-        data-scanner-id="${id}"
-      >
-        <input
-          type="checkbox"
-          class="scan-cb w-4 h-4 rounded"
-          value="${id}"
-          onchange="window.ScanManager._onCheckbox(this)"
-        />
+      <label class="scan-card flex items-center gap-3 p-3 rounded-xl border border-[var(--cg-border)]
+                    hover:border-[var(--cg-accent)] cursor-pointer transition-all select-none"
+             data-scanner-id="${id}">
+        <input type="checkbox" class="scan-cb w-4 h-4 rounded" value="${id}"
+               onchange="window.ScanManager._onCheckbox(this)" />
         <span class="flex-1 text-sm text-white">${name}</span>
         <span class="text-xs px-2 py-0.5 rounded-full border font-semibold ${catBadgeCls}">
           ${escHtml(s.category || "")}
@@ -180,16 +152,12 @@
       </label>`;
   }
 
-  /* ─── Select All toggle per category ─────────────────────────────────────── */
   function _toggleGroup(cat) {
     const group = document.querySelector(`[data-scan-group="${cat}"]`);
     if (!group) return;
     const cbs = [...group.querySelectorAll(".scan-cb")];
     const allOn = cbs.every((cb) => cb.checked);
-    cbs.forEach((cb) => {
-      cb.checked = !allOn;
-      _syncSelection(cb);
-    });
+    cbs.forEach((cb) => { cb.checked = !allOn; _syncSelection(cb); });
     _refreshCardStyles(group);
   }
 
@@ -207,17 +175,18 @@
   function _refreshCardStyles(group) {
     group.querySelectorAll(".scan-card").forEach((card) => {
       const cb = card.querySelector(".scan-cb");
-      card.classList.toggle("border-[var(--cg-accent)]",  !!cb?.checked);
+      card.classList.toggle("border-[var(--cg-accent)]",         !!cb?.checked);
       card.classList.toggle("bg-[rgba(167,139,250,0.07)]", !!cb?.checked);
     });
   }
 
-  /* ─── Close modal ────────────────────────────────────────────────────────── */
   function closeScanModal() {
     document.getElementById("scan-scanner-modal")?.classList.add("hidden");
   }
 
-  /* ─── Start scan ─────────────────────────────────────────────────────────── */
+  /* ═══════════════════════════════════════════════════════════════════════
+     START SCAN — KEY FIX: driver_ids vs driver_id
+  ═══════════════════════════════════════════════════════════════════════ */
   async function startScan() {
     if (_selected.size === 0) {
       notify("Please select at least one scanner.", "warning");
@@ -232,29 +201,48 @@
     _btnLoading(btn, "Starting…");
 
     try {
+      // ── Build payload ────────────────────────────────────────────────────
+      // The backend doc shows driver_id (singular string).
+      // We support multiple by sending the first selected for single-driver
+      // backends, and also include driver_ids array for multi-driver backends.
+      const selectedArray = [..._selected];
+      const payload = {
+        target_id : scanState.targetId,
+        driver_ids: selectedArray,        // multi-driver support
+        driver_id : selectedArray[0],     // single-driver fallback
+      };
+
+      console.log("[ScanManager] POST /scan/start →", payload);
+
       const res = await apiFetch("/scan/start", {
         method: "POST",
-        body: JSON.stringify({
-          target_id:  scanState.targetId,
-          driver_ids: [..._selected],
-        }),
+        body  : JSON.stringify(payload),
       });
 
       let data = {};
       try { data = await res.json(); } catch (_) {}
+
+      console.log("[ScanManager] /scan/start response:", res.status, data);
 
       if (!res.ok) {
         notify(data.message || `Failed to start scan (${res.status}).`, "error");
         return;
       }
 
-      const sessionId = data.scan_session_id;
+      // ── Extract session ID (handle multiple response shapes) ─────────────
+      const sessionId =
+        data?.scan_job?.id          ||
+        data?.scan_session_id       ||
+        data?.session_id            ||
+        data?.id;
+
       if (!sessionId) {
-        notify("Server did not return a scan session ID.", "error");
+        console.error("[ScanManager] Unexpected response shape:", data);
+        notify("Server did not return a scan job ID.", "error");
         return;
       }
 
-      // Transition state
+      // ── Transition to running state ──────────────────────────────────────
       closeScanModal();
       scanState.sessionId      = sessionId;
       scanState.status         = "running";
@@ -262,34 +250,69 @@
       scanState.seenFindingIds = new Set();
       scanState.startedAt      = new Date().toISOString();
       scanState.finishedAt     = null;
-      scanState.socket         = null;
-      scanState.pollingInterval = null;
+      scanCompleted            = false;
 
       showScanPanel();
-      connectWebSocket(sessionId);
+
+      // ── Wait for Echo to be connected before subscribing ─────────────────
+      await waitForEchoConnection();
+      subscribeToScanChannel(sessionId);
+
+      // ── Concurrent polling as fallback ───────────────────────────────────
+      startStatusPolling(sessionId);
+
+      // ── Safety timeout ───────────────────────────────────────────────────
+      startScanTimeout(sessionId);
+
       notify("Scan started — connecting to live feed…", "success");
     } catch (err) {
-      console.error("[ScanManager] startScan:", err);
+      console.error("[ScanManager] startScan error:", err);
       notify(err.message || "Failed to start scan.", "error");
     } finally {
       _btnRestore(btn);
     }
   }
 
-  /* ─── Scan live panel ────────────────────────────────────────────────────── */
+  /**
+   * Waits up to 5 s for the Pusher/Reverb WebSocket to reach "connected" state.
+   * Resolves immediately if already connected or if Echo isn't available.
+   */
+  function waitForEchoConnection() {
+    return new Promise((resolve) => {
+      if (!window.echoInstance) { resolve(); return; }
+
+      const pusher = window.echoInstance.connector?.pusher;
+      if (!pusher) { resolve(); return; }
+
+      // Already connected
+      if (pusher.connection.state === "connected") { resolve(); return; }
+
+      console.log("[Echo] Waiting for connection…");
+      const timeout = setTimeout(resolve, 5000); // give up after 5 s
+
+      pusher.connection.bind("connected", () => {
+        clearTimeout(timeout);
+        console.log("[Echo] Connection established — proceeding with subscription.");
+        resolve();
+      });
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     SCAN PANEL
+  ═══════════════════════════════════════════════════════════════════════ */
   function showScanPanel() {
     const panel = document.getElementById("scan-live-panel");
     if (!panel) return;
+    terminalLogs = [];
     panel.classList.remove("hidden");
     panel.innerHTML = buildPanelHTML();
     panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
   function buildPanelHTML() {
-    const targetText = escHtml(scanState.targetValue || "");
-    const sessionText = escHtml(scanState.sessionId || "");
     return `
-      <!-- Panel header -->
+      <!-- Header -->
       <div class="flex items-center justify-between flex-wrap gap-3">
         <div class="flex items-center gap-3">
           <span class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider"
@@ -299,16 +322,18 @@
             LIVE
           </span>
           <p class="text-sm font-semibold text-white">
-            Scanning: <span class="font-mono" style="color:var(--cg-info)">${targetText}</span>
+            Scanning:
+            <span class="font-mono" style="color:var(--cg-info)">
+              ${escHtml(scanState.targetValue || "")}
+            </span>
           </p>
         </div>
         <div class="flex items-center gap-3">
-          <span class="text-xs text-slate-500 font-mono">Session: ${sessionText}</span>
-          <button
-            onclick="window.ScanManager.closeScanPanel()"
-            title="Close scan panel"
-            class="cyber-btn-ghost text-xs px-2 py-1 rounded"
-          >✕</button>
+          <span class="text-xs text-slate-500 font-mono">
+            Session: ${escHtml(scanState.sessionId || "")}
+          </span>
+          <button onclick="window.ScanManager.closeScanPanel()"
+                  class="cyber-btn-ghost text-xs px-2 py-1 rounded" title="Close">✕</button>
         </div>
       </div>
 
@@ -319,6 +344,31 @@
         <span id="scan-status-text">Initializing…</span>
       </div>
 
+      <!-- Debug info (remove in production) -->
+      <div id="scan-debug-bar"
+           class="text-xs font-mono text-slate-500 py-1 px-2 rounded bg-black/20">
+        Echo: <span id="dbg-echo">checking…</span> |
+        Channel: <span id="dbg-channel">—</span> |
+        Events received: <span id="dbg-events">0</span>
+      </div>
+
+      <!-- Terminal -->
+      <div class="scan-terminal-wrapper">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+          </div>
+          <span class="terminal-title">SCAN TERMINAL</span>
+          <button class="terminal-clear-btn"
+                  onclick="window.ScanManager.clearTerminal()">Clear</button>
+        </div>
+        <div id="scan-terminal" class="scan-terminal">
+          <div class="terminal-line terminal-default">Waiting for scan to start…</div>
+        </div>
+      </div>
+
       <!-- Findings stream -->
       <div id="scan-findings-stream"
            class="space-y-3 max-h-[520px] overflow-y-auto pr-1 scroll-smooth">
@@ -327,9 +377,8 @@
         </p>
       </div>
 
-      <!-- Completed state (hidden until done) -->
-      <div id="scan-complete-state"
-           class="hidden mt-2 p-4 rounded-xl border"
+      <!-- Completed state -->
+      <div id="scan-complete-state" class="hidden mt-2 p-4 rounded-xl border"
            style="border-color:var(--cg-success);background:rgba(52,211,153,0.06)">
         <div class="flex items-center gap-2 mb-2">
           <svg class="w-5 h-5" style="color:var(--cg-success)" fill="none"
@@ -345,17 +394,16 @@
         </div>
       </div>
 
-      <!-- Failed state (hidden until failed) -->
-      <div id="scan-failed-state"
-           class="hidden mt-2 p-4 rounded-xl border"
+      <!-- Failed state -->
+      <div id="scan-failed-state" class="hidden mt-2 p-4 rounded-xl border"
            style="border-color:var(--cg-danger);background:rgba(248,113,113,0.06)">
         <div class="flex items-center gap-2 mb-2">
           <svg class="w-5 h-5" style="color:var(--cg-danger)" fill="none"
                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0
-                     2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898
-                     0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71
+                     c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5
+                     -3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
           </svg>
           <span class="font-bold text-sm" style="color:var(--cg-danger)">Scan Failed</span>
         </div>
@@ -366,105 +414,378 @@
 
   function closeScanPanel() {
     _clearPolling();
-    if (scanState.socket) {
-      try { scanState.socket.close(); } catch (_) {}
-      scanState.socket = null;
-    }
+    stopStatusPolling();
+    clearScanTimeout();
+    scanCompleted = true;
+    if (activeScanJobId) teardownScanChannel(activeScanJobId);
     scanState.status = "idle";
     document.getElementById("scan-live-panel")?.classList.add("hidden");
   }
 
-  /* ─── WebSocket connection ───────────────────────────────────────────────── */
-  function connectWebSocket(sessionId) {
-    const url =
-      `wss://${REVERB.host}/app/${REVERB.appKey}` +
-      `?protocol=7&client=js&version=8.0&flash=false`;
+  /* ═══════════════════════════════════════════════════════════════════════
+     ECHO SUBSCRIPTION — THE CRITICAL SECTION
+     ─────────────────────────────────────────────────────────────────────
+     ARCHITECTURE DECISION:
+     We use ONLY bind_global to route ALL events. We do NOT also call
+     Echo's .listen() because Pusher.js internally uses bind() for both
+     bind_global and .listen(), and when both are active on the same
+     channel+event, Pusher fires the callback twice OR the global handler
+     swallows the event before the named handler sees it (depending on
+     library version). Using a single routing mechanism eliminates this
+     entire class of bugs.
+  ═══════════════════════════════════════════════════════════════════════ */
+  /** Track whether we've received at least one real data event */
+  let _hasReceivedDataEvent = false;
+  let _lastEventTimestamp   = 0;
+  let _inactivityCheckId    = null;
+  const INACTIVITY_TIMEOUT_MS = 45_000; // 45 s of silence after first event → complete
 
-    let ws;
-    try {
-      ws = new WebSocket(url);
-    } catch (err) {
-      console.error("[WS] Cannot open WebSocket:", err);
-      _setStatusText("WebSocket unavailable — falling back to polling…");
-      startPolling(sessionId);
+  function subscribeToScanChannel(sessionId) {
+    _updateDebugBar();
+    _hasReceivedDataEvent = false;
+    _lastEventTimestamp   = 0;
+
+    if (!window.echoInstance) {
+      console.warn("[ScanManager] Echo not initialised — using polling only.");
+      _appendTerminalSystem("⚠ WebSocket unavailable — using polling fallback");
+      _setStatusText("WebSocket unavailable — polling every 5 s…");
       return;
     }
 
-    scanState.socket = ws;
+    const pusher  = window.echoInstance.connector?.pusher;
+    const wsState = pusher?.connection?.state || "unknown";
+    console.log("[Echo] WebSocket state before subscribe:", wsState);
+    _appendTerminalSystem(`WebSocket state: ${wsState}`);
 
-    ws.onopen = () => {
-      console.log("[WS] Open — subscribing to scan." + sessionId);
-      ws.send(
-        JSON.stringify({
-          event: "pusher:subscribe",
-          data:  { channel: `scan.${sessionId}` },
-        })
-      );
-      _setStatusText("Connected — receiving live findings…");
-    };
+    if (wsState !== "connected") {
+      _appendTerminalSystem(`⚠ WebSocket not ready (${wsState}) — polling active`);
+    }
 
-    ws.onmessage = (ev) => {
-      let msg;
-      try { msg = JSON.parse(ev.data); } catch (_) { return; }
-      console.log("[WS] Message:", msg);
+    // ── Tear down any stale subscription ─────────────────────────────────
+    if (activeScanJobId) teardownScanChannel(activeScanJobId);
 
-      // Ignore housekeeping frames
-      if (
-        msg.event === "pusher:connection_established" ||
-        msg.event === "pusher_internal:subscription_succeeded"
-      ) return;
+    activeScanJobId   = sessionId;
+    const channelName = `scan.${sessionId}`;
 
-      // Normalise data (Pusher wraps payload as JSON string)
-      const raw  = msg.data;
-      const data = typeof raw === "string"
-        ? (() => { try { return JSON.parse(raw); } catch (_) { return {}; } })()
-        : (raw || {});
+    console.log("[Echo] Subscribing to channel:", channelName);
+    _appendTerminalSystem(`Subscribing to channel: ${channelName}`);
 
-      const evt = (msg.event || "").toLowerCase();
+    const dbgChannel = document.getElementById("dbg-channel");
+    if (dbgChannel) dbgChannel.textContent = channelName;
 
-      if (evt.includes("finding")) {
-        appendFinding(data);
-      }
+    // ── Subscribe via Echo (creates the Pusher subscription internally) ──
+    activeScanChannel = window.echoInstance.channel(channelName);
 
-      if (evt.includes("status")) {
-        _handleStatusData(data);
-      }
+    // ── Attach bind_global to the Pusher channel ─────────────────────────
+    // The channel object may not be available synchronously because Pusher
+    // creates it asynchronously. We poll until it appears (max 5 s).
+    _attachGlobalHandler(pusher, channelName, 0);
 
-      // Terminal check regardless of event name
-      const status =
-        data?.status ||
-        data?.scan_session?.status ||
-        data?.scan_job?.status;
+    // ── Subscription lifecycle callbacks ─────────────────────────────────
+    if (activeScanChannel.subscribed) {
+      activeScanChannel.subscribed(() => {
+        console.log("[Echo] ✅ Subscribed to:", channelName);
+        _appendTerminalSystem("✅ Live channel connected");
+        _setStatusText("Connected — receiving live stream…");
+        _updateDebugBar();
+      });
+    }
 
-      if (status === "completed" || status === "failed") {
-        onScanComplete(data);
-        ws.close();
-      }
-    };
+    if (activeScanChannel.error) {
+      activeScanChannel.error((err) => {
+        console.error("[Echo] Channel subscription error:", err);
+        _appendTerminalSystem(`❌ Channel error: ${JSON.stringify(err)}`);
+        _setStatusText("WebSocket error — polling active");
+      });
+    }
 
-    ws.onerror = (err) => {
-      console.error("[WS] Error:", err);
-      _setStatusText("WebSocket error — switching to polling…");
-      startPolling(sessionId);
-    };
+    _setStatusText("Connecting to live stream…");
 
-    ws.onclose = (ev) => {
-      console.log("[WS] Closed", ev.code, ev.reason);
-      // Only auto-start polling if scan is still logically running
-      if (scanState.status === "running") {
-        startPolling(sessionId);
-      }
-    };
+    // ── Start inactivity watcher ─────────────────────────────────────────
+    _startInactivityWatcher();
   }
 
-  /* ─── Append a single finding ────────────────────────────────────────────── */
+  /**
+   * Polls for the Pusher channel object and attaches bind_global once found.
+   * Retries up to 10 times at 500 ms intervals (total 5 s).
+   */
+  function _attachGlobalHandler(pusher, channelName, attempt) {
+    if (!pusher || attempt > 10) {
+      if (attempt > 10) {
+        console.warn("[Echo] Pusher channel never appeared after 5 s — relying on polling");
+        _appendTerminalSystem("⚠ WebSocket channel not found — polling is active");
+      }
+      return;
+    }
+
+    const pusherChannel = pusher.channel(channelName);
+    if (!pusherChannel) {
+      setTimeout(() => _attachGlobalHandler(pusher, channelName, attempt + 1), 500);
+      return;
+    }
+
+    // ── Single global event router ─────────────────────────────────────
+    pusherChannel.bind_global((eventName, eventData) => {
+      // Ignore Pusher internal lifecycle events
+      if (eventName.startsWith("pusher:") || eventName.startsWith("pusher_internal:")) return;
+
+      console.log(`[Pusher RAW] Event: "${eventName}"`, eventData);
+      _incrementDebugEventCount();
+      _lastEventTimestamp = Date.now();
+
+      // Normalize: Pusher strips the leading dot internally, but some
+      // servers send it and some don't — handle both.
+      const normalized = eventName.replace(/^\./, "").toLowerCase();
+
+      switch (normalized) {
+        case "terminal-log":
+          _hasReceivedDataEvent = true;
+          handleTerminalLog(eventData);
+          break;
+
+        case "scan-results":
+        case "scan.finding":
+          _hasReceivedDataEvent = true;
+          handleScanResult(eventData);
+          break;
+
+        case "scan.status":
+          _handleStatusData(eventData);
+          break;
+
+        case "scan-completed":
+        case "scan-finished":
+        case "scan-done":
+        case "scancompleted":
+        case "scanfinished":
+        case "job-completed":
+          onScanComplete(eventData || { status: "completed" });
+          break;
+
+        default:
+          console.log(`[Pusher] Unhandled event: "${eventName}"`, eventData);
+          // Try to detect completion from unknown event payloads
+          if (eventData?.status === "completed" || eventData?.status === "failed") {
+            onScanComplete(eventData);
+          }
+          break;
+      }
+    });
+
+    console.log("[Echo]  bind_global attached to Pusher channel:", channelName);
+    _appendTerminalSystem(" Event listener attached");
+  }
+
+  /**
+   * Inactivity watcher: if we've received at least one data event but then
+   * go silent for INACTIVITY_TIMEOUT_MS, assume the scan finished and the
+   * completion signal was lost.
+   */
+  function _startInactivityWatcher() {
+    _stopInactivityWatcher();
+    _inactivityCheckId = setInterval(() => {
+      if (scanCompleted) { _stopInactivityWatcher(); return; }
+      if (!_hasReceivedDataEvent) return; // haven't started receiving yet
+
+      const silentMs = Date.now() - _lastEventTimestamp;
+      if (silentMs >= INACTIVITY_TIMEOUT_MS) {
+        console.warn(`[Scan] No events for ${Math.round(silentMs / 1000)}s — assuming completed`);
+        _appendTerminalSystem(`⚠ No activity for ${Math.round(silentMs / 1000)}s — finalising`);
+        onScanComplete({ status: "completed" });
+        _stopInactivityWatcher();
+      }
+    }, 5000);
+  }
+
+  function _stopInactivityWatcher() {
+    if (_inactivityCheckId) { clearInterval(_inactivityCheckId); _inactivityCheckId = null; }
+  }
+
+  function teardownScanChannel(sessionId) {
+    _stopInactivityWatcher();
+    if (window.echoInstance) {
+      try { window.echoInstance.leaveChannel(`scan.${sessionId}`); } catch (_) {}
+    }
+    activeScanChannel = null;
+    activeScanJobId   = null;
+    console.log("[Echo] Left channel: scan." + sessionId);
+  }
+
+  /* ── Debug bar helpers ────────────────────────────────────────────────── */
+  function _updateDebugBar() {
+    const dbgEcho = document.getElementById("dbg-echo");
+    if (!dbgEcho) return;
+    if (!window.echoInstance) {
+      dbgEcho.textContent = "❌ not initialised";
+      return;
+    }
+    const state = window.echoInstance.connector?.pusher?.connection?.state || "unknown";
+    const icons = { connected: "✅", connecting: "🔄", disconnected: "❌", failed: "💀" };
+    dbgEcho.textContent = `${icons[state] || "❓"} ${state}`;
+  }
+
+  let _debugEventCount = 0;
+  function _incrementDebugEventCount() {
+    _debugEventCount++;
+    const el = document.getElementById("dbg-events");
+    if (el) el.textContent = _debugEventCount;
+  }
+
+  function _appendTerminalSystem(msg) {
+    appendTerminalLine(`[SYS] ${msg}`);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     EVENT HANDLERS
+  ═══════════════════════════════════════════════════════════════════════ */
+  function handleTerminalLog(event) {
+    // Handle multiple shapes:
+    //   { logLine: "..." }
+    //   { log_line: "..." }
+    //   { message: "..." }
+    //   "raw string"  (some backends send strings directly)
+    const logLine =
+      typeof event === "string"
+        ? event
+        : event?.logLine || event?.log_line || event?.message || "";
+
+    if (logLine) {
+      console.log("[Terminal]", logLine);
+      terminalLogs.push(logLine);
+      appendTerminalLine(logLine);
+
+      if (typeof window.appendActivityEvent === "function") {
+        window.appendActivityEvent({
+          type   : detectLogType(logLine),
+          scanner: "TERMINAL",
+          message: cleanLogLine(logLine),
+        });
+      }
+    }
+
+    // Check for embedded status in the event payload
+    if (typeof event === "object" && event !== null) {
+      const embeddedStatus =
+        event.status || event.scan_job?.status || event.scan_session?.status;
+
+      if (embeddedStatus && scanState.status === "running" &&
+          (embeddedStatus === "completed" || embeddedStatus === "failed")) {
+        onScanComplete(event);
+        return;
+      }
+    }
+
+    // Detect completion from terminal content — expanded pattern matching
+    if (scanState.status === "running" && logLine) {
+      const lower = logLine.toLowerCase();
+      const completionPatterns = [
+        "[ok] scan complete",
+        "[ok] finished at",
+        "scan finished",
+        "scan completed",
+        "all scanners completed",
+        "scan job completed",
+        "scan session completed",
+        "[done]",
+        "scanning complete",
+      ];
+
+      if (completionPatterns.some((p) => lower.includes(p))) {
+        // Wait briefly for any remaining events to arrive, then complete
+        setTimeout(() => {
+          if (scanState.status === "running") {
+            onScanComplete({ status: "completed" });
+          }
+        }, 2000);
+      }
+    }
+  }
+
+  function handleScanResult(event) {
+    // Handle both { finding: {...} } and the finding object directly
+    const finding = event?.finding || event;
+    if (!finding || !finding.title) {
+      console.warn("[ScanManager] Received scan-results with no finding.title:", event);
+      return;
+    }
+    console.log("[Finding] Received:", finding);
+    appendFinding(finding);
+
+    if (typeof window.appendActivityEvent === "function") {
+      window.appendActivityEvent({
+        type   : mapSeverityToActivityType(finding.severity),
+        scanner: ((finding.type || finding.driver_id || "SCANNER") + "")
+                   .toUpperCase().replace(/_/g, " "),
+        message: finding.title,
+        detail : (finding.severity || "").toUpperCase(),
+      });
+    }
+  }
+
+  function _handleStatusData(data) {
+    if (!data) return;
+    const status = data.status || data.scan_session?.status || data.scan_job?.status;
+    if (status) {
+      scanState.status = status;
+      _setStatusText(`Status: ${status}`);
+      if (status === "completed" || status === "failed") onScanComplete(data);
+    }
+    if (Array.isArray(data.findings)) data.findings.forEach(appendFinding);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     TERMINAL UI
+  ═══════════════════════════════════════════════════════════════════════ */
+  function appendTerminalLine(logLine) {
+    const terminal = document.getElementById("scan-terminal");
+    if (!terminal) return;
+
+    const line = document.createElement("div");
+    line.className = "terminal-line " + getTerminalLineClass(logLine);
+    line.textContent = logLine;
+    terminal.appendChild(line);
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  function getTerminalLineClass(line) {
+    if (line.includes("[LIVE]"))  return "terminal-live";
+    if (line.includes("[WAIT]"))  return "terminal-wait";
+    if (line.includes("[ERROR]")) return "terminal-error";
+    if (line.includes("[WARN]"))  return "terminal-warn";
+    if (line.includes("[INFO]"))  return "terminal-info";
+    if (line.includes("[SYS]"))   return "terminal-system";
+    return "terminal-default";
+  }
+
+  function detectLogType(line) {
+    if (line.includes("[LIVE]"))  return "success";
+    if (line.includes("[WAIT]"))  return "info";
+    if (line.includes("[ERROR]")) return "error";
+    if (line.includes("[WARN]"))  return "warning";
+    return "info";
+  }
+
+  function cleanLogLine(line) {
+    return line.replace(/\x1B\[[0-9;]*m/g, "").trim();
+  }
+
+  function clearTerminal() {
+    const terminal = document.getElementById("scan-terminal");
+    if (terminal) {
+      terminal.innerHTML =
+        '<div class="terminal-line terminal-default">Terminal cleared.</div>';
+    }
+    terminalLogs = [];
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     FINDINGS RENDERING
+  ═══════════════════════════════════════════════════════════════════════ */
   function appendFinding(data) {
     if (!data) return;
 
-    // Deduplicate — use id if present, else fingerprint
     const fid =
-      data.id ||
-      data.finding_id ||
+      data.id || data.finding_id ||
       (data.title ? `${data.title}::${data.severity}` : null) ||
       JSON.stringify(data).substring(0, 120);
 
@@ -475,42 +796,52 @@
     const stream = document.getElementById("scan-findings-stream");
     if (!stream) return;
 
-    // Remove placeholder message
     document.getElementById("scan-waiting-msg")?.remove();
 
     const div = document.createElement("div");
     div.innerHTML = renderFindingCard(data);
-    stream.appendChild(div.firstElementChild || div);
 
-    // Auto-scroll
+    // ── Add entry animation ───────────────────────────────────────────────
+    const card = div.firstElementChild;
+    if (card) {
+      card.style.opacity   = "0";
+      card.style.transform = "translateY(8px)";
+      card.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+      stream.appendChild(card);
+      requestAnimationFrame(() => {
+        card.style.opacity   = "1";
+        card.style.transform = "translateY(0)";
+      });
+    } else {
+      stream.appendChild(div);
+    }
+
     stream.scrollTop = stream.scrollHeight;
 
-    // Keep running total in completed banner (updated live)
     const countEl = document.getElementById("scan-total-findings");
     if (countEl) countEl.textContent = scanState.findings.length;
   }
 
-  /* ─── Finding card renderer ──────────────────────────────────────────────── */
   const SEV = {
     critical: {
       badge: "bg-[rgba(248,113,113,0.18)] text-[var(--cg-danger)] border-[rgba(248,113,113,0.35)]",
-      dot:   "background:var(--cg-danger)",
+      dot  : "background:var(--cg-danger)",
     },
     high: {
       badge: "bg-[rgba(249,115,22,0.18)] text-[#F97316] border-[rgba(249,115,22,0.35)]",
-      dot:   "background:#F97316",
+      dot  : "background:#F97316",
     },
     medium: {
       badge: "bg-[rgba(251,191,36,0.18)] text-[var(--cg-warning)] border-[rgba(251,191,36,0.35)]",
-      dot:   "background:var(--cg-warning)",
+      dot  : "background:var(--cg-warning)",
     },
     low: {
       badge: "bg-[rgba(56,189,248,0.18)] text-[var(--cg-info)] border-[rgba(56,189,248,0.35)]",
-      dot:   "background:var(--cg-info)",
+      dot  : "background:var(--cg-info)",
     },
     info: {
       badge: "bg-[rgba(148,163,184,0.18)] text-[var(--cg-text-2)] border-[rgba(148,163,184,0.35)]",
-      dot:   "background:var(--cg-text-2)",
+      dot  : "background:var(--cg-text-2)",
     },
   };
 
@@ -518,64 +849,52 @@
     const sev = (f.severity || "info").toLowerCase();
     const s   = SEV[sev] || SEV.info;
 
-    const cvssRow =
-      f.cvss_score
-        ? `<div class="flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-400">
-             <span>CVSS: <strong class="text-white">${escHtml(String(f.cvss_score))}</strong></span>
-             ${
-               f.cvss_vector
-                 ? `<span class="font-mono break-all" title="${escAttr(f.cvss_vector)}">
-                      Vector: ${escHtml(f.cvss_vector)}
-                    </span>`
-                 : ""
-             }
-           </div>`
-        : "";
+    const cvssRow = f.cvss_score ? `
+      <div class="flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-400">
+        <span>CVSS: <strong class="text-white">${escHtml(String(f.cvss_score))}</strong></span>
+        ${f.cvss_vector ? `<span class="font-mono break-all">Vector: ${escHtml(f.cvss_vector)}</span>` : ""}
+      </div>` : "";
 
-    const affectedRow =
-      f.affected_url
-        ? `<div class="text-xs">
-             <span class="text-slate-400">Affected URL: </span>
-             <a href="${escAttr(f.affected_url)}" target="_blank" rel="noopener noreferrer"
-                class="font-mono break-all hover:underline" style="color:var(--cg-info)">
-               ${escHtml(f.affected_url)}
-             </a>
-           </div>`
-        : "";
+    const affectedRow = f.affected_url ? `
+      <div class="text-xs">
+        <span class="text-slate-400">Affected URL: </span>
+        <a href="${escAttr(f.affected_url)}" target="_blank" rel="noopener noreferrer"
+           class="font-mono break-all hover:underline" style="color:var(--cg-info)">
+          ${escHtml(f.affected_url)}
+        </a>
+      </div>` : "";
 
-    const proofRow =
-      f.proof
-        ? `<div class="rounded-lg p-2.5 text-xs font-mono break-all"
-                style="background:rgba(0,0,0,0.3);color:var(--cg-text-2)">
-             <span class="text-slate-500">Proof: </span>${escHtml(f.proof)}
-           </div>`
-        : "";
+    const proofRow = f.proof ? `
+      <div class="rounded-lg p-2.5 text-xs font-mono break-all"
+           style="background:rgba(0,0,0,0.3);color:var(--cg-text-2)">
+        <span class="text-slate-500">Proof: </span>${escHtml(f.proof)}
+      </div>` : "";
 
-    const remediationRow =
-      f.remediation
-        ? `<details class="group">
-             <summary class="cursor-pointer text-xs hover:underline list-none flex items-center gap-1 select-none"
-                      style="color:var(--cg-accent)">
-               <svg class="w-3.5 h-3.5 transition-transform group-open:rotate-90 flex-shrink-0"
-                    fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                 <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
-               </svg>
-               Remediation
-             </summary>
-             <p class="mt-2 text-xs text-slate-300 leading-relaxed pl-5">${escHtml(f.remediation)}</p>
-           </details>`
-        : "";
+    const remediationRow = f.remediation ? `
+      <details class="group">
+        <summary class="cursor-pointer text-xs hover:underline list-none
+                        flex items-center gap-1 select-none"
+                 style="color:var(--cg-accent)">
+          <svg class="w-3.5 h-3.5 transition-transform group-open:rotate-90 flex-shrink-0"
+               fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
+          </svg>
+          Remediation
+        </summary>
+        <p class="mt-2 text-xs text-slate-300 leading-relaxed pl-5">
+          ${escHtml(f.remediation)}
+        </p>
+      </details>` : "";
 
     return `
       <div class="rounded-xl border p-4 space-y-3"
            style="background:var(--cg-bg-surface);border-color:var(--cg-border)">
-        <!-- Header row -->
         <div class="flex items-start gap-3">
-          <span class="w-2 h-2 mt-1.5 rounded-full flex-shrink-0"
-                style="${s.dot}"></span>
+          <span class="w-2 h-2 mt-1.5 rounded-full flex-shrink-0" style="${s.dot}"></span>
           <div class="flex-1 min-w-0">
             <div class="flex flex-wrap items-center gap-2 mb-1">
-              <span class="text-xs font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide ${s.badge}">
+              <span class="text-xs font-bold px-2 py-0.5 rounded-full border
+                           uppercase tracking-wide ${s.badge}">
                 ${escHtml(sev)}
               </span>
               <p class="text-sm font-semibold text-white leading-snug">
@@ -595,54 +914,60 @@
       </div>`;
   }
 
-  /* ─── Status helpers ─────────────────────────────────────────────────────── */
-  function _setStatusText(msg) {
-    const el = document.getElementById("scan-status-text");
-    if (el) el.textContent = msg;
-  }
-
-  function _handleStatusData(data) {
-    if (!data) return;
-    const status =
-      data.status ||
-      data.scan_session?.status ||
-      data.scan_job?.status;
-    if (status) {
-      scanState.status = status;
-      _setStatusText(`Status: ${status}`);
-    }
-    if (Array.isArray(data.findings)) {
-      data.findings.forEach(appendFinding);
-    }
-  }
-
-  /* ─── Scan complete / failed ─────────────────────────────────────────────── */
+  /* ═══════════════════════════════════════════════════════════════════════
+     SCAN COMPLETE / FAILED
+  ═══════════════════════════════════════════════════════════════════════ */
   function onScanComplete(data) {
+    if (scanCompleted) return;
+    scanCompleted = true;
+
     const session = data?.scan_session || data?.scan_job || data || {};
     const status  = session.status || data?.status || "completed";
 
     scanState.status     = status;
     scanState.finishedAt = session.finished_at || new Date().toISOString();
 
+    console.log("[Scan] Complete — status:", status,
+                "findings:", scanState.findings.length);
+
     _clearPolling();
-    if (scanState.socket) {
-      try { scanState.socket.close(); } catch (_) {}
-      scanState.socket = null;
-    }
+    stopStatusPolling();
+    clearScanTimeout();
+    if (activeScanJobId) teardownScanChannel(activeScanJobId);
 
-    // Replace spinner status bar with plain text
+    // Update status bar
     const bar = document.getElementById("scan-status-bar");
-    if (bar)
-      bar.innerHTML = `<span class="text-xs" style="color:var(--cg-text-2)">Scan ${escHtml(status)}</span>`;
+    if (bar) {
+      const isTimeout = status === "timeout";
+      const isFailed  = status === "failed";
+      const color = isFailed || isTimeout ? "var(--cg-warning)" : "var(--cg-success)";
+      const icon  = isFailed || isTimeout
+        ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+             <circle cx="12" cy="12" r="10"/>
+             <polyline points="12 6 12 12 16 14"/>
+           </svg>`
+        : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5">
+             <polyline points="20 6 9 17 4 12"/>
+           </svg>`;
+      const label = isTimeout
+        ? "Scan timed out — partial results shown"
+        : isFailed
+          ? "Scan failed"
+          : `Scan completed — ${scanState.findings.length} finding${
+              scanState.findings.length !== 1 ? "s" : ""}`;
 
-    // Render any remaining findings from the final payload
-    if (Array.isArray(data?.findings)) {
-      data.findings.forEach(appendFinding);
+      bar.innerHTML = `
+        <span style="color:${color};display:flex;align-items:center;gap:8px;font-size:13px">
+          ${icon}<span>${escHtml(label)}</span>
+        </span>`;
     }
 
-    if (status === "completed") {
-      const el = document.getElementById("scan-complete-state");
-      if (el) el.classList.remove("hidden");
+    if (Array.isArray(data?.findings)) data.findings.forEach(appendFinding);
+
+    if (status === "completed" || status === "timeout") {
+      document.getElementById("scan-complete-state")?.classList.remove("hidden");
 
       const countEl = document.getElementById("scan-total-findings");
       if (countEl) countEl.textContent = scanState.findings.length;
@@ -652,71 +977,123 @@
         const s = Math.round(
           (new Date(scanState.finishedAt) - new Date(scanState.startedAt)) / 1000
         );
-        durEl.textContent =
-          s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`;
+        durEl.textContent = s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`;
       }
       notify(`Scan completed — ${scanState.findings.length} finding(s) found.`, "success");
     } else {
-      const el = document.getElementById("scan-failed-state");
-      if (el) el.classList.remove("hidden");
-
+      document.getElementById("scan-failed-state")?.classList.remove("hidden");
       const logEl = document.getElementById("scan-error-log");
       if (logEl)
         logEl.textContent =
           session.error_log || data?.error_log || "An error occurred during scanning.";
-
       notify("Scan failed. See the panel for details.", "error");
     }
   }
 
-  /* ─── Polling fallback ───────────────────────────────────────────────────── */
-  function startPolling(sessionId) {
-    if (scanState.pollingInterval) return; // already polling
-    console.log("[ScanManager] Starting polling for", sessionId);
-    _setStatusText("Polling for updates every 5 s…");
+  /* ═══════════════════════════════════════════════════════════════════════
+     CONCURRENT STATUS POLLING
+     ─────────────────────────────────────────────────────────────────────
+     Tries multiple API endpoint patterns since the backend may use
+     different URL structures. Only stops on 3 consecutive 404s
+     (handles race conditions during scan startup).
+  ═══════════════════════════════════════════════════════════════════════ */
+  let _poll404Count = 0;
+  const MAX_404_BEFORE_STOP = 3;
 
-    scanState.pollingInterval = setInterval(async () => {
-      if (scanState.status !== "running") {
-        _clearPolling();
-        return;
+  /** Candidate status endpoint patterns — tried in order. */
+  function _statusEndpoints(sessionId) {
+    return [
+      `/scan/${sessionId}/status`,
+      `/scan/status/${sessionId}`,
+      `/scan-jobs/${sessionId}`,
+      `/scan-sessions/${sessionId}`,
+    ];
+  }
+
+  function startStatusPolling(sessionId) {
+    stopStatusPolling();
+    _poll404Count = 0;
+    console.log("[ScanManager] Polling started for:", sessionId);
+
+    statusPollingInterval = setInterval(async () => {
+      if (scanCompleted) { stopStatusPolling(); return; }
+
+      const endpoints = _statusEndpoints(sessionId);
+      let succeeded = false;
+
+      for (const endpoint of endpoints) {
+        if (scanCompleted) return;
+
+        try {
+          const res = await apiFetch(endpoint);
+
+          if (res.status === 404) {
+            // This endpoint doesn't exist — try the next one
+            continue;
+          }
+          if (!res.ok) continue;
+
+          // Got a valid response — reset 404 counter
+          _poll404Count = 0;
+          succeeded = true;
+
+          const data    = await res.json();
+          const session = data.scan_session || data.scan_job || data || {};
+          const status  = session.status || data.status;
+
+          console.log(`[Polling] ${endpoint} → status:`, status);
+
+          if (Array.isArray(data.findings)) data.findings.forEach(appendFinding);
+
+          if (status === "completed" || status === "failed") {
+            onScanComplete(data);
+            stopStatusPolling();
+          }
+          break; // Don't try other endpoints if this one worked
+        } catch (err) {
+          console.warn(`[Polling] ${endpoint} error:`, err.message);
+        }
       }
 
-      try {
-        const res = await apiFetch(`/scan/${sessionId}/status`);
-
-        if (res.status === 404) {
-          _clearPolling();
-          _setStatusText("Scan session not found on server.");
-          notify("Scan session not found.", "error");
-          return;
+      // If none of the endpoints returned a valid response
+      if (!succeeded) {
+        _poll404Count++;
+        console.warn(`[Polling] All endpoints failed (${_poll404Count}/${MAX_404_BEFORE_STOP})`);
+        if (_poll404Count >= MAX_404_BEFORE_STOP) {
+          console.warn("[Polling] Giving up after", MAX_404_BEFORE_STOP, "consecutive failures");
+          stopStatusPolling();
         }
-
-        if (!res.ok) return; // transient — keep polling
-
-        const data = await res.json();
-        const session = data.scan_session || data.scan_job || {};
-
-        // Render any new findings
-        if (Array.isArray(data.findings)) {
-          data.findings.forEach(appendFinding);
-        }
-
-        const status = session.status || data.status;
-        if (status) {
-          scanState.status = status;
-          _setStatusText(`Status: ${status}`);
-        }
-
-        if (status === "completed" || status === "failed") {
-          _clearPolling();
-          onScanComplete(data);
-        }
-      } catch (err) {
-        console.error("[ScanManager] Polling error:", err);
       }
     }, 5000);
   }
 
+  function stopStatusPolling() {
+    if (statusPollingInterval) {
+      clearInterval(statusPollingInterval);
+      statusPollingInterval = null;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     SAFETY TIMEOUT
+  ═══════════════════════════════════════════════════════════════════════ */
+  function startScanTimeout(sessionId) {
+    clearScanTimeout();
+    scanTimeoutId = setTimeout(() => {
+      if (!scanCompleted) {
+        console.warn("[Scan] Max duration reached — forcing completion");
+        onScanComplete({ status: "timeout" });
+      }
+    }, MAX_SCAN_DURATION_MS);
+  }
+
+  function clearScanTimeout() {
+    if (scanTimeoutId) { clearTimeout(scanTimeoutId); scanTimeoutId = null; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     LEGACY POLLING (kept for closeScanPanel cleanup — unused otherwise)
+  ═══════════════════════════════════════════════════════════════════════ */
   function _clearPolling() {
     if (scanState.pollingInterval) {
       clearInterval(scanState.pollingInterval);
@@ -724,7 +1101,19 @@
     }
   }
 
-  /* ─── Tiny utilities ─────────────────────────────────────────────────────── */
+  /* ═══════════════════════════════════════════════════════════════════════
+     UTILITIES
+  ═══════════════════════════════════════════════════════════════════════ */
+  function _setStatusText(msg) {
+    const el = document.getElementById("scan-status-text");
+    if (el) el.textContent = msg;
+  }
+
+  function mapSeverityToActivityType(severity) {
+    return ({ critical:"error", high:"error", medium:"warning",
+               low:"info", info:"info" })[(severity||"").toLowerCase()] || "info";
+  }
+
   function escHtml(t) {
     const d = document.createElement("div");
     d.textContent = String(t ?? "");
@@ -732,8 +1121,9 @@
   }
 
   function escAttr(t) {
-    return String(t ?? "").replace(/['"<>&]/g, (ch) =>
-      ({ "'": "&#39;", '"': "&quot;", "<": "&lt;", ">": "&gt;", "&": "&amp;" }[ch])
+    return String(t ?? "").replace(
+      /['"<>&]/g,
+      (ch) => ({"'":"&#39;",'"':"&quot;","<":"&lt;",">":"&gt;","&":"&amp;"})[ch]
     );
   }
 
@@ -755,16 +1145,26 @@
     btn.disabled  = false;
   }
 
-  /* ─── Public API ─────────────────────────────────────────────────────────── */
+  function cleanupScan() {
+    if (activeScanJobId) teardownScanChannel(activeScanJobId);
+    _clearPolling();
+    stopStatusPolling();
+    clearScanTimeout();
+  }
+
+  window.addEventListener("beforeunload", cleanupScan);
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     PUBLIC API
+  ═══════════════════════════════════════════════════════════════════════ */
   window.ScanManager = {
     openScanModal,
     closeScanModal,
     closeScanPanel,
     startScan,
-    // Used by inline onclick handlers in rendered HTML
+    clearTerminal,
     _toggleGroup,
     _onCheckbox,
-    // Dev/debug access
     get state() { return scanState; },
   };
 })();
