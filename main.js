@@ -1085,7 +1085,7 @@ const CyberNotify = {
 
 document.addEventListener("DOMContentLoaded", () => {
   // === AUTHENTICATION CHECK ===
-  if (typeof window.runAuthGuard === 'function' && !window.runAuthGuard()) {
+  if (typeof window.runAuthGuard === "function" && !window.runAuthGuard()) {
     return; // Stop initialization if not authenticated
   }
 
@@ -1163,13 +1163,9 @@ document.addEventListener("DOMContentLoaded", () => {
           // Clear the results data array
           resultsData = [];
 
-          // Clear the activity log container
-          const activityLogContainer = document.getElementById(
-            "activity-log-container",
-          );
-          if (activityLogContainer) {
-            activityLogContainer.innerHTML = "";
-          }
+          // Clear the activity feed and any Shodan results panel
+          clearActivityFeed();
+          document.getElementById("tcp-scan-results")?.remove();
 
           // Reset active filters
           activeFilters.clear();
@@ -1346,6 +1342,349 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // ===== RESULTS RENDERING HELPERS (Professional Grouped View) =====
+  // These helpers replace the per-item accordion with grouped tool cards.
+  // No scan logic, data collection, or filtering is changed here.
+
+  /** Escapes special HTML characters to prevent XSS */
+  function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  /** Strips leading emoji/symbol characters from a string */
+  function cleanTitle(title) {
+    if (!title) return "";
+    return title.replace(/^[^a-zA-Z0-9[]+/, "").trim();
+  }
+
+  /**
+   * Replaces literal backslash-n sequences with real newlines,
+   * then collapses runs of 3+ newlines to 2.
+   */
+  function formatDescription(text) {
+    if (!text) return "";
+    return text
+      .replace(/\\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+
+  /** Groups result array by feature/tool name */
+  function groupResultsByTool(results) {
+    return results.reduce((groups, result) => {
+      const key = result.feature || result.tool || "General";
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(result);
+      return groups;
+    }, {});
+  }
+
+  /** Returns an SVG icon string for a given tool name */
+  function getToolIcon(toolName) {
+    const n = (toolName || "").toLowerCase();
+    if (/port|tcp|udp|shodan/.test(n))
+      return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
+    if (/ssl|cert|tls/.test(n))
+      return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M12 15v2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+    if (/xss|zap|web|http/.test(n))
+      return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
+    if (/dns|whois|domain/.test(n))
+      return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>';
+    if (/hash|md5|sha/.test(n))
+      return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>';
+    if (/threat|intel|virus|malware/.test(n))
+      return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+    return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+  }
+
+  /** Returns severity badge HTML for a group of results */
+  function getSeverityBadges(results) {
+    const counts = {};
+    results.forEach((r) => {
+      const sev = mapStatusToSeverity(r.status);
+      counts[sev] = (counts[sev] || 0) + 1;
+    });
+    let html = "";
+    if (counts.critical)
+      html += `<span class="severity-badge severity-critical">${counts.critical} Critical</span>`;
+    if (counts.warning)
+      html += `<span class="severity-badge severity-warning">${counts.warning} Warning</span>`;
+    if (counts.info)
+      html += `<span class="severity-badge severity-info">${counts.info} Info</span>`;
+    return html;
+  }
+
+  /** Returns a small SVG indicator for a port status */
+  function getPortStatusIcon(status) {
+    if (status === "open")
+      return '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>';
+    if (status === "timeout")
+      return '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="12" x2="15" y2="12"/></svg>';
+    return '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/></svg>';
+  }
+
+  /**
+   * Attempts to parse a result's message as a port scan line.
+   * Handles TCP scanner format (443/tcp OPEN HTTPS) and
+   * Shodan format (Port 443 is OPEN - HTTPS).
+   * @returns {{port,service,status,responseTime}|null}
+   */
+  function parsePortResult(result) {
+    const raw = (result.message || result.description || "").trim();
+    // Strip leading non-alphanumeric prefix characters (emojis, symbols)
+    const text = raw.replace(/^[^a-zA-Z0-9[]+/, "").trim();
+
+    // TCP format: "443/tcp OPEN HTTPS (336ms)" or "443/tcp OPEN WS-SSL WebSocket (123ms)"
+    const tcpOpen = text.match(
+      /^(\d+)\/tcp\s+OPEN\s+([^\s(]+)(?:\s+[^\s(]+)*\s*\((\d+)ms\)/i,
+    );
+    if (tcpOpen)
+      return {
+        port: tcpOpen[1],
+        service: tcpOpen[2],
+        status: "open",
+        responseTime: tcpOpen[3] + "ms",
+      };
+
+    // TCP timeout: "8443/tcp TIMEOUT HTTPS-Alt (5000ms)" or "3001/tcp TIMEOUT Socket.IO WebSocket"
+    const tcpTimeout = text.match(
+      /^(\d+)\/tcp\s+TIMEOUT\s+([^\s(]+)(?:\s+.*?)?\s*(?:\((\d+)ms\))?$/i,
+    );
+    if (tcpTimeout)
+      return {
+        port: tcpTimeout[1],
+        service: tcpTimeout[2],
+        status: "timeout",
+        responseTime: tcpTimeout[3] ? tcpTimeout[3] + "ms" : null,
+      };
+
+    // TCP closed/filtered: "80/tcp CLOSED/FILTERED HTTP" or with extra word
+    const tcpClosed = text.match(
+      /^(\d+)\/tcp\s+CLOSED(?:\/FILTERED)?\s+([^\s]+)/i,
+    );
+    if (tcpClosed)
+      return {
+        port: tcpClosed[1],
+        service: tcpClosed[2],
+        status: "closed",
+        responseTime: null,
+      };
+
+    // Shodan format: "Port 443 is OPEN - HTTPS (7.4.3) [TCP]"
+    const shodanOpen = text.match(
+      /^Port\s+(\d+)\s+is\s+OPEN\s*-?\s*([^\s([\]]+)/i,
+    );
+    if (shodanOpen)
+      return {
+        port: shodanOpen[1],
+        service: shodanOpen[2],
+        status: "open",
+        responseTime: null,
+      };
+
+    return null;
+  }
+
+  /**
+   * Renders a table of port results deduplicated by port number.
+   * Priority: Open > Timeout > Closed.
+   */
+  function renderPortTable(results) {
+    const statusOrder = { open: 0, timeout: 1, closed: 2 };
+    const portMap = {};
+    results.forEach((r) => {
+      const p = parsePortResult(r);
+      if (!p) return;
+      const ex = portMap[p.port];
+      if (!ex || (statusOrder[p.status] ?? 3) < (statusOrder[ex.status] ?? 3))
+        portMap[p.port] = p;
+    });
+    const ports = Object.values(portMap).sort((a, b) => {
+      const d = (statusOrder[a.status] ?? 3) - (statusOrder[b.status] ?? 3);
+      return d !== 0 ? d : parseInt(a.port) - parseInt(b.port);
+    });
+    if (ports.length === 0) return "";
+    const rows = ports
+      .map(
+        (p) =>
+          `<tr class="port-row port-${p.status}">` +
+          `<td class="port-number">${escapeHtml(p.port)}</td>` +
+          `<td class="port-service">${escapeHtml(p.service || "\u2014")}</td>` +
+          `<td class="port-status"><span class="port-status-badge status-${p.status}">${getPortStatusIcon(p.status)} ${p.status.toUpperCase()}</span></td>` +
+          `<td class="port-response">${p.responseTime ? `<span class="response-time">${escapeHtml(p.responseTime)}</span>` : "\u2014"}</td>` +
+          `</tr>`,
+      )
+      .join("");
+    return `<div class="port-table-wrapper"><table class="port-results-table"><thead><tr><th>Port</th><th>Service</th><th>Status</th><th>Response</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  }
+
+  /** Renders a list of non-port findings */
+  function renderFindingsList(results) {
+    return results
+      .map((result) => {
+        const severity = mapStatusToSeverity(result.status);
+        const title = cleanTitle(result.message || "");
+        const description = result.description || result.details || "";
+        const showDesc = description && description !== result.message;
+        return (
+          `<div class="finding-row">` +
+          `<div class="finding-row-header">` +
+          `<span class="severity-dot severity-${severity}"></span>` +
+          `<span class="finding-row-title">${escapeHtml(title || result.message || "")}</span>` +
+          `</div>` +
+          (showDesc
+            ? `<div class="finding-row-desc">${escapeHtml(formatDescription(description))}</div>`
+            : "") +
+          `</div>`
+        );
+      })
+      .join("");
+  }
+
+  /** Renders a verbose scan report summary section */
+  function renderSummaryDetail(summaryResults) {
+    return summaryResults
+      .map((r) => {
+        const text = formatDescription(r.message || r.description || "");
+        return (
+          `<div class="summary-detail-section">` +
+          `<h4 class="summary-detail-heading">Scan Report</h4>` +
+          `<pre class="summary-detail-pre">${escapeHtml(text)}</pre>` +
+          `</div>`
+        );
+      })
+      .join("");
+  }
+
+  /**
+   * Builds the summary stats bar element shown at the top of results.
+   */
+  function buildSummaryBar(results) {
+    const critical = results.filter(
+      (r) => mapStatusToSeverity(r.status) === "critical",
+    ).length;
+    const warning = results.filter(
+      (r) => mapStatusToSeverity(r.status) === "warning",
+    ).length;
+    const info = results.filter(
+      (r) => mapStatusToSeverity(r.status) === "info",
+    ).length;
+    const el = document.createElement("div");
+    el.className = "results-summary-bar";
+    el.innerHTML =
+      `<div class="summary-stats">` +
+      `<span class="stat-total">${results.length} Total Finding${results.length !== 1 ? "s" : ""}</span>` +
+      (critical
+        ? `<span class="stat critical">${critical} Critical</span>`
+        : "") +
+      (warning
+        ? `<span class="stat warning">${warning} Warning${warning !== 1 ? "s" : ""}</span>`
+        : "") +
+      (info ? `<span class="stat info">${info} Info</span>` : "") +
+      `</div>`;
+    return el;
+  }
+
+  /**
+   * Builds a collapsible group element for one tool's results.
+   * Port-scan groups render as a structured table; others as a findings list.
+   */
+  function buildToolGroup(toolName, results) {
+    const isPortScan = /port|tcp|udp|shodan/i.test(toolName);
+    const statusOrder = { open: 0, timeout: 1, closed: 2 };
+
+    // Build a deduplicated port count for the group header label
+    const portMap = {};
+    if (isPortScan) {
+      results.forEach((r) => {
+        const p = parsePortResult(r);
+        if (!p) return;
+        const ex = portMap[p.port];
+        if (!ex || (statusOrder[p.status] ?? 3) < (statusOrder[ex.status] ?? 3))
+          portMap[p.port] = p;
+      });
+    }
+    const dedupedPorts = Object.values(portMap);
+    const openCount = dedupedPorts.filter((p) => p.status === "open").length;
+    const timeoutCount = dedupedPorts.filter(
+      (p) => p.status === "timeout",
+    ).length;
+    const closedCount = dedupedPorts.filter(
+      (p) => p.status === "closed",
+    ).length;
+    const parsedCount = dedupedPorts.length;
+
+    // Separate verbose scan-report blobs (long) from individual port lines
+    const summaryResults = isPortScan
+      ? results.filter(
+          (r) => !parsePortResult(r) && (r.message || "").length > 100,
+        )
+      : [];
+    const miscResults = isPortScan
+      ? results.filter(
+          (r) => !parsePortResult(r) && (r.message || "").length <= 100,
+        )
+      : results;
+
+    const countLabel =
+      isPortScan && parsedCount > 0
+        ? `${parsedCount} port${parsedCount !== 1 ? "s" : ""} \xB7 ` +
+          `<span class="open-count">${openCount} open</span>` +
+          (timeoutCount
+            ? ` \xB7 <span class="timeout-count">${timeoutCount} timeout</span>`
+            : "") +
+          ` \xB7 <span class="closed-count">${closedCount} closed</span>`
+        : `${results.length} result${results.length !== 1 ? "s" : ""}`;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "tool-result-group";
+    wrapper.innerHTML =
+      `<div class="tool-group-header">` +
+      `<div class="tool-group-left">` +
+      `<div class="tool-group-icon">${getToolIcon(toolName)}</div>` +
+      `<div class="tool-group-info">` +
+      `<span class="tool-group-name">${escapeHtml(toolName)}</span>` +
+      `<span class="tool-group-count">${countLabel}</span>` +
+      `</div>` +
+      `</div>` +
+      `<div class="tool-group-right">` +
+      getSeverityBadges(results) +
+      `<svg class="tool-group-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>` +
+      `</div>` +
+      `</div>` +
+      `<div class="tool-group-content">` +
+      (isPortScan && parsedCount > 0 ? renderPortTable(results) : "") +
+      (miscResults.length > 0 ? renderFindingsList(miscResults) : "") +
+      (summaryResults.length > 0 ? renderSummaryDetail(summaryResults) : "") +
+      `</div>`;
+
+    wrapper
+      .querySelector(".tool-group-header")
+      .addEventListener("click", () => {
+        const header = wrapper.querySelector(".tool-group-header");
+        const content = wrapper.querySelector(".tool-group-content");
+        const chevron = wrapper.querySelector(".tool-group-chevron");
+        const isOpen = header.classList.contains("expanded");
+        if (isOpen) {
+          header.classList.remove("expanded");
+          content.classList.remove("visible");
+          chevron.style.transform = "rotate(0deg)";
+        } else {
+          header.classList.add("expanded");
+          content.classList.add("visible");
+          chevron.style.transform = "rotate(180deg)";
+        }
+      });
+
+    return wrapper;
+  }
+
   /**
    * Updates the empty state display based on results and filter state
    * Shows "No Scans Performed" when results array is empty
@@ -1383,35 +1722,32 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /**
-   * Renders results in the accordion container
-   * This is the main rendering function that populates the accordion with result items
-   * Optimized with document fragments for better performance with large result sets
+   * Renders results grouped by tool/scanner in the accordion container.
+   * Port-scan groups display as a structured table; all others as a findings list.
+   * A summary stats bar is shown at the top. Replaces the old per-item accordion.
    */
   function renderResults() {
     const container = document.getElementById("accordion-items-container");
-
     if (!container) return;
 
-    // Get filtered results
     const filteredResults = getFilteredResults();
 
-    // Clear container (but keep empty state element)
-    const accordionItems = container.querySelectorAll(".result-accordion-item");
-    accordionItems.forEach((item) => item.remove());
+    // Clear all previously rendered items (old accordion items and new tool groups)
+    container
+      .querySelectorAll(
+        ".result-accordion-item, .tool-result-group, .results-summary-bar",
+      )
+      .forEach((el) => el.remove());
 
-    // Update empty state display
     updateEmptyState(filteredResults.length, activeFilters.size > 0);
 
-    // Render accordion items for filtered results using document fragment for performance
     if (filteredResults.length > 0) {
       const fragment = document.createDocumentFragment();
-
-      filteredResults.forEach((result) => {
-        const accordionItem = createAccordionItem(result);
-        fragment.appendChild(accordionItem);
+      fragment.appendChild(buildSummaryBar(filteredResults));
+      const grouped = groupResultsByTool(filteredResults);
+      Object.entries(grouped).forEach(([toolName, toolResults]) => {
+        fragment.appendChild(buildToolGroup(toolName, toolResults));
       });
-
-      // Append all items at once for better performance
       container.appendChild(fragment);
     }
   }
@@ -1426,47 +1762,104 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ===== LIVE ACTIVITY FEED COMPONENT =====
-  // Terminal-style activity logging for real-time scan progress
+  // Real-time terminal-style event log for all scan operations.
+
+  // Running count of events emitted to the feed
+  let activityEventCount = 0;
 
   /**
-   * Adds a log entry to the Live Activity Feed
-   * @param {string} message - The log message to display
-   * @param {string} scanner - The scanner name (default: 'System')
+   * Core activity feed renderer.
+   * Appends a styled timestamped event row to #live-activity-feed.
+   *
+   * @param {Object} options
+   * @param {'info'|'success'|'warning'|'error'|'system'} options.type
+   * @param {string} options.scanner  - Tag shown in [BRACKETS]
+   * @param {string} options.message  - Main message text
+   * @param {string} [options.detail] - Dimmed right-aligned detail
+   * @param {Date}   [options.time]   - Timestamp (defaults to now)
    */
-  function addActivityLog(message, scanner = "System") {
-    // Format timestamp as HH:MM (24-hour format)
-    const timestamp = new Date().toLocaleTimeString("en-US", {
+  function appendActivityEvent({
+    type = "info",
+    scanner = "SYSTEM",
+    message = "",
+    detail = "",
+    time = new Date(),
+  } = {}) {
+    // Remove empty state on first event
+    const emptyState = document.getElementById("activity-empty-state");
+    if (emptyState) emptyState.remove();
+
+    activityEventCount++;
+    const countEl = document.getElementById("activity-count");
+    if (countEl)
+      countEl.textContent = `${activityEventCount} event${activityEventCount !== 1 ? "s" : ""}`;
+
+    const feed = document.getElementById("live-activity-feed");
+    if (!feed) return;
+
+    const timeStr = time.toLocaleTimeString("en-US", {
+      hour12: false,
       hour: "2-digit",
       minute: "2-digit",
-      hour12: false,
+      second: "2-digit",
     });
 
-    // Create log entry element
-    const logEntry = document.createElement("div");
-    logEntry.className = "log-entry text-slate-400";
-    logEntry.innerHTML = `
-      <span class="text-cyan-400">[${timestamp}]</span>
-      <span class="text-purple-300">${scanner}:</span>
-      <span>${message}</span>
-    `;
+    const entry = document.createElement("div");
+    entry.className = `activity-entry activity-${type}`;
+    entry.innerHTML =
+      `<span class="activity-time">${timeStr}</span>` +
+      `<span class="activity-scanner">[${escapeHtml(String(scanner).toUpperCase())}]</span>` +
+      `<span class="activity-message">${escapeHtml(String(message))}</span>` +
+      (detail
+        ? `<span class="activity-detail">${escapeHtml(String(detail))}</span>`
+        : "") +
+      `<span class="activity-indicator"></span>`;
 
-    // Get the activity log container
-    const container = document.getElementById("activity-log-container");
-    if (!container) return;
+    // Slide-in animation
+    entry.style.opacity = "0";
+    entry.style.transform = "translateX(-6px)";
+    feed.appendChild(entry);
 
-    // Append the log entry
-    container.appendChild(logEntry);
+    requestAnimationFrame(() => {
+      entry.style.transition = "opacity 0.2s ease, transform 0.2s ease";
+      entry.style.opacity = "1";
+      entry.style.transform = "translateX(0)";
+    });
 
-    // Auto-scroll to bottom
-    const feedContainer = container.parentElement;
-    if (feedContainer) {
-      feedContainer.scrollTop = feedContainer.scrollHeight;
+    // Auto-scroll to latest event
+    feed.scrollTop = feed.scrollHeight;
+
+    // Cap at 200 entries to prevent memory growth
+    const entries = feed.querySelectorAll(".activity-entry");
+    if (entries.length > 200) entries[0].remove();
+  }
+
+  /**
+   * Clears the activity feed and resets the event counter.
+   */
+  function clearActivityFeed() {
+    const feed = document.getElementById("live-activity-feed");
+    if (feed) {
+      feed.innerHTML =
+        '<div id="activity-empty-state" class="activity-empty">' +
+        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' +
+        '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>' +
+        "</svg><span>Activity will appear here when a scan starts</span></div>";
     }
+    activityEventCount = 0;
+    const countEl = document.getElementById("activity-count");
+    if (countEl) countEl.textContent = "0 events";
+  }
 
-    // Limit to last 100 entries
-    if (container.children.length > 100) {
-      container.removeChild(container.firstChild);
-    }
+  /**
+   * Backward-compatible wrapper so all existing addActivityLog() calls
+   * continue to work unchanged, now rendered via appendActivityEvent.
+   *
+   * @param {string} message
+   * @param {string} [scanner]
+   */
+  function addActivityLog(message, scanner = "System") {
+    appendActivityEvent({ type: "info", scanner, message });
   }
 
   // Security: Simple encryption key (in production, this should be more sophisticated)
@@ -2851,9 +3244,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Welcome Popup Functions ---
   function showWelcomePopup() {
     // Check if popup has already been shown in this session
-    const hasShownWelcome = sessionStorage.getItem('cyberguard_welcome_shown');
-    
-    if (hasShownWelcome === 'true') {
+    const hasShownWelcome = sessionStorage.getItem("cyberguard_welcome_shown");
+
+    if (hasShownWelcome === "true") {
       console.log("Welcome popup already shown in this session, skipping...");
       return;
     }
@@ -2874,7 +3267,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     // Mark as shown in this session
-    sessionStorage.setItem('cyberguard_welcome_shown', 'true');
+    sessionStorage.setItem("cyberguard_welcome_shown", "true");
 
     // Add event listener for close button
     closeBtn.addEventListener("click", () => {
@@ -3055,7 +3448,7 @@ document.addEventListener("DOMContentLoaded", () => {
           );
         }
       },
-      { type: "warning" }
+      { type: "warning" },
     );
   }
 
@@ -3190,6 +3583,12 @@ document.addEventListener("DOMContentLoaded", () => {
       clearResultsBtn.addEventListener("click", () => {
         clearResults();
       });
+    }
+
+    // Wire up activity feed clear button
+    const clearActivityBtn = document.getElementById("clear-activity-btn");
+    if (clearActivityBtn) {
+      clearActivityBtn.addEventListener("click", clearActivityFeed);
     }
 
     if (listViewBtn) {
@@ -3684,6 +4083,22 @@ document.addEventListener("DOMContentLoaded", () => {
     resultsData.push(result);
     updateResultsStats();
 
+    // Feed every logged result into the live activity feed automatically.
+    // This ensures tools that only call logResult (TCP scan, SSL, DNS, etc.)
+    // still appear in the feed without any per-tool changes.
+    const _actTypeMap = {
+      safe: "success",
+      warning: "warning",
+      threat: "error",
+      system: "info",
+    };
+    appendActivityEvent({
+      type: _actTypeMap[newStatus] || "info",
+      scanner: feature,
+      message: cleanTitle(message),
+      time: timestamp,
+    });
+
     // Render results in the new accordion view
     renderResults();
 
@@ -4114,13 +4529,23 @@ document.addEventListener("DOMContentLoaded", () => {
     // Notify risk gauge that a scan has started
     document.dispatchEvent(new CustomEvent("cyberguard:scanStart"));
 
+    let _scanCompleted = false;
     try {
       // Check if scan should be stopped before executing
       if (shouldStopScan) {
         logResult(new Date(), feature, "⚠️ Scan cancelled by user", "warning");
         return;
       }
+      // Emit scan-start event to live activity feed
+      appendActivityEvent({
+        type: "system",
+        scanner: "SYSTEM",
+        message: `${feature} started`,
+        detail:
+          inputValue && inputValue !== "N/A" ? `Target: ${inputValue}` : "",
+      });
       await toolFunction(inputValue);
+      _scanCompleted = true;
     } catch (error) {
       if (shouldStopScan) {
         logResult(new Date(), feature, "⚠️ Scan cancelled by user", "warning");
@@ -4133,6 +4558,7 @@ document.addEventListener("DOMContentLoaded", () => {
         );
       }
     } finally {
+      const _stopped = shouldStopScan; // capture before reset
       isRunning = false;
       shouldStopScan = false;
       hideProgressBar();
@@ -4164,6 +4590,21 @@ document.addEventListener("DOMContentLoaded", () => {
       // Update risk gauge with aggregated results from current scan data
       if (!shouldStopScan) {
         _dispatchRiskGaugeUpdate();
+      }
+      // Emit scan completion / cancellation event
+      if (_scanCompleted) {
+        appendActivityEvent({
+          type: "success",
+          scanner: "SYSTEM",
+          message: `${feature} completed`,
+          detail: `${metrics.totalIssues} finding${metrics.totalIssues !== 1 ? "s" : ""} \xB7 ${metrics.timeTaken}`,
+        });
+      } else if (_stopped) {
+        appendActivityEvent({
+          type: "warning",
+          scanner: "SYSTEM",
+          message: `${feature} cancelled`,
+        });
       }
     }
   }
@@ -8604,7 +9045,312 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // REAL TCP Port Scanner - Using Browser APIs
+  // ===== TCP PORT SCAN — Powered by Shodan InternetDB =====
+  // Uses Shodan's free, no-auth InternetDB API for real open-port data.
+  // CORS-enabled, no API key required. Replaces the previous browser-based
+  // scan that could only test HTTP/HTTPS and showed TIMEOUT for everything else.
+
+  // Service name map for well-known ports
+  const PORT_SERVICES = {
+    21: "FTP",
+    22: "SSH",
+    23: "Telnet",
+    25: "SMTP",
+    53: "DNS",
+    80: "HTTP",
+    110: "POP3",
+    143: "IMAP",
+    443: "HTTPS",
+    445: "SMB",
+    587: "SMTP-TLS",
+    993: "IMAPS",
+    995: "POP3S",
+    1433: "MSSQL",
+    3000: "Dev-Server",
+    3306: "MySQL",
+    3389: "RDP",
+    5432: "PostgreSQL",
+    5900: "VNC",
+    6379: "Redis",
+    8080: "HTTP-Alt",
+    8443: "HTTPS-Alt",
+    8888: "Jupyter",
+    9200: "Elasticsearch",
+    27017: "MongoDB",
+  };
+
+  function getServiceName(port) {
+    return PORT_SERVICES[port] || "Unknown";
+  }
+
+  function getPortRisk(port) {
+    const high = [21, 23, 445, 1433, 3389, 5900, 6379, 27017, 9200];
+    const med = [22, 25, 80, 3306, 5432, 8080];
+    if (high.includes(port)) return "high";
+    if (med.includes(port)) return "medium";
+    return "low";
+  }
+
+  /**
+   * Resolves a domain name to an IPv4 address via DNS-over-HTTPS.
+   * Tries Google DoH first, falls back to Cloudflare DoH.
+   */
+  async function resolveDomainToIP(domain) {
+    try {
+      const res = await fetch(
+        `https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=A`,
+      );
+      const data = await res.json();
+      const a = data.Answer?.find((r) => r.type === 1);
+      if (a?.data) return a.data;
+    } catch (_) {}
+    try {
+      const res = await fetch(
+        `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=A`,
+        { headers: { Accept: "application/dns-json" } },
+      );
+      const data = await res.json();
+      const a = data.Answer?.find((r) => r.type === 1);
+      if (a?.data) return a.data;
+    } catch (_) {}
+    return null;
+  }
+
+  /**
+   * Queries the Shodan InternetDB API for open ports on a target.
+   * Automatically resolves domain names to IPs.
+   * Returns a structured result object — never throws.
+   */
+  async function scanWithShodanInternetDB(target) {
+    let ip = target.trim();
+    if (ip.startsWith("http://") || ip.startsWith("https://")) {
+      try {
+        ip = new URL(ip).hostname;
+      } catch (_) {}
+    }
+
+    if (!isValidIP(ip)) {
+      appendActivityEvent({
+        type: "system",
+        scanner: "TCP SCAN",
+        message: `Resolving ${ip}…`,
+      });
+      const resolved = await resolveDomainToIP(ip);
+      if (!resolved) {
+        return {
+          error: true,
+          message: `Could not resolve “${ip}” to an IP address. Try entering an IP directly.`,
+        };
+      }
+      appendActivityEvent({
+        type: "info",
+        scanner: "TCP SCAN",
+        message: `Resolved: ${ip} → ${resolved}`,
+      });
+      ip = resolved;
+    }
+
+    try {
+      updateStatus(`Querying Shodan InternetDB for ${ip}…`);
+      const response = await fetch(`https://internetdb.shodan.io/${ip}`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+
+      if (response.status === 404) {
+        return {
+          error: false,
+          ip,
+          ports: [],
+          hostnames: [],
+          tags: [],
+          vulns: [],
+          cpes: [],
+          message: "No information available for this IP in Shodan database.",
+        };
+      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const data = await response.json();
+
+      if (data.detail) {
+        return {
+          error: false,
+          ip,
+          ports: [],
+          hostnames: [],
+          tags: [],
+          vulns: [],
+          cpes: [],
+          message: data.detail,
+        };
+      }
+
+      return {
+        error: false,
+        ip,
+        ports: data.ports || [],
+        hostnames: data.hostnames || [],
+        tags: data.tags || [],
+        cpes: data.cpes || [],
+        vulns: data.vulns || [],
+        source: "Shodan InternetDB",
+      };
+    } catch (err) {
+      console.error("[Shodan InternetDB]", err);
+      return { error: true, message: `Shodan lookup failed: ${err.message}` };
+    }
+  }
+
+  /**
+   * Appends (or moves) the Shodan results panel to the accordion container.
+   * Hides the empty state and scrolls the panel into view.
+   */
+  function injectShodanPanel(panel) {
+    const container = document.getElementById("accordion-items-container");
+    if (!container) return;
+    const emptyState = document.getElementById("empty-results-state");
+    if (emptyState) emptyState.style.display = "none";
+    const existing = document.getElementById("tcp-scan-results");
+    if (existing && existing !== panel) existing.remove();
+    container.appendChild(panel);
+    panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  /**
+   * Shows a scanning-state spinner in the TCP results panel while the API call runs.
+   */
+  function setTCPScanState(state, target) {
+    if (state === "scanning") {
+      let panel = document.getElementById("tcp-scan-results");
+      if (!panel) {
+        panel = document.createElement("div");
+        panel.id = "tcp-scan-results";
+        panel.className = "shodan-results-panel";
+      }
+      panel.innerHTML =
+        '<div class="shodan-scanning-state">' +
+        '<div class="shodan-scan-spinner"></div>' +
+        `<span>Querying Shodan InternetDB for ${escapeHtml(String(target))}…</span>` +
+        "</div>";
+      injectShodanPanel(panel);
+    }
+    // 'complete' and 'error' states are handled by renderShodanResults
+  }
+
+  /**
+   * Renders the full Shodan InternetDB results panel:
+   * stats bar, open-ports table, hostnames, CVEs, and a data-source disclaimer.
+   */
+  function renderShodanResults(data, target) {
+    let panel = document.getElementById("tcp-scan-results");
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.id = "tcp-scan-results";
+      panel.className = "shodan-results-panel";
+    } else {
+      panel.innerHTML = "";
+    }
+
+    if (data.error) {
+      panel.innerHTML =
+        '<div class="shodan-error-state">' +
+        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' +
+        '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>' +
+        '<line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+        `<p>${escapeHtml(data.message)}</p></div>`;
+      injectShodanPanel(panel);
+      return;
+    }
+
+    const resolvedNote =
+      String(target) !== String(data.ip)
+        ? `<span class="resolved-note">${escapeHtml(String(target))} → ${escapeHtml(String(data.ip))}</span>`
+        : "";
+
+    // Stats bar
+    const statsEl = document.createElement("div");
+    statsEl.className = "shodan-stats-bar";
+    statsEl.innerHTML =
+      `<div class="shodan-stat"><span class="stat-value">${data.ports.length}</span><span class="stat-label">Open Ports</span></div>` +
+      `<div class="shodan-stat"><span class="stat-value">${data.hostnames.length}</span><span class="stat-label">Hostnames</span></div>` +
+      `<div class="shodan-stat"><span class="stat-value${data.vulns.length > 0 ? " stat-value-danger" : ""}">${data.vulns.length}</span><span class="stat-label">Known CVEs</span></div>` +
+      `<div class="shodan-stat"><span class="stat-value stat-value-sm">${data.tags.length > 0 ? escapeHtml(data.tags.join(", ")) : "—"}</span><span class="stat-label">Tags</span></div>` +
+      `<div class="shodan-source">${resolvedNote}<span class="source-badge">Shodan InternetDB</span></div>`;
+    panel.appendChild(statsEl);
+
+    if (data.ports.length === 0) {
+      const noEl = document.createElement("div");
+      noEl.className = "no-ports-found";
+      noEl.innerHTML =
+        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' +
+        '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>' +
+        '<line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+        `<p>${escapeHtml(data.message || "No open ports found for this IP.")}</p>` +
+        "<span>This IP may be behind a firewall or not yet indexed by Shodan.</span>";
+      panel.appendChild(noEl);
+    } else {
+      const tableWrapper = document.createElement("div");
+      tableWrapper.className = "port-table-wrapper";
+      const rows = [...data.ports]
+        .sort((a, b) => a - b)
+        .map((port) => {
+          const service = getServiceName(port);
+          const risk = getPortRisk(port);
+          return (
+            '<tr class="port-row">' +
+            `<td class="port-number">${port}</td>` +
+            `<td class="port-service">${escapeHtml(service)}</td>` +
+            `<td><span class="risk-badge risk-${risk}">${risk.toUpperCase()}</span></td>` +
+            '<td><span class="port-status-badge status-open">' +
+            '<svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg> OPEN' +
+            "</span></td></tr>"
+          );
+        })
+        .join("");
+      tableWrapper.innerHTML =
+        '<table class="port-results-table"><thead><tr>' +
+        "<th>PORT</th><th>SERVICE</th><th>RISK</th><th>STATUS</th>" +
+        `</tr></thead><tbody>${rows}</tbody></table>`;
+      panel.appendChild(tableWrapper);
+    }
+
+    if (data.hostnames && data.hostnames.length > 0) {
+      const hostsEl = document.createElement("div");
+      hostsEl.className = "shodan-hostnames";
+      hostsEl.innerHTML =
+        '<div class="section-label">Hostnames</div>' +
+        `<div class="hostnames-list">${data.hostnames.map((h) => `<span class="hostname-tag">${escapeHtml(h)}</span>`).join("")}</div>`;
+      panel.appendChild(hostsEl);
+    }
+
+    if (data.vulns && data.vulns.length > 0) {
+      const vulnsEl = document.createElement("div");
+      vulnsEl.className = "shodan-vulns";
+      vulnsEl.innerHTML =
+        `<div class="section-label danger-label">⚠ Known Vulnerabilities (${data.vulns.length})</div>` +
+        `<div class="vulns-list">${data.vulns
+          .map(
+            (cve) =>
+              `<a href="https://nvd.nist.gov/vuln/detail/${escapeHtml(cve)}" target="_blank" rel="noopener" class="cve-tag">${escapeHtml(cve)}</a>`,
+          )
+          .join("")}</div>`;
+      panel.appendChild(vulnsEl);
+    }
+
+    const disc = document.createElement("div");
+    disc.className = "shodan-disclaimer";
+    disc.innerHTML =
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+      '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8"/>' +
+      '<line x1="12" y1="12" x2="12" y2="16"/></svg>' +
+      "Data sourced from Shodan InternetDB. Results reflect last known scan, not real-time port status. " +
+      "For live scanning use nmap locally.";
+    panel.appendChild(disc);
+
+    injectShodanPanel(panel);
+  }
+
   document
     .getElementById("tcp-scan-btn")
     .addEventListener("click", () =>
@@ -8616,249 +9362,98 @@ document.addEventListener("DOMContentLoaded", () => {
         "tcp-scan-btn",
       ),
     );
+
+  /**
+   * TCP Port Scan entry point — called by runTool.
+   * Uses Shodan InternetDB for accurate, real internet-wide port data.
+   */
   async function realTcpPortScan(target) {
-    logResult(
-      new Date(),
-      "TCP Port Scan",
-      `🔌 Starting REAL TCP connectivity test of ${target}...`,
-    );
-    logResult(
-      new Date(),
-      "TCP Port Scan",
-      `⚠️ Note: Browser security limits direct socket access. Using available APIs for real connectivity testing.`,
-      "info",
-    );
+    // Remove any stale panel from a previous scan
+    document.getElementById("tcp-scan-results")?.remove();
 
-    try {
-      showProgressBar();
-      updateStatus("Initializing real TCP connectivity test...");
+    setTCPScanState("scanning", target);
 
-      // Extract hostname from target
-      let hostname = target;
-      if (target.startsWith("http://") || target.startsWith("https://")) {
-        hostname = new URL(target).hostname;
-      }
+    appendActivityEvent({
+      type: "system",
+      scanner: "TCP SCAN",
+      message: `Querying Shodan InternetDB for ${target}`,
+    });
 
-      // Real ports we can test with browser APIs
-      const testablePorts = [
-        { port: 80, service: "HTTP", protocol: "http" },
-        { port: 443, service: "HTTPS", protocol: "https" },
-        { port: 8080, service: "HTTP-Alt", protocol: "http" },
-        { port: 8443, service: "HTTPS-Alt", protocol: "https" },
-        { port: 3000, service: "Dev-Server", protocol: "http" },
-        { port: 5000, service: "Flask/Node", protocol: "http" },
-        { port: 9000, service: "Dev-Alt", protocol: "http" },
-      ];
+    const result = await scanWithShodanInternetDB(target);
 
-      // WebSocket testable ports (real connection attempts)
-      const wsTestPorts = [
-        { port: 80, service: "WebSocket", protocol: "ws" },
-        { port: 443, service: "WebSocket-SSL", protocol: "wss" },
-        { port: 8080, service: "WebSocket-Alt", protocol: "ws" },
-        { port: 3001, service: "Socket.IO", protocol: "ws" },
-      ];
+    if (result.error) {
+      appendActivityEvent({
+        type: "error",
+        scanner: "TCP SCAN",
+        message: result.message,
+      });
+      renderShodanResults(result, target);
+      logResult(new Date(), "TCP Port Scan", result.message, "danger");
+      return;
+    }
 
+    if (result.ports.length > 0) {
+      appendActivityEvent({
+        type: "success",
+        scanner: "TCP SCAN",
+        message: `Found ${result.ports.length} open port${result.ports.length !== 1 ? "s" : ""}`,
+        detail:
+          result.ports.slice(0, 10).join(", ") +
+          (result.ports.length > 10 ? "…" : ""),
+      });
+      result.ports.forEach((port) => {
+        const service = getServiceName(port);
+        const risk = getPortRisk(port);
+        const aType =
+          risk === "high" ? "error" : risk === "medium" ? "warning" : "info";
+        appendActivityEvent({
+          type: aType,
+          scanner: "TCP SCAN",
+          message: `Port ${port} OPEN`,
+          detail: service,
+        });
+        // Use Shodan format so parsePortResult groups them correctly in the accordion
+        logResult(
+          new Date(),
+          "TCP Port Scan",
+          `Port ${port} is OPEN - ${service}`,
+          "success",
+        );
+      });
+    } else {
+      const msg = result.message || "No open ports found in Shodan database.";
+      appendActivityEvent({ type: "info", scanner: "TCP SCAN", message: msg });
+      logResult(new Date(), "TCP Port Scan", msg, "info");
+    }
+
+    if (result.vulns && result.vulns.length > 0) {
+      const topCves = result.vulns.slice(0, 3).join(", ");
+      const more =
+        result.vulns.length > 3 ? ` +${result.vulns.length - 3} more` : "";
+      appendActivityEvent({
+        type: "error",
+        scanner: "TCP SCAN",
+        message: `${result.vulns.length} known CVE${result.vulns.length !== 1 ? "s" : ""} found`,
+        detail: topCves + more,
+      });
       logResult(
         new Date(),
         "TCP Port Scan",
-        `🔌 Testing ${
-          testablePorts.length + wsTestPorts.length
-        } ports with real connectivity checks on ${hostname}...`,
-        "info",
-      );
-
-      const openPorts = [];
-      const closedPorts = [];
-      const timeoutPorts = [];
-
-      // Test HTTP/HTTPS ports with real fetch requests
-      for (const portInfo of testablePorts) {
-        updateStatus(
-          `Testing ${portInfo.protocol.toUpperCase()} on port ${
-            portInfo.port
-          }...`,
-        );
-
-        try {
-          const startTime = Date.now();
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-
-          const url = `${portInfo.protocol}://${hostname}:${portInfo.port}`;
-          const response = await fetch(url, {
-            method: "GET",
-            mode: "no-cors", // Bypass CORS for connectivity test
-            signal: controller.signal,
-            cache: "no-cache",
-          });
-
-          clearTimeout(timeoutId);
-          const responseTime = Date.now() - startTime;
-
-          openPorts.push({
-            ...portInfo,
-            responseTime,
-            status: response.status || "Connected",
-          });
-          logResult(
-            new Date(),
-            "TCP Port Scan",
-            `✅ ${portInfo.port}/tcp OPEN ${portInfo.service} (${responseTime}ms)`,
-            "success",
-          );
-        } catch (error) {
-          if (error.name === "AbortError") {
-            timeoutPorts.push({ ...portInfo, error: "Timeout" });
-            logResult(
-              new Date(),
-              "TCP Port Scan",
-              `⏱️ ${portInfo.port}/tcp TIMEOUT ${portInfo.service} (5000ms)`,
-              "warning",
-            );
-          } else {
-            closedPorts.push({ ...portInfo, error: error.message });
-            logResult(
-              new Date(),
-              "TCP Port Scan",
-              `❌ ${portInfo.port}/tcp CLOSED/FILTERED ${portInfo.service}`,
-              "info",
-            );
-          }
-        }
-
-        // Small delay between requests
-        await new Promise((r) => setTimeout(r, 200));
-      }
-
-      // Test WebSocket connections (real socket attempts)
-      for (const portInfo of wsTestPorts) {
-        updateStatus(`Testing WebSocket on port ${portInfo.port}...`);
-
-        try {
-          const startTime = Date.now();
-          const wsUrl = `${portInfo.protocol}://${hostname}:${portInfo.port}`;
-
-          const wsTest = await new Promise((resolve, reject) => {
-            const ws = new WebSocket(wsUrl);
-            const timeout = setTimeout(() => {
-              ws.close();
-              reject(new Error("WebSocket timeout"));
-            }, 3000);
-
-            ws.onopen = () => {
-              clearTimeout(timeout);
-              ws.close();
-              resolve({ connected: true, time: Date.now() - startTime });
-            };
-
-            ws.onerror = () => {
-              clearTimeout(timeout);
-              reject(new Error("WebSocket connection failed"));
-            };
-          });
-
-          openPorts.push({
-            ...portInfo,
-            responseTime: wsTest.time,
-            status: "WebSocket Connected",
-          });
-          logResult(
-            new Date(),
-            "TCP Port Scan",
-            `✅ ${portInfo.port}/tcp OPEN ${portInfo.service} WebSocket (${wsTest.time}ms)`,
-            "success",
-          );
-        } catch (error) {
-          if (error.message.includes("timeout")) {
-            timeoutPorts.push({ ...portInfo, error: "WebSocket Timeout" });
-            logResult(
-              new Date(),
-              "TCP Port Scan",
-              `⏱️ ${portInfo.port}/tcp TIMEOUT ${portInfo.service} WebSocket`,
-              "warning",
-            );
-          } else {
-            closedPorts.push({ ...portInfo, error: error.message });
-            logResult(
-              new Date(),
-              "TCP Port Scan",
-              `❌ ${portInfo.port}/tcp CLOSED/FILTERED ${portInfo.service} WebSocket`,
-              "info",
-            );
-          }
-        }
-
-        await new Promise((r) => setTimeout(r, 200));
-      }
-
-      // Generate real connectivity report
-      updateStatus("Generating real connectivity report...");
-      await new Promise((r) => setTimeout(r, 300));
-
-      const scanReport = [
-        `🔌 REAL TCP Connectivity Test Results for ${hostname}`,
-        `Scan completed at ${new Date().toLocaleString()}`,
-        `Method: Browser APIs (Fetch + WebSocket)`,
-        ``,
-        `ACCESSIBLE PORTS (Real Connections):`,
-      ];
-
-      if (openPorts.length > 0) {
-        scanReport.push(`Port    Service         Method    Response    Status`);
-        scanReport.push(`----    -------         ------    --------    ------`);
-        openPorts.forEach((port) => {
-          const method = port.protocol.toUpperCase();
-          scanReport.push(
-            `${port.port.toString().padEnd(7)} ${port.service.padEnd(
-              15,
-            )} ${method.padEnd(9)} ${port.responseTime}ms      ${port.status}`,
-          );
-        });
-      } else {
-        scanReport.push(
-          `No accessible ports detected with available browser methods`,
-        );
-      }
-
-      if (timeoutPorts.length > 0) {
-        scanReport.push(``);
-        scanReport.push(`TIMEOUT PORTS (Possible Firewall/Filter):`);
-        timeoutPorts.forEach((port) => {
-          scanReport.push(`${port.port}/tcp ${port.service} - ${port.error}`);
-        });
-      }
-
-      scanReport.push(``);
-      scanReport.push(`BROWSER LIMITATIONS:`);
-      scanReport.push(`• Only HTTP/HTTPS/WebSocket protocols testable`);
-      scanReport.push(`• CORS policy may block some requests`);
-      scanReport.push(`• Raw TCP sockets not available in browsers`);
-      scanReport.push(`• For full port scanning, use native tools like nmap`);
-
-      scanReport.push(``);
-      scanReport.push(`REAL CONNECTIVITY SUMMARY:`);
-      scanReport.push(
-        `Total ports tested: ${testablePorts.length + wsTestPorts.length}`,
-      );
-      scanReport.push(`Accessible: ${openPorts.length}`);
-      scanReport.push(`Timeout/Filtered: ${timeoutPorts.length}`);
-      scanReport.push(`Closed/Blocked: ${closedPorts.length}`);
-
-      hideProgressBar();
-      updateStatus("Real TCP connectivity test completed");
-
-      const status = openPorts.length > 0 ? "success" : "info";
-      logResult(new Date(), "TCP Port Scan", scanReport.join("\\n"), status);
-    } catch (error) {
-      hideProgressBar();
-      updateStatus("Real TCP test failed");
-      logResult(
-        new Date(),
-        "TCP Port Scan",
-        `❌ [ERROR] Real TCP connectivity test failed: ${error.message}`,
+        `⚠ ${result.vulns.length} known CVE${result.vulns.length !== 1 ? "s" : ""}: ${topCves}${more}`,
         "danger",
       );
     }
+
+    if (result.hostnames && result.hostnames.length > 0) {
+      appendActivityEvent({
+        type: "info",
+        scanner: "TCP SCAN",
+        message: `${result.hostnames.length} hostname${result.hostnames.length !== 1 ? "s" : ""} resolved`,
+        detail: result.hostnames.slice(0, 2).join(", "),
+      });
+    }
+
+    renderShodanResults(result, target);
   }
 
   // REAL UDP Connectivity Test - Using Browser APIs
