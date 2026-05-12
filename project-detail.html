@@ -764,6 +764,14 @@
                     <div class="shimmer h-14 rounded-xl"></div>
                     <div class="shimmer h-14 rounded-xl"></div>
                 </div>
+
+                <!-- ── Scan Live Panel ─────────────────────────────────────── -->
+                <div
+                    id="scan-live-panel"
+                    class="hidden cyber-card p-5 rounded-2xl border border-[var(--cg-border)] space-y-4"
+                >
+                    <!-- populated by ScanManager.showScanPanel() -->
+                </div>
             </div>
         </main>
 
@@ -1038,10 +1046,87 @@
             </div>
         </div>
 
+        <!-- ─── Scanner Selection Modal ──────────────────────────────────────── -->
+        <div
+            id="scan-scanner-modal"
+            class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="scan-scanner-modal-title"
+        >
+            <div
+                class="cyber-card w-full max-w-lg p-6 rounded-2xl flex flex-col gap-5 max-h-[90vh]"
+            >
+                <!-- Modal header -->
+                <div>
+                    <h3
+                        id="scan-scanner-modal-title"
+                        class="text-base font-bold text-white"
+                    >
+                        Select Scanners for:
+                        <span
+                            id="scan-modal-target-label"
+                            class="text-[var(--cg-accent)]"
+                        ></span>
+                    </h3>
+                    <p
+                        id="scan-modal-target-detail"
+                        class="text-xs text-slate-400 font-mono mt-1"
+                    ></p>
+                </div>
+
+                <!-- Scanner list (filled by ScanManager) -->
+                <div
+                    id="scan-modal-scanner-body"
+                    class="overflow-y-auto flex-1 pr-1 space-y-1"
+                    style="max-height: 52vh"
+                >
+                    <div
+                        class="flex items-center justify-center py-10 text-slate-400 text-sm gap-3"
+                    >
+                        <span class="cyber-spinner-sm"></span>Loading scanners…
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-3 pt-1 border-t border-[var(--cg-border)]">
+                    <button
+                        id="scan-start-btn"
+                        type="button"
+                        onclick="window.ScanManager?.startScan()"
+                        class="cyber-btn-primary px-5 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2"
+                    >
+                        <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+                            />
+                        </svg>
+                        ▶ Start Scan
+                    </button>
+                    <button
+                        type="button"
+                        onclick="window.ScanManager?.closeScanModal()"
+                        class="cyber-btn-ghost px-4 py-2.5 rounded-lg text-sm"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- ─── CyberNotify toast ──────────────────────────────────────────────── -->
         <script src="cyber-notify.js"></script>
         <script src="api-client.js"></script>
         <script src="target-validator.js"></script>
+        <script src="scan-manager.js"></script>
 
         <script>
             "use strict";
@@ -1758,6 +1843,23 @@
                         </button>`
                     : "";
 
+                const scanBtn = `
+                    <button
+                        onclick="window.ScanManager?.openScanModal(this)"
+                        data-tid="${id}"
+                        data-lbl="${label}"
+                        data-val="${value}"
+                        data-typ="${esc(type)}"
+                        title="Run security scan on this target"
+                        aria-label="Run scan on ${label}"
+                        class="cyber-btn-primary text-xs px-2.5 py-1.5 rounded flex items-center gap-1.5"
+                    >
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/>
+                        </svg>
+                        Scan
+                    </button>`;
+
                 return `
                     <div class="cyber-card p-3 flex items-center gap-3" data-target-id="${id}">
                         <div class="flex-1 min-w-0">
@@ -1766,6 +1868,7 @@
                         </div>
                         <div class="flex items-center gap-2 flex-shrink-0">
                             <span class="text-xs px-2 py-0.5 rounded-full border font-semibold ${typeBadgeCls}">${cap(type)}</span>
+                            ${scanBtn}
                             ${editDeleteBtns}
                         </div>
                     </div>`;
@@ -2132,6 +2235,7 @@
                     hideAddTargetModal();
                     hideEditTargetModal();
                     hideDeleteTargetModal();
+                    window.ScanManager?.closeScanModal();
                 }
             });
 

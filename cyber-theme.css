@@ -596,6 +596,74 @@ select.cyber-input option {
     box-shadow: 0 0 16px rgba(248, 113, 113, 0.3);
 }
 
+/* ---- Scoped Ghost Button: Logout ---- */
+/* Ghost/outline danger style — replaces the old solid-red danger button */
+.btn-logout {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid rgba(248, 113, 113, 0.3);  /* subtle danger border */
+    border-radius: var(--cg-radius-md);           /* 8px */
+    color: var(--cg-danger);                      /* #F87171 */
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    font-family: var(--cg-font-sans);
+    text-align: left;
+}
+.btn-logout:hover {
+    background: rgba(248, 113, 113, 0.1);
+    border-color: var(--cg-danger);
+    color: var(--cg-danger);
+    box-shadow: 0 0 12px rgba(248, 113, 113, 0.15);
+}
+.btn-logout:active {
+    background: rgba(248, 113, 113, 0.15);
+}
+
+/* ---- Scoped Ghost Button: Clear History ---- */
+/* Muted ghost style — turns danger-red on hover as a soft warning */
+.btn-clear-history {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid var(--cg-border-subtle);    /* #374151 */
+    border-radius: var(--cg-radius-md);
+    color: var(--cg-text-2);                      /* #94A3B8 muted */
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--cg-font-sans);
+}
+.btn-clear-history:hover {
+    background: rgba(248, 113, 113, 0.08);
+    border-color: rgba(248, 113, 113, 0.4);
+    color: var(--cg-danger);
+    box-shadow: 0 0 10px rgba(248, 113, 113, 0.1);
+}
+.btn-clear-history:active {
+    background: rgba(248, 113, 113, 0.12);
+}
+
+/* ---- Shared Icon Sizing (Logout & Clear History) ---- */
+/* SVG and icon elements inside these buttons stay crisp and vertically aligned */
+.btn-logout svg,
+.btn-clear-history svg,
+.btn-logout i,
+.btn-clear-history i {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
 .cyber-btn-warning {
     background: linear-gradient(
         135deg,
