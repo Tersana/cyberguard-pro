@@ -12,6 +12,11 @@
    * Sets up event listeners for scan lifecycle events
    */
   function initializeDashboard() {
+    // === AUTHENTICATION CHECK ===
+    if (typeof window.runAuthGuard === 'function' && !window.runAuthGuard()) {
+      return; // Stop initialization if not authenticated
+    }
+
     // Reset dashboard to empty state on page load
     if (window.StateManager) {
       window.StateManager.resetDashboard();

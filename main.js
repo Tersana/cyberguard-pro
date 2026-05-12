@@ -1084,6 +1084,11 @@ const CyberNotify = {
 // Professional port scanning using Shodan API for comprehensive network intelligence
 
 document.addEventListener("DOMContentLoaded", () => {
+  // === AUTHENTICATION CHECK ===
+  if (typeof window.runAuthGuard === 'function' && !window.runAuthGuard()) {
+    return; // Stop initialization if not authenticated
+  }
+
   let isRunning = false;
   let shouldStopScan = false; // Flag to track if scan should be stopped
   let history = [];

@@ -813,6 +813,11 @@ const ThreatIntelHub = {
    * Binds event listeners and loads search history
    */
   init() {
+    // === AUTHENTICATION CHECK ===
+    if (typeof window.runAuthGuard === 'function' && !window.runAuthGuard()) {
+      return; // Stop initialization if not authenticated
+    }
+
     console.log('ThreatIntelHub: Initializing...');
     
     try {

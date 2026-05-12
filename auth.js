@@ -1620,3 +1620,115 @@ const authManager = new AuthManager();
 // Export for use in other scripts
 window.AuthManager = AuthManager;
 window.authManager = authManager;
+
+// ===== AUTHENTICATION GUARD HELPERS =====
+
+/**
+ * isAuthenticated() — checks ALL known token keys in BOTH storages.
+ * The canonical key used by APIClient.setToken() is "cyberguard_jwt".
+ * Legacy / alternate keys are also checked for backward compatibility.
+ * Returns true if ANY non-empty token string is found.
+ */
+window.isAuthenticated = function() {
+  // All known key names used across the app (canonical key first)
+  const keys = [
+    'cyberguard_jwt',   // canonical — written by APIClient.setToken()
+    'auth_token',       // legacy fallback
+    'access_token',     // possible backend alias
+    'token',            // generic fallback
+    'authToken',        // camelCase variant
+  ];
+
+  for (const key of keys) {
+    const value = localStorage.getItem(key) || sessionStorage.getItem(key);
+    if (!value) continue;
+
+    // Handle JSON-wrapped tokens: { token: '...' } or { access_token: '...' }
+    try {
+      const parsed = JSON.parse(value);
+      const inner = parsed?.token || parsed?.access_token || parsed?.data?.token;
+      if (inner && inner.length > 10) return true;
+    } catch {
+      // Plain string token — valid if it has meaningful length
+      if (value.length > 10) return true;
+    }
+  }
+
+  return false;
+};
+
+/**
+ * isTokenExpired() — returns true only for provably expired standard JWTs.
+ * Returns FALSE (not expired) for non-JWT / opaque tokens so that valid
+ * sessions using non-standard token formats are never accidentally blocked.
+ */
+window.isTokenExpired = function(token) {
+  if (!token) return true;
+  try {
+    const parts = token.split('.');
+    // Only treat as JWT if it has exactly 3 parts (header.payload.signature)
+    if (parts.length !== 3) return false; // opaque token — assume valid
+    const payload = JSON.parse(atob(parts[1]));
+    if (!payload.exp) return false; // no expiry claim — assume valid
+    return payload.exp * 1000 < Date.now();
+  } catch {
+    // Parse failure — do NOT assume expired; treat token as valid
+    return false;
+  }
+};
+
+window.clearAuthStorage = function() {
+  localStorage.removeItem("cyberguard_jwt");
+  localStorage.removeItem("auth_token");
+  sessionStorage.removeItem("auth_token");
+  localStorage.removeItem("cyberguard_user");
+  localStorage.removeItem("cyberguard_session");
+};
+
+window.showLoginRequiredModal = function() {
+  if (typeof CyberNotify !== 'undefined' && CyberNotify.confirm) {
+    CyberNotify.confirm("You must log in first before using CyberGuard Pro tools.", () => {
+      window.location.href = '/login.html';
+    });
+  } else {
+    alert("You must log in first before using CyberGuard Pro tools.");
+    window.location.href = '/login.html';
+  }
+};
+
+/**
+ * runAuthGuard() — the page-level auth gate.
+ *
+ * BUG FIXED: Previously, a token that failed JWT parsing (opaque/non-standard
+ * tokens) caused isTokenExpired() to return true, triggering clearAuthStorage()
+ * + modal even for a fully authenticated user.
+ *
+ * Fix: Two separate guard stages.
+ *   1. If no token exists at all → guest, show modal.
+ *   2. Only if token IS a parseable JWT with an exp claim AND that exp has
+ *      passed → treat as expired session and show modal.
+ *   Non-JWT opaque tokens pass stage 2 unconditionally.
+ */
+window.runAuthGuard = function() {
+  // Stage 1 — Must have a token in storage
+  if (!window.isAuthenticated()) {
+    window.showLoginRequiredModal();
+    return false;
+  }
+
+  // Stage 2 — Only enforce expiry on provably expired standard JWTs
+  const currentToken =
+    localStorage.getItem('cyberguard_jwt') ||
+    localStorage.getItem('auth_token') ||
+    sessionStorage.getItem('auth_token');
+
+  if (currentToken && window.isTokenExpired(currentToken)) {
+    // Token is a JWT and provably expired — clear session and prompt login
+    window.clearAuthStorage();
+    window.showLoginRequiredModal();
+    return false;
+  }
+
+  // Authenticated and token is valid (or non-JWT opaque) → allow access
+  return true;
+};

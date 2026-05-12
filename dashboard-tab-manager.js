@@ -375,11 +375,17 @@ function switchToTab(tabId) {
 // Auto-initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
+    // === AUTHENTICATION CHECK ===
+    if (typeof window.runAuthGuard === 'function' && !window.runAuthGuard()) {
+      return; // Stop initialization if not authenticated
+    }
     DashboardTabManager.init();
   });
 } else {
   // DOM already loaded
-  DashboardTabManager.init();
+  if (typeof window.runAuthGuard !== 'function' || window.runAuthGuard()) {
+    DashboardTabManager.init();
+  }
 }
 
 // Export for use in other scripts
