@@ -962,6 +962,14 @@
                                     "Email Not Verified",
                                     "Please check your inbox and verify your email before signing in.",
                                 );
+                                // Show resend link below the form
+                                const resendNotice = document.createElement("div");
+                                resendNotice.className = "text-center mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20";
+                                resendNotice.innerHTML = '<p class="text-amber-400 text-sm">Didn\'t receive the email? <a href="verify-email.html" class="text-neon-purple hover:text-purple-300 font-semibold underline">Resend verification email</a></p>';
+                                const existingNotice = document.getElementById("resend-notice");
+                                if (existingNotice) existingNotice.remove();
+                                resendNotice.id = "resend-notice";
+                                document.getElementById("loginForm").appendChild(resendNotice);
                             } else {
                                 showMessage(
                                     "error",

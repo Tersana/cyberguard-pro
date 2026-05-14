@@ -682,13 +682,26 @@ class AuthManager {
   }
 
   // Resend verification email
-  async resendVerificationEmail() {
+  // API docs: POST /api/email/verification-notification/resend  body: { email }
+  // No auth required | Throttle: 6/min
+  // 200 → sent | 400 → already verified | 403 → not registered
+  async resendVerificationEmail(email = null) {
     try {
       // Show loading indicator
       showLoading("Sending verification email...");
 
-      // Send POST request to resend verification email
-      const response = await this.apiClient.post("auth/resend-verification");
+      // Use provided email, fall back to current user's email
+      const targetEmail = email || (this.currentUser && this.currentUser.email);
+      if (!targetEmail) {
+        throw new APIError("Email address is required to resend verification.", 400);
+      }
+
+      // Send POST request to resend verification email — no auth required
+      const response = await this.apiClient.post(
+        "email/verification-notification/resend",
+        { email: targetEmail },
+        { skipAuth: true }
+      );
 
       return {
         success: true,
