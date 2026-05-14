@@ -6,11 +6,15 @@ phishing_dataset.csv
 SECURITY_TEST_DATA.md
 
 # --- Dependencies ---
-
+.zed/
+.agents/
+graphify-out/
+.graphifyignore
 node_modules/
 .vscode/
 .kiro/
 .cursor/
+.claude/
 .zed/
 # --- Backups & Temp Files ---
 *.rar
