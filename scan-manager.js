@@ -364,9 +364,7 @@
           <button class="terminal-clear-btn"
                   onclick="window.ScanManager.clearTerminal()">Clear</button>
         </div>
-        <div id="scan-terminal" class="scan-terminal">
-          <div class="terminal-line terminal-default">Waiting for scan to start…</div>
-        </div>
+        <div id="scan-terminal" class="scan-terminal"><div class="terminal-line terminal-default">Waiting for scan to start…</div></div>
       </div>
 
       <!-- Findings stream -->
@@ -447,7 +445,7 @@
 
     if (!window.echoInstance) {
       console.warn("[ScanManager] Echo not initialised — using polling only.");
-      _appendTerminalSystem("⚠ WebSocket unavailable — using polling fallback");
+      _appendTerminalSystem("[!] WebSocket unavailable — using polling fallback");
       _setStatusText("WebSocket unavailable — polling every 5 s…");
       return;
     }
@@ -458,7 +456,7 @@
     _appendTerminalSystem(`WebSocket state: ${wsState}`);
 
     if (wsState !== "connected") {
-      _appendTerminalSystem(`⚠ WebSocket not ready (${wsState}) — polling active`);
+      _appendTerminalSystem(`[!] WebSocket not ready (${wsState}) — polling active`);
     }
 
     // ── Tear down any stale subscription ─────────────────────────────────
@@ -484,8 +482,8 @@
     // ── Subscription lifecycle callbacks ─────────────────────────────────
     if (activeScanChannel.subscribed) {
       activeScanChannel.subscribed(() => {
-        console.log("[Echo] ✅ Subscribed to:", channelName);
-        _appendTerminalSystem("✅ Live channel connected");
+        console.log("[Echo] Subscribed to:", channelName);
+        _appendTerminalSystem("[OK] Live channel connected");
         _setStatusText("Connected — receiving live stream…");
         _updateDebugBar();
       });
@@ -494,7 +492,7 @@
     if (activeScanChannel.error) {
       activeScanChannel.error((err) => {
         console.error("[Echo] Channel subscription error:", err);
-        _appendTerminalSystem(`❌ Channel error: ${JSON.stringify(err)}`);
+        _appendTerminalSystem(`[ERR] Channel error: ${JSON.stringify(err)}`);
         _setStatusText("WebSocket error — polling active");
       });
     }
@@ -513,7 +511,7 @@
     if (!pusher || attempt > 10) {
       if (attempt > 10) {
         console.warn("[Echo] Pusher channel never appeared after 5 s — relying on polling");
-        _appendTerminalSystem("⚠ WebSocket channel not found — polling is active");
+        _appendTerminalSystem("[!] WebSocket channel not found — polling is active");
       }
       return;
     }
@@ -572,8 +570,8 @@
       }
     });
 
-    console.log("[Echo]  bind_global attached to Pusher channel:", channelName);
-    _appendTerminalSystem(" Event listener attached");
+    console.log("[Echo] bind_global attached to Pusher channel:", channelName);
+    _appendTerminalSystem("Event listener attached");
   }
 
   /**
@@ -590,7 +588,7 @@
       const silentMs = Date.now() - _lastEventTimestamp;
       if (silentMs >= INACTIVITY_TIMEOUT_MS) {
         console.warn(`[Scan] No events for ${Math.round(silentMs / 1000)}s — assuming completed`);
-        _appendTerminalSystem(`⚠ No activity for ${Math.round(silentMs / 1000)}s — finalising`);
+        _appendTerminalSystem(`[!] No activity for ${Math.round(silentMs / 1000)}s — finalising`);
         onScanComplete({ status: "completed" });
         _stopInactivityWatcher();
       }
@@ -616,12 +614,12 @@
     const dbgEcho = document.getElementById("dbg-echo");
     if (!dbgEcho) return;
     if (!window.echoInstance) {
-      dbgEcho.textContent = "❌ not initialised";
+      dbgEcho.textContent = "[X] not initialised";
       return;
     }
     const state = window.echoInstance.connector?.pusher?.connection?.state || "unknown";
-    const icons = { connected: "✅", connecting: "🔄", disconnected: "❌", failed: "💀" };
-    dbgEcho.textContent = `${icons[state] || "❓"} ${state}`;
+    const icons = { connected: "[OK]", connecting: "[~]", disconnected: "[X]", failed: "[X]" };
+    dbgEcho.textContent = `${icons[state] || "[?]"} ${state}`;
   }
 
   let _debugEventCount = 0;
@@ -740,10 +738,25 @@
     const terminal = document.getElementById("scan-terminal");
     if (!terminal) return;
 
+    // Detect if this line is part of an ASCII art block.
+    // ASCII art lines contain box-drawing characters or dense symbol sequences.
+    const isAsciiArt = /[║╔╚╗╝═╠╣╦╩╬┌┐└┘├┤┬┴┼─│▀▄█▌▐]/.test(logLine);
+
+    // Detect the subtitle line inside the banner (e.g. "Web Endpoint Fuzzer — CyberGuard v2.1")
+    const isAsciiSubtitle = isAsciiArt && /Fuzzer|CyberGuard v/i.test(logLine);
+
     const line = document.createElement("div");
-    line.className = "terminal-line " + getTerminalLineClass(logLine);
+    line.className = "terminal-line " +
+      (isAsciiArt
+        ? (isAsciiSubtitle ? "terminal-ascii terminal-ascii-subtitle" : "terminal-ascii")
+        : getTerminalLineClass(logLine));
+
+    // CRITICAL: use textContent not innerHTML — preserves every space exactly
     line.textContent = logLine;
+
     terminal.appendChild(line);
+
+    // Lock scroll to bottom after every line
     terminal.scrollTop = terminal.scrollHeight;
   }
 
@@ -772,8 +785,11 @@
   function clearTerminal() {
     const terminal = document.getElementById("scan-terminal");
     if (terminal) {
-      terminal.innerHTML =
-        '<div class="terminal-line terminal-default">Terminal cleared.</div>';
+      terminal.textContent = "";
+      const placeholder = document.createElement("div");
+      placeholder.className = "terminal-line terminal-default";
+      placeholder.textContent = "Terminal cleared.";
+      terminal.appendChild(placeholder);
     }
     terminalLogs = [];
   }
