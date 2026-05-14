@@ -1,413 +1,364 @@
-# 🛡️ CyberGuard Pro - Comprehensive Cybersecurity Analysis Platform
+# CyberGuard Pro
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Technologies Used](#technologies-used)
-- [Installation & Setup](#installation--setup)
-- [Usage Guide](#usage-guide)
-- [API Integrations](#api-integrations)
-- [Security Tools](#security-tools)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-
-## 🎯 Overview
-
-CyberGuard Pro is a comprehensive web-based cybersecurity analysis platform that provides real-time security scanning, vulnerability assessment, and threat intelligence. The application combines multiple security tools and APIs to deliver professional-grade security analysis in a user-friendly interface.
-
-### Key Capabilities
-
-- **Real-time vulnerability scanning** using OWASP ZAP
-- **Network security analysis** with port scanning and service detection
-- **Web application security testing** including XSS detection
-- **Threat intelligence** with VirusTotal and WHOIS integration
-- **Hash analysis** and cryptographic operations
-- **DNS security** and geolocation analysis
-- **SSL/TLS certificate validation**
-
-## 🚀 Features
-
-### 🔍 Network Security Tools
-
-- **Port Scanner**: Comprehensive port scanning with service detection
-- **TCP Connectivity Testing**: Real TCP connection validation
-- **Service Detection**: Advanced service and version identification
-- **Network Mapping**: Visual network topology analysis
-
-### 🌐 Web Security Tools
-
-- **XSS Vulnerability Scanner**: Real OWASP ZAP integration
-- **SSL/TLS Certificate Analysis**: Certificate validation and security assessment
-- **URL Phishing Detection**: AI-powered phishing URL analysis
-- **Web Application Security Testing**: Comprehensive web app vulnerability scanning
-
-### 🔐 Cryptographic Tools
-
-- **Hash Analysis**: MD5, SHA-1, SHA-256, SHA-512 hash generation and verification
-- **Hash Cracking**: Integration with online hash databases
-- **Password Security**: Password strength analysis and recommendations
-
-### 🌍 Intelligence & Analysis
-
-- **WHOIS Lookup**: Domain registration and ownership information
-- **IP Geolocation**: Geographic location and ISP information
-- **DNS Analysis**: DNS record analysis and security assessment
-- **Threat Intelligence**: VirusTotal integration for malware detection
-
-## 🛠️ Technologies Used
-
-### Frontend Technologies
-
-- **HTML5**: Semantic markup and modern web standards
-- **CSS3**: Advanced styling with Tailwind CSS framework
-- **JavaScript (ES6+)**: Modern JavaScript with async/await patterns
-- **Web APIs**: Fetch API, WebSocket API, Geolocation API
-- **Responsive Design**: Mobile-first responsive design approach
-
-### Backend & Integration Technologies
-
-- **Node.js**: JavaScript runtime for proxy server
-- **Express.js**: Web framework for API proxy
-- **Docker**: Containerization for OWASP ZAP
-- **REST APIs**: RESTful API integration and consumption
-
-### Security Technologies
-
-- **OWASP ZAP**: Industry-standard web application security scanner
-- **VirusTotal API**: Malware detection and threat intelligence
-- **WHOIS API**: Domain registration information
-- **SSL/TLS**: Cryptographic protocol analysis
-- **Hash Algorithms**: MD5, SHA-1, SHA-256, SHA-512
-
-### Development Tools
-
-- **Git**: Version control
-- **npm**: Package management
-- **Docker**: Container orchestration
-- **PowerShell**: Windows automation scripts
-
-## 📦 Installation & Setup
-
-### Prerequisites
-
-- **Node.js** (v14 or higher)
-- **Docker** (for OWASP ZAP)
-- **Modern web browser** (Chrome, Firefox, Edge, Safari)
-- **Internet connection** (for API integrations)
-
-### Quick Start
-
-1. **Clone the repository**
-
-   ```bash
-   git clone <repository-url>
-   cd CyberGuardWeb
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-3. **Start the services**
-
-   ```bash
-   # Option 1: Use the automated startup script
-   start-zap-xss.bat
-
-   # Option 2: Manual setup
-   # Start ZAP
-   docker run -d -p 8080:8080 -i zaproxy/zap-stable zap.sh -daemon -host 0.0.0.0 -port 8080 -config api.disablekey=true -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true
-
-   # Start proxy server
-   npm start
-   ```
-
-4. **Open the application**
-   - Navigate to `index.html` in your web browser
-   - The application will automatically detect and connect to services
-
-### Configuration
-
-#### API Keys (Optional)
-
-For enhanced functionality, configure API keys in the application:
-
-- **VirusTotal API**: Get free API key from [VirusTotal](https://www.virustotal.com/)
-- **WHOIS API**: Get API key from [WhoisXML](https://whoisxmlapi.com/)
-
-## 📖 Usage Guide
-
-### Network Security Analysis
-
-#### Port Scanning
-
-1. Navigate to the **Network Tools** tab
-2. Enter target IP address or hostname
-3. Click **"Port Scanner"** button
-4. Review scan results and open ports
-
-#### TCP Connectivity Testing
-
-1. Enter target IP address
-2. Click **"TCP Port Scan"** button
-3. View real connectivity test results
-
-### Web Security Testing
-
-#### XSS Vulnerability Scanning
-
-1. Navigate to **Web Security** tab
-2. Enter target URL (e.g., `https://example.com`)
-3. Click **"XSS Test"** button
-4. Monitor real-time scan progress
-5. Review vulnerability report
-
-#### SSL/TLS Analysis
-
-1. Enter target URL
-2. Click **"SSL/TLS Check"** button
-3. Review certificate information and security recommendations
-
-### Cryptographic Operations
-
-#### Hash Analysis
-
-1. Navigate to **Hash Tools** tab
-2. Enter text or file for hashing
-3. Select hash algorithm (MD5, SHA-1, SHA-256, SHA-512)
-4. Click **"Generate Hash"** button
-5. Use **"Hash Cracker"** for hash verification
-
-### Intelligence Gathering
-
-#### WHOIS Lookup
-
-1. Enter domain name
-2. Click **"WHOIS Lookup"** button
-3. Review domain registration information
-
-#### IP Geolocation
-
-1. Enter IP address
-2. Click **"IP Geolocation"** button
-3. View geographic and ISP information
-
-## 🔌 API Integrations
-
-### OWASP ZAP Integration
-
-- **Purpose**: Real vulnerability scanning
-- **API Endpoints**: `/JSON/ascan/`, `/JSON/core/`, `/JSON/alert/`
-- **Features**: Active scanning, vulnerability detection, report generation
-- **Configuration**: CORS proxy on port 3001
-
-### VirusTotal Integration
-
-- **Purpose**: Malware detection and threat intelligence
-- **API**: VirusTotal Public API v2.1
-- **Features**: File scanning, URL analysis, domain reputation
-- **Rate Limits**: 4 requests/minute (free tier)
-
-### WHOIS Integration
-
-- **Purpose**: Domain registration information
-- **API**: WhoisXML API
-- **Features**: Domain lookup, ownership details, registration history
-- **Rate Limits**: Varies by subscription
-
-### Browser APIs
-
-- **Fetch API**: HTTP requests and API communication
-- **WebSocket API**: Real-time communication
-- **Geolocation API**: IP-based location services
-- **Crypto API**: Cryptographic operations
-
-## 🛡️ Security Tools
-
-### Port Scanner Engine
-
-```javascript
-// Advanced port scanning with multiple detection methods
-class PortScanner {
-  async scanPorts(ports) {
-    // HTTP/HTTPS detection
-    // WebSocket detection
-    // Service-specific detection
-    // Resource loading detection
-  }
-}
-```
-
-### XSS Scanner (OWASP ZAP Integration)
-
-```javascript
-// Real vulnerability scanning with OWASP ZAP
-async function testXss(url) {
-  // ZAP API integration
-  // Progress monitoring
-  // Vulnerability reporting
-  // Security recommendations
-}
-```
-
-### Hash Analysis Engine
-
-```javascript
-// Cryptographic hash operations
-async function generateHash(text, algorithm) {
-  // MD5, SHA-1, SHA-256, SHA-512
-  // Hash verification
-  // Online hash database lookup
-}
-```
-
-### Network Security Analysis
-
-```javascript
-// Comprehensive network scanning
-class NetworkAnalyzer {
-  // Port scanning
-  // Service detection
-  // Vulnerability assessment
-  // Security recommendations
-}
-```
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-#### ZAP Connection Issues
-
-**Problem**: "OWASP ZAP not detected"
-**Solution**:
-
-1. Ensure Docker is running
-2. Start ZAP with correct configuration
-3. Check proxy server status
-
-#### CORS Errors
-
-**Problem**: "NetworkError when attempting to fetch resource"
-**Solution**:
-
-1. Use the provided proxy server
-2. Ensure proxy is running on port 3001
-3. Check ZAP configuration
-
-#### API Key Issues
-
-**Problem**: API requests failing
-**Solution**:
-
-1. Verify API keys are correctly configured
-2. Check rate limits
-3. Ensure internet connectivity
-
-### Performance Optimization
-
-#### Scan Timeout Issues
-
-- **Default timeout**: 2.5 minutes
-- **Stuck scan detection**: Automatic timeout
-- **Progress monitoring**: Real-time updates
-- **Fallback mechanisms**: Simulation mode
-
-#### Resource Management
-
-- **Memory usage**: Optimized for browser limits
-- **Network requests**: Rate-limited API calls
-- **Error handling**: Graceful degradation
-
-## 📊 System Architecture
-
-### Frontend Architecture
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   User Interface │    │  Security Tools │    │  API Integration │
-│   (HTML/CSS/JS)  │◄──►│   (JavaScript)   │◄──►│   (REST APIs)   │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
-
-### Backend Services
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  Proxy Server   │    │   OWASP ZAP     │    │  External APIs  │
-│   (Node.js)     │◄──►│   (Docker)      │◄──►│ (VirusTotal, etc)│
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
-
-## 🚀 Advanced Features
-
-### Real-time Monitoring
-
-- **Progress tracking**: Live scan progress updates
-- **Status indicators**: Visual progress bars and status messages
-- **Error reporting**: Detailed error messages and solutions
-
-### Security Recommendations
-
-- **Automated suggestions**: Security best practices
-- **Vulnerability remediation**: Step-by-step fix instructions
-- **Compliance guidance**: Industry standard recommendations
-
-### Report Generation
-
-- **Comprehensive reports**: Detailed security analysis
-- **Export functionality**: Save results for documentation
-- **Historical tracking**: Session history and saved results
-
-## 🤝 Contributing
-
-### Development Setup
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-### Code Standards
-
-- **JavaScript**: ES6+ syntax
-- **CSS**: Tailwind CSS framework
-- **HTML**: Semantic markup
-- **Documentation**: Comprehensive comments
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Support
-
-For support and questions:
-
-- **Documentation**: Check this README
-- **Issues**: Create GitHub issues
-- **Community**: Join our discussion forums
-
-## 🔄 Updates & Maintenance
-
-### Regular Updates
-
-- **Security patches**: Regular security updates
-- **Feature additions**: New security tools and capabilities
-- **API updates**: Integration with latest security APIs
-- **Performance improvements**: Optimization and bug fixes
-
-### Version History
-
-- **v1.0.0**: Initial release with basic security tools
-- **v1.1.0**: Added OWASP ZAP integration
-- **v1.2.0**: Enhanced XSS scanning capabilities
-- **v1.3.0**: Improved timeout handling and error management
+A web-based cybersecurity analysis platform. Vanilla JavaScript frontend deployed on Vercel, backed by a Laravel 12 REST API.
 
 ---
 
-**CyberGuard Pro** - Your comprehensive cybersecurity analysis platform 🛡️
+## Table of Contents
 
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Installation](#installation)
+- [Environment Variables](#environment-variables)
+- [Available Scripts](#available-scripts)
+- [Usage](#usage)
+- [API Integration](#api-integration)
+- [Testing](#testing)
+- [Deployment](#deployment)
+
+---
+
+## Overview
+
+CyberGuard Pro lets authenticated users run real-time security scans against targets (domains, IPs, URLs). Scan results are streamed live to the dashboard via Laravel Echo (Pusher WebSockets). The frontend is a no-build-step, vanilla JS SPA served as static files.
+
+**Core workflow:**
+
+1. User logs in → JWT stored in `localStorage`
+2. User creates a project and adds scan targets
+3. User selects tools and clicks **Execute Scan**
+4. Backend queues the scan; real-time progress arrives over WebSockets
+5. Results render in the scan terminal + risk gauge; findings persist to the project
+
+---
+
+## Features
+
+### Security Tools (Dashboard Tabs)
+
+| Tab | Tools |
+|---|---|
+| **Network** | Port scanner, TCP connectivity test, WHOIS lookup, IP geolocation, DNS analysis |
+| **Web Security** | OWASP ZAP XSS scanner, SSL/TLS certificate check |
+| **Hash Tools** | MD5/SHA-1/SHA-256/SHA-512 generation, hash identifier, password strength analyzer |
+| **Threat Intel** | VirusTotal, AbuseIPDB, URLScan.io — unified threat intelligence hub |
+| **AI Assistant** | In-dashboard AI chat (local fallback model) |
+| **Projects** | Project CRUD, collaborator management, findings per target |
+
+### Platform Features
+
+- **Real-time scan terminal** — live log lines streamed over Pusher WebSockets via Laravel Echo
+- **Risk gauge** — SVG score visualization updated per scan result
+- **Project management** — multi-target projects with collaborator invitations
+- **Billing & subscriptions** — Paymob payment integration, plan-gated features
+- **Auth flows** — Login, signup, 2FA, email verification, password reset
+- **Export** — Download scan results as CSV/PDF
+- **Session history** — Persisted in `localStorage`
+- **API key vault** — Third-party keys encrypted with XOR cipher in `localStorage`
+
+---
+
+## Tech Stack
+
+### Frontend
+
+| Technology | Role |
+|---|---|
+| HTML5 / CSS3 / ES6+ JS | Core — no bundler, no transpilation |
+| `theme-tokens.css` | Design token system (`--cg-*` CSS custom properties) |
+| `cyber-theme.css` | Component styles (`cyber-*` classes) |
+| Tailwind CSS (CDN) | Utility classes on `dashboard.html` |
+| Laravel Echo + Pusher JS | Real-time WebSocket events |
+| Vitest + happy-dom | Unit & integration testing |
+
+### Backend (separate repo)
+
+| Technology | Role |
+|---|---|
+| Laravel 12 | REST API, auth, scan queue |
+| MySQL | Persistence |
+| Redis | Queue driver |
+| Pusher | WebSocket broadcasting |
+
+### Supporting Services
+
+| Service | Role |
+|---|---|
+| OWASP ZAP (Docker) | Active web vulnerability scanner |
+| `zap-proxy.js` (Node/Express) | Local CORS proxy for ZAP API on port 3001 |
+| VirusTotal API | Malware / URL reputation |
+| AbuseIPDB API | IP reputation |
+| URLScan.io API | URL analysis |
+| Paymob | Payment processing |
+
+---
+
+## Project Structure
+
+```
+CyberGuardWeb/
+│
+├── index.html                  # Marketing landing page
+├── dashboard.html              # Main app (tabbed security dashboard)
+├── login.html / signup.html    # Authentication pages
+├── email-verification.html     # Email confirm page
+├── forgot-password.html        # Password reset request
+├── reset-password.html         # Password reset form
+├── invite.html                 # Team invitation acceptance
+├── pricing.html                # Subscription plans
+├── paymob-redirect.html        # Payment redirect handler
+├── billing-paymob-redirect.html
+├── project-detail.html         # Per-project findings & targets view
+│
+├── api-client.js               # Centralized HTTP client (APIClient class)
+├── auth.js                     # Auth flows — AuthManager class
+├── main.js                     # Core security tools (large, monolithic)
+├── scan-manager.js             # Scan lifecycle & terminal output
+├── project-manager.js          # Project CRUD & collaborators
+├── threat-intel.js             # Threat intel hub (VT, AbuseIPDB, URLScan)
+├── billing-api.js              # Subscription & billing API calls
+├── billing-utils.js            # Billing formatting helpers
+├── data-normalizer.js          # camelCase ↔ snake_case conversion
+├── error-handler.js            # Centralized error display
+├── cyber-notify.js             # Toast notification system
+├── state-manager.js            # Dashboard state (empty/scanning/result)
+├── dashboard-tab-manager.js    # Tab switching
+├── dashboard-integration.js    # Dashboard initialization glue
+├── risk-gauge.js               # SVG risk score gauge
+├── target-validator.js         # Input validation for scan targets
+├── result-item-structure.js    # Normalized scan result schema
+├── performance-audit.js        # APM utilities (tracker, batcher, cache)
+├── echo-config.js              # Laravel Echo / Pusher bootstrap
+├── landing.js                  # Landing page animations
+├── zap-proxy.js                # Node.js/Express CORS proxy for ZAP
+│
+├── theme-tokens.css            # CSS custom properties (design tokens)
+├── cyber-theme.css             # Component-level styles
+├── auth.css                    # Auth page styles
+├── landing.css                 # Landing page styles
+├── Style.css                   # Dashboard / global styles
+│
+├── lib/                        # Vendored libraries (echo.iife.js, pusher.min.js)
+├── tests/
+│   ├── unit/                   # 39 Vitest unit test files
+│   └── integration/            # 6 Vitest integration test files
+│
+├── vercel.json                 # Vercel routing rules
+├── vitest.config.js            # Vitest + happy-dom config
+├── package.json                # npm scripts & dependencies
+└── .gitignore
+```
+
+---
+
+## Installation
+
+### Prerequisites
+
+- **Node.js** v18+
+- **npm** v9+
+- **Docker** — only needed if running OWASP ZAP locally
+- A modern browser (Chrome, Firefox, Edge)
+
+### Steps
+
+```bash
+# 1. Clone the repo
+git clone <repository-url>
+cd CyberGuardWeb
+
+# 2. Install dependencies
+npm install
+
+# 3. Open the app
+#    No build step needed — open index.html or dashboard.html directly in your browser,
+#    or serve them with any static file server:
+npx serve .
+```
+
+> The app communicates with the Laravel backend via the `APIClient` base URL configured in `api-client.js`.  
+> During local development, the backend is typically exposed via **ngrok**. Update the base URL constant in `api-client.js` to your ngrok tunnel URL.
+
+---
+
+## Environment Variables
+
+This is a static frontend — there is no `.env` file loaded at runtime. Configuration is done in two places:
+
+### 1. `api-client.js` — Backend URL
+
+```js
+// api-client.js
+const BASE_URL = 'https://<your-ngrok-or-production-url>/api';
+```
+
+### 2. In-App API Key Vault (runtime, stored in localStorage)
+
+Users configure third-party API keys inside the dashboard under **Settings → API Keys**. Keys are encrypted with a simple XOR cipher before being stored in `localStorage`.
+
+| Key | Service | Where to get it |
+|---|---|---|
+| `virusTotalApiKey` | VirusTotal | [virustotal.com](https://www.virustotal.com/) |
+| `abuseApiKey` | AbuseIPDB | [abuseipdb.com](https://www.abuseipdb.com/) |
+| `urlScanApiKey` | URLScan.io | [urlscan.io](https://urlscan.io/) |
+| `whoisApiKey` | WhoisXML | [whoisxmlapi.com](https://www.whoisxmlapi.com/) |
+
+### 3. localStorage Auth Keys
+
+| Key | Contents |
+|---|---|
+| `cyberguard_jwt` | JWT Bearer token |
+| `cyberguard_user` | Serialized user object |
+| `cyberguard_session` | Current scan session |
+
+---
+
+## Available Scripts
+
+```bash
+# Run the test suite (single pass)
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm test -- --coverage
+
+# Run a single test file
+npx vitest run tests/unit/scan-lifecycle-events.test.js
+
+# Start the OWASP ZAP CORS proxy (port 3001)
+npm start
+
+# Start the proxy with auto-reload (development)
+npm run dev
+```
+
+---
+
+## Usage
+
+### Running OWASP ZAP (for XSS scanning)
+
+```bash
+# Pull and start ZAP as a daemon
+docker run -d -p 8080:8080 zaproxy/zap-stable \
+  zap.sh -daemon -host 0.0.0.0 -port 8080 \
+  -config api.disablekey=true \
+  -config api.addrs.addr.name=.* \
+  -config api.addrs.addr.regex=true
+
+# Start the CORS proxy (bridges browser → ZAP)
+npm start
+```
+
+The ZAP proxy listens on **port 3001** and forwards requests to ZAP on port 8080.
+
+### Dashboard Navigation
+
+| Tab | What to do |
+|---|---|
+| **Network** | Enter an IP or hostname → select tools → Execute Scan |
+| **Web Security** | Enter a URL → run XSS or SSL checks (ZAP must be running) |
+| **Hash Tools** | Type text or drop a file → choose algorithm → Generate |
+| **Threat Intel** | Enter an IP, domain, or URL → run intelligence checks |
+| **Projects** | Create project → add targets → run scans → view findings |
+| **AI Assistant** | Chat with the in-dashboard assistant |
+
+### Authentication Flow
+
+1. Navigate to `login.html` (redirected automatically if unauthenticated)
+2. Log in — JWT is stored and attached to all subsequent API requests
+3. All dashboard pages call `AuthManager.runAuthGuard()` on load; unauthenticated users are redirected to login
+
+---
+
+## API Integration
+
+All backend communication goes through `APIClient` in `api-client.js`.
+
+```
+browser → APIClient → ngrok tunnel → Laravel 12 API
+                                   ↳ Pusher broadcast → Laravel Echo → browser
+```
+
+Key patterns:
+
+- **JWT auth**: `Authorization: Bearer <token>` header on every request
+- **ngrok header**: `ngrok-skip-browser-warning: true` (required for ngrok tunnels)
+- **snake_case ↔ camelCase**: `data-normalizer.js` converts outgoing and incoming payloads automatically
+- **Error handling**: `error-handler.js` renders inline form errors and toast notifications
+- **Interceptors**: `APIClient` supports request/response interceptors for cross-cutting concerns
+
+### Scan Real-Time Events (Pusher/Echo)
+
+Scans run as Laravel queue jobs. Results broadcast over Pusher. `echo-config.js` bootstraps Laravel Echo with vendored `lib/echo.iife.js` and `lib/pusher.min.js`. `scan-manager.js` binds the channel listeners.
+
+### Vercel Routing
+
+`vercel.json` maps clean URLs to HTML pages:
+
+| URL pattern | Page |
+|---|---|
+| `/invitations/:token` | `invite.html` |
+| `/invite/:token` | `invite.html` |
+| `/billing/paymob/redirect` | `paymob-redirect.html` |
+| `/api/billing/paymob/redirect` | `paymob-redirect.html` |
+
+---
+
+## Testing
+
+Tests use **Vitest** with the **happy-dom** environment (no real browser required).
+
+```
+tests/
+├── unit/           # 39 test files — individual module behaviour
+└── integration/    # 6 test files — cross-module interactions
+```
+
+Property-based tests use **fast-check** for input-space exploration (e.g., hash tools, password analysis, data mapping).
+
+```bash
+npm test                    # run all tests once
+npm run test:watch          # re-run on file save
+npm test -- --coverage      # generate HTML coverage report in ./coverage/
+```
+
+---
+
+## Deployment
+
+### Frontend → Vercel
+
+Push to the main branch. Vercel picks up `vercel.json` and serves all static files. No build step.
+
+### ZAP Proxy
+
+The `zap-proxy.js` Node.js process is **not** deployed to Vercel. It must run locally (or on a separate server) whenever ZAP-based scanning is needed.
+
+### Backend → Laravel
+
+See the backend repository for deployment instructions (Laravel Forge / Envoyer recommended). Required services: MySQL, Redis, Pusher.
+
+---
+
+## Contributing
+
+1. Fork and create a feature branch
+2. Follow existing conventions:
+   - CSS classes: `cyber-*` prefix
+   - JS classes: `PascalCase`
+   - JS functions: `camelCase`
+   - Constants: `UPPER_SNAKE_CASE`
+   - DOM IDs: `kebab-case`
+   - Design tokens only from `theme-tokens.css` — no hardcoded colors or spacing
+3. Add or update tests in `tests/unit/` or `tests/integration/`
+4. Run `npm test` before opening a PR
+
+---
+
+*CyberGuard Pro — web-based security analysis platform*
