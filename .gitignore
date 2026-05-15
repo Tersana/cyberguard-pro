@@ -52,3 +52,6 @@ Thumbs.db
 # Environment variables
 .env
 .env.local
+build_html_slides.py
+CyberGuard_Pro_Presentation.html
+generate_presentation.py
