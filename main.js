@@ -23,12 +23,11 @@ if (typeof APIClient !== "undefined") {
 
 // ===== PROJECT MANAGER INITIALIZATION =====
 // Global Project Manager instance for project management
-// Requirement 9.1: Project Creation
+
 
 /**
  * Global Project Manager Instance
  * Handles security project CRUD operations and collaborator management
- * Requires apiClient to be initialized first
  */
 let projectManager;
 
@@ -1949,9 +1948,118 @@ document.addEventListener("DOMContentLoaded", () => {
   // Threat feed feature removed - moved inside DOMContentLoaded
   // (Button event listeners are now attached after DOM is ready)
 
+  // ===== WHOIS OUTPUT FORMATTING HELPERS =====
+  const WHOIS_DIVIDER = "\u2500".repeat(45);
+
+  /**
+   * Formats IP WHOIS data into a clean, structured tabular layout.
+   * @param {string} ip - The queried IP address
+   * @param {Object} location - Location data from the API
+   * @param {Object} asn - ASN data from the API
+   * @param {Object} security - Security flags from the API
+   * @returns {string} Formatted output string
+   */
+  function formatIpWhoisOutput(ip, location, asn, security) {
+    const coords =
+      location.latitude && location.longitude
+        ? `${location.latitude}, ${location.longitude}`
+        : "N/A";
+
+    return [
+      WHOIS_DIVIDER,
+      `  IP WHOIS DATA \u2014 ${ip}`,
+      WHOIS_DIVIDER,
+      "  Location",
+      `    Country        : ${location.country || "N/A"}`,
+      `    Region         : ${location.region || "N/A"}`,
+      `    City           : ${location.city || "N/A"}`,
+      `    Postal Code    : ${location.postalCode || "N/A"}`,
+      `    Coordinates    : ${coords}`,
+      `    Timezone       : ${location.timezone || "N/A"}`,
+      "",
+      "  Network",
+      `    Organization   : ${asn.organization || "N/A"}`,
+      `    ASN            : ${asn.asn || "N/A"}`,
+      `    ASN Name       : ${asn.name || "N/A"}`,
+      `    ASN Domain     : ${asn.domain || "N/A"}`,
+      `    ASN Country    : ${asn.country || "N/A"}`,
+      "",
+      "  Security",
+      `    Proxy          : ${security.isProxy ? "Proxy detected" : "No proxy"}`,
+      `    VPN            : ${security.isVpn ? "VPN detected" : "No VPN"}`,
+      `    Hosting        : ${security.isHosting ? "Hosting provider" : "Not hosting"}`,
+      `    Tor            : ${security.isTor ? "Tor exit node" : "Not Tor"}`,
+      WHOIS_DIVIDER,
+    ].join("\n");
+  }
+
+  /**
+   * Formats Domain WHOIS data into a clean, structured tabular layout.
+   * @param {string} domainName - The queried domain
+   * @param {Object} opts - Extracted domain fields
+   * @returns {string} Formatted output string
+   */
+  function formatDomainWhoisOutput(domainName, opts) {
+    const {
+      createdDate,
+      updatedDate,
+      expiresDate,
+      registrar,
+      registrant,
+      status,
+      nameServers,
+    } = opts;
+
+    // Build status flags block
+    const statusFlags = Array.isArray(status)
+      ? status
+      : typeof status === "string" && status !== "N/A"
+        ? status.split(/[,\s]+/).filter(Boolean)
+        : ["N/A"];
+    const flagLines = statusFlags.map(
+      (f, i) => (i === 0 ? `    Flags          : ${f}` : `                     ${f}`),
+    );
+
+    // Build nameservers block
+    const nsArray = Array.isArray(nameServers) ? nameServers : [];
+    const nsLines =
+      nsArray.length > 0
+        ? nsArray.map(
+            (ns, i) =>
+              i === 0
+                ? `    Nameservers    : ${ns}`
+                : `                     ${ns}`,
+          )
+        : ["    Nameservers    : N/A"];
+
+    return [
+      WHOIS_DIVIDER,
+      `  DOMAIN WHOIS DATA \u2014 ${domainName}`,
+      WHOIS_DIVIDER,
+      "  Registration",
+      `    Domain         : ${domainName}`,
+      `    Created        : ${createdDate}`,
+      `    Updated        : ${updatedDate}`,
+      `    Expires        : ${expiresDate}`,
+      `    Registrar      : ${registrar}`,
+      `    Registrant     : ${registrant}`,
+      "",
+      "  Status",
+      ...flagLines,
+      "",
+      "  DNS",
+      ...nsLines,
+      WHOIS_DIVIDER,
+    ].join("\n");
+  }
+
   async function whoisLookup(target) {
     addActivityLog(`Starting WHOIS lookup for ${target}`, "WHOIS Lookup");
-    logResult(new Date(), "WHOIS Lookup", `📜 Fetching WHOIS for ${target}...`);
+    logResult(
+      new Date(),
+      "WHOIS Lookup",
+      `[*] Fetching WHOIS data for: ${target}`,
+    );
     try {
       // Check if API key is available
       if (!whoisApiKey) {
@@ -1959,7 +2067,7 @@ document.addEventListener("DOMContentLoaded", () => {
         logResult(
           new Date(),
           "WHOIS Lookup",
-          `❌ [ERROR] WhoisXML API key not set. Please configure it in the sidebar.`,
+          `[!] ERROR: WhoisXML API key not set. Please configure it in the sidebar.`,
           "danger",
         );
         return;
@@ -1974,7 +2082,7 @@ document.addEventListener("DOMContentLoaded", () => {
         logResult(
           new Date(),
           "WHOIS Lookup",
-          `❌ [ERROR] Invalid input format. Please enter a valid IP address (e.g., 8.8.8.8) or domain name (e.g., google.com).`,
+          `[!] ERROR: Invalid input format. Please enter a valid IP address (e.g., 8.8.8.8) or domain name (e.g., google.com).`,
           "danger",
         );
         return;
@@ -2046,32 +2154,9 @@ document.addEventListener("DOMContentLoaded", () => {
           const security = data.security || {};
 
           addActivityLog(`WHOIS lookup complete for ${ip}`, "WHOIS Lookup");
-          const lines = [
-            `✅ [IP WHOIS DATA] IP: ${ip}`,
-            `🌍 Country: ${location.country || "N/A"}`,
-            `🏙️ Region: ${location.region || "N/A"}`,
-            `�️ City: ${location.city || "N/A"}`,
-            `� Postal Code: ${location.postalCode || "N/A"}`,
-            `🌐 Timezone: ${location.timezone || "N/A"}`,
-            `� Coordinates: ${location.latitude || "N/A"}, ${
-              location.longitude || "N/A"
-            }`,
-            "",
-            `🏢 Organization: ${asn.organization || "N/A"}`,
-            `� ASN: ${asn.asn || "N/A"}`,
-            `� ASN Name: ${asn.name || "N/A"}`,
-            `🔗 ASN Domain: ${asn.domain || "N/A"}`,
-            `🌍 ASN Country: ${asn.country || "N/A"}`,
-            "",
-            `🛡️ Security: ${security.isProxy ? "Proxy detected" : "No proxy"}`,
-            `🔒 VPN: ${security.isVpn ? "VPN detected" : "No VPN"}`,
-            `🏢 Hosting: ${
-              security.isHosting ? "Hosting provider" : "Not hosting"
-            }`,
-            `🕵️ Tor: ${security.isTor ? "Tor exit node" : "Not Tor"}`,
-          ].filter(Boolean);
+          const output = formatIpWhoisOutput(ip, location, asn, security);
 
-          logResult(new Date(), "WHOIS Lookup", lines.join("\n"), "success");
+          logResult(new Date(), "WHOIS Lookup", output, "success");
           updateStatus("IP WHOIS lookup completed");
         } else if (data.errorMessage) {
           throw new Error(data.errorMessage);
@@ -2103,8 +2188,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // Extract contact information
           const registrant = record.registrant || {};
-          const adminContact = record.administrativeContact || {};
-          const techContact = record.technicalContact || {};
 
           // Format dates properly
           const formatDate = (dateStr) => {
@@ -2120,35 +2203,17 @@ document.addEventListener("DOMContentLoaded", () => {
             `WHOIS lookup complete for ${domainName}`,
             "WHOIS Lookup",
           );
-          const lines = [
-            `✅ [DOMAIN WHOIS DATA] Domain: ${domainName}`,
-            `📅 Created: ${formatDate(createdDate)}`,
-            `📅 Updated: ${formatDate(updatedDate)}`,
-            `📅 Expires: ${formatDate(expiresDate)}`,
-            `🏢 Registrar: ${registrar}`,
-            `� Status: ${status}`,
-            "",
-            nameServers.length > 0
-              ? `🌐 Nameservers:\n${nameServers
-                  .map((ns) => `   • ${ns}`)
-                  .join("\n")}`
-              : "🌐 Nameservers: N/A",
-            "",
-            registrant.organization
-              ? `👤 Registrant: ${registrant.organization}`
-              : undefined,
-            registrant.email
-              ? `📧 Registrant Email: ${registrant.email}`
-              : undefined,
-            adminContact.email
-              ? `👨‍💼 Admin Contact: ${adminContact.email}`
-              : undefined,
-            techContact.email
-              ? `👨‍💻 Tech Contact: ${techContact.email}`
-              : undefined,
-          ].filter(Boolean);
+          const output = formatDomainWhoisOutput(domainName, {
+            createdDate: formatDate(createdDate),
+            updatedDate: formatDate(updatedDate),
+            expiresDate: formatDate(expiresDate),
+            registrar,
+            registrant: registrant.organization || "N/A",
+            status,
+            nameServers,
+          });
 
-          logResult(new Date(), "WHOIS Lookup", lines.join("\n"), "success");
+          logResult(new Date(), "WHOIS Lookup", output, "success");
           updateStatus("Domain WHOIS lookup completed");
         } else if (data.errorMessage) {
           throw new Error(data.errorMessage);
@@ -2162,7 +2227,7 @@ document.addEventListener("DOMContentLoaded", () => {
       logResult(
         new Date(),
         "WHOIS Lookup",
-        `❌ [ERROR] WHOIS lookup failed: ${e.message}`,
+        `[!] ERROR: WHOIS lookup failed: ${e.message}`,
         "danger",
       );
     }
@@ -4626,7 +4691,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function whoisLookup(target) {
     addActivityLog(`Starting WHOIS lookup for ${target}`, "WHOIS Lookup");
-    logResult(new Date(), "WHOIS Lookup", `📜 Fetching WHOIS for ${target}...`);
+    logResult(
+      new Date(),
+      "WHOIS Lookup",
+      `[*] Fetching WHOIS data for: ${target}`,
+    );
     try {
       // Check if API key is available
       if (!whoisApiKey) {
@@ -4634,7 +4703,7 @@ document.addEventListener("DOMContentLoaded", () => {
         logResult(
           new Date(),
           "WHOIS Lookup",
-          `❌ [ERROR] WhoisXML API key not set. Please configure it in the sidebar.`,
+          `[!] ERROR: WhoisXML API key not set. Please configure it in the sidebar.`,
           "danger",
         );
         return;
@@ -4649,7 +4718,7 @@ document.addEventListener("DOMContentLoaded", () => {
         logResult(
           new Date(),
           "WHOIS Lookup",
-          `❌ [ERROR] Invalid input format. Please enter a valid IP address (e.g., 8.8.8.8) or domain name (e.g., google.com).`,
+          `[!] ERROR: Invalid input format. Please enter a valid IP address (e.g., 8.8.8.8) or domain name (e.g., google.com).`,
           "danger",
         );
         return;
@@ -4721,32 +4790,9 @@ document.addEventListener("DOMContentLoaded", () => {
           const security = data.security || {};
 
           addActivityLog(`WHOIS lookup complete for ${ip}`, "WHOIS Lookup");
-          const lines = [
-            `✅ [IP WHOIS DATA] IP: ${ip}`,
-            `🌍 Country: ${location.country || "N/A"}`,
-            `🏙️ Region: ${location.region || "N/A"}`,
-            `🏙️ City: ${location.city || "N/A"}`,
-            `📮 Postal Code: ${location.postalCode || "N/A"}`,
-            `🌐 Timezone: ${location.timezone || "N/A"}`,
-            `📍 Coordinates: ${location.latitude || "N/A"}, ${
-              location.longitude || "N/A"
-            }`,
-            "",
-            `🏢 Organization: ${asn.organization || "N/A"}`,
-            `🔢 ASN: ${asn.asn || "N/A"}`,
-            `📛 ASN Name: ${asn.name || "N/A"}`,
-            `🔗 ASN Domain: ${asn.domain || "N/A"}`,
-            `🌍 ASN Country: ${asn.country || "N/A"}`,
-            "",
-            `🛡️ Security: ${security.isProxy ? "Proxy detected" : "No proxy"}`,
-            `🔒 VPN: ${security.isVpn ? "VPN detected" : "No VPN"}`,
-            `🏢 Hosting: ${
-              security.isHosting ? "Hosting provider" : "Not hosting"
-            }`,
-            `🕵️ Tor: ${security.isTor ? "Tor exit node" : "Not Tor"}`,
-          ].filter(Boolean);
+          const output = formatIpWhoisOutput(ip, location, asn, security);
 
-          logResult(new Date(), "WHOIS Lookup", lines.join("\n"), "success");
+          logResult(new Date(), "WHOIS Lookup", output, "success");
           updateStatus("IP WHOIS lookup completed");
         } else if (data.errorMessage) {
           throw new Error(data.errorMessage);
@@ -4778,8 +4824,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // Extract contact information
           const registrant = record.registrant || {};
-          const adminContact = record.administrativeContact || {};
-          const techContact = record.technicalContact || {};
 
           // Format dates properly
           const formatDate = (dateStr) => {
@@ -4795,35 +4839,17 @@ document.addEventListener("DOMContentLoaded", () => {
             `WHOIS lookup complete for ${domainName}`,
             "WHOIS Lookup",
           );
-          const lines = [
-            `✅ [DOMAIN WHOIS DATA] Domain: ${domainName}`,
-            `📅 Created: ${formatDate(createdDate)}`,
-            `📅 Updated: ${formatDate(updatedDate)}`,
-            `📅 Expires: ${formatDate(expiresDate)}`,
-            `🏢 Registrar: ${registrar}`,
-            `📊 Status: ${status}`,
-            "",
-            nameServers.length > 0
-              ? `🌐 Nameservers:\n${nameServers
-                  .map((ns) => `   • ${ns}`)
-                  .join("\n")}`
-              : "🌐 Nameservers: N/A",
-            "",
-            registrant.organization
-              ? `👤 Registrant: ${registrant.organization}`
-              : undefined,
-            registrant.email
-              ? `📧 Registrant Email: ${registrant.email}`
-              : undefined,
-            adminContact.email
-              ? `👨‍💼 Admin Contact: ${adminContact.email}`
-              : undefined,
-            techContact.email
-              ? `👨‍💻 Tech Contact: ${techContact.email}`
-              : undefined,
-          ].filter(Boolean);
+          const output = formatDomainWhoisOutput(domainName, {
+            createdDate: formatDate(createdDate),
+            updatedDate: formatDate(updatedDate),
+            expiresDate: formatDate(expiresDate),
+            registrar,
+            registrant: registrant.organization || "N/A",
+            status,
+            nameServers,
+          });
 
-          logResult(new Date(), "WHOIS Lookup", lines.join("\n"), "success");
+          logResult(new Date(), "WHOIS Lookup", output, "success");
           updateStatus("Domain WHOIS lookup completed");
         } else if (data.errorMessage) {
           throw new Error(data.errorMessage);
@@ -4837,7 +4863,7 @@ document.addEventListener("DOMContentLoaded", () => {
       logResult(
         new Date(),
         "WHOIS Lookup",
-        `❌ [ERROR] WHOIS lookup failed: ${e.message}`,
+        `[!] ERROR: WHOIS lookup failed: ${e.message}`,
         "danger",
       );
     }
