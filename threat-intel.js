@@ -8,7 +8,49 @@
 const VT_BASE_URL = 'https://www.virustotal.com/api/v3';
 const ABUSE_BASE_URL = 'https://api.abuseipdb.com/api/v2';
 const URLSCAN_BASE_URL = 'https://urlscan.io/api/v1';
-const PROXY_URL = 'https://corsproxy.io/?';
+// CORS proxy fallback chain — tried in order until one succeeds.
+// corsproxy.io is first because it transparently forwards custom auth headers
+// (API-Key, x-apikey etc.); allorigins and cors.lol do NOT forward custom
+// headers so they only work for unauthenticated / public GET requests.
+const CORS_PROXIES = [
+  { url: 'https://corsproxy.io/?',              encode: true },
+  { url: 'https://api.allorigins.win/raw?url=', encode: true },
+  { url: 'https://cors.lol/?url=',              encode: true },
+];
+
+/**
+ * Fetch through the CORS proxy fallback chain.
+ * Tries each proxy in order; returns the first successful Response.
+ * @param {string} targetUrl - The actual API endpoint URL
+ * @param {Object} fetchOptions - Standard fetch() options (method, headers, body …)
+ * @returns {Promise<Response>} The fetch Response from the first proxy that works
+ */
+async function fetchWithProxy(targetUrl, fetchOptions = {}) {
+  let lastError = null;
+
+  for (const proxy of CORS_PROXIES) {
+    try {
+      const proxiedUrl = proxy.encode
+        ? `${proxy.url}${encodeURIComponent(targetUrl)}`
+        : `${proxy.url}${targetUrl}`;
+
+      const response = await fetch(proxiedUrl, fetchOptions);
+
+      // If the proxy itself is down / blocked, the status will often be 0 or a
+      // CORS error will throw before we reach here.  A non-network error (e.g.
+      // 401 from the upstream API) is still useful — return it so the caller
+      // can surface a proper message.
+      return response;
+    } catch (err) {
+      console.warn(`CORS proxy failed (${proxy.url}):`, err.message);
+      lastError = err;
+      // Continue to next proxy
+    }
+  }
+
+  // All proxies exhausted
+  throw lastError || new Error('All CORS proxies failed');
+}
 
 // Encryption key for API key storage (matches main.js)
 const ENCRYPTION_KEY = 'CyberGuard2024!@#';
@@ -64,7 +106,7 @@ const ThreatIntelState = {
   // Current search
   currentSearch: {
     input: '',
-    inputType: '', // 'ip', 'domain', 'hash'
+    inputType: '', // 'ip', 'domain', 'hash', 'url'
     timestamp: null
   },
   
@@ -112,7 +154,9 @@ const InputValidator = {
     domain: /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/,
     md5: /^[a-fA-F0-9]{32}$/,
     sha1: /^[a-fA-F0-9]{40}$/,
-    sha256: /^[a-fA-F0-9]{64}$/
+    sha256: /^[a-fA-F0-9]{64}$/,
+    // Matches URLs with protocol, or domain-like strings with paths/trailing slashes
+    url: /^(?:https?:\/\/)?(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(?::\d{1,5})?(?:\/[^\s]*)?$/
   },
   
   /**
@@ -128,7 +172,7 @@ const InputValidator = {
     if (!sanitized || sanitized.length === 0) {
       return {
         valid: false,
-        error: 'Please enter an IP address, domain, or file hash'
+        error: 'Please enter an IP address, domain, URL, or file hash'
       };
     }
     
@@ -138,7 +182,7 @@ const InputValidator = {
     if (!type) {
       return {
         valid: false,
-        error: 'Invalid format. Please enter a valid IP, domain, or hash'
+        error: 'Invalid format. Please enter a valid IP, domain, URL, or hash'
       };
     }
     
@@ -151,7 +195,7 @@ const InputValidator = {
   /**
    * Detect input type
    * @param {string} input - Sanitized input
-   * @returns {string|null} 'ip', 'domain', 'hash', or null
+   * @returns {string|null} 'ip', 'domain', 'hash', 'url', or null
    */
   detectType(input) {
     const sanitized = this.sanitize(input);
@@ -161,19 +205,52 @@ const InputValidator = {
       return 'ip';
     }
     
-    // Test domain
-    if (this.patterns.domain.test(sanitized)) {
-      return 'domain';
-    }
-    
-    // Test hashes (MD5, SHA-1, SHA-256)
+    // Test hashes (MD5, SHA-1, SHA-256) — before domain/url to avoid
+    // false positives on hex strings
     if (this.patterns.md5.test(sanitized) || 
         this.patterns.sha1.test(sanitized) || 
         this.patterns.sha256.test(sanitized)) {
       return 'hash';
     }
     
+    // Test bare domain (no path, no protocol, no trailing slash)
+    if (this.patterns.domain.test(sanitized)) {
+      return 'domain';
+    }
+    
+    // Test URL (has protocol, path, trailing slash, port, etc.)
+    if (this.patterns.url.test(sanitized)) {
+      return 'url';
+    }
+    
     return null;
+  },
+  
+  /**
+   * Extract the hostname from a URL or domain-like input
+   * @param {string} input - URL or domain string
+   * @returns {string} The hostname portion
+   */
+  extractHostname(input) {
+    try {
+      // Add protocol if missing so URL constructor works
+      const withProtocol = input.includes('://') ? input : `http://${input}`;
+      return new URL(withProtocol).hostname;
+    } catch {
+      // Fallback: strip protocol and path manually
+      return input.replace(/^https?:\/\//, '').split('/')[0].split(':')[0];
+    }
+  },
+
+  /**
+   * Normalise input into a full URL for URLScan submission.
+   * Ensures a protocol is present.
+   * @param {string} input - Raw or sanitized input
+   * @returns {string} URL with protocol
+   */
+  toFullURL(input) {
+    if (/^https?:\/\//i.test(input)) return input;
+    return `http://${input}`;
   },
   
   /**
@@ -223,12 +300,21 @@ const APIOrchestrator = {
         this.fetchAbuseIPDB(input).then(result => ({ source: 'abuseipdb', result }))
       );
     } else if (inputType === 'domain') {
-      // Domains: VirusTotal + URLScan
+      // Domains: VirusTotal (domain lookup) + URLScan
       promises.push(
         this.fetchVirusTotal(input, 'domain').then(result => ({ source: 'virustotal', result }))
       );
       promises.push(
-        this.fetchURLScan(input).then(result => ({ source: 'urlscan', result }))
+        this.fetchURLScan(InputValidator.toFullURL(input)).then(result => ({ source: 'urlscan', result }))
+      );
+    } else if (inputType === 'url') {
+      // Full URLs: VirusTotal (domain lookup on hostname) + URLScan (full URL)
+      const hostname = InputValidator.extractHostname(input);
+      promises.push(
+        this.fetchVirusTotal(hostname, 'domain').then(result => ({ source: 'virustotal', result }))
+      );
+      promises.push(
+        this.fetchURLScan(InputValidator.toFullURL(input)).then(result => ({ source: 'urlscan', result }))
       );
     } else if (inputType === 'hash') {
       // Hashes: VirusTotal only
@@ -274,11 +360,8 @@ const APIOrchestrator = {
         throw new Error(`Invalid type: ${type}`);
       }
       
-      // Build proxied URL
-      const proxiedUrl = `${PROXY_URL}${encodeURIComponent(endpoint)}`;
-      
-      // Make request with API key header
-      const response = await fetch(proxiedUrl, {
+      // Fetch through CORS proxy fallback chain
+      const response = await fetchWithProxy(endpoint, {
         method: 'GET',
         headers: {
           'x-apikey': apiKey
@@ -340,11 +423,8 @@ const APIOrchestrator = {
       
       const endpoint = `${ABUSE_BASE_URL}/check?${params.toString()}`;
       
-      // Build proxied URL
-      const proxiedUrl = `${PROXY_URL}${encodeURIComponent(endpoint)}`;
-      
-      // Make request with Key and Accept headers
-      const response = await fetch(proxiedUrl, {
+      // Fetch through CORS proxy fallback chain
+      const response = await fetchWithProxy(endpoint, {
         method: 'GET',
         headers: {
           'Key': apiKey,
@@ -382,67 +462,116 @@ const APIOrchestrator = {
   },
   
   /**
-   * Fetch data from URLScan.io API
-   * Submits a scan and polls for results
-   * @param {string} domain - Domain name
-   * @returns {Promise<Object>} URLScan response
+   * Fetch data from URLScan.io API.
+   * Strategy (per URLScan best-practices):
+   *   1. Search for existing results first (compact JSON, avoids 413).
+   *   2. If no results found, submit a new scan and poll for completion.
+   * @param {string} url - Full URL to scan (must include protocol)
+   * @returns {Promise<Object>} URLScan response (search or scan result)
    */
-  async fetchURLScan(domain) {
+  async fetchURLScan(url) {
     try {
       // Get API key from localStorage
       const storedKey = localStorage.getItem('urlscanApiKey');
       if (!storedKey) {
         throw new Error('URLScan API key not configured');
       }
-      
+
       const apiKey = decryptApiKey(storedKey);
       if (!apiKey) {
         throw new Error('URLScan API key not configured');
       }
-      
-      // Step 1: Submit scan
+
+      // --- Step 1: Search for existing results (recommended by docs) ---
+      // Extract hostname for the search query
+      let hostname;
+      try {
+        hostname = new URL(url).hostname;
+      } catch (_) {
+        hostname = url.replace(/^https?:\/\//, '').split('/')[0];
+      }
+
+      const searchQuery = encodeURIComponent(`domain:${hostname}`);
+      const searchEndpoint = `${URLSCAN_BASE_URL}/search/?q=${searchQuery}&size=1`;
+
+      console.log('URLScan: Searching existing results for', hostname);
+
+      try {
+        const searchResponse = await fetchWithProxy(searchEndpoint, {
+          method: 'GET',
+          headers: { 'API-Key': apiKey }
+        });
+
+        if (searchResponse.ok) {
+          const searchData = await searchResponse.json();
+
+          if (searchData.results && searchData.results.length > 0) {
+            console.log('URLScan: Found existing result via Search API');
+            // Return first result in a normalised wrapper so DataExtractor
+            // can handle both search and full-result formats.
+            const hit = searchData.results[0];
+            return {
+              _source: 'search',
+              verdicts: hit.verdicts || { overall: { malicious: false, score: 0 } },
+              page: hit.page || {},
+              task: hit.task || {},
+              stats: hit.stats || {},
+              lists: hit.lists || {},
+              result: hit.result || null
+            };
+          }
+          console.log('URLScan: No existing results, will submit a new scan');
+        } else {
+          console.warn('URLScan: Search API returned', searchResponse.status, '- falling back to scan submission');
+        }
+      } catch (searchErr) {
+        console.warn('URLScan: Search API failed, falling back to scan submission:', searchErr.message);
+      }
+
+      // --- Step 2: Submit a new scan ---
       const submitEndpoint = `${URLSCAN_BASE_URL}/scan/`;
-      const proxiedSubmitUrl = `${PROXY_URL}${encodeURIComponent(submitEndpoint)}`;
-      
-      const submitResponse = await fetch(proxiedSubmitUrl, {
+
+      const submitResponse = await fetchWithProxy(submitEndpoint, {
         method: 'POST',
         headers: {
           'API-Key': apiKey,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          url: domain,
-          visibility: 'private'
+          url: url,
+          visibility: 'public'
         })
       });
-      
-      // Handle submit response
+
       if (!submitResponse.ok) {
         if (submitResponse.status === 401 || submitResponse.status === 403) {
           throw new Error('URLScan: Invalid API key');
         } else if (submitResponse.status === 429) {
-          throw new Error('URLScan: Rate limit exceeded');
+          throw new Error('URLScan: Rate limit exceeded. Please wait before trying again');
         } else {
-          throw new Error(`URLScan: Scan submission failed with status ${submitResponse.status}`);
+          let detail = '';
+          try {
+            const errBody = await submitResponse.json();
+            detail = errBody.message || errBody.description || '';
+          } catch (_) { /* ignore */ }
+          throw new Error(`URLScan: Scan submission failed (${submitResponse.status})${detail ? ' - ' + detail : ''}`);
         }
       }
-      
+
       const submitData = await submitResponse.json();
       const uuid = submitData.uuid;
-      
+
       if (!uuid) {
         throw new Error('URLScan: No UUID returned from scan submission');
       }
-      
+
       console.log('URLScan: Scan submitted, UUID:', uuid);
-      
-      // Step 2: Poll for results
+
+      // --- Step 3: Poll for scan results ---
       const resultData = await this.pollURLScanResult(uuid, apiKey);
-      
       return resultData;
-      
+
     } catch (error) {
-      // Re-throw with URLScan prefix for error handling
       if (error.message.includes('URLScan')) {
         throw error;
       } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
@@ -452,68 +581,99 @@ const APIOrchestrator = {
       }
     }
   },
-  
+
   /**
-   * Poll URLScan.io result endpoint until scan completes
+   * Poll URLScan.io result endpoint until scan completes.
+   * Per URLScan docs: scans take at least 30 seconds.
    * @param {string} uuid - Scan UUID from submission
    * @param {string} apiKey - URLScan API key
    * @returns {Promise<Object>} URLScan result data
    */
   async pollURLScanResult(uuid, apiKey) {
-    const maxAttempts = 30; // 30 seconds timeout (1 second per attempt)
-    const pollInterval = 1000; // 1 second
-    
+    const initialWait = 15000;
+    const pollInterval = 5000;
+    const maxAttempts = 15; // 15s initial + 15×5s = 90s total
+
+    console.log('URLScan: Waiting 15s before first poll...');
+    await new Promise(resolve => setTimeout(resolve, initialWait));
+
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
-        // Build result endpoint
         const resultEndpoint = `${URLSCAN_BASE_URL}/result/${uuid}/`;
-        const proxiedResultUrl = `${PROXY_URL}${encodeURIComponent(resultEndpoint)}`;
-        
-        const resultResponse = await fetch(proxiedResultUrl, {
+
+        const resultResponse = await fetchWithProxy(resultEndpoint, {
           method: 'GET',
-          headers: {
-            'API-Key': apiKey
-          }
+          headers: { 'API-Key': apiKey }
         });
-        
-        // Check response status
+
         if (resultResponse.status === 200) {
-          // Scan complete, return data
           const resultData = await resultResponse.json();
-          console.log('URLScan: Scan complete after', attempt + 1, 'attempts');
+          console.log('URLScan: Scan complete after', attempt + 1, 'polls');
           return resultData;
         } else if (resultResponse.status === 404) {
-          // Still processing, wait and retry
-          console.log('URLScan: Scan still processing, attempt', attempt + 1, 'of', maxAttempts);
-          
-          // Wait 1 second before next attempt
+          console.log(`URLScan: Still processing, poll ${attempt + 1}/${maxAttempts}`);
           await new Promise(resolve => setTimeout(resolve, pollInterval));
           continue;
+        } else if (resultResponse.status === 410) {
+          throw new Error('URLScan: Scan result was deleted (HTTP 410)');
+        } else if (resultResponse.status === 413) {
+          // Proxy payload too large — try search API as fallback
+          console.warn('URLScan: 413 from proxy (result too large), trying Search API fallback...');
+          return await this.searchFallbackByUuid(uuid, apiKey);
         } else {
-          // Unexpected status code
-          throw new Error(`URLScan: Unexpected status ${resultResponse.status} while polling results`);
+          throw new Error(`URLScan: Unexpected status ${resultResponse.status} while polling`);
         }
-        
+
       } catch (error) {
-        // If this is the last attempt, throw timeout error
+        if (error.message.includes('URLScan:')) throw error;
         if (attempt === maxAttempts - 1) {
-          throw new Error('URLScan: Request timeout - scan did not complete in 30 seconds');
+          throw new Error('URLScan: Scan did not complete within 90 seconds');
         }
-        
-        // For network errors, retry
         if (error.name === 'TypeError' && error.message.includes('fetch')) {
           console.warn('URLScan: Network error during polling, retrying...');
           await new Promise(resolve => setTimeout(resolve, pollInterval));
           continue;
         }
-        
-        // For other errors, re-throw
         throw error;
       }
     }
-    
-    // If we exit the loop without returning, throw timeout error
-    throw new Error('URLScan: Request timeout - scan did not complete in 30 seconds');
+
+    throw new Error('URLScan: Scan did not complete within 90 seconds');
+  },
+
+  /**
+   * Fallback: use Search API to retrieve a compact summary when the full
+   * result payload is too large for the CORS proxy (413).
+   * @param {string} uuid - Scan UUID
+   * @param {string} apiKey - URLScan API key
+   * @returns {Promise<Object>} Normalised result
+   */
+  async searchFallbackByUuid(uuid, apiKey) {
+    const q = encodeURIComponent(`scan:${uuid}`);
+    const endpoint = `${URLSCAN_BASE_URL}/search/?q=${q}&size=1`;
+
+    const resp = await fetchWithProxy(endpoint, {
+      method: 'GET',
+      headers: { 'API-Key': apiKey }
+    });
+
+    if (!resp.ok) throw new Error(`URLScan: Search fallback failed (${resp.status})`);
+
+    const data = await resp.json();
+    if (!data.results || data.results.length === 0) {
+      throw new Error('URLScan: Scan completed but could not retrieve results');
+    }
+
+    const hit = data.results[0];
+    return {
+      _source: 'search',
+      verdicts: hit.verdicts || { overall: { malicious: false, score: 0 } },
+      page: hit.page || {},
+      task: hit.task || {},
+      stats: hit.stats || {},
+      lists: hit.lists || {},
+      result: hit.result || null
+    };
   },
   
   /**
@@ -572,8 +732,8 @@ const APIOrchestrator = {
         notApplicable: true,
         reason: 'N/A - URL/Domain only'
       };
-    } else if (inputType === 'domain') {
-      // AbuseIPDB not applicable for domains
+    } else if (inputType === 'domain' || inputType === 'url') {
+      // AbuseIPDB not applicable for domains/URLs
       processedResults.abuseipdb = {
         success: true,
         data: null,
@@ -722,30 +882,38 @@ const DataExtractor = {
           rawData: null
         };
       }
-      
-      // Extract verdicts.overall.malicious from response
-      const malicious = response.verdicts?.overall?.malicious;
-      
-      if (malicious === undefined || malicious === null) {
-        throw new Error('Invalid URLScan response structure');
+
+      // Supports both full-result and Search-API responses.
+      // Full result:  response.verdicts.overall.malicious  (boolean)
+      // Search API:   response.verdicts.overall.malicious  (boolean)
+      //               response.verdicts.overall.score      (number)
+      const verdicts = response.verdicts?.overall;
+
+      // If verdicts are present, use them
+      if (verdicts && typeof verdicts.malicious === 'boolean') {
+        const threatFlag = verdicts.malicious === true;
+        const score = verdicts.score ?? 0;
+        const verdict = threatFlag ? 'Malicious' : 'Clean';
+        const displayText = threatFlag
+          ? `Verdict: ${verdict} (score ${score})`
+          : `Verdict: ${verdict}`;
+
+        return { threatFlag, verdict, displayText, rawData: response };
       }
-      
-      // Calculate threat flag (malicious === true)
-      const threatFlag = malicious === true;
-      
-      // Determine verdict string
-      const verdict = malicious ? 'Malicious' : 'Clean';
-      
-      // Format display string
-      const displayText = `Verdict: ${verdict}`;
-      
-      return {
-        threatFlag,
-        verdict,
-        displayText,
-        rawData: response
-      };
-      
+
+      // Fallback: if verdicts block is missing but we have page info
+      // (e.g. from a search result without verdict data), still succeed.
+      if (response.page) {
+        return {
+          threatFlag: false,
+          verdict: 'Unknown',
+          displayText: 'Verdict: No verdict data available',
+          rawData: response
+        };
+      }
+
+      throw new Error('Invalid URLScan response structure');
+
     } catch (error) {
       console.error('DataExtractor: Error extracting URLScan data:', error);
       throw error;
@@ -1010,10 +1178,10 @@ const ThreatIntelHub = {
         displayText: 'N/A - URL/Domain only',
         rawData: null
       });
-    } else if (inputType === 'domain') {
+    } else if (inputType === 'domain' || inputType === 'url') {
       UIRenderer.showLoadingState('virustotal');
       UIRenderer.showLoadingState('urlscan');
-      // AbuseIPDB N/A for domains
+      // AbuseIPDB N/A for domains/URLs
       UIRenderer.renderSourceCard('abuseipdb', {
         threatFlag: false,
         displayText: 'N/A - IP only',

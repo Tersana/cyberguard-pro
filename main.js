@@ -2261,7 +2261,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const VT_BASE_URL = "https://www.virustotal.com/api/v3";
   const ABUSE_BASE_URL = "https://api.abuseipdb.com/api/v2";
-  const PROXY_URL = "https://corsproxy.io/?";
+
+  // CORS proxy fallback chain — tried in order until one succeeds.
+  const CORS_PROXIES = [
+    { url: "https://api.allorigins.win/raw?url=", encode: true },
+    { url: "https://cors.lol/?url=",              encode: true },
+    { url: "https://corsproxy.io/?",              encode: true },
+  ];
+
+  /**
+   * Fetch through the CORS proxy fallback chain (main.js-scoped).
+   * @param {string} targetUrl - The actual API endpoint URL
+   * @param {Object} fetchOptions - Standard fetch() options
+   * @returns {Promise<Response>}
+   */
+  async function fetchWithProxyMain(targetUrl, fetchOptions = {}) {
+    let lastError = null;
+    for (const proxy of CORS_PROXIES) {
+      try {
+        const proxiedUrl = proxy.encode
+          ? `${proxy.url}${encodeURIComponent(targetUrl)}`
+          : `${proxy.url}${targetUrl}`;
+        const response = await fetch(proxiedUrl, fetchOptions);
+        return response;
+      } catch (err) {
+        console.warn(`CORS proxy failed (${proxy.url}):`, err.message);
+        lastError = err;
+      }
+    }
+    throw lastError || new Error("All CORS proxies failed");
+  }
 
   // --- UI Management ---
 
@@ -5177,10 +5206,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // VirusTotal URL scan (public, requires key)
     try {
       if (virusTotalApiKey) {
-        const vtUrl = `${PROXY_URL}${encodeURIComponent(
-          `${VT_BASE_URL}/urls`,
-        )}`;
-        const res = await fetch(vtUrl, {
+        const res = await fetchWithProxyMain(`${VT_BASE_URL}/urls`, {
           method: "POST",
           headers: {
             "x-apikey": virusTotalApiKey,
@@ -5195,10 +5221,8 @@ document.addEventListener("DOMContentLoaded", () => {
           const id = data?.data?.id;
           if (id) {
             // fetch analysis once (best effort single fetch)
-            const ares = await fetch(
-              `${PROXY_URL}${encodeURIComponent(
-                `${VT_BASE_URL}/analyses/${id}`,
-              )}`,
+            const ares = await fetchWithProxyMain(
+              `${VT_BASE_URL}/analyses/${id}`,
               { headers: { "x-apikey": virusTotalApiKey } },
             );
             if (ares.ok) {
@@ -5225,10 +5249,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (isIP) {
         const abuseKey = loadAbuseKey();
         if (abuseKey) {
-          const url = `${PROXY_URL}${encodeURIComponent(
-            `${ABUSE_BASE_URL}/check`,
-          )}?ipAddress=${encodeURIComponent(host)}&maxAgeInDays=90`;
-          const res = await fetch(url, {
+          const abuseEndpoint = `${ABUSE_BASE_URL}/check?ipAddress=${encodeURIComponent(host)}&maxAgeInDays=90`;
+          const res = await fetchWithProxyMain(abuseEndpoint, {
             headers: { Key: abuseKey, Accept: "application/json" },
           });
           if (res.ok) {
@@ -5319,9 +5341,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // Use a more reliable CORS proxy approach with multiple options
       const proxyOptions = [
         "https://api.allorigins.win/raw?url=",
+        "https://cors.lol/?url=",
         "https://corsproxy.io/?",
-        "https://thingproxy.freeboard.io/fetch/",
-        "https://cors-anywhere.herokuapp.com/",
       ];
 
       const proxyUrl = proxyOptions[0]; // Start with the most reliable
@@ -5367,10 +5388,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Alternative CORS proxy method with multiple retries
     async makeShodanRequestAlternative(targetUrl) {
       const proxyOptions = [
-        "https://corsproxy.io/?",
-        "https://thingproxy.freeboard.io/fetch/",
-        "https://cors-anywhere.herokuapp.com/",
         "https://api.allorigins.win/raw?url=",
+        "https://cors.lol/?url=",
+        "https://corsproxy.io/?",
       ];
 
       for (let i = 0; i < proxyOptions.length; i++) {
@@ -10001,8 +10021,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // Poll for max ~75 seconds
       await new Promise((r) => setTimeout(r, 5000));
       try {
-        const res = await fetch(
-          `${PROXY_URL}${encodeURIComponent(`${VT_BASE_URL}/analyses/${id}`)}`,
+        const res = await fetchWithProxyMain(
+          `${VT_BASE_URL}/analyses/${id}`,
           { headers: { "x-apikey": virusTotalApiKey } },
         );
         if (!res.ok) continue;
@@ -10038,8 +10058,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!checkVtApiKey()) return;
     logResult(new Date(), "VT Hash Check", `🔍 Checking hash ${hash}...`);
     try {
-      const res = await fetch(
-        `${PROXY_URL}${encodeURIComponent(`${VT_BASE_URL}/files/${hash}`)}`,
+      const res = await fetchWithProxyMain(
+        `${VT_BASE_URL}/files/${hash}`,
         { headers: { "x-apikey": virusTotalApiKey } },
       );
       if (res.status === 404) {
@@ -10085,8 +10105,8 @@ document.addEventListener("DOMContentLoaded", () => {
       `🦠 Submitting URL to VirusTotal: ${url}`,
     );
     try {
-      const res = await fetch(
-        `${PROXY_URL}${encodeURIComponent(`${VT_BASE_URL}/urls`)}`,
+      const res = await fetchWithProxyMain(
+        `${VT_BASE_URL}/urls`,
         {
           method: "POST",
           headers: {
@@ -10142,8 +10162,8 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch(
-        `${PROXY_URL}${encodeURIComponent(`${VT_BASE_URL}/files`)}`,
+      const res = await fetchWithProxyMain(
+        `${VT_BASE_URL}/files`,
         {
           method: "POST",
           headers: { "x-apikey": virusTotalApiKey },
