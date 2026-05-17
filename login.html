@@ -524,7 +524,7 @@
                                     >
                                 </label>
                                 <a
-                                    href="forgot-password.html"
+                                    href="/forgot-password"
                                     class="text-sm text-neon-purple hover:text-purple-300 transition-colors font-medium"
                                     >Forgot password?</a
                                 >
@@ -619,7 +619,7 @@
                         <p class="text-center mt-6 text-gray-400 text-sm">
                             Don't have an account?
                             <a
-                                href="signup.html"
+                                href="/signup"
                                 class="text-neon-purple hover:text-purple-300 font-semibold transition-colors ml-1"
                                 >Create one now</a
                             >
@@ -700,7 +700,7 @@
                     <!-- Back to Home -->
                     <div class="text-center mt-6">
                         <a
-                            href="index.html"
+                            href="/"
                             class="inline-flex items-center gap-2 text-white-500 hover:text-neon-purple transition-colors text-sm"
                         >
                             <svg
@@ -911,14 +911,14 @@
                                             target.origin ===
                                             window.location.origin
                                                 ? redirectParam
-                                                : "dashboard.html";
+                                                : "/dashboard";
                                     } catch (_) {
                                         dest = redirectParam.startsWith("/")
                                             ? redirectParam
-                                            : "dashboard.html";
+                                            : "/dashboard";
                                     }
                                 } else {
-                                    dest = "dashboard.html";
+                                    dest = "/dashboard";
                                 }
                             }
                             showMessage(
@@ -965,7 +965,7 @@
                                 // Show resend link below the form
                                 const resendNotice = document.createElement("div");
                                 resendNotice.className = "text-center mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20";
-                                resendNotice.innerHTML = '<p class="text-amber-400 text-sm">Didn\'t receive the email? <a href="verify-email.html" class="text-neon-purple hover:text-purple-300 font-semibold underline">Resend verification email</a></p>';
+                                resendNotice.innerHTML = '<p class="text-amber-400 text-sm">Didn\'t receive the email? <a href="/verify-email" class="text-neon-purple hover:text-purple-300 font-semibold underline">Resend verification email</a></p>';
                                 const existingNotice = document.getElementById("resend-notice");
                                 if (existingNotice) existingNotice.remove();
                                 resendNotice.id = "resend-notice";
@@ -1098,14 +1098,14 @@
                                             target.origin ===
                                             window.location.origin
                                                 ? redirectParam
-                                                : "dashboard.html";
+                                                : "/dashboard";
                                     } catch (_) {
                                         dest = redirectParam.startsWith("/")
                                             ? redirectParam
-                                            : "dashboard.html";
+                                            : "/dashboard";
                                     }
                                 } else {
-                                    dest = "dashboard.html";
+                                    dest = "/dashboard";
                                 }
                             }
                             showMessage(

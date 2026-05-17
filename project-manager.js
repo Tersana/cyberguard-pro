@@ -619,7 +619,7 @@ class ProjectManager {
       </button>`
       : "";
 
-    const detailUrl = `project-detail.html?id=${this.escapeAttr(String(project.id))}${isOwner ? "&owned=true" : ""}`;
+    const detailUrl = `/project-detail?id=${this.escapeAttr(String(project.id))}${isOwner ? "&owned=true" : ""}`;
 
     return `
       <div class="cyber-card p-5 hover:border-[rgba(167,139,250,0.4)] transition-all group" data-project-id="${this.escapeAttr(String(project.id))}">

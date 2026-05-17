@@ -217,7 +217,7 @@
         >
             <div class="flex items-center gap-4">
                 <a
-                    href="dashboard.html#projects"
+                    href="/dashboard#projects"
                     onclick="goBack(event)"
                     class="cyber-btn-ghost text-xs px-3 py-2 rounded-lg flex items-center gap-2"
                 >
@@ -252,7 +252,7 @@
                     class="text-xs px-2.5 py-1 rounded-full border font-semibold hidden"
                 ></span>
                 <a
-                    href="dashboard.html"
+                    href="/dashboard"
                     class="cyber-btn-ghost text-xs px-3 py-2 rounded-lg"
                     >Dashboard</a
                 >
@@ -298,7 +298,7 @@
                 This project doesn't exist or you don't have access.
             </p>
             <a
-                href="dashboard.html"
+                href="/dashboard"
                 class="cyber-btn-primary px-6 py-2.5 rounded-lg font-semibold text-sm inline-flex items-center gap-2"
             >
                 <svg
@@ -1403,14 +1403,14 @@
                 const isOwnedHint = params.get("owned") === "true";
 
                 if (!_projectId) {
-                    location.replace("dashboard.html");
+                    location.replace("/dashboard");
                     return;
                 }
 
                 const token = localStorage.getItem(JWT_KEY);
                 if (!token) {
                     location.replace(
-                        `login.html?redirect=${encodeURIComponent(location.href)}`,
+                        `/login?redirect=${encodeURIComponent(location.href)}`,
                     );
                     return;
                 }
@@ -1975,7 +1975,7 @@
                         return;
                     }
                     notify("Project deleted.", "success");
-                    setTimeout(() => location.replace("dashboard.html"), 1500);
+                    setTimeout(() => location.replace("/dashboard"), 1500);
                 } finally {
                     restoreBtn(btn);
                 }
@@ -2521,11 +2521,11 @@
                 e.preventDefault();
                 if (
                     document.referrer &&
-                    document.referrer.includes("dashboard.html")
+                    document.referrer.includes("/dashboard")
                 ) {
                     history.back();
                 } else {
-                    location.replace("dashboard.html");
+                    location.replace("/dashboard");
                 }
             }
 

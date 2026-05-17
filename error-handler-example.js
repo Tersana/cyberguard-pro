@@ -80,7 +80,7 @@ document.getElementById('login-form')?.addEventListener('submit', async (e) => {
     });
     
     // Success - redirect to dashboard
-    window.location.href = '/dashboard.html';
+    window.location.href = '/dashboard';
   } catch (error) {
     // ErrorHandler will display appropriate error messages
     ErrorHandler.handle(error);

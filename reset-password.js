@@ -44,7 +44,7 @@ function scrubSensitiveResetQueryParams() {
   params.delete("token");
   params.delete("email");
   const query = params.toString();
-  const cleanPath = window.location.pathname || "/reset-password.html";
+  const cleanPath = window.location.pathname || "/reset-password";
   const nextUrl = query ? `${cleanPath}?${query}` : cleanPath;
   window.history.replaceState({}, document.title, nextUrl);
 }
@@ -140,7 +140,7 @@ async function handleResetPasswordSubmit(event) {
       notify("Password updated successfully. Redirecting to login...", "success");
       form.reset();
       setTimeout(() => {
-        window.location.href = "login.html";
+        window.location.href = "/login";
       }, 3000);
       return;
     }

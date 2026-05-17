@@ -677,7 +677,7 @@
                 >
                     Contact the project owner to request a new link.
                 </p>
-                <a href="/dashboard.html" class="btn-link">
+                <a href="/dashboard" class="btn-link">
                     <svg
                         width="13"
                         height="13"
@@ -757,7 +757,7 @@
                 >
                     <a
                         id="link-409"
-                        href="/dashboard.html"
+                        href="/dashboard"
                         class="btn-primary-link"
                     >
                         <svg
@@ -783,7 +783,7 @@
                         </svg>
                         Go to Project
                     </a>
-                    <a href="/dashboard.html" class="btn-link">Dashboard</a>
+                    <a href="/dashboard" class="btn-link">Dashboard</a>
                 </div>
             </div>
         </div>
@@ -842,7 +842,7 @@
                 <div style="display: flex; gap: 10px; justify-content: center">
                     <a
                         id="link-login"
-                        href="/login.html"
+                        href="/login"
                         class="btn-primary-link"
                         onclick="
                             sessionStorage.setItem(
@@ -869,7 +869,7 @@
                         </svg>
                         Log In to Accept
                     </a>
-                    <a href="/signup.html" class="btn-link">Sign Up</a>
+                    <a href="/signup" class="btn-link">Sign Up</a>
                 </div>
             </div>
         </div>
@@ -949,7 +949,7 @@
                     >
                         Retry
                     </button>
-                    <a href="/dashboard.html" class="btn-link">Dashboard</a>
+                    <a href="/dashboard" class="btn-link">Dashboard</a>
                 </div>
             </div>
         </div>
@@ -1212,7 +1212,7 @@
                             "invite_redirect",
                             window.location.href,
                         );
-                        window.location.href = "/login.html";
+                        window.location.href = "/login";
                         return;
                     }
                     if (res.status === 404) {
@@ -1283,7 +1283,7 @@
                         const lnk = document.getElementById("link-409");
                         if (lnk && pid)
                             lnk.href =
-                                "/project-detail.html?id=" +
+                                "/project-detail?id=" +
                                 encodeURIComponent(pid);
                         idle(btn);
                         show("409");
@@ -1307,9 +1307,9 @@
                     toast("Successfully joined the project!", "success");
                     setTimeout(() => {
                         window.location.href = pid
-                            ? "/project-detail.html?id=" +
+                            ? "/project-detail?id=" +
                               encodeURIComponent(pid)
-                            : "/dashboard.html";
+                            : "/dashboard";
                     }, 1100);
                 } catch (e) {
                     console.error("[invite] accept error", e);
@@ -1345,8 +1345,8 @@
                     if (res.status === 409) {
                         idle(btn);
                         window.location.href = localStorage.getItem(JWT)
-                            ? "/dashboard.html"
-                            : "/login.html";
+                            ? "/dashboard"
+                            : "/login";
                         return;
                     }
 
@@ -1364,8 +1364,8 @@
                     toast("Invitation declined.", "info");
                     setTimeout(() => {
                         window.location.href = localStorage.getItem(JWT)
-                            ? "/dashboard.html"
-                            : "/login.html";
+                            ? "/dashboard"
+                            : "/login";
                     }, 1100);
                 } catch (e) {
                     console.error("[invite] decline error", e);
@@ -1407,7 +1407,7 @@
                         "invite_redirect",
                         window.location.href,
                     );
-                    window.location.href = "/login.html";
+                    window.location.href = "/login";
                     return;
                 }
 
