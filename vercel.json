@@ -1,20 +1,29 @@
 {
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
     {
       "source": "/invitations/:token*",
-      "destination": "/invite.html"
+      "destination": "/invite"
     },
     {
       "source": "/invite/:token*",
-      "destination": "/invite.html"
+      "destination": "/invite"
     },
     {
       "source": "/billing/paymob/redirect",
-      "destination": "/paymob-redirect.html"
+      "destination": "/paymob-redirect"
     },
     {
       "source": "/api/billing/paymob/redirect",
-      "destination": "/paymob-redirect.html"
+      "destination": "/paymob-redirect"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*.html",
+      "destination": "/:path*",
+      "permanent": true
     }
   ]
 }

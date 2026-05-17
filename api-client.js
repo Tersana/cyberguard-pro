@@ -132,8 +132,8 @@ class APIClient {
     localStorage.removeItem("cyberguard_session");
 
     // Redirect to login if not already there
-    if (window.location.pathname !== "/login.html") {
-      window.location.href = "/login.html?session_expired=true";
+    if (window.location.pathname !== "/login") {
+      window.location.href = "/login?session_expired=true";
     }
   }
 

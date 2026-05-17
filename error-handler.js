@@ -206,8 +206,8 @@ class ErrorHandler {
     
     // Redirect to login page after a short delay
     setTimeout(() => {
-      if (window.location.pathname !== '/login.html') {
-        window.location.href = '/login.html?session_expired=true';
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login?session_expired=true';
       }
     }, 1500);
   }

@@ -594,20 +594,20 @@
     <!-- Nav -->
     <nav class="pricing-nav">
         <div class="pricing-nav-inner">
-            <a href="index.html" class="pricing-logo">
+            <a href="/" class="pricing-logo">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--cg-accent)" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
                 </svg>
                 <span>CyberGuard Pro</span>
             </a>
             <div class="pricing-nav-links">
-                <a href="index.html">Home</a>
-                <a href="dashboard.html">Dashboard</a>
+                <a href="/">Home</a>
+                <a href="/dashboard">Dashboard</a>
                 
                 <!-- Guest UI (shown by default, hidden when authenticated) -->
                 <div data-guest style="display: flex; align-items: center; gap: 0.75rem;">
-                    <a href="login.html" class="cyber-btn-ghost" style="padding:0.4rem 1rem;border-radius:var(--cg-radius-md);font-size:0.85rem;">Login</a>
-                    <a href="signup.html" class="cyber-btn-primary" style="padding:0.4rem 1rem;border-radius:var(--cg-radius-md);font-size:0.85rem;">Sign Up</a>
+                    <a href="/login" class="cyber-btn-ghost" style="padding:0.4rem 1rem;border-radius:var(--cg-radius-md);font-size:0.85rem;">Login</a>
+                    <a href="/signup" class="cyber-btn-primary" style="padding:0.4rem 1rem;border-radius:var(--cg-radius-md);font-size:0.85rem;">Sign Up</a>
                 </div>
                 
                 <!-- Authenticated User Info (hidden by default, shown when authenticated) -->
@@ -625,7 +625,7 @@
                             </svg>
                         </button>
                         <div class="dropdown-menu" style="position: absolute; top: calc(100% + 8px); right: 0; background: var(--cg-bg-surface); border: 1px solid var(--cg-border); border-radius: 12px; padding: 8px; min-width: 180px; box-shadow: var(--cg-shadow-lg); z-index: 1000;">
-                            <a href="dashboard.html" style="display: block; padding: 10px 14px; color: var(--cg-text-2); text-decoration: none; font-size: 14px; font-weight: 500; border-radius: 8px; transition: all var(--cg-transition-fast);">Go to Dashboard</a>
+                            <a href="/dashboard" style="display: block; padding: 10px 14px; color: var(--cg-text-2); text-decoration: none; font-size: 14px; font-weight: 500; border-radius: 8px; transition: all var(--cg-transition-fast);">Go to Dashboard</a>
                             <button id="logout-btn" style="width: 100%; display: block; padding: 10px 14px; color: var(--cg-danger); text-decoration: none; font-size: 14px; font-weight: 500; border-radius: 8px; transition: all var(--cg-transition-fast); background: transparent; border: none; text-align: left; cursor: pointer;">Logout</button>
                         </div>
                     </div>
@@ -937,7 +937,7 @@
             const token = localStorage.getItem('cyberguard_jwt');
             if (!token) {
                 // Redirect to login with return URL
-                window.location.href = '/login.html?redirect=/pricing.html';
+                window.location.href = '/login?redirect=/pricing';
                 return;
             }
 
@@ -1212,7 +1212,7 @@
                 else if (error.status === 401) {
                     CyberNotify.alert('Your session has expired. Please log in again.', { type: 'error' });
                     setTimeout(() => {
-                        window.location.href = '/login.html?redirect=/pricing.html';
+                        window.location.href = '/login?redirect=/pricing';
                     }, 1500);
                 }
                 // Handle other errors
