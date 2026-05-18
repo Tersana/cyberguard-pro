@@ -17,7 +17,7 @@ describe('Severity Mapping - mapStatusToSeverity', () => {
   beforeEach(() => {
     // Load main.js in a DOM context
     const mainCode = fs.readFileSync(
-      path.resolve(process.cwd(), 'main.js'),
+      path.resolve(process.cwd(), 'public/js/main.js'),
       'utf-8'
     );
 

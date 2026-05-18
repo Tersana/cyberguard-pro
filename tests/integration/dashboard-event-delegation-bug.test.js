@@ -36,7 +36,7 @@ describe('Bug Condition Exploration: Legacy Hash Tools Event Listener Registrati
     };
 
     // Load the actual dashboard.html file
-    const dashboardPath = path.resolve(__dirname, '../../dashboard.html');
+    const dashboardPath = path.resolve(__dirname, '../../public/dashboard.html');
     const dashboardHTML = fs.readFileSync(dashboardPath, 'utf-8');
     
     // Create JSDOM instance with script execution disabled initially
@@ -90,7 +90,7 @@ describe('Bug Condition Exploration: Legacy Hash Tools Event Listener Registrati
       expect(hashStringBtn).toBeNull(); // Confirms element is missing
       
       // Load main.js and simulate DOMContentLoaded
-      const mainJsPath = path.resolve(__dirname, '../../main.js');
+      const mainJsPath = path.resolve(__dirname, '../../public/js/main.js');
       const mainJsContent = fs.readFileSync(mainJsPath, 'utf-8');
       
       // Check if the problematic code exists in main.js
@@ -112,7 +112,7 @@ describe('Bug Condition Exploration: Legacy Hash Tools Event Listener Registrati
       // prevents subsequent event listeners from registering
       
       // Arrange & Act: Load main.js
-      const mainJsPath = path.resolve(__dirname, '../../main.js');
+      const mainJsPath = path.resolve(__dirname, '../../public/js/main.js');
       const mainJsContent = fs.readFileSync(mainJsPath, 'utf-8');
       
       try {
@@ -146,7 +146,7 @@ describe('Bug Condition Exploration: Legacy Hash Tools Event Listener Registrati
       // are never registered due to the TypeError
       
       // Arrange & Act: Load main.js
-      const mainJsPath = path.resolve(__dirname, '../../main.js');
+      const mainJsPath = path.resolve(__dirname, '../../public/js/main.js');
       const mainJsContent = fs.readFileSync(mainJsPath, 'utf-8');
       
       try {
@@ -181,7 +181,7 @@ describe('Bug Condition Exploration: Legacy Hash Tools Event Listener Registrati
       // are registered after line 8174 and never execute
       
       // Arrange & Act: Load main.js
-      const mainJsPath = path.resolve(__dirname, '../../main.js');
+      const mainJsPath = path.resolve(__dirname, '../../public/js/main.js');
       const mainJsContent = fs.readFileSync(mainJsPath, 'utf-8');
       
       try {
@@ -211,7 +211,7 @@ describe('Bug Condition Exploration: Legacy Hash Tools Event Listener Registrati
       // code is never reached due to the TypeError at line 8174
       
       // Arrange & Act: Load main.js
-      const mainJsPath = path.resolve(__dirname, '../../main.js');
+      const mainJsPath = path.resolve(__dirname, '../../public/js/main.js');
       const mainJsContent = fs.readFileSync(mainJsPath, 'utf-8');
       
       try {
@@ -257,7 +257,7 @@ describe('Bug Condition Exploration: Legacy Hash Tools Event Listener Registrati
           }),
           (scenario) => {
             // Arrange: Load dashboard with scenario
-            const dashboardPath = path.resolve(__dirname, '../../dashboard.html');
+            const dashboardPath = path.resolve(__dirname, '../../public/dashboard.html');
             const dashboardHTML = fs.readFileSync(dashboardPath, 'utf-8');
             
             const testDom = new JSDOM(dashboardHTML, {
@@ -274,7 +274,7 @@ describe('Bug Condition Exploration: Legacy Hash Tools Event Listener Registrati
             testWindow.CryptoJS = global.CryptoJS;
             
             // Act: Load main.js and trigger DOMContentLoaded
-            const mainJsPath = path.resolve(__dirname, '../../main.js');
+            const mainJsPath = path.resolve(__dirname, '../../public/js/main.js');
             const mainJsContent = fs.readFileSync(mainJsPath, 'utf-8');
             
             let errorThrown = null;

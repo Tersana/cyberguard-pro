@@ -46,7 +46,7 @@ describe('RiskGauge.startScan', () => {
     global.performance = { now: () => Date.now() };
 
     // Load the risk-gauge.js module
-    const script = require('fs').readFileSync('./risk-gauge.js', 'utf8');
+    const script = require('fs').readFileSync('./public/js/risk-gauge.js', 'utf8');
     const scriptEl = document.createElement('script');
     scriptEl.textContent = script;
     document.body.appendChild(scriptEl);

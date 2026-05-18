@@ -15,7 +15,7 @@ describe('SelectionManager Integration - Task 2.1', () => {
 
   beforeEach(() => {
     // Load the actual dashboard.html file
-    const dashboardPath = path.resolve(__dirname, '../../dashboard.html');
+    const dashboardPath = path.resolve(__dirname, '../../public/dashboard.html');
     const dashboardHTML = fs.readFileSync(dashboardPath, 'utf-8');
     
     dom = new JSDOM(dashboardHTML, {

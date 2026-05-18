@@ -20,7 +20,7 @@ describe('Risk Calculator Edge Cases', () => {
   beforeEach(() => {
     // Load risk-gauge.js in a DOM context to extract calculateScore
     const riskGaugeCode = fs.readFileSync(
-      path.resolve(process.cwd(), 'risk-gauge.js'),
+      path.resolve(process.cwd(), 'public/js/risk-gauge.js'),
       'utf-8'
     );
     
