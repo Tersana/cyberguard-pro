@@ -2,8 +2,7 @@
 
 ADMIN_CREDENTIALS.txt
 CyberGuardWeb.rar
-phishing_dataset.csv
-SECURITY_TEST_DATA.md
+data/phishing_dataset.csv
 
 # --- Dependencies ---
 .zed/
@@ -15,26 +14,30 @@ node_modules/
 .kiro/
 .cursor/
 .claude/
-.zed/
+
 # --- Backups & Temp Files ---
 *.rar
 *.zip
 *.7z
 *.old
 *.backup
-main-original.js
-main.js.backup
+public/js/main-original.js
+
+# --- Docs (tracked separately) ---
 docs/
 *.md
 !README.md
+!CLAUDE.md
+
 # --- Testing Artifacts ---
-test-results.json
+data/test-results.json
 test-accordion-styles.html
 test-color-function.html
 test-dashboard-integration.html
 test-filter-pills.html
 test-state-manager.html
 test-stop-scan.html
+
 # --- System Files ---
 .DS_Store
 Thumbs.db
@@ -52,6 +55,8 @@ Thumbs.db
 # Environment variables
 .env
 .env.local
-build_html_slides.py
+
+# Build scripts
+scripts/build_html_slides.py
+scripts/generate_presentation.py
 CyberGuard_Pro_Presentation.html
-generate_presentation.py

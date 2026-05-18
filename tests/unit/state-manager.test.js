@@ -51,7 +51,7 @@ describe("State Manager", () => {
 
     // Load the state-manager module
     const stateManagerCode = require("fs").readFileSync(
-      "./state-manager.js",
+      "./public/js/state-manager.js",
       "utf-8",
     );
     const script = new window.Function(stateManagerCode);

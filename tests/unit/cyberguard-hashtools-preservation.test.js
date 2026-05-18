@@ -91,7 +91,7 @@ describe('Preservation Property Tests: CyberGuardHashTools Module', () => {
     global.CryptoJS = CryptoJS;
 
     // Load the CyberGuardHashTools module from main.js
-    const mainJsPath = path.resolve(__dirname, '../../main.js');
+    const mainJsPath = path.resolve(__dirname, '../../public/js/main.js');
     const mainJsContent = fs.readFileSync(mainJsPath, 'utf-8');
     
     // Extract the CyberGuardHashTools module definition

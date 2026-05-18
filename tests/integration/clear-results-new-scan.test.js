@@ -28,7 +28,7 @@ describe('Clear Results Button - Task 6.3: New Scan After Clear', () => {
 
   beforeEach(() => {
     // Load the actual dashboard.html file
-    const dashboardPath = path.resolve(__dirname, '../../dashboard.html');
+    const dashboardPath = path.resolve(__dirname, '../../public/dashboard.html');
     const dashboardHTML = fs.readFileSync(dashboardPath, 'utf-8');
     
     dom = new JSDOM(dashboardHTML, {

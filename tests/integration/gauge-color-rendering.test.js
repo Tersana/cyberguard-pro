@@ -90,7 +90,7 @@ describe('Gauge Color Rendering Integration Tests (Task 6.6)', () => {
     global.performance = { now: () => Date.now() };
 
     // Load risk-gauge.js
-    const riskGaugeCode = readFileSync(join(process.cwd(), 'risk-gauge.js'), 'utf-8');
+    const riskGaugeCode = readFileSync(join(process.cwd(), 'public/js/risk-gauge.js'), 'utf-8');
     
     // Execute the script in the window context
     const script = new window.Function(riskGaugeCode);

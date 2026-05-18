@@ -41,7 +41,7 @@ describe('Bug Condition Exploration - Legacy Hash Tools Event Listener Registrat
   beforeEach(() => {
     // Load the actual dashboard.html
     const dashboardHtml = fs.readFileSync(
-      path.resolve(process.cwd(), 'dashboard.html'),
+      path.resolve(process.cwd(), 'public/dashboard.html'),
       'utf-8'
     );
 
@@ -178,7 +178,7 @@ describe('Bug Condition Exploration - Legacy Hash Tools Event Listener Registrat
     it('should load main.js and verify it contains the problematic code at line 8174', () => {
       // Read main.js and verify the bug exists
       const mainJs = fs.readFileSync(
-        path.resolve(process.cwd(), 'main.js'),
+        path.resolve(process.cwd(), 'public/js/main.js'),
         'utf-8'
       );
 
@@ -221,7 +221,7 @@ describe('Bug Condition Exploration - Legacy Hash Tools Event Listener Registrat
             
             // Read main.js
             const mainJs = fs.readFileSync(
-              path.resolve(process.cwd(), 'main.js'),
+              path.resolve(process.cwd(), 'public/js/main.js'),
               'utf-8'
             );
 
