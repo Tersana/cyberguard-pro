@@ -802,6 +802,8 @@
         // State
         let selectedPlan = null;
         let plansData = [];
+        let currentSubscription = null;
+        let isLoadingSubscription = true; // Track loading state
 
         // Load plans on page load
         document.addEventListener('DOMContentLoaded', () => {
@@ -836,6 +838,54 @@
                     throw new Error('No plans data received from API');
                 }
 
+                // Fetch current subscription if user is authenticated
+                const token = localStorage.getItem('cyberguard_jwt');
+                console.log('[Pricing] JWT token exists:', !!token);
+                
+                if (token) {
+                    try {
+                        console.log('[Pricing] User is authenticated, fetching subscription...');
+                        console.log('[Pricing] Calling BillingAPI.getCurrentSubscription()...');
+                        
+                        currentSubscription = await BillingAPI.getCurrentSubscription();
+                        
+                        console.log('[Pricing] ===== SUBSCRIPTION DATA RECEIVED =====');
+                        console.log('[Pricing] Full subscription object:', JSON.stringify(currentSubscription, null, 2));
+                        console.log('[Pricing] subscription.plan:', currentSubscription?.plan);
+                        console.log('[Pricing] subscription.status:', currentSubscription?.status);
+                        console.log('[Pricing] Type of plan:', typeof currentSubscription?.plan);
+                        console.log('[Pricing] ==========================================');
+                        
+                        // Validate subscription data
+                        if (!currentSubscription || !currentSubscription.plan) {
+                            console.warn('[Pricing] Invalid subscription data, defaulting to free');
+                            currentSubscription = { plan: 'free', status: 'active' };
+                        }
+                    } catch (error) {
+                        console.error('[Pricing] Error fetching subscription:', error);
+                        console.error('[Pricing] Error status:', error.status);
+                        console.error('[Pricing] Error message:', error.message);
+                        
+                        // If 404, user has no subscription (defaults to free)
+                        if (error.status === 404) {
+                            console.log('[Pricing] No active subscription found (404), defaulting to free');
+                            currentSubscription = { plan: 'free', status: 'active' };
+                        } else {
+                            console.warn('[Pricing] Failed to fetch current subscription, defaulting to free');
+                            // Default to free on error to avoid showing wrong plan
+                            currentSubscription = { plan: 'free', status: 'active' };
+                        }
+                    }
+                } else {
+                    console.log('[Pricing] User not authenticated, defaulting to free');
+                    currentSubscription = { plan: 'free', status: 'active' };
+                }
+                
+                // Mark subscription loading as complete
+                isLoadingSubscription = false;
+                
+                console.log('[Pricing] Final currentSubscription before rendering:', currentSubscription);
+
                 // Render plan cards
                 renderPlanCards(plansData);
             } catch (error) {
@@ -864,26 +914,58 @@
         }
 
         /**
+         * Normalize plan name for comparison
+         * Handles case variations: 'Pro', 'pro', 'PRO', 'Starter', 'starter', 'Free', 'free'
+         */
+        function normalizePlanName(planName) {
+            if (!planName) return 'free';
+            return planName.toString().toLowerCase().trim();
+        }
+
+        /**
          * Render plan cards
          */
         function renderPlanCards(plans) {
             const plansGrid = document.getElementById('plans-grid');
 
-            // Determine "featured" plan: highest price with checkout available, or just middle index
-            const subscribablePlans = plans.filter(p => p.checkout_available);
-            let featuredId = null;
-            if (subscribablePlans.length > 0) {
-                // Pick the most expensive subscribable plan as "Most Popular"
-                featuredId = subscribablePlans.reduce((a, b) => (a.amount_egp > b.amount_egp ? a : b)).id;
+            console.log('[Pricing] ===== RENDERING PLAN CARDS =====');
+            console.log('[Pricing] currentSubscription:', currentSubscription);
+            
+            // Determine current plan from subscription data with normalization
+            const rawCurrentPlan = currentSubscription ? currentSubscription.plan : 'free';
+            const currentPlanId = normalizePlanName(rawCurrentPlan);
+            
+            console.log('[Pricing] Raw current plan:', rawCurrentPlan);
+            console.log('[Pricing] Normalized current plan ID:', currentPlanId);
+            console.log('[Pricing] Plans to render:', plans.map(p => ({ id: p.id, normalized: normalizePlanName(p.id) })));
+
+            // Determine "featured" plan: pro plan or highest priced plan
+            let featuredId = 'pro'; // Default to pro
+            const proPlan = plans.find(p => normalizePlanName(p.id) === 'pro');
+            if (!proPlan) {
+                // If no pro plan, pick the most expensive plan
+                const sortedPlans = [...plans].sort((a, b) => b.amount_egp - a.amount_egp);
+                featuredId = normalizePlanName(sortedPlans[0]?.id) || null;
             }
+            
+            console.log('[Pricing] Featured plan ID:', featuredId);
 
             const checkIcon = `<svg class="plan-feature-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
 
             plansGrid.innerHTML = plans.map(plan => {
-                const isCurrent = !plan.checkout_available;
-                const isFeatured = plan.id === featuredId;
+                // Normalize plan IDs for comparison
+                const normalizedPlanId = normalizePlanName(plan.id);
+                
+                // Check if this plan is the user's current plan
+                const isCurrent = normalizedPlanId === currentPlanId;
+                const isFeatured = normalizedPlanId === featuredId && !isCurrent;
                 const planName = capitalize(plan.id);
                 const isFree = plan.amount_egp === 0;
+                
+                console.log(`[Pricing] Plan: ${plan.id}`);
+                console.log(`  - Normalized: ${normalizedPlanId}`);
+                console.log(`  - Is Current: ${isCurrent} (comparing "${normalizedPlanId}" === "${currentPlanId}")`);
+                console.log(`  - Is Featured: ${isFeatured}`);
 
                 const cardClass = isCurrent ? 'plan-card plan-current'
                                 : isFeatured ? 'plan-card plan-featured'
@@ -927,6 +1009,9 @@
                     </div>
                 `;
             }).join('');
+            
+            console.log('[Pricing] ===== PLAN CARDS RENDERED =====');
+            console.log('[Pricing] Current plan badge should be on:', currentPlanId);
         }
 
         /**
