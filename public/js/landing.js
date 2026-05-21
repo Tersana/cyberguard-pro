@@ -229,8 +229,8 @@ if (heroSection && heroBackground) {
 
   const colors = [
     "rgba(167, 139, 250, 0.12)", // var(--cg-accent) translucent
-    "rgba(56, 189, 248, 0.08)",  // var(--cg-info) translucent
-    "rgba(139, 92, 246, 0.06)",   // var(--cg-accent-dark) translucent
+    "rgba(139, 92, 246, 0.08)",  // var(--cg-accent-hover) translucent
+    "rgba(109, 40, 217, 0.06)",   // var(--cg-accent-dark) translucent
   ];
 
   class HeroParticle {
