@@ -18,6 +18,10 @@
     {
       "source": "/api/billing/paymob/redirect",
       "destination": "/paymob-redirect"
+    },
+    {
+      "source": "/scan/:scanJobId",
+      "destination": "/scan-progress"
     }
   ],
   "redirects": [

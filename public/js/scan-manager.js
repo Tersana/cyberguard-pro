@@ -252,19 +252,25 @@
       scanState.finishedAt     = null;
       scanCompleted            = false;
 
-      showScanPanel();
+      // ── Navigate to dedicated scan progress page ─────────────────────────
+      // The scan-progress page will handle terminal, findings, controls.
+      // Store session info so scan-progress.js can read it if needed.
+      try {
+        sessionStorage.setItem("cg_pending_scan", JSON.stringify({
+          sessionId,
+          targetValue : scanState.targetValue,
+          targetId    : scanState.targetId,
+          startedAt   : scanState.startedAt,
+        }));
+      } catch (_) {}
 
-      // ── Wait for Echo to be connected before subscribing ─────────────────
-      await waitForEchoConnection();
-      subscribeToScanChannel(sessionId);
+      notify("Scan started — opening progress view…", "success");
 
-      // ── Concurrent polling as fallback ───────────────────────────────────
-      startStatusPolling(sessionId);
+      // Small delay so the toast is visible before navigation
+      setTimeout(() => {
+        window.location.href = `/scan/${sessionId}`;
+      }, 600);
 
-      // ── Safety timeout ───────────────────────────────────────────────────
-      startScanTimeout(sessionId);
-
-      notify("Scan started — connecting to live feed…", "success");
     } catch (err) {
       console.error("[ScanManager] startScan error:", err);
       notify(err.message || "Failed to start scan.", "error");
@@ -1171,6 +1177,52 @@
   window.addEventListener("beforeunload", cleanupScan);
 
   /* ═══════════════════════════════════════════════════════════════════════
+     PAUSE / RESUME / CANCEL — called by scan-progress.js
+  ═══════════════════════════════════════════════════════════════════════ */
+
+  /**
+   * Pause a running scan.
+   * Returns the raw API response data.
+   */
+  async function pauseScan(scanJobId) {
+    if (typeof window.scannerAPI !== "undefined") {
+      return window.scannerAPI.pauseScan(scanJobId);
+    }
+    // Fallback — direct fetch
+    const res = await apiFetch(`/scan/${scanJobId}/pause`, { method: "POST" });
+    if (!res.ok) throw new Error(`Pause failed (HTTP ${res.status})`);
+    return res.json();
+  }
+
+  /**
+   * Continue (resume) a paused scan.
+   * Returns scan_job data.
+   */
+  async function resumeScan(scanJobId) {
+    if (typeof window.scannerAPI !== "undefined") {
+      return window.scannerAPI.continueScan(scanJobId);
+    }
+    const res = await apiFetch(`/scan/${scanJobId}/continue`, { method: "POST" });
+    if (!res.ok) throw new Error(`Resume failed (HTTP ${res.status})`);
+    const data = await res.json();
+    return data.scan_job || data;
+  }
+
+  /**
+   * Cancel a scan permanently.
+   * Returns scan_job data.
+   */
+  async function cancelScan(scanJobId) {
+    if (typeof window.scannerAPI !== "undefined") {
+      return window.scannerAPI.cancelScan(scanJobId);
+    }
+    const res = await apiFetch(`/scan/${scanJobId}/cancel`, { method: "POST" });
+    if (!res.ok) throw new Error(`Cancel failed (HTTP ${res.status})`);
+    const data = await res.json();
+    return data.scan_job || data;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
      PUBLIC API
   ═══════════════════════════════════════════════════════════════════════ */
   window.ScanManager = {
@@ -1178,6 +1230,9 @@
     closeScanModal,
     closeScanPanel,
     startScan,
+    pauseScan,
+    resumeScan,
+    cancelScan,
     clearTerminal,
     _toggleGroup,
     _onCheckbox,

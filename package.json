@@ -1,11 +1,12 @@
 {
-  "name": "cyberguard-zap-proxy",
+  "name": "cyberguard-pro",
+  "type": "module",
   "version": "1.0.0",
   "description": "CORS proxy for OWASP ZAP API",
   "main": "zap-proxy.js",
   "scripts": {
-    "start": "node zap-proxy.js",
-    "dev": "nodemon zap-proxy.js",
+    "start": "node dev-server.js",
+    "dev": "nodemon dev-server.js",
     "test": "vitest --run",
     "test:watch": "vitest"
   },
