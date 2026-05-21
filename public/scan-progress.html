@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Scan Progress — CyberGuard Pro</title>
+        <meta name="description" content="Live scan progress — terminal output, real-time findings, and scan controls for CyberGuard Pro security scans." />
+
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="/css/theme-tokens.css" />
+        <link rel="stylesheet" href="/css/cyber-theme.css" />
+        <link rel="stylesheet" href="/css/Style.css" />
+
+        <style>
+            /* ═══════════════════════════════════════════════════════════
+               SCAN PROGRESS — Page-level styles
+               Tokens from theme-tokens.css; all colors via var(--cg-*)
+            ═══════════════════════════════════════════════════════════ */
+
+            /* ── Layout ──────────────────────────────────────────────── */
+            .sp-page {
+                min-height: 100vh;
+                background: var(--cg-bg-base);
+                font-family: var(--cg-font-sans);
+            }
+
+            .sp-content {
+                max-width: 1100px;
+                margin: 0 auto;
+                padding: 24px 16px 48px;
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            /* ── Header Card ─────────────────────────────────────────── */
+            .sp-header-card {
+                background: var(--cg-bg-surface);
+                border: 1px solid var(--cg-border);
+                border-radius: 16px;
+                padding: 20px 24px;
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+            .sp-header-left { flex: 1; min-width: 0; }
+            .sp-header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+
+            .sp-back-link {
+                display: inline-flex; align-items: center; gap: 6px;
+                color: var(--cg-text-3); font-size: 12px;
+                text-decoration: none; margin-bottom: 8px;
+                transition: color 0.15s;
+            }
+            .sp-back-link:hover { color: var(--cg-accent); }
+
+            .sp-target-name {
+                font-size: 20px; font-weight: 800;
+                color: var(--cg-text-1); margin: 0 0 4px;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            }
+            .sp-scan-meta {
+                display: flex; align-items: center;
+                flex-wrap: wrap; gap: 10px; margin-bottom: 12px;
+            }
+            .sp-meta-chip {
+                font-size: 11px; color: var(--cg-text-3);
+                display: flex; align-items: center; gap: 4px;
+            }
+            .sp-meta-chip code {
+                font-family: var(--cg-font-mono);
+                color: var(--cg-info); font-size: 11px;
+            }
+            .sp-sep { color: var(--cg-border-subtle); }
+
+            /* ── Driver chips ────────────────────────────────────────── */
+            .sp-driver-chip {
+                font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+                padding: 2px 8px; border-radius: 20px;
+                background: var(--cg-accent-muted);
+                border: 1px solid rgba(167, 139, 250, 0.25);
+                color: var(--cg-accent);
+                font-family: var(--cg-font-mono);
+            }
+            .sp-driver-chip--muted {
+                background: var(--cg-bg-elevated);
+                border-color: var(--cg-border);
+                color: var(--cg-text-3);
+            }
+
+            /* ── Status Badge ────────────────────────────────────────── */
+            .sp-status-badge {
+                display: inline-flex; align-items: center; gap: 7px;
+                padding: 5px 14px; border-radius: 20px;
+                font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+                border: 1px solid transparent;
+            }
+            .sp-badge--running {
+                background: rgba(34, 197, 94, 0.12);
+                border-color: rgba(34, 197, 94, 0.3);
+                color: #22c55e;
+            }
+            .sp-badge--pending {
+                background: rgba(251, 191, 36, 0.12);
+                border-color: rgba(251, 191, 36, 0.3);
+                color: var(--cg-warning);
+            }
+            .sp-badge--cancelled {
+                background: rgba(248, 113, 113, 0.12);
+                border-color: rgba(248, 113, 113, 0.3);
+                color: var(--cg-danger);
+            }
+            .sp-badge--completed {
+                background: rgba(52, 211, 153, 0.12);
+                border-color: rgba(52, 211, 153, 0.3);
+                color: var(--cg-success);
+            }
+
+            /* Pulsing dot for running status */
+            .sp-badge-pulse {
+                display: inline-block;
+                width: 8px; height: 8px;
+                border-radius: 50%;
+                background: #22c55e;
+                animation: sp-pulse 1.6s ease-in-out infinite;
+                flex-shrink: 0;
+            }
+            @keyframes sp-pulse {
+                0%, 100% { transform: scale(1); opacity: 1; }
+                50%       { transform: scale(1.5); opacity: 0.5; }
+            }
+
+            /* ── Control Bar ─────────────────────────────────────────── */
+            .sp-control-bar {
+                display: flex; align-items: center;
+                gap: 10px; flex-wrap: wrap;
+            }
+            .sp-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+            .sp-btn {
+                display: inline-flex; align-items: center; gap: 6px;
+                padding: 8px 16px; border-radius: 8px;
+                font-size: 13px; font-weight: 600; cursor: pointer;
+                border: 1px solid transparent;
+                transition: all 0.2s ease;
+            }
+            .sp-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+            .sp-btn--warning {
+                background: rgba(251, 191, 36, 0.12);
+                border-color: rgba(251, 191, 36, 0.3);
+                color: var(--cg-warning);
+            }
+            .sp-btn--warning:hover:not(:disabled) {
+                background: rgba(251, 191, 36, 0.22);
+            }
+            .sp-btn--success {
+                background: rgba(52, 211, 153, 0.12);
+                border-color: rgba(52, 211, 153, 0.3);
+                color: var(--cg-success);
+            }
+            .sp-btn--success:hover:not(:disabled) {
+                background: rgba(52, 211, 153, 0.22);
+            }
+            .sp-btn--danger {
+                background: rgba(248, 113, 113, 0.12);
+                border-color: rgba(248, 113, 113, 0.3);
+                color: var(--cg-danger);
+            }
+            .sp-btn--danger:hover:not(:disabled) {
+                background: rgba(248, 113, 113, 0.22);
+            }
+
+            .sp-controls-note {
+                font-size: 12px; color: var(--cg-text-3);
+            }
+            .sp-note {
+                display: inline-flex; align-items: center; gap: 5px;
+                font-size: 12px; font-weight: 500;
+            }
+            .sp-note--success { color: var(--cg-success); }
+            .sp-note--danger  { color: var(--cg-danger); }
+
+            /* ── WS Indicator ────────────────────────────────────────── */
+            .sp-ws-indicator {
+                font-size: 11px; color: var(--cg-warning);
+                background: rgba(251, 191, 36, 0.08);
+                border: 1px solid rgba(251, 191, 36, 0.2);
+                padding: 4px 10px; border-radius: 6px;
+            }
+
+            /* ── Two-column layout for terminal + findings ────────────── */
+            .sp-main-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+            }
+            @media (max-width: 768px) {
+                .sp-main-grid { grid-template-columns: 1fr; }
+            }
+
+            /* ── Panel card ──────────────────────────────────────────── */
+            .sp-panel {
+                background: var(--cg-bg-surface);
+                border: 1px solid var(--cg-border);
+                border-radius: 12px;
+                overflow: hidden;
+                display: flex; flex-direction: column;
+            }
+            .sp-panel-header {
+                display: flex; align-items: center; justify-content: space-between;
+                padding: 12px 16px;
+                border-bottom: 1px solid var(--cg-border);
+                background: var(--cg-bg-elevated);
+                flex-shrink: 0;
+            }
+            .sp-panel-title {
+                font-size: 12px; font-weight: 700; letter-spacing: 0.7px;
+                text-transform: uppercase; color: var(--cg-text-2);
+                display: flex; align-items: center; gap: 6px;
+            }
+            .sp-panel-actions { display: flex; gap: 6px; align-items: center; }
+
+            /* ── Terminal ────────────────────────────────────────────── */
+            .sp-terminal-wrap {
+                flex: 1;
+                min-height: 280px; max-height: 420px;
+            }
+            #sp-terminal {
+                font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+                font-size: 12px; line-height: 1.7;
+                background: #0a0a0a;
+                color: #22c55e;
+                padding: 14px 16px;
+                height: 100%; min-height: 280px; max-height: 420px;
+                overflow-y: auto;
+                white-space: pre-wrap;
+                word-break: break-all;
+                scrollbar-width: thin;
+                scrollbar-color: #1f2937 transparent;
+            }
+
+            /* Terminal line styles */
+            .sp-terminal-line { display: block; }
+            .sp-tl-default  { color: #22c55e; }
+            .sp-tl-system   { color: #64748b; }
+            .sp-tl-error    { color: var(--cg-danger); }
+            .sp-tl-warn     { color: var(--cg-warning); }
+            .sp-tl-info     { color: var(--cg-info); }
+            .sp-tl-live     { color: #a78bfa; }
+
+            /* ── Findings Table ──────────────────────────────────────── */
+            .sp-findings-wrap {
+                flex: 1; overflow-y: auto;
+                min-height: 280px; max-height: 420px;
+                scrollbar-width: thin;
+                scrollbar-color: #1f2937 transparent;
+            }
+            .sp-findings-table {
+                width: 100%; border-collapse: collapse;
+            }
+            .sp-th {
+                font-size: 10px; font-weight: 700; letter-spacing: 0.7px;
+                text-transform: uppercase; color: var(--cg-text-3);
+                padding: 8px 12px; text-align: left;
+                background: var(--cg-bg-elevated);
+                border-bottom: 1px solid var(--cg-border);
+                white-space: nowrap;
+            }
+            .sp-table-row:hover { background: var(--cg-bg-elevated); }
+            .sp-td {
+                padding: 10px 12px; font-size: 12px;
+                color: var(--cg-text-2);
+                border-bottom: 1px solid var(--cg-border);
+                vertical-align: middle;
+            }
+            .sp-td--title { font-weight: 500; color: var(--cg-text-1); }
+            .sp-td--mono  { font-family: var(--cg-font-mono); font-size: 11px; }
+            .sp-table-empty {
+                padding: 32px; text-align: center;
+                color: var(--cg-text-3); font-size: 13px;
+            }
+            .sp-table-error { color: var(--cg-danger); }
+            .sp-retry-btn {
+                margin-left: 8px; font-size: 12px;
+                color: var(--cg-accent); cursor: pointer;
+                background: none; border: none; text-decoration: underline;
+            }
+
+            /* ── Severity badges ─────────────────────────────────────── */
+            .sp-sev-badge {
+                padding: 2px 8px; border-radius: 20px;
+                font-size: 10px; font-weight: 700;
+                letter-spacing: 0.4px;
+            }
+            .sp-sev-critical { background: rgba(248,113,113,0.15); color: var(--cg-danger); }
+            .sp-sev-high     { background: rgba(249,115,22,0.15);  color: #F97316; }
+            .sp-sev-medium   { background: rgba(251,191,36,0.15);  color: var(--cg-warning); }
+            .sp-sev-low      { background: rgba(56,189,248,0.15);  color: var(--cg-info); }
+            .sp-sev-info     { background: rgba(148,163,184,0.1);  color: var(--cg-text-2); }
+
+            /* ── Status pills ────────────────────────────────────────── */
+            .sp-status-pill {
+                padding: 2px 8px; border-radius: 20px;
+                font-size: 10px; font-weight: 700; letter-spacing: 0.4px;
+            }
+            .sp-status-open   { background: rgba(251,191,36,0.12); color: var(--cg-warning); }
+            .sp-status-closed { background: rgba(52,211,153,0.12); color: var(--cg-success); }
+
+            /* ── Metadata panel ──────────────────────────────────────── */
+            .sp-metadata-panel {
+                background: var(--cg-bg-surface);
+                border: 1px solid var(--cg-border);
+                border-radius: 12px; padding: 16px 20px;
+            }
+            .sp-metadata-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 12px;
+            }
+            .sp-meta-item { }
+            .sp-meta-label {
+                font-size: 10px; font-weight: 700; letter-spacing: 0.7px;
+                text-transform: uppercase; color: var(--cg-text-3); margin-bottom: 3px;
+            }
+            .sp-meta-value {
+                font-family: var(--cg-font-mono); font-size: 11px;
+                color: var(--cg-text-2); word-break: break-all;
+            }
+
+            /* ── Cancel confirm dialog ───────────────────────────────── */
+            .sp-dialog-backdrop {
+                position: fixed; inset: 0;
+                background: var(--cg-overlay);
+                display: flex; align-items: center; justify-content: center;
+                z-index: 100; padding: 16px;
+            }
+            .sp-dialog {
+                background: var(--cg-bg-surface);
+                border: 1px solid var(--cg-border);
+                border-radius: 16px;
+                padding: 24px; width: 100%; max-width: 400px;
+                box-shadow: var(--cg-shadow-xl);
+            }
+            .sp-dialog-title {
+                font-size: 16px; font-weight: 700;
+                color: var(--cg-danger); margin: 0 0 8px;
+            }
+            .sp-dialog-body {
+                font-size: 13px; color: var(--cg-text-2);
+                line-height: 1.6; margin: 0 0 20px;
+            }
+            .sp-dialog-actions { display: flex; gap: 10px; }
+
+            /* ── Skeleton ────────────────────────────────────────────── */
+            .sp-skeleton {
+                background: var(--cg-bg-surface);
+                border: 1px solid var(--cg-border);
+                border-radius: 16px;
+                overflow: hidden;
+            }
+            .shimmer {
+                background: linear-gradient(
+                    90deg,
+                    rgba(167,139,250,0.04) 25%,
+                    rgba(167,139,250,0.10) 50%,
+                    rgba(167,139,250,0.04) 75%
+                );
+                background-size: 200% 100%;
+                animation: sp-shimmer 1.6s infinite;
+            }
+            @keyframes sp-shimmer {
+                0%   { background-position: 200% 0; }
+                100% { background-position: -200% 0; }
+            }
+
+            /* ── Error state ─────────────────────────────────────────── */
+            .sp-error-state {
+                max-width: 480px; margin: 80px auto;
+                text-align: center; padding: 24px;
+            }
+            .sp-error-icon {
+                width: 64px; height: 64px; border-radius: 16px;
+                background: rgba(248,113,113,0.12);
+                border: 1px solid rgba(248,113,113,0.25);
+                display: flex; align-items: center; justify-content: center;
+                margin: 0 auto 20px;
+            }
+            .sp-error-title {
+                font-size: 20px; font-weight: 800;
+                color: var(--cg-text-1); margin: 0 0 8px;
+            }
+            .sp-error-msg {
+                font-size: 13px; color: var(--cg-text-3);
+                line-height: 1.6; margin: 0 0 24px;
+            }
+
+            /* ── Misc button ─────────────────────────────────────────── */
+            .sp-text-btn {
+                background: none; border: none;
+                color: var(--cg-text-3); font-size: 11px;
+                cursor: pointer; display: flex; align-items: center; gap: 4px;
+                transition: color 0.15s;
+            }
+            .sp-text-btn:hover { color: var(--cg-text-1); }
+        </style>
+    </head>
+    <body class="sp-page">
+
+        <!-- ─── Top Bar ───────────────────────────────────────────────────── -->
+        <header class="cyber-header px-6 py-3 flex items-center justify-between z-10 border-b border-[var(--cg-border)]">
+            <div class="flex items-center gap-4">
+                <a href="javascript:history.back()"
+                   class="cyber-btn-ghost text-xs px-3 py-2 rounded-lg flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+                    </svg>
+                    Back
+                </a>
+                <div class="w-px h-5 bg-[var(--cg-border)]"></div>
+                <div>
+                    <h1 class="text-base font-bold text-white">Scan Progress</h1>
+                    <p class="text-xs text-slate-400">Live security scan monitoring</p>
+                </div>
+            </div>
+            <a href="/dashboard" class="cyber-btn-ghost text-xs px-3 py-2 rounded-lg">Dashboard</a>
+        </header>
+
+        <!-- ─── Loading Skeleton ──────────────────────────────────────────── -->
+        <div id="sp-skeleton" class="sp-content" aria-live="polite" aria-label="Loading scan…">
+            <div class="sp-skeleton">
+                <div class="shimmer h-28 rounded-2xl"></div>
+            </div>
+            <div class="sp-skeleton">
+                <div class="shimmer h-10 rounded-xl"></div>
+            </div>
+            <div class="sp-main-grid">
+                <div class="sp-skeleton shimmer" style="height:340px;border-radius:12px"></div>
+                <div class="sp-skeleton shimmer" style="height:340px;border-radius:12px"></div>
+            </div>
+        </div>
+
+        <!-- ─── Error State ───────────────────────────────────────────────── -->
+        <div id="sp-error-state" class="hidden" aria-live="assertive">
+            <div class="sp-error-state">
+                <div class="sp-error-icon">
+                    <svg class="w-8 h-8 text-[var(--cg-danger)]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+                    </svg>
+                </div>
+                <h2 id="sp-error-title" class="sp-error-title">Error</h2>
+                <p id="sp-error-msg" class="sp-error-msg">Something went wrong.</p>
+                <a href="/dashboard"
+                   class="cyber-btn-primary px-6 py-2.5 rounded-lg font-semibold text-sm inline-flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+                    </svg>
+                    Go to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- ─── Main Content ──────────────────────────────────────────────── -->
+        <div id="sp-main-content" class="hidden sp-content">
+
+            <!-- Header Card -->
+            <div class="sp-header-card">
+                <div class="sp-header-left">
+                    <h2 id="sp-target-name" class="sp-target-name">Loading target…</h2>
+                    <div class="sp-scan-meta">
+                        <span class="sp-meta-chip">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <line x1="9" y1="3" x2="9" y2="21"/>
+                            </svg>
+                            Scan ID: <code id="sp-scan-id-short">—</code>
+                        </span>
+                        <span class="sp-sep">·</span>
+                        <span class="sp-meta-chip">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            Started: <code id="sp-started-at">—</code>
+                        </span>
+                    </div>
+                    <!-- Driver chips -->
+                    <div id="sp-drivers" class="flex flex-wrap gap-2"></div>
+                </div>
+                <div class="sp-header-right">
+                    <span id="sp-status-badge" class="sp-status-badge sp-badge--pending">
+                        Loading…
+                    </span>
+                    <!-- WebSocket indicator -->
+                    <div id="sp-ws-indicator" class="sp-ws-indicator hidden" role="status"></div>
+                </div>
+            </div>
+
+            <!-- Control Bar -->
+            <div class="sp-control-bar cyber-card px-4 py-3">
+                <div id="sp-controls" class="sp-controls" role="group" aria-label="Scan controls"></div>
+                <span id="sp-controls-note" class="sp-controls-note"></span>
+            </div>
+
+            <!-- Terminal + Findings grid -->
+            <div class="sp-main-grid">
+
+                <!-- ── Terminal Panel ──────────────────────────────────── -->
+                <div class="sp-panel">
+                    <div class="sp-panel-header">
+                        <span class="sp-panel-title">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+                            </svg>
+                            Live Terminal
+                        </span>
+                        <div class="sp-panel-actions">
+                            <button class="sp-text-btn" title="Scroll to bottom"
+                                    onclick="(function(){const t=document.getElementById('sp-terminal');if(t)t.scrollTop=t.scrollHeight})()">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="18 15 12 21 6 15"/>
+                                    <polyline points="18 9 12 15 6 9"/>
+                                </svg>
+                                Bottom
+                            </button>
+                        </div>
+                    </div>
+                    <div class="sp-terminal-wrap">
+                        <div id="sp-terminal" role="log" aria-live="polite" aria-label="Scan terminal output"></div>
+                    </div>
+                </div>
+
+                <!-- ── Findings Panel ──────────────────────────────────── -->
+                <div class="sp-panel">
+                    <div class="sp-panel-header">
+                        <span class="sp-panel-title">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                            Findings
+                        </span>
+                        <div class="sp-panel-actions">
+                            <span id="sp-findings-count" class="text-xs text-slate-500">—</span>
+                        </div>
+                    </div>
+                    <div class="sp-findings-wrap">
+                        <table class="sp-findings-table" aria-label="Scan findings">
+                            <thead>
+                                <tr>
+                                    <th class="sp-th">Title</th>
+                                    <th class="sp-th">Severity</th>
+                                    <th class="sp-th">Status</th>
+                                    <th class="sp-th">Discovered</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sp-findings-body">
+                                <tr>
+                                    <td colspan="4" class="sp-table-empty">
+                                        <span class="cyber-spinner-sm"></span> Loading findings…
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metadata (collapsible) -->
+            <div>
+                <button class="sp-text-btn mb-2"
+                        onclick="window._scanProgress.toggleMetadata()"
+                        aria-expanded="false"
+                        aria-controls="sp-metadata-panel">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+                    </svg>
+                    Scan Metadata
+                </button>
+                <div id="sp-metadata-panel" class="sp-metadata-panel hidden">
+                    <div class="sp-metadata-grid">
+                        <div class="sp-meta-item">
+                            <div class="sp-meta-label">Scan Job ID</div>
+                            <div class="sp-meta-value" id="sp-meta-scan-id">—</div>
+                        </div>
+                        <div class="sp-meta-item">
+                            <div class="sp-meta-label">Target ID</div>
+                            <div class="sp-meta-value" id="sp-meta-target-id">—</div>
+                        </div>
+                        <div class="sp-meta-item">
+                            <div class="sp-meta-label">Project ID</div>
+                            <div class="sp-meta-value" id="sp-meta-project-id">—</div>
+                        </div>
+                        <div class="sp-meta-item">
+                            <div class="sp-meta-label">Started At</div>
+                            <div class="sp-meta-value" id="sp-meta-started">—</div>
+                        </div>
+                        <div class="sp-meta-item">
+                            <div class="sp-meta-label">Finished At</div>
+                            <div class="sp-meta-value" id="sp-meta-finished">—</div>
+                        </div>
+                        <div class="sp-meta-item">
+                            <div class="sp-meta-label">Drivers</div>
+                            <div class="sp-meta-value" id="sp-meta-drivers">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /#sp-main-content -->
+
+        <!-- ─── Cancel Confirmation Dialog ────────────────────────────────── -->
+        <div id="sp-cancel-dialog"
+             class="sp-dialog-backdrop hidden"
+             role="dialog" aria-modal="true"
+             aria-labelledby="sp-cancel-dialog-title">
+            <div class="sp-dialog">
+                <h3 id="sp-cancel-dialog-title" class="sp-dialog-title">
+                    Cancel Scan?
+                </h3>
+                <p class="sp-dialog-body">
+                    This will permanently stop the scan. Running containers will be shut down immediately
+                    and this action <strong class="text-white">cannot be undone</strong>.
+                </p>
+                <div class="sp-dialog-actions">
+                    <button id="sp-cancel-confirm-btn"
+                            onclick="window._scanProgress.doCancel()"
+                            class="sp-btn sp-btn--danger">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                        Yes, Cancel Scan
+                    </button>
+                    <button onclick="window._scanProgress.closeCancelDialog()"
+                            class="cyber-btn-ghost px-4 py-2.5 rounded-lg text-sm">
+                        Go Back
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── Scripts ───────────────────────────────────────────────────── -->
+        <script src="/js/cyber-notify.js"></script>
+        <script src="/js/api-client.js"></script>
+        <script src="/lib/pusher.min.js"></script>
+        <script src="/lib/echo.iife.js"></script>
+        <script src="/js/echo-config.js"></script>
+        <script src="/js/scan-progress.js"></script>
+
+    </body>
+</html>

@@ -208,6 +208,58 @@
             .findings-empty-state p, .findings-error-state span { font-size:13px; max-width:320px; line-height:1.5; }
             .btn-show-all, .btn-retry { margin-top:8px; padding:8px 20px; background:var(--cg-accent-muted); border:1px solid rgba(167,139,250,0.3); border-radius:var(--cg-radius-md); color:var(--cg-accent); font-size:13px; font-weight:500; cursor:pointer; transition:all 0.2s ease; }
             .btn-show-all:hover, .btn-retry:hover { background:var(--cg-accent); color:#fff; }
+
+            /* ── Scans Tab ───────────────────────────────────────────── */
+            .scans-table { width:100%; border-collapse:collapse; }
+            .scans-th {
+                font-size:10px; font-weight:700; letter-spacing:0.7px;
+                text-transform:uppercase; color:var(--cg-text-3);
+                padding:10px 14px; text-align:left;
+                background:var(--cg-bg-elevated);
+                border-bottom:1px solid var(--cg-border);
+                white-space:nowrap;
+            }
+            .scans-td {
+                padding:10px 14px; font-size:12px;
+                color:var(--cg-text-2);
+                border-bottom:1px solid var(--cg-border);
+                vertical-align:middle;
+            }
+            .scans-td--mono { font-family:var(--cg-font-mono); font-size:11px; }
+            .scans-row:hover { background:var(--cg-bg-elevated); }
+            .scan-status-pill {
+                padding:2px 8px; border-radius:20px;
+                font-size:10px; font-weight:700; letter-spacing:0.4px;
+            }
+            .scan-pill-running   { background:rgba(34,197,94,0.12);   color:#22c55e; }
+            .scan-pill-pending   { background:rgba(251,191,36,0.12);  color:var(--cg-warning); }
+            .scan-pill-completed { background:rgba(52,211,153,0.12);  color:var(--cg-success); }
+            .scan-pill-cancelled { background:rgba(248,113,113,0.12); color:var(--cg-danger); }
+            .scan-pill-default   { background:var(--cg-bg-elevated);  color:var(--cg-text-3); }
+            /* pulsing dot for running */
+            .scan-pill-running::before {
+                content:'';
+                display:inline-block; width:6px; height:6px; border-radius:50%;
+                background:#22c55e; margin-right:5px;
+                animation:pill-pulse 1.6s ease-in-out infinite;
+            }
+            @keyframes pill-pulse {
+                0%,100%{transform:scale(1);opacity:1}
+                50%{transform:scale(1.6);opacity:.4}
+            }
+            .scans-empty {
+                padding:40px; text-align:center;
+                color:var(--cg-text-3); font-size:13px;
+            }
+
+            /* ── Target Scan History sub-panel ──────────────────────── */
+            .target-history-panel {
+                margin-top:6px;
+                background:var(--cg-bg-elevated);
+                border:1px solid var(--cg-border);
+                border-radius:10px; overflow:hidden;
+            }
+            .target-history-panel.hidden { display:none; }
         </style>
     </head>
     <body class="cyber-body min-h-screen">
@@ -433,6 +485,23 @@
                     </svg>
                     Findings
                     <span class="tab-badge" id="findings-tab-badge" style="display:none">0</span>
+                </button>
+                <button
+                    id="scans-tab-btn"
+                    class="detail-tab px-5 py-2 rounded-lg text-sm font-semibold border border-transparent text-[var(--cg-text-2)]"
+                    onclick="switchDetailTab('scans')"
+                    aria-label="Scans history tab"
+                >
+                    <svg
+                        class="w-4 h-4 inline-block mr-1.5 -mt-0.5"
+                        fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2"
+                    >
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    Scans
+                    <span class="tab-badge" id="scans-tab-badge" style="display:none">0</span>
                 </button>
             </div>
 
@@ -1017,8 +1086,47 @@
                     <div id="findings-list-container"></div>
 
                 </div>
-            </div>
+            </div><!-- /#tab-findings -->
+
+            <!-- ── Scans Tab ─────────────────────────────────────────────────────── -->
+            <div id="tab-scans" class="hidden space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-white">Scan History</h2>
+                    <button
+                        onclick="loadProjectScans()"
+                        class="btn-refresh-findings"
+                        aria-label="Refresh scan history"
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+                <div class="cyber-card overflow-hidden">
+                    <table class="scans-table" aria-label="Project scan history">
+                        <thead>
+                            <tr>
+                                <th class="scans-th">Scan ID</th>
+                                <th class="scans-th">Target</th>
+                                <th class="scans-th">Status</th>
+                                <th class="scans-th">Triggered By</th>
+                                <th class="scans-th">Started</th>
+                                <th class="scans-th">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scans-table-body">
+                            <tr><td colspan="6" class="scans-empty">
+                                <span class="shimmer inline-block w-40 h-3 rounded"></span>
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div><!-- /#tab-scans -->
+
         </main>
+
 
         <!-- ─── Add Target Modal ───────────────────────────────────────────────── -->
         <div
@@ -2111,16 +2219,47 @@
                         Scan
                     </button>`;
 
+                const historyBtn = `
+                    <button
+                        onclick="toggleTargetScanHistory('${id}')"
+                        data-history-btn="${id}"
+                        title="View scan history for this target"
+                        aria-label="View scan history for ${label}"
+                        class="cyber-btn-ghost text-xs px-2.5 py-1.5 rounded flex items-center gap-1.5"
+                    >
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>
+                        History
+                    </button>`;
+
                 return `
-                    <div class="cyber-card p-3 flex items-center gap-3" data-target-id="${id}">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-semibold text-white truncate">${label}</p>
-                            <p class="text-xs text-slate-400 font-mono truncate">${value}</p>
+                    <div class="space-y-1" data-target-wrapper="${id}">
+                        <div class="cyber-card p-3 flex items-center gap-3" data-target-id="${id}">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-white truncate">${label}</p>
+                                <p class="text-xs text-slate-400 font-mono truncate">${value}</p>
+                            </div>
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                <span class="text-xs px-2 py-0.5 rounded-full border font-semibold ${typeBadgeCls}">${cap(type)}</span>
+                                ${scanBtn}
+                                ${historyBtn}
+                                ${editDeleteBtns}
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2 flex-shrink-0">
-                            <span class="text-xs px-2 py-0.5 rounded-full border font-semibold ${typeBadgeCls}">${cap(type)}</span>
-                            ${scanBtn}
-                            ${editDeleteBtns}
+                        <!-- Target scan history sub-panel (lazy loaded) -->
+                        <div id="target-history-${id}" class="target-history-panel hidden">
+                            <table class="scans-table" aria-label="Scan history for ${label}">
+                                <thead><tr>
+                                    <th class="scans-th">Scan ID</th>
+                                    <th class="scans-th">Status</th>
+                                    <th class="scans-th">Started</th>
+                                    <th class="scans-th">View</th>
+                                </tr></thead>
+                                <tbody id="target-history-body-${id}">
+                                    <tr><td colspan="4" class="scans-empty">Loading…</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>`;
             }
@@ -2500,7 +2639,7 @@
                     btn.classList.toggle("active", isActive);
                     if (!isActive) btn.classList.remove("active");
                 });
-                ["overview", "team", "settings", "targets", "findings"].forEach((id) => {
+                ["overview", "team", "settings", "targets", "findings", "scans"].forEach((id) => {
                     const el = document.getElementById(`tab-${id}`);
                     if (el) el.classList.toggle("hidden", id !== tab);
                 });
@@ -2513,6 +2652,11 @@
                     } else {
                         showSelectTargetPrompt();
                     }
+                }
+
+                // Auto-load project scans when switching to scans tab
+                if (tab === "scans" && !_scansLoaded) {
+                    loadProjectScans();
                 }
             }
 
@@ -2603,6 +2747,152 @@
                 if (!btn || !btn._orig) return;
                 btn.innerHTML = btn._orig;
                 btn.disabled = false;
+            }
+
+            // ─── Scans (Project-level) ────────────────────────────────────────────────
+
+            let _scansLoaded = false;
+
+            async function loadProjectScans() {
+                const tbody = document.getElementById("scans-table-body");
+                if (!tbody) return;
+
+                tbody.innerHTML = `<tr><td colspan="6" class="scans-empty">
+                    <span class="cyber-spinner-sm"></span> Loading scans…
+                </td></tr>`;
+
+                try {
+                    if (!window.scannerAPI) throw new Error("scannerAPI not available");
+                    const scans = await window.scannerAPI.getProjectScans(_projectId);
+                    _scansLoaded = true;
+
+                    // Update tab badge
+                    const badge = document.getElementById("scans-tab-badge");
+                    if (badge) {
+                        badge.textContent = scans.length;
+                        badge.style.display = scans.length > 0 ? "inline-flex" : "none";
+                    }
+
+                    if (scans.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="6" class="scans-empty">
+                            No scans yet. Start a scan from the Targets tab.
+                        </td></tr>`;
+                        return;
+                    }
+
+                    tbody.innerHTML = scans.map(scan => renderScanRow(scan)).join("");
+
+                } catch (err) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="scans-empty" style="color:var(--cg-danger)">
+                        Failed to load scans.
+                        <button onclick="loadProjectScans()" class="btn-retry ml-2">Retry</button>
+                    </td></tr>`;
+                }
+            }
+
+            function renderScanRow(item) {
+                const s         = item.scan || item;
+                const meta      = item.metadata || {};
+                const scanId    = esc(String(s.id || ""));
+                const shortId   = scanId.substring(0, 8).toUpperCase();
+                const status    = (s.status || "unknown").toLowerCase();
+                const targetVal = esc(meta.target_name || s.target?.value || s.target_id || "—");
+                const triggeredBy = esc(meta.triggered_by || s.triggered_by || s.user?.name || "—");
+                const startedAt = (s.started_at || s.created_at)
+                    ? new Date(s.started_at || s.created_at).toLocaleString("en-US",
+                        {year:"numeric",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})
+                    : "—";
+
+                const STATUS_CLS = {
+                    running  : "scan-pill-running",
+                    pending  : "scan-pill-pending",
+                    completed: "scan-pill-completed",
+                    cancelled: "scan-pill-cancelled",
+                };
+                const pillCls = STATUS_CLS[status] || "scan-pill-default";
+
+                return `<tr class="scans-row">
+                    <td class="scans-td scans-td--mono">${shortId}&hellip;</td>
+                    <td class="scans-td">${targetVal}</td>
+                    <td class="scans-td"><span class="scan-status-pill ${pillCls}">${esc(status.toUpperCase())}</span></td>
+                    <td class="scans-td">${triggeredBy}</td>
+                    <td class="scans-td scans-td--mono">${esc(startedAt)}</td>
+                    <td class="scans-td">
+                        ${scanId ? `<a href="/scan/${scanId}"
+                           class="cyber-btn-ghost text-xs px-2.5 py-1.5 rounded flex items-center gap-1"
+                           aria-label="View scan ${shortId}"
+                        >
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
+                            </svg>
+                            View
+                        </a>` : `<span class="text-xs" style="color:var(--cg-muted)">No ID</span>`}
+                    </td>
+                </tr>`;
+            }
+
+            // ─── Target Scan History ──────────────────────────────────────────────────
+
+            async function toggleTargetScanHistory(targetId) {
+                const panel = document.getElementById(`target-history-${targetId}`);
+                if (!panel) return;
+
+                const isVisible = !panel.classList.contains("hidden");
+                if (isVisible) {
+                    panel.classList.add("hidden");
+                    return;
+                }
+
+                panel.classList.remove("hidden");
+                const tbody = document.getElementById(`target-history-body-${targetId}`);
+                if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="scans-empty">
+                    <span class="cyber-spinner-sm"></span> Loading…
+                </td></tr>`;
+
+                try {
+                    if (!window.scannerAPI) throw new Error("scannerAPI not available");
+                    const scans = await window.scannerAPI.getTargetScans(targetId);
+
+                    if (!tbody) return;
+                    if (scans.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="4" class="scans-empty">No scans for this target yet.</td></tr>`;
+                        return;
+                    }
+
+                    tbody.innerHTML = scans.map(item => {
+                        const s        = item.scan || item;
+                        const scanId   = esc(String(s.id || ""));
+                        const shortId  = scanId.substring(0, 8).toUpperCase();
+                        const status   = (s.status || "unknown").toLowerCase();
+                        const started  = (s.started_at || s.created_at)
+                            ? new Date(s.started_at || s.created_at).toLocaleString("en-US",
+                                {year:"numeric",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})
+                            : "—";
+                        const STATUS_CLS = {
+                            running  : "scan-pill-running",
+                            pending  : "scan-pill-pending",
+                            completed: "scan-pill-completed",
+                            cancelled: "scan-pill-cancelled",
+                        };
+                        const pillCls = STATUS_CLS[status] || "scan-pill-default";
+                        return `<tr class="scans-row">
+                            <td class="scans-td scans-td--mono">${shortId}&hellip;</td>
+                            <td class="scans-td"><span class="scan-status-pill ${pillCls}">${esc(status.toUpperCase())}</span></td>
+                            <td class="scans-td scans-td--mono">${esc(started)}</td>
+                            <td class="scans-td">
+                                <a href="/scan/${scanId}" class="cyber-btn-ghost text-xs px-2 py-1 rounded"
+                                   aria-label="View scan ${shortId}">View</a>
+                            </td>
+                        </tr>`;
+                    }).join("");
+                } catch (err) {
+                    if (tbody) tbody.innerHTML =
+                        `<tr><td colspan="4" class="scans-empty" style="color:var(--cg-danger)">
+                            Failed to load. <button onclick="toggleTargetScanHistory('${esc(targetId)}')"
+                            class="btn-retry">Retry</button>
+                        </td></tr>`;
+                }
             }
 
             // ─── Findings ─────────────────────────────────────────────────────────────

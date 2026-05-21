@@ -504,6 +504,201 @@ function withLoading(asyncFn, options = {}) {
   };
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+   SCANNER API MODULE
+   Centralized scanning API functions — all 9 endpoints.
+   Requires: APIClient class (above), API_BASE_URL, JWT_STORAGE_KEY constants.
+   Exposed on window.scannerAPI for use by scan-manager.js, scan-progress.js, etc.
+═══════════════════════════════════════════════════════════════════════ */
+(function () {
+  "use strict";
+
+  /**
+   * Internal helper — performs an authenticated fetch using the same
+   * base URL and headers as APIClient.
+   * Parses JSON and checks data.status === "success".
+   * @param {string} method  HTTP method
+   * @param {string} path    API path (no leading slash needed)
+   * @param {Object} [body]  Request body (for POST/PATCH)
+   * @returns {Promise<Object>} Parsed response data
+   */
+  async function _apiFetch(method, path, body) {
+    const token = localStorage.getItem(JWT_STORAGE_KEY);
+    const headers = {
+      Accept: "application/json",
+      "ngrok-skip-browser-warning": "true",
+    };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    if (body) headers["Content-Type"] = "application/json";
+
+    // Strip leading slash so we don't double-slash with base URL
+    const cleanPath = path.replace(/^\//, "");
+    const url = API_BASE_URL + cleanPath;
+
+    let response;
+    try {
+      response = await fetch(url, {
+        method,
+        headers,
+        ...(body ? { body: JSON.stringify(body) } : {}),
+      });
+    } catch (err) {
+      throw new NetworkError(`Network request failed: ${err.message}`);
+    }
+
+    // Parse body
+    let data = {};
+    try {
+      data = await response.json();
+    } catch (_) {
+      // Ignore parse errors for empty responses
+    }
+
+    if (!response.ok) {
+      const msg = data.message || `Request failed (HTTP ${response.status})`;
+      throw new APIError(msg, response.status, data);
+    }
+
+    return data;
+  }
+
+  /**
+   * GET /api/scanners
+   * Returns list of available scanners grouped ready for UI rendering.
+   */
+  async function getAvailableScanners() {
+    const data = await _apiFetch("GET", "scanners");
+    if (data.status !== "success") {
+      throw new APIError(data.message || "Failed to load scanners", 0, data);
+    }
+    return Array.isArray(data.scanners) ? data.scanners : [];
+  }
+
+  /**
+   * POST /api/scan/start
+   * @param {{ target_id: string, driver_ids: string[], flags?: string[] }} params
+   */
+  async function startScan({ target_id, driver_ids, flags = [] }) {
+    if (!target_id) throw new Error("target_id is required");
+    if (!Array.isArray(driver_ids) || driver_ids.length === 0) {
+      throw new Error("At least one driver_id is required");
+    }
+    const data = await _apiFetch("POST", "scan/start", {
+      target_id,
+      driver_ids,
+      flags,
+    });
+    if (data.status !== "success") {
+      throw new APIError(data.message || "Failed to start scan", 0, data);
+    }
+    return data.scan_job;
+  }
+
+  /**
+   * GET /api/scan/{scanJobId}/status
+   * @param {string} scanJobId
+   */
+  async function getScanStatus(scanJobId) {
+    if (!scanJobId) throw new Error("scanJobId is required");
+    const data = await _apiFetch("GET", `scan/${scanJobId}/status`);
+    if (data.status !== "success") {
+      throw new APIError(data.message || "Failed to get scan status", 0, data);
+    }
+    return data.scan_session;
+  }
+
+  /**
+   * GET /api/scan/{scanJobId}/findings
+   * @param {string} scanJobId
+   */
+  async function getScanFindings(scanJobId) {
+    if (!scanJobId) throw new Error("scanJobId is required");
+    const data = await _apiFetch("GET", `scan/${scanJobId}/findings`);
+    if (data.status !== "success") {
+      throw new APIError(data.message || "Failed to get scan findings", 0, data);
+    }
+    return Array.isArray(data.findings) ? data.findings : [];
+  }
+
+  /**
+   * GET /api/projects/{projectId}/scans
+   * @param {string} projectId
+   */
+  async function getProjectScans(projectId) {
+    if (!projectId) throw new Error("projectId is required");
+    const data = await _apiFetch("GET", `projects/${projectId}/scans`);
+    if (data.status !== "success") {
+      throw new APIError(data.message || "Failed to get project scans", 0, data);
+    }
+    return Array.isArray(data.scans) ? data.scans : [];
+  }
+
+  /**
+   * GET /api/targets/{targetId}/scans
+   * @param {string} targetId
+   */
+  async function getTargetScans(targetId) {
+    if (!targetId) throw new Error("targetId is required");
+    const data = await _apiFetch("GET", `targets/${targetId}/scans`);
+    if (data.status !== "success") {
+      throw new APIError(data.message || "Failed to get target scans", 0, data);
+    }
+    return Array.isArray(data.scans) ? data.scans : [];
+  }
+
+  /**
+   * POST /api/scan/{scanJobId}/pause
+   * @param {string} scanJobId
+   */
+  async function pauseScan(scanJobId) {
+    if (!scanJobId) throw new Error("scanJobId is required");
+    const data = await _apiFetch("POST", `scan/${scanJobId}/pause`);
+    if (data.status !== "success") {
+      throw new APIError(data.message || "Failed to pause scan", 0, data);
+    }
+    return data; // { status, message, scan_job_status }
+  }
+
+  /**
+   * POST /api/scan/{scanJobId}/continue
+   * @param {string} scanJobId
+   */
+  async function continueScan(scanJobId) {
+    if (!scanJobId) throw new Error("scanJobId is required");
+    const data = await _apiFetch("POST", `scan/${scanJobId}/continue`);
+    if (data.status !== "success") {
+      throw new APIError(data.message || "Failed to resume scan", 0, data);
+    }
+    return data.scan_job;
+  }
+
+  /**
+   * POST /api/scan/{scanJobId}/cancel
+   * @param {string} scanJobId
+   */
+  async function cancelScan(scanJobId) {
+    if (!scanJobId) throw new Error("scanJobId is required");
+    const data = await _apiFetch("POST", `scan/${scanJobId}/cancel`);
+    if (data.status !== "success") {
+      throw new APIError(data.message || "Failed to cancel scan", 0, data);
+    }
+    return data.scan_job;
+  }
+
+  /* ── Expose on window ─────────────────────────────────────────────────── */
+  window.scannerAPI = {
+    getAvailableScanners,
+    startScan,
+    getScanStatus,
+    getScanFindings,
+    getProjectScans,
+    getTargetScans,
+    pauseScan,
+    continueScan,
+    cancelScan,
+  };
+})();
+
 // Export for use in other modules
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
