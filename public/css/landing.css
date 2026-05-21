@@ -565,7 +565,7 @@ body::before {
 }
 
 .gradient-stop-end {
-  stop-color: var(--cg-info);
+  stop-color: var(--cg-accent-hover);
   stop-opacity: 1;
 }
 
