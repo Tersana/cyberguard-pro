@@ -60,3 +60,5 @@ Thumbs.db
 scripts/build_html_slides.py
 scripts/generate_presentation.py
 CyberGuard_Pro_Presentation.html
+dev-server.js
+
