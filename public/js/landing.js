@@ -204,6 +204,208 @@ if (securityShield) {
 }
 
 // ===========================
+// Hero Particle Canvas Background
+// ===========================
+const heroSection = document.querySelector(".hero");
+const heroBackground = document.querySelector(".hero-background");
+if (heroSection && heroBackground) {
+  const canvas = document.createElement("canvas");
+  canvas.id = "hero-particle-canvas";
+  canvas.style.position = "absolute";
+  canvas.style.inset = "0";
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
+  canvas.style.pointerEvents = "none";
+  canvas.style.zIndex = "1";
+  heroBackground.appendChild(canvas);
+
+  const ctx = canvas.getContext("2d");
+  
+  let width = (canvas.width = heroSection.offsetWidth);
+  let height = (canvas.height = heroSection.offsetHeight);
+
+  const particles = [];
+  const particleCount = 45;
+
+  const colors = [
+    "rgba(167, 139, 250, 0.12)", // var(--cg-accent) translucent
+    "rgba(56, 189, 248, 0.08)",  // var(--cg-info) translucent
+    "rgba(139, 92, 246, 0.06)",   // var(--cg-accent-dark) translucent
+  ];
+
+  class HeroParticle {
+    constructor() {
+      this.reset();
+      this.y = Math.random() * height; // initial random spread
+    }
+
+    reset() {
+      this.x = Math.random() * width;
+      this.y = height + 10;
+      this.size = Math.random() * 2.2 + 0.8;
+      this.speedY = -(Math.random() * 0.35 + 0.1); // float upwards very slowly
+      this.speedX = (Math.random() - 0.5) * 0.15;
+      this.color = colors[Math.floor(Math.random() * colors.length)];
+      this.alpha = Math.random() * 0.5 + 0.5;
+      this.oscillationSpeed = Math.random() * 0.015 + 0.005;
+      this.oscillationDistance = Math.random() * 0.4 + 0.1;
+      this.time = Math.random() * 100;
+    }
+
+    update() {
+      this.time += this.oscillationSpeed;
+      this.y += this.speedY;
+      this.x += this.speedX + Math.sin(this.time) * this.oscillationDistance;
+
+      if (this.y < -10 || this.x < -10 || this.x > width + 10) {
+        this.reset();
+      }
+    }
+
+    draw() {
+      ctx.fillStyle = this.color;
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Initialize particles
+  for (let i = 0; i < particleCount; i++) {
+    const p = new HeroParticle();
+    p.y = Math.random() * height;
+    particles.push(p);
+  }
+
+  let animationId;
+  function animateHeroParticles() {
+    ctx.clearRect(0, 0, width, height);
+
+    particles.forEach((p) => {
+      p.update();
+      p.draw();
+    });
+
+    animationId = requestAnimationFrame(animateHeroParticles);
+  }
+
+  const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+  
+  function handleMotionPreference(mediaQuery) {
+    if (mediaQuery.matches) {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+      ctx.clearRect(0, 0, width, height);
+      particles.forEach((p) => {
+        p.draw();
+      });
+    } else {
+      animateHeroParticles();
+    }
+  }
+
+  handleMotionPreference(prefersReduced);
+  prefersReduced.addEventListener("change", handleMotionPreference);
+
+  window.addEventListener("resize", () => {
+    width = canvas.width = heroSection.offsetWidth;
+    height = canvas.height = heroSection.offsetHeight;
+    if (prefersReduced.matches) {
+      particles.forEach((p) => {
+        p.draw();
+      });
+    }
+  });
+}
+
+// ===========================
+// Headline Typewriter Effect
+// ===========================
+document.addEventListener("DOMContentLoaded", () => {
+  const typewriterSpan = document.getElementById("typewriter");
+  if (!typewriterSpan) return;
+
+  const words = ["Cybersecurity", "Threat Detection", "Vulnerability Scan", "Network Security"];
+  let wordIndex = 0;
+  let charIndex = words[0].length; // Start with the first word complete to prevent SEO/layout shift
+  let isDeleting = true;
+  let typingSpeed = 150;
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    typewriterSpan.textContent = "Cybersecurity";
+    return;
+  }
+
+  function type() {
+    const currentWord = words[wordIndex];
+    
+    if (isDeleting) {
+      typewriterSpan.textContent = currentWord.substring(0, charIndex - 1);
+      charIndex--;
+      typingSpeed = 60; // Faster deleting
+    } else {
+      typewriterSpan.textContent = currentWord.substring(0, charIndex + 1);
+      charIndex++;
+      typingSpeed = 130; // Custom typing speed
+    }
+
+    if (!isDeleting && charIndex === currentWord.length) {
+      typingSpeed = 2000; // Pause at the complete word
+      isDeleting = true;
+    } else if (isDeleting && charIndex === 0) {
+      isDeleting = false;
+      wordIndex = (wordIndex + 1) % words.length;
+      typingSpeed = 500; // Pause before typing the next word
+    }
+
+    setTimeout(type, typingSpeed);
+  }
+
+  // Initial delay before commencing loop
+  setTimeout(type, 1500);
+});
+
+// ===========================
+// Progress Ring Percentage Count-Up
+// ===========================
+document.addEventListener("DOMContentLoaded", () => {
+  const percentEl = document.getElementById("progressPercent");
+  if (!percentEl) return;
+
+  const targetPercent = 98.5;
+  
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    percentEl.textContent = `${targetPercent}%`;
+    return;
+  }
+
+  const duration = 2500; // 2.5s duration
+  const startTime = performance.now();
+
+  function easeOutQuad(x) {
+    return 1 - (1 - x) * (1 - x);
+  }
+
+  function updateCounter(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easedProgress = easeOutQuad(progress);
+    
+    const currentVal = (easedProgress * targetPercent).toFixed(1);
+    percentEl.textContent = `${currentVal}%`;
+
+    if (progress < 1) {
+      requestAnimationFrame(updateCounter);
+    }
+  }
+
+  setTimeout(() => {
+    requestAnimationFrame(updateCounter);
+  }, 400);
+});
+
+// ===========================
 // CTA Section Particle Effect
 // ===========================
 const ctaSection = document.querySelector(".cta");

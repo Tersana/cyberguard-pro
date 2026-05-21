@@ -2189,3 +2189,284 @@ body::before {
     display: block;
   }
 }
+
+/* ============================================================
+   CyberGuard Pro — UI Enhancements & Animations
+   ============================================================ */
+
+/* Typewriter Cursor blinking */
+.typewriter-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--cg-accent);
+  animation: blink 0.75s step-end infinite;
+  font-weight: 500;
+}
+
+@keyframes blink {
+  from, to { color: transparent }
+  50% { color: var(--cg-accent) }
+}
+
+/* Enhanced Status Indicator Pulse */
+.status-indicator {
+  position: relative;
+  background: var(--cg-success);
+  box-shadow: 0 0 12px var(--cg-success);
+  animation: statusPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes statusPulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7), 0 0 12px var(--cg-success);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 8px rgba(52, 211, 153, 0), 0 0 12px var(--cg-success);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0), 0 0 12px var(--cg-success);
+  }
+}
+
+/* Progress Circle Transparent Content Layout */
+.progress-inner-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 110px;
+  height: 110px;
+  z-index: 2;
+}
+
+.progress-shield-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--cg-accent);
+  margin-bottom: 2px;
+  filter: drop-shadow(0 0 8px var(--cg-accent));
+}
+
+.progress-percentage {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--cg-text-1);
+  line-height: 1;
+  margin-bottom: 2px;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--cg-text-1) 30%, var(--cg-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.progress-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--cg-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Enhanced Start Scanning Button (Glow & Shimmer) */
+.btn-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-glow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  animation: shimmer 4s infinite linear;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -150%;
+  }
+  30% {
+    left: 150%;
+  }
+  100% {
+    left: 150%;
+  }
+}
+
+.btn-glow:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(167, 139, 250, 0.4),
+              0 0 40px rgba(167, 139, 250, 0.25),
+              0 0 60px rgba(167, 139, 250, 0.15);
+}
+
+/* Stats Cards Layout & Glow Animations */
+.card-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--cg-transition-base);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.stat-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  color: var(--cg-accent);
+}
+
+.stat-icon {
+  width: 18px;
+  height: 18px;
+  filter: drop-shadow(0 0 8px var(--cg-accent));
+  transition: all var(--cg-transition-base);
+}
+
+.card-stat:hover {
+  transform: scale(1.05);
+  border-color: var(--cg-accent);
+  background: var(--cg-bg-elevated);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3),
+              0 0 20px rgba(167, 139, 250, 0.2);
+}
+
+.card-stat:hover .stat-icon {
+  transform: scale(1.15) rotate(8deg);
+  color: var(--cg-accent-hover);
+  filter: drop-shadow(0 0 12px var(--cg-accent-hover));
+}
+
+/* Bouncing Scroll Indicator */
+.scroll-indicator {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--cg-text-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(17, 24, 39, 0.4);
+  border: 1px solid var(--cg-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 10;
+  transition: all var(--cg-transition-fast);
+}
+
+.scroll-indicator:hover {
+  color: var(--cg-text-1);
+  border-color: var(--cg-accent);
+  background: var(--cg-bg-elevated);
+  box-shadow: 0 0 15px rgba(167, 139, 250, 0.2);
+}
+
+.scroll-indicator svg {
+  width: 20px;
+  height: 20px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-6px);
+  }
+  60% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Trust Badges Pills Layout */
+.hero-trust-badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+  animation: fadeInUp 0.9s ease-out 0.5s both;
+}
+
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(17, 24, 39, 0.4);
+  border: 1px solid var(--cg-border);
+  border-radius: var(--cg-radius-full);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--cg-text-2);
+  transition: all var(--cg-transition-fast);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.trust-badge:hover {
+  color: var(--cg-text-1);
+  border-color: var(--cg-accent);
+  background: var(--cg-bg-surface);
+  box-shadow: 0 0 15px rgba(167, 139, 250, 0.15);
+}
+
+.trust-badge-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--cg-accent);
+  filter: drop-shadow(0 0 4px var(--cg-accent));
+}
+
+/* Accessibility: Reduced Motion Fallbacks */
+@media (prefers-reduced-motion: reduce) {
+  .btn-glow::after {
+    animation: none;
+    display: none;
+  }
+  .status-indicator {
+    animation: none;
+    box-shadow: 0 0 12px var(--cg-success);
+  }
+  .card-stat:hover {
+    transform: none !important;
+  }
+  .card-stat:hover .stat-icon {
+    transform: none !important;
+  }
+  .scroll-indicator svg {
+    animation: none;
+  }
+  .typewriter-cursor {
+    animation: none;
+    display: none;
+  }
+}
