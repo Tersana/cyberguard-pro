@@ -1558,21 +1558,47 @@
                                     </p>
                                 </div>
 
-                                <!-- Top Row: Risk Score + Results Summary -->
-                                <div
-                                    class="grid grid-cols-1 xl:grid-cols-5 gap-4"
-                                >
-                                    <!-- Global Risk Score Card -->
-                                    <div
-                                        class="xl:col-span-2 cyber-card p-6 flex flex-col"
-                                        id="riskScoreCard"
+                                <!-- Target Configuration Card -->
+                                <div class="cyber-card p-5 mb-6">
+                                    <h3
+                                        class="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2"
                                     >
-                                        <div
-                                            class="flex items-center gap-2 mb-4"
+                                        <svg
+                                            class="w-4 h-4 text-purple-400"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke-width="1.5"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                                            />
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
+                                            />
+                                        </svg>
+                                        Target Configuration
+                                    </h3>
+                                    <div class="flex gap-3">
+                                        <input
+                                            type="text"
+                                            id="target-ip"
+                                            class="cyber-input flex-1 text-sm p-3 rounded-lg font-mono"
+                                            placeholder="8.8.8.8 or example.com"
+                                            pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$"
+                                            title="Enter a valid IP address or domain name"
+                                        />
+                                        <button
+                                            id="execute-scan-btn"
+                                            class="cyber-btn-primary px-5 py-3 rounded-lg text-sm font-semibold flex items-center gap-2"
                                         >
                                             <svg
                                                 class="w-4 h-4"
-                                                id="riskCardIcon"
                                                 xmlns="http://www.w3.org/2000/svg"
                                                 fill="none"
                                                 viewBox="0 0 24 24"
@@ -1582,306 +1608,31 @@
                                                 <path
                                                     stroke-linecap="round"
                                                     stroke-linejoin="round"
-                                                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+                                                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
                                                 />
                                             </svg>
-                                            <span
-                                                class="text-sm font-semibold text-slate-300"
-                                                >Global Risk Score</span
-                                            >
-                                        </div>
-
-                                        <!-- SVG Gauge -->
-                                        <div class="flex justify-center my-4">
-                                            <div class="cyber-gauge-wrapper">
-                                                <svg
-                                                    id="riskGaugeSvg"
-                                                    width="160"
-                                                    height="160"
-                                                    viewBox="0 0 160 160"
-                                                    class="cyber-gauge-svg"
-                                                >
-                                                    <!-- Track -->
-                                                    <circle
-                                                        cx="80"
-                                                        cy="80"
-                                                        r="68"
-                                                        fill="none"
-                                                        stroke="rgba(255,255,255,0.06)"
-                                                        stroke-width="10"
-                                                        stroke-linecap="round"
-                                                    />
-                                                    <!-- Progress arc -->
-                                                    <circle
-                                                        id="riskGaugeArc"
-                                                        cx="80"
-                                                        cy="80"
-                                                        r="68"
-                                                        fill="none"
-                                                        stroke="#6b7280"
-                                                        stroke-width="10"
-                                                        stroke-linecap="round"
-                                                        stroke-dasharray="427.26"
-                                                        stroke-dashoffset="427.26"
-                                                        class="cyber-gauge-arc"
-                                                    />
-                                                </svg>
-                                                <!-- Inner content -->
-                                                <div
-                                                    class="cyber-gauge-content"
-                                                >
-                                                    <span
-                                                        id="riskScore"
-                                                        class="cyber-gauge-score"
-                                                        >0</span
-                                                    >
-                                                    <span
-                                                        id="riskLabel"
-                                                        class="cyber-gauge-status"
-                                                        >IDLE</span
-                                                    >
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Stats Footer -->
-                                        <div
-                                            class="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-white/10"
+                                            Execute Scan
+                                        </button>
+                                        <button
+                                            id="stop-scan-btn"
+                                            class="hidden bg-red-500 hover:bg-red-600 px-5 py-3 rounded-lg text-sm font-semibold flex items-center gap-2 text-white transition-colors"
                                         >
-                                            <div class="text-center">
-                                                <p
-                                                    class="text-xs text-slate-500 uppercase tracking-widest mb-1"
-                                                >
-                                                    Vulnerabilities
-                                                </p>
-                                                <p
-                                                    class="text-2xl font-bold text-white"
-                                                    id="vulnCount"
-                                                >
-                                                    0
-                                                </p>
-                                            </div>
-                                            <div class="text-center">
-                                                <p
-                                                    class="text-xs text-slate-500 uppercase tracking-widest mb-1"
-                                                >
-                                                    Latency
-                                                </p>
-                                                <p
-                                                    class="text-2xl font-bold text-white"
-                                                    id="latencyVal"
-                                                >
-                                                    0ms
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Right column: Target Config + Quick Stats -->
-                                    <div
-                                        class="xl:col-span-3 flex flex-col gap-4"
-                                    >
-                                        <!-- Quick Stats Row -->
-                                        <div class="grid grid-cols-3 gap-3">
-                                            <div
-                                                class="cyber-stat-card cyber-stat-threat p-4 rounded-xl"
+                                            <svg
+                                                class="w-4 h-4"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke-width="1.5"
+                                                stroke="currentColor"
                                             >
-                                                <p
-                                                    class="text-xl font-bold text-white"
-                                                    id="openPortsCount"
-                                                >
-                                                    7
-                                                </p>
-                                                <p
-                                                    class="text-xs text-slate-400 mt-1"
-                                                >
-                                                    Open Ports
-                                                </p>
-                                                <span
-                                                    class="cyber-badge-threat text-xs mt-2 inline-block"
-                                                    >Critical</span
-                                                >
-                                            </div>
-                                            <div
-                                                class="cyber-stat-card cyber-stat-safe p-4 rounded-xl"
-                                            >
-                                                <p
-                                                    class="text-xl font-bold text-white"
-                                                    id="sslHealthStatus"
-                                                >
-                                                    94%
-                                                </p>
-                                                <p
-                                                    class="text-xs text-slate-400 mt-1"
-                                                >
-                                                    SSL Health
-                                                </p>
-                                                <span
-                                                    class="cyber-badge-safe text-xs mt-2 inline-block"
-                                                    >Secure</span
-                                                >
-                                            </div>
-                                            <div
-                                                class="cyber-stat-card cyber-stat-warning p-4 rounded-xl"
-                                            >
-                                                <p
-                                                    class="text-xl font-bold text-white"
-                                                    id="warningStatCount"
-                                                >
-                                                    3
-                                                </p>
-                                                <p
-                                                    class="text-xs text-slate-400 mt-1"
-                                                >
-                                                    Warnings
-                                                </p>
-                                                <span
-                                                    class="cyber-badge-warning text-xs mt-2 inline-block"
-                                                    >Review</span
-                                                >
-                                            </div>
-                                        </div>
-
-                                        <!-- Target Configuration -->
-                                        <div class="cyber-card p-5 flex-1">
-                                            <h3
-                                                class="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2"
-                                            >
-                                                <svg
-                                                    class="w-4 h-4 text-purple-400"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke-width="1.5"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                                                    />
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
-                                                    />
-                                                </svg>
-                                                Target Configuration
-                                            </h3>
-                                            <div class="flex gap-3">
-                                                <input
-                                                    type="text"
-                                                    id="target-ip"
-                                                    class="cyber-input flex-1 text-sm p-3 rounded-lg font-mono"
-                                                    placeholder="8.8.8.8 or example.com"
-                                                    pattern="^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$"
-                                                    title="Enter a valid IP address or domain name"
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z"
                                                 />
-                                                <button
-                                                    id="execute-scan-btn"
-                                                    class="cyber-btn-primary px-5 py-3 rounded-lg text-sm font-semibold flex items-center gap-2"
-                                                >
-                                                    <svg
-                                                        class="w-4 h-4"
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke-width="1.5"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-                                                        />
-                                                    </svg>
-                                                    Execute Scan
-                                                </button>
-                                                <button
-                                                    id="stop-scan-btn"
-                                                    class="hidden bg-red-500 hover:bg-red-600 px-5 py-3 rounded-lg text-sm font-semibold flex items-center gap-2 text-white transition-colors"
-                                                >
-                                                    <svg
-                                                        class="w-4 h-4"
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke-width="1.5"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z"
-                                                        />
-                                                    </svg>
-                                                    Stop Scan
-                                                </button>
-                                            </div>
-                                            <!-- Scan meta info -->
-                                            <div
-                                                class="grid grid-cols-3 gap-3 mt-4"
-                                            >
-                                                <div
-                                                    class="cyber-meta-item p-3 rounded-lg"
-                                                >
-                                                    <p
-                                                        class="text-xs text-slate-500"
-                                                    >
-                                                        Last Scan
-                                                    </p>
-                                                    <p
-                                                        class="text-sm font-semibold text-white mt-0.5"
-                                                        id="lastScanTime"
-                                                    >
-                                                        14m ago
-                                                    </p>
-                                                    <p
-                                                        class="text-xs text-emerald-400"
-                                                    >
-                                                        Completed
-                                                    </p>
-                                                </div>
-                                                <div
-                                                    class="cyber-meta-item p-3 rounded-lg"
-                                                >
-                                                    <p
-                                                        class="text-xs text-slate-500"
-                                                    >
-                                                        Scan Depth
-                                                    </p>
-                                                    <p
-                                                        class="text-sm font-semibold text-white mt-0.5"
-                                                    >
-                                                        Standard
-                                                    </p>
-                                                    <p
-                                                        class="text-xs text-emerald-400"
-                                                    >
-                                                        Active
-                                                    </p>
-                                                </div>
-                                                <div
-                                                    class="cyber-meta-item p-3 rounded-lg"
-                                                >
-                                                    <p
-                                                        class="text-xs text-slate-500"
-                                                    >
-                                                        Sessions
-                                                    </p>
-                                                    <p
-                                                        class="text-sm font-semibold text-white mt-0.5"
-                                                    >
-                                                        4
-                                                    </p>
-                                                    <p
-                                                        class="text-xs text-emerald-400"
-                                                    >
-                                                        Saved
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
+                                            </svg>
+                                            Stop Scan
+                                        </button>
                                     </div>
                                 </div>
 

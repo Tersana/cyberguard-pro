@@ -418,31 +418,6 @@
                     Team
                 </button>
                 <button
-                    id="settings-tab-btn"
-                    class="detail-tab hidden px-5 py-2 rounded-lg text-sm font-semibold border border-transparent text-[var(--cg-text-2)]"
-                    onclick="switchDetailTab('settings')"
-                >
-                    <svg
-                        class="w-4 h-4 inline-block mr-1.5 -mt-0.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        stroke="currentColor"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"
-                        />
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                        />
-                    </svg>
-                    Settings
-                </button>
-                <button
                     id="targets-tab-btn"
                     class="detail-tab px-5 py-2 rounded-lg text-sm font-semibold border border-transparent text-[var(--cg-text-2)]"
                     onclick="switchDetailTab('targets')"
@@ -502,6 +477,31 @@
                     </svg>
                     Scans
                     <span class="tab-badge" id="scans-tab-badge" style="display:none">0</span>
+                </button>
+                <button
+                    id="settings-tab-btn"
+                    class="detail-tab hidden px-5 py-2 rounded-lg text-sm font-semibold border border-transparent text-[var(--cg-text-2)]"
+                    onclick="switchDetailTab('settings')"
+                >
+                    <svg
+                        class="w-4 h-4 inline-block mr-1.5 -mt-0.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"
+                        />
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                        />
+                    </svg>
+                    Settings
                 </button>
             </div>
 
@@ -578,6 +578,222 @@
                     </div>
                 </div>
                 <!-- === END SECTION: SECURITY HEALTH SCORE WIDGET === -->
+
+                <!-- === SECTION: PROJECT RISK SCORE === -->
+                <div class="cyber-card p-6" id="project-risk-score-widget">
+                    <!-- Loading Skeleton State -->
+                    <div id="risk-score-skeleton" class="animate-pulse space-y-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="flex flex-col items-center justify-center p-4 border border-white/5 rounded-xl bg-white/5 h-[260px]">
+                                <div class="w-24 h-24 rounded-full bg-slate-700/50 mb-4"></div>
+                                <div class="w-20 h-4 bg-slate-700/50 rounded mb-2"></div>
+                                <div class="w-28 h-3 bg-slate-700/50 rounded"></div>
+                            </div>
+                            <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="border border-white/5 rounded-xl bg-white/5 p-4 h-[260px] flex flex-col justify-between">
+                                    <div class="w-16 h-3 bg-slate-700/50 rounded"></div>
+                                    <div class="w-24 h-8 bg-slate-700/50 rounded"></div>
+                                    <div class="space-y-2">
+                                        <div class="w-full h-3 bg-slate-700/50 rounded"></div>
+                                        <div class="w-5/6 h-3 bg-slate-700/50 rounded"></div>
+                                    </div>
+                                </div>
+                                <div class="border border-white/5 rounded-xl bg-white/5 p-4 h-[260px] flex flex-col justify-between">
+                                    <div class="w-16 h-3 bg-slate-700/50 rounded"></div>
+                                    <div class="w-24 h-8 bg-slate-700/50 rounded"></div>
+                                    <div class="space-y-2">
+                                        <div class="w-full h-3 bg-slate-700/50 rounded"></div>
+                                        <div class="w-5/6 h-3 bg-slate-700/50 rounded"></div>
+                                    </div>
+                                </div>
+                                <div class="border border-white/5 rounded-xl bg-white/5 p-4 h-[260px] flex flex-col justify-between">
+                                    <div class="w-16 h-3 bg-slate-700/50 rounded"></div>
+                                    <div class="w-24 h-8 bg-slate-700/50 rounded"></div>
+                                    <div class="space-y-2">
+                                        <div class="w-full h-3 bg-slate-700/50 rounded"></div>
+                                        <div class="w-5/6 h-3 bg-slate-700/50 rounded"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Real Data State (initially hidden or shown once loaded) -->
+                    <div id="risk-score-content" class="hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <!-- Left Column: Risk Score Ring -->
+                            <div class="flex flex-col items-center justify-between p-5 border border-white/10 rounded-xl bg-[rgba(15,23,42,0.4)]">
+                                <h3 class="text-sm font-semibold text-slate-300 mb-3 self-start flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-[var(--cg-accent)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                                    </svg>
+                                    Project Risk Score
+                                </h3>
+                                
+                                <div class="flex flex-col items-center gap-3">
+                                    <div class="relative" style="width:130px;height:130px">
+                                        <svg width="130" height="130" viewBox="0 0 130 130" id="risk-gauge-circle-svg">
+                                            <!-- Track -->
+                                            <circle cx="65" cy="65" r="55" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+                                            <!-- Progress Ring -->
+                                            <circle id="risk-score-ring" cx="65" cy="65" r="55" fill="none"
+                                                stroke="#6b7280" stroke-width="10" stroke-linecap="round"
+                                                stroke-dasharray="345.57" stroke-dashoffset="345.57"
+                                                transform="rotate(-90 65 65)"
+                                                style="transition: stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1), stroke 0.5s ease;"/>
+                                        </svg>
+                                        <!-- Score Text Overlay -->
+                                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                            <span id="risk-score-number" class="text-3xl font-bold text-white font-mono">—</span>
+                                            <span id="risk-score-category" class="text-[10px] font-bold tracking-wider uppercase text-slate-400 mt-0.5">—</span>
+                                        </div>
+                                    </div>
+                                    <span id="risk-score-desc" class="text-xs text-slate-400 text-center px-2">Loading score analysis...</span>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4 w-full mt-4 pt-4 border-t border-white/5 text-center">
+                                    <div>
+                                        <p class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Total Findings</p>
+                                        <p id="risk-footer-findings" class="text-base font-bold text-white font-mono">—</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Total Scans</p>
+                                        <p id="risk-footer-scans" class="text-base font-bold text-white font-mono">—</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Column: 3 Stat Cards in a row -->
+                            <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <!-- Card 1: Open Findings -->
+                                <div id="card-open-findings" class="flex flex-col justify-between p-5 border border-white/10 rounded-xl bg-[rgba(15,23,42,0.4)] transition-all duration-300">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Open Findings</span>
+                                            <!-- SVG Warning Icon -->
+                                            <svg class="w-4 h-4 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                                            </svg>
+                                        </div>
+                                        <div class="flex items-baseline gap-2">
+                                            <span id="stat-open-findings-count" class="text-3xl font-bold text-white font-mono">—</span>
+                                            <span id="stat-open-findings-all-clear" class="hidden text-emerald-400 text-xs font-semibold flex items-center gap-1">
+                                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                All Clear
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Severity pills inside open findings card -->
+                                    <div class="space-y-2 mt-4">
+                                        <!-- Critical -->
+                                        <div class="flex items-center justify-between text-xs py-1 px-2 border border-rose-500/20 bg-rose-500/5 rounded-lg">
+                                            <span class="text-rose-400 font-medium flex items-center gap-1">
+                                                <svg class="w-3 h-3 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                                                Critical
+                                            </span>
+                                            <span id="stat-sev-critical" class="font-mono text-white font-semibold">0</span>
+                                        </div>
+                                        <!-- High -->
+                                        <div class="flex items-center justify-between text-xs py-1 px-2 border border-orange-500/20 bg-orange-500/5 rounded-lg">
+                                            <span class="text-orange-400 font-medium flex items-center gap-1">
+                                                <svg class="w-3 h-3 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                                High
+                                            </span>
+                                            <span id="stat-sev-high" class="font-mono text-white font-semibold">0</span>
+                                        </div>
+                                        <!-- Medium -->
+                                        <div class="flex items-center justify-between text-xs py-1 px-2 border border-amber-500/20 bg-amber-500/5 rounded-lg">
+                                            <span class="text-amber-400 font-medium flex items-center gap-1">
+                                                <svg class="w-3 h-3 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                                                Medium
+                                            </span>
+                                            <span id="stat-sev-medium" class="font-mono text-white font-semibold">0</span>
+                                        </div>
+                                        <!-- Low -->
+                                        <div class="flex items-center justify-between text-xs py-1 px-2 border border-sky-500/20 bg-sky-500/5 rounded-lg">
+                                            <span class="text-sky-400 font-medium flex items-center gap-1">
+                                                <svg class="w-3 h-3 text-sky-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16h.01"/><path d="M12 8v4"/></svg>
+                                                Low
+                                            </span>
+                                            <span id="stat-sev-low" class="font-mono text-white font-semibold">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Card 2: Last Scan -->
+                                <div class="flex flex-col justify-between p-5 border border-white/10 rounded-xl bg-[rgba(15,23,42,0.4)]">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Last Scan</span>
+                                            <!-- Status dot -->
+                                            <div class="flex items-center gap-1.5">
+                                                <span id="stat-last-scan-dot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+                                                <span id="stat-last-scan-status-text" class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Never</span>
+                                            </div>
+                                        </div>
+                                        <p id="stat-last-scan-relative" class="text-2xl font-bold text-white font-mono">—</p>
+                                        <p id="stat-last-scan-exact" class="text-[10px] text-slate-500 mt-1 font-mono">—</p>
+                                    </div>
+
+                                    <div id="stat-last-scan-footer" class="mt-4 pt-4 border-t border-white/5 flex flex-col gap-2">
+                                        <div class="flex justify-between items-center text-xs text-slate-400">
+                                            <span>Scan ID</span>
+                                            <span id="stat-last-scan-id" class="font-mono text-white truncate max-w-[120px]">—</span>
+                                        </div>
+                                        <div class="flex justify-between items-center text-xs text-slate-400">
+                                            <span>Duration</span>
+                                            <span id="stat-last-scan-duration" class="font-mono text-white">—</span>
+                                        </div>
+                                        <!-- View Live Button when running -->
+                                        <a id="stat-last-scan-view-live" href="#" class="hidden mt-1 text-center py-2 px-3 bg-[var(--cg-success)]/10 text-[var(--cg-success)] text-xs font-semibold border border-[var(--cg-success)]/20 rounded-lg hover:bg-[var(--cg-success)]/20 transition-all">
+                                            View Live →
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Card 3: Scan Coverage -->
+                                <div class="flex flex-col justify-between p-5 border border-white/10 rounded-xl bg-[rgba(15,23,42,0.4)]">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Scan Coverage</span>
+                                            <svg class="w-4 h-4 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5a1.5 1.5 0 00-3 0V9M18 9V4.5a1.5 1.5 0 00-3 0V9m-9 6h12M4.5 19.5h15a2.25 2.25 0 002.25-2.25V9A2.25 2.25 0 0019.5 6.75h-15A2.25 2.25 0 002.25 9v8.25A2.25 2.25 0 004.5 19.5z" />
+                                            </svg>
+                                        </div>
+                                        
+                                        <div class="flex items-baseline gap-1.5">
+                                            <span id="stat-coverage-ratio" class="text-3xl font-bold text-white font-mono">—</span>
+                                            <span class="text-xs text-slate-500">Targets Scanned</span>
+                                        </div>
+
+                                        <!-- Progress bar -->
+                                        <div class="w-full bg-slate-800 rounded-full h-2 mt-3 overflow-hidden">
+                                            <div id="stat-coverage-bar" class="bg-indigo-500 h-full rounded-full transition-all duration-1000" style="width:0%"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 pt-4 border-t border-white/5 space-y-2">
+                                        <div class="flex justify-between items-center text-xs text-slate-400">
+                                            <span>Total Scans</span>
+                                            <span id="stat-coverage-total-scans" class="font-mono text-white font-semibold">—</span>
+                                        </div>
+                                        <div class="flex justify-between items-center text-xs text-slate-400">
+                                            <span>Completed</span>
+                                            <span id="stat-coverage-completed" class="font-mono text-emerald-400 font-semibold">—</span>
+                                        </div>
+                                        <div class="flex justify-between items-center text-xs text-slate-400">
+                                            <span>Cancelled / Failed</span>
+                                            <span id="stat-coverage-cancelled" class="font-mono text-rose-400 font-semibold">—</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- === SECTION: QUICK STATS ROW === -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="ov-quick-stats">
@@ -1750,6 +1966,8 @@
             let _currentUserRole = "viewer"; // updated by loadTeam()
             let _editTargetType = ""; // type stored when Edit Target modal opens
             let _projectFindings = []; // cache of all findings across targets
+            let _riskScorePollInterval = null;
+            let _latestScanIsRunning = false;
 
             // ─── Boot ─────────────────────────────────────────────────────────────────
             (function boot() {
@@ -1831,6 +2049,7 @@
                     loadTargets();
                     loadScansCount();
                     loadProjectFindings();
+                    loadProjectRiskScore();
                 } catch (err) {
                     showError(
                         "Network Error",
@@ -1985,7 +2204,7 @@
 
                     // Update team count on overview
                     const hasOwnerInList = members.some((m) => (m.role || "") === "owner");
-                    _set("ov-team-size", String(members.length + (_isOwner && !hasOwnerInList ? 1 : 0)));
+                    _set("ov-team-size", String(members.length + (hasOwnerInList ? 0 : 1)));
 
                     // BUG 3 FIX: derive the current user's actual role from the
                     // collaborators list — never show a generic "Member" label.
@@ -2062,8 +2281,8 @@
                     if (el) el.textContent = val;
                 };
                 // Include owner in total and owner stats only if not already present in collaborators list
-                _set2("team-stat-total",   String(total + (_isOwner && !hasOwnerInList ? 1 : 0)));
-                _set2("team-stat-owners",  String(owners  + (_isOwner && !hasOwnerInList ? 1 : 0)));
+                _set2("team-stat-total",   String(total + (hasOwnerInList ? 0 : 1)));
+                _set2("team-stat-owners",  String(owners  + (hasOwnerInList ? 0 : 1)));
                 _set2("team-stat-editors", String(editors));
                 _set2("team-stat-viewers", String(viewers));
             }
@@ -2121,6 +2340,7 @@
 
                     // 6. Recalculate health score and render ring
                     _renderHealthScore();
+                    loadProjectRiskScore();
                 } catch (err) {
                     console.error("Error loading project findings:", err);
                 }
@@ -2174,6 +2394,357 @@
                 numEl.textContent  = String(score);
                 labelEl.textContent = hlabel;
                 labelEl.style.color = color;
+            }
+
+            /**
+             * Asynchronously load project scans, target coverages, and calculate risk score.
+             */
+            async function loadProjectRiskScore(isPoll = false) {
+                const skeleton = document.getElementById("risk-score-skeleton");
+                const content = document.getElementById("risk-score-content");
+                if (!isPoll && skeleton && content) {
+                    skeleton.classList.remove("hidden");
+                    content.classList.add("hidden");
+                }
+
+                try {
+                    if (!window.scannerAPI) throw new Error("scannerAPI not available");
+
+                    // 1. Fetch scans and targets in parallel
+                    const [scans, targetsRes] = await Promise.all([
+                        window.scannerAPI.getProjectScans(_projectId).catch(() => []),
+                        apiFetch(`/projects/${_projectId}/targets`).then(res => res.ok ? res.json() : { targets: [] }).catch(() => ({ targets: [] }))
+                    ]);
+
+                    const targets = Array.isArray(targetsRes.targets)
+                        ? targetsRes.targets
+                        : Array.isArray(targetsRes)
+                          ? targetsRes
+                          : [];
+                    const totalTargets = targets.length;
+
+                    // Update footer / stats scans count
+                    const totalScans = scans.length;
+                    _set("risk-footer-scans", String(totalScans));
+                    _set("stat-coverage-total-scans", String(totalScans));
+
+                    // 2. Scan Coverage - Calculate targets scanned ratio
+                    const scannedTargetIds = new Set();
+                    let completedScansCount = 0;
+                    let cancelledScansCount = 0;
+
+                    scans.forEach(s => {
+                        const scanObj = s.scan || s;
+                        const status = (scanObj.status || "unknown").toLowerCase();
+                        if (status === "completed") {
+                            completedScansCount++;
+                        } else if (status === "cancelled" || status === "failed" || status === "timeout") {
+                            cancelledScansCount++;
+                        }
+                        if (scanObj.target_id) {
+                            scannedTargetIds.add(String(scanObj.target_id));
+                        } else if (scanObj.target && scanObj.target.id) {
+                            scannedTargetIds.add(String(scanObj.target.id));
+                        }
+                    });
+
+                    const scannedCount = scannedTargetIds.size;
+                    _set("stat-coverage-ratio", totalTargets > 0 ? `${scannedCount}/${totalTargets}` : "0/0");
+
+                    const coverageBar = document.getElementById("stat-coverage-bar");
+                    if (coverageBar) {
+                        const pct = totalTargets > 0 ? Math.round((scannedCount / totalTargets) * 100) : 0;
+                        coverageBar.style.width = `${pct}%`;
+                    }
+
+                    _set("stat-coverage-completed", String(completedScansCount));
+                    _set("stat-coverage-cancelled", String(cancelledScansCount));
+
+                    // 3. Handle IDLE state (no scans)
+                    if (scans.length === 0) {
+                        _latestScanIsRunning = false;
+                        updateRiskScorePolling(_currentTab);
+
+                        const ring = document.getElementById("risk-score-ring");
+                        const numEl = document.getElementById("risk-score-number");
+                        const catEl = document.getElementById("risk-score-category");
+                        const descEl = document.getElementById("risk-score-desc");
+                        const gaugeSvg = document.getElementById("risk-gauge-circle-svg");
+
+                        if (ring) {
+                            ring.style.stroke = "#6b7280";
+                            ring.style.strokeDashoffset = "345.57";
+                            ring.classList.remove("animate-pulse");
+                        }
+                        if (gaugeSvg) gaugeSvg.classList.remove("animate-pulse");
+                        if (numEl) numEl.textContent = "100";
+                        if (catEl) {
+                            catEl.textContent = "IDLE";
+                            catEl.style.color = "#6b7280";
+                        }
+                        if (descEl) descEl.textContent = "No scans run yet. Start a scan to calculate risk.";
+
+                        // Card 1: Open Findings reset
+                        _set("stat-open-findings-count", "0");
+                        const allClearEl = document.getElementById("stat-open-findings-all-clear");
+                        if (allClearEl) allClearEl.classList.remove("hidden");
+
+                        const openCard = document.getElementById("card-open-findings");
+                        if (openCard) openCard.style.borderColor = "var(--cg-border)";
+
+                        _set("stat-sev-critical", "0");
+                        _set("stat-sev-high", "0");
+                        _set("stat-sev-medium", "0");
+                        _set("stat-sev-low", "0");
+
+                        // Card 2: Last Scan reset
+                        const lastScanDot = document.getElementById("stat-last-scan-dot");
+                        if (lastScanDot) {
+                            lastScanDot.className = "w-2.5 h-2.5 rounded-full bg-slate-500";
+                            lastScanDot.classList.remove("animate-pulse");
+                        }
+                        _set("stat-last-scan-status-text", "Never");
+                        _set("stat-last-scan-relative", "—");
+                        _set("stat-last-scan-exact", "—");
+                        _set("stat-last-scan-id", "—");
+                        _set("stat-last-scan-duration", "—");
+
+                        const lastScanViewLive = document.getElementById("stat-last-scan-view-live");
+                        if (lastScanViewLive) lastScanViewLive.classList.add("hidden");
+
+                        _set("risk-footer-findings", "0");
+
+                        if (skeleton) skeleton.classList.add("hidden");
+                        if (content) content.classList.remove("hidden");
+                        return;
+                    }
+
+                    // 4. Sort scans to find the latest scan
+                    const sortedScans = [...scans].sort((a, b) => {
+                        const dateA = new Date(a.scan?.started_at || a.scan?.created_at || a.started_at || a.created_at);
+                        const dateB = new Date(b.scan?.started_at || b.scan?.created_at || b.started_at || b.created_at);
+                        return dateB - dateA;
+                    });
+
+                    const latest = sortedScans[0];
+                    const latestScanObj = latest.scan || latest;
+                    const latestScanIdVal = latestScanObj.id;
+                    const latestScanStatusVal = (latestScanObj.status || "unknown").toLowerCase();
+
+                    // Check if running
+                    _latestScanIsRunning = (latestScanStatusVal === "running" || latestScanStatusVal === "pending");
+                    updateRiskScorePolling(_currentTab);
+
+                    // 5. Fetch latest scan findings
+                    const findings = await window.scannerAPI.getScanFindings(latestScanIdVal).catch(() => []);
+
+                    // Count open findings
+                    let openCritical = 0;
+                    let openHigh = 0;
+                    let openMedium = 0;
+                    let openLow = 0;
+                    let openInfo = 0;
+                    let totalOpen = 0;
+
+                    findings.forEach(f => {
+                        if ((f.status || "open").toLowerCase() === "open") {
+                            totalOpen++;
+                            const sev = (f.severity || "info").toLowerCase();
+                            if (sev === "critical") openCritical++;
+                            else if (sev === "high") openHigh++;
+                            else if (sev === "medium") openMedium++;
+                            else if (sev === "low") openLow++;
+                            else if (sev === "info") openInfo++;
+                        }
+                    });
+
+                    _set("risk-footer-findings", String(totalOpen));
+
+                    // 6. Calculate risk score
+                    let riskScore = 100 - (openCritical * 15 + openHigh * 8 + openMedium * 4 + openLow * 1);
+                    riskScore = Math.max(0, Math.min(100, riskScore));
+
+                    // 7. Map category & color & description
+                    let riskCategory = "SECURE";
+                    let riskColor = "#10b981";
+                    let riskDesc = "All checks passed. No high or critical risks identified.";
+
+                    if (riskScore <= 20) {
+                        riskCategory = "CRITICAL";
+                        riskColor = "#7f1d1d";
+                        riskDesc = "Critical threat level. Immediate security response required.";
+                    } else if (riskScore <= 40) {
+                        riskCategory = "HIGH RISK";
+                        riskColor = "#ef4444";
+                        riskDesc = "High vulnerability count. Prioritize remediation efforts.";
+                    } else if (riskScore <= 60) {
+                        riskCategory = "MODERATE";
+                        riskColor = "#f97316";
+                        riskDesc = "Moderate security risks detected. Remediate active threats.";
+                    } else if (riskScore <= 80) {
+                        riskCategory = "LOW RISK";
+                        riskColor = "#eab308";
+                        riskDesc = "Low risks identified. Scheduled maintenance recommended.";
+                    }
+
+                    // 8. Render Gauge Ring
+                    const ring = document.getElementById("risk-score-ring");
+                    const numEl = document.getElementById("risk-score-number");
+                    const catEl = document.getElementById("risk-score-category");
+                    const descEl = document.getElementById("risk-score-desc");
+                    const gaugeSvg = document.getElementById("risk-gauge-circle-svg");
+
+                    if (ring) {
+                        if (_latestScanIsRunning) {
+                            ring.style.stroke = "var(--cg-accent)";
+                            ring.style.strokeDashoffset = "0";
+                            ring.classList.add("animate-pulse");
+                            if (gaugeSvg) gaugeSvg.classList.add("animate-pulse");
+
+                            if (numEl) numEl.textContent = "—";
+                            if (catEl) {
+                                catEl.textContent = "SCANNING...";
+                                catEl.style.color = "var(--cg-accent)";
+                            }
+                            if (descEl) descEl.textContent = "Active scan in progress... Calculating risk score.";
+                        } else {
+                            ring.classList.remove("animate-pulse");
+                            if (gaugeSvg) gaugeSvg.classList.remove("animate-pulse");
+
+                            ring.style.stroke = riskColor;
+                            const circumference = 345.57;
+                            const offset = circumference - (riskScore / 100) * circumference;
+                            ring.style.strokeDashoffset = String(offset);
+
+                            if (numEl) numEl.textContent = String(riskScore);
+                            if (catEl) {
+                                catEl.textContent = riskCategory;
+                                catEl.style.color = riskColor;
+                            }
+                            if (descEl) descEl.textContent = riskDesc;
+                        }
+                    }
+
+                    // 9. Card 1 (Open Findings) update
+                    _set("stat-open-findings-count", String(totalOpen));
+                    const allClearEl = document.getElementById("stat-open-findings-all-clear");
+                    if (allClearEl) {
+                        if (totalOpen === 0) allClearEl.classList.remove("hidden");
+                        else allClearEl.classList.add("hidden");
+                    }
+
+                    const openCard = document.getElementById("card-open-findings");
+                    if (openCard) {
+                        if (openCritical > 0 || openHigh > 0) {
+                            openCard.style.borderColor = "#ef4444";
+                        } else if (openMedium > 0) {
+                            openCard.style.borderColor = "#eab308";
+                        } else {
+                            openCard.style.borderColor = "#10b981";
+                        }
+                    }
+
+                    _set("stat-sev-critical", String(openCritical));
+                    _set("stat-sev-high", String(openHigh));
+                    _set("stat-sev-medium", String(openMedium));
+                    _set("stat-sev-low", String(openLow));
+
+                    // 10. Card 2 (Last Scan) update
+                    const lastScanDot = document.getElementById("stat-last-scan-dot");
+                    if (lastScanDot) {
+                        lastScanDot.className = "w-2.5 h-2.5 rounded-full";
+                        if (latestScanStatusVal === "running") {
+                            lastScanDot.classList.add("bg-emerald-400", "animate-pulse");
+                        } else if (latestScanStatusVal === "pending") {
+                            lastScanDot.classList.add("bg-amber-400");
+                        } else if (latestScanStatusVal === "completed") {
+                            lastScanDot.classList.add("bg-emerald-500");
+                        } else if (latestScanStatusVal === "cancelled" || latestScanStatusVal === "failed" || latestScanStatusVal === "timeout") {
+                            lastScanDot.classList.add("bg-rose-500");
+                        } else {
+                            lastScanDot.classList.add("bg-slate-500");
+                        }
+                    }
+
+                    const lastScanStatus = document.getElementById("stat-last-scan-status-text");
+                    if (lastScanStatus) {
+                        if (latestScanStatusVal === "running") {
+                            lastScanStatus.textContent = "Active Now";
+                            lastScanStatus.style.color = "var(--cg-success)";
+                        } else {
+                            lastScanStatus.textContent = latestScanStatusVal.toUpperCase();
+                            lastScanStatus.style.color = "";
+                        }
+                    }
+
+                    const startedTimeStr = latestScanObj.started_at || latestScanObj.created_at;
+                    const completedTimeStr = latestScanObj.completed_at || latestScanObj.finished_at;
+
+                    _set("stat-last-scan-relative", fmtScanRelative(startedTimeStr));
+
+                    if (startedTimeStr) {
+                        const exactDate = new Date(startedTimeStr);
+                        _set("stat-last-scan-exact", exactDate.toLocaleString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        }));
+                    } else {
+                        _set("stat-last-scan-exact", "—");
+                    }
+
+                    if (latestScanIdVal) {
+                        const shortId = latestScanIdVal.substring(0, 8).toUpperCase();
+                        const lastScanId = document.getElementById("stat-last-scan-id");
+                        if (lastScanId) {
+                            lastScanId.textContent = shortId;
+                            lastScanId.title = latestScanIdVal;
+                        }
+                    } else {
+                        _set("stat-last-scan-id", "—");
+                    }
+
+                    _set("stat-last-scan-duration", formatDuration(startedTimeStr, completedTimeStr));
+
+                    const lastScanViewLive = document.getElementById("stat-last-scan-view-live");
+                    if (lastScanViewLive) {
+                        if (_latestScanIsRunning) {
+                            lastScanViewLive.href = `/scan/${latestScanIdVal}`;
+                            lastScanViewLive.classList.remove("hidden");
+                        } else {
+                            lastScanViewLive.classList.add("hidden");
+                        }
+                    }
+
+                } catch (err) {
+                    console.error("Error in loadProjectRiskScore:", err);
+                } finally {
+                    if (skeleton) skeleton.classList.add("hidden");
+                    if (content) content.classList.remove("hidden");
+                }
+            }
+
+            /**
+             * Handles active polling for risk score when overview is active and scan is running.
+             */
+            function updateRiskScorePolling(tab) {
+                const overviewActive = (tab === "overview");
+                if (overviewActive && _latestScanIsRunning) {
+                    if (!_riskScorePollInterval) {
+                        console.log("[Polling] Starting risk score polling (15s interval)...");
+                        _riskScorePollInterval = setInterval(() => {
+                            loadProjectRiskScore(true);
+                        }, 15000);
+                    }
+                } else {
+                    if (_riskScorePollInterval) {
+                        console.log("[Polling] Stopping risk score polling.");
+                        clearInterval(_riskScorePollInterval);
+                        _riskScorePollInterval = null;
+                    }
+                }
             }
 
             /**
@@ -2349,7 +2920,7 @@
          <option value="editor" ${role === "editor" ? "selected" : ""}>Editor</option>
          <option value="viewer" ${role === "viewer" ? "selected" : ""}>Viewer</option>
        </select>`
-                        : `<span class="text-xs px-2 py-0.5 rounded-full border font-semibold ${roleCls}">${cap(role)}</span>`;
+                        : "";
 
                 const removeBtn = _isOwner
                     ? isSelf
@@ -3216,9 +3787,15 @@
                 }
             });
 
+            // Reload risk score when scan states update
+            ["cyberguard:scanStart", "cyberguard:scanComplete", "cyberguard:scanCancel", "cyberguard:scanError", "cyberguard:scanReset"].forEach(evt => {
+                document.addEventListener(evt, () => loadProjectRiskScore());
+            });
+
             // ─── Tab switching ────────────────────────────────────────────────────────────────────
             function switchDetailTab(tab) {
                 _currentTab = tab;
+                updateRiskScorePolling(tab);
                 document.querySelectorAll(".detail-tab").forEach((btn) => {
                     const isActive =
                         btn.getAttribute("onclick") ===
@@ -3331,6 +3908,40 @@
                 if (days === 1) return "Yesterday";
                 if (days < 30) return `${days} days ago`;
                 return fmtDate(s);
+            }
+
+            function fmtScanRelative(s) {
+                if (!s) return "—";
+                const d = parseSafeDate(s);
+                if (!d || isNaN(d.getTime())) return "—";
+                const diffMs = Date.now() - d.getTime();
+                const diffMins = Math.floor(diffMs / 60000);
+                if (diffMins < 1) return "Just now";
+                if (diffMins < 60) return `${diffMins}m ago`;
+                const diffHours = Math.floor(diffMins / 60);
+                if (diffHours < 24) return `${diffHours}h ago`;
+                const diffDays = Math.floor(diffHours / 24);
+                if (diffDays === 1) return "Yesterday";
+                if (diffDays < 30) return `${diffDays}d ago`;
+                return fmtDate(s);
+            }
+
+            function formatDuration(started, completed) {
+                if (!started) return "—";
+                const startD = parseSafeDate(started);
+                if (!startD || isNaN(startD.getTime())) return "—";
+                const endD = completed ? parseSafeDate(completed) : new Date();
+                if (!endD || isNaN(endD.getTime())) return "—";
+                const diffMs = endD.getTime() - startD.getTime();
+                if (diffMs < 0) return "0s";
+                const totalSecs = Math.floor(diffMs / 1000);
+                if (totalSecs < 60) return `${totalSecs}s`;
+                const totalMins = Math.floor(totalSecs / 60);
+                const secs = totalSecs % 60;
+                if (totalMins < 60) return `${totalMins}m ${secs}s`;
+                const hours = Math.floor(totalMins / 60);
+                const mins = totalMins % 60;
+                return `${hours}h ${mins}m`;
             }
 
             function setBtnLoading(btn, label) {
