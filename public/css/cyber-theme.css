@@ -3215,3 +3215,259 @@ body.authenticated [data-auth-required].cyber-tool-link::after {
 .finding-flash {
     animation: findingFlash 1s ease-out forwards;
 }
+
+/* ================================================================
+   PROJECTS TAB ENHANCEMENTS
+   Stats bar, search/filter, project card extras
+   ================================================================ */
+
+/* --- Projects Stats Bar --- */
+.projects-stat-card {
+    background: var(--cg-bg-surface);
+    border: 1px solid var(--cg-border);
+    border-radius: var(--cg-radius-lg);
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    text-align: center;
+    transition:
+        border-color var(--cg-transition-base),
+        box-shadow var(--cg-transition-base),
+        transform var(--cg-transition-fast);
+}
+.projects-stat-card:hover {
+    border-color: var(--cg-focus-ring);
+    box-shadow: 0 0 20px var(--cg-accent-muted);
+    transform: translateY(-2px);
+}
+.projects-stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--cg-radius-md);
+    background: var(--cg-accent-muted);
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cg-accent);
+    margin-bottom: 0.25rem;
+}
+.projects-stat-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--cg-text-1);
+    font-family: var(--cg-font-mono);
+    line-height: 1;
+}
+.projects-stat-label {
+    font-size: 0.7rem;
+    color: var(--cg-text-3);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* --- Projects Filter Pills --- */
+.projects-filter-pill {
+    padding: 0.3rem 0.75rem;
+    border-radius: var(--cg-radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid var(--cg-border);
+    color: var(--cg-text-3);
+    background: transparent;
+    cursor: pointer;
+    transition: all var(--cg-transition-fast);
+}
+.projects-filter-pill:hover {
+    border-color: var(--cg-accent);
+    color: var(--cg-accent);
+    background: var(--cg-accent-muted);
+}
+.projects-filter-pill.active {
+    background: var(--cg-accent-muted);
+    border-color: var(--cg-accent);
+    color: var(--cg-accent);
+    box-shadow: 0 0 8px var(--cg-accent-muted);
+}
+
+/* --- Project Progress Bar (inside project cards) --- */
+.project-progress-track {
+    width: 100%;
+    height: 5px;
+    background: var(--cg-bg-elevated);
+    border-radius: var(--cg-radius-full);
+    overflow: hidden;
+}
+.project-progress-fill {
+    height: 100%;
+    border-radius: var(--cg-radius-full);
+    transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+/* ================================================================
+   PROJECT DETAIL — OVERVIEW TAB ENHANCEMENTS
+   ================================================================ */
+
+/* --- Overview Quick Stat Icon --- */
+.ov-stat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--cg-radius-md);
+    background: var(--cg-accent-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cg-accent);
+    flex-shrink: 0;
+}
+
+/* --- Project Timeline Bar --- */
+.ov-timeline-track {
+    width: 100%;
+    height: 8px;
+    background: var(--cg-bg-elevated);
+    border-radius: var(--cg-radius-full);
+    overflow: visible;
+}
+.ov-timeline-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--cg-accent-hover), var(--cg-accent));
+    border-radius: var(--cg-radius-full);
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 8px var(--cg-accent-muted);
+}
+.ov-timeline-today {
+    position: absolute;
+    top: -4px;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    transition: left 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ov-timeline-today-line {
+    width: 2px;
+    height: 16px;
+    background: var(--cg-warning);
+    border-radius: 1px;
+    opacity: 0.8;
+}
+.ov-timeline-today-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cg-warning);
+    box-shadow: 0 0 6px var(--cg-warning);
+}
+
+/* --- Activity Feed --- */
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    transition: background var(--cg-transition-fast);
+}
+.activity-item:hover {
+    background: var(--cg-bg-elevated);
+}
+.activity-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--cg-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.activity-icon.scan   { background: rgba(167, 139, 250, 0.12); color: var(--cg-accent); }
+.activity-icon.find   { background: rgba(248, 113, 113, 0.12); color: var(--cg-danger); }
+.activity-icon.target { background: rgba(56, 189, 248, 0.12);  color: var(--cg-info); }
+.activity-icon.team   { background: rgba(52, 211, 153, 0.12);  color: var(--cg-success); }
+.activity-icon.update { background: rgba(251, 191, 36, 0.12);  color: var(--cg-warning); }
+.activity-body {
+    flex: 1;
+    min-width: 0;
+}
+.activity-title {
+    font-size: 0.8125rem;
+    color: var(--cg-text-1);
+    font-weight: 500;
+}
+.activity-time {
+    font-size: 0.7rem;
+    color: var(--cg-text-3);
+    margin-top: 1px;
+}
+
+/* ================================================================
+   PROJECT DETAIL — TEAM TAB ENHANCEMENTS
+   ================================================================ */
+
+/* --- Permissions Table --- */
+.perm-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: var(--cg-radius-sm);
+    background: rgba(52, 211, 153, 0.12);
+    color: var(--cg-success);
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+.perm-cross {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: var(--cg-radius-sm);
+    background: rgba(248, 113, 113, 0.08);
+    color: var(--cg-text-3);
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+/* --- Team Member Card Online Indicator --- */
+.team-member-online-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cg-success);
+    box-shadow: 0 0 6px rgba(52, 211, 153, 0.5);
+    border: 1.5px solid var(--cg-bg-surface);
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+/* ================================================================
+   ANIMATIONS
+   ================================================================ */
+
+/* Count-up number animation */
+@keyframes numberPop {
+    0% { transform: scale(0.85); opacity: 0; }
+    60% { transform: scale(1.07); }
+    100% { transform: scale(1); opacity: 1; }
+}
+.stat-number-animate {
+    animation: numberPop 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Fade-in-up for new cards */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.project-card-item {
+    animation: fadeInUp 0.35s ease both;
+}

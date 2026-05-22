@@ -507,103 +507,199 @@
 
             <!-- ── Overview Tab ────────────────────────────────────────────────────── -->
             <div id="tab-overview" class="space-y-6">
+
+                <!-- === SECTION: SECURITY HEALTH SCORE WIDGET === -->
                 <div class="cyber-card p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Left: Project Info -->
-                        <div class="space-y-4">
+                    <div class="flex flex-col md:flex-row items-center gap-6">
+                        <!-- Circular Progress Ring -->
+                        <div class="flex-shrink-0 flex flex-col items-center gap-2">
+                            <div class="relative" style="width:120px;height:120px">
+                                <svg width="120" height="120" viewBox="0 0 120 120" id="health-score-svg">
+                                    <!-- Background track -->
+                                    <circle cx="60" cy="60" r="50" fill="none"
+                                        stroke="rgba(167,139,250,0.1)"
+                                        stroke-width="10"/>
+                                    <!-- Progress arc -->
+                                    <circle id="health-score-ring" cx="60" cy="60" r="50" fill="none"
+                                        stroke="#34d399"
+                                        stroke-width="10"
+                                        stroke-linecap="round"
+                                        stroke-dasharray="314"
+                                        stroke-dashoffset="314"
+                                        transform="rotate(-90 60 60)"
+                                        style="transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1), stroke 0.5s ease"/>
+                                </svg>
+                                <!-- Center label -->
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span id="health-score-number" class="text-2xl font-bold text-white">—</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 mt-0.5">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <span id="health-score-label" class="text-xs font-semibold text-slate-400">Loading…</span>
+                        </div>
+                        <!-- Project Info -->
+                        <div class="flex-1 space-y-4">
                             <div>
-                                <p
-                                    class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1"
-                                >
-                                    Description
-                                </p>
-                                <p
-                                    id="ov-description"
-                                    class="text-sm text-slate-300"
-                                >
-                                    —
-                                </p>
+                                <p class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1">Description</p>
+                                <p id="ov-description" class="text-sm text-slate-300">—</p>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <p
-                                        class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1"
-                                    >
-                                        Start Date
-                                    </p>
-                                    <p
-                                        id="ov-start-date"
-                                        class="text-sm text-white font-mono"
-                                    >
-                                        —
-                                    </p>
+                                    <p class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1">Start Date</p>
+                                    <p id="ov-start-date" class="text-sm text-white font-mono">—</p>
                                 </div>
                                 <div>
-                                    <p
-                                        class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1"
-                                    >
-                                        End Date
-                                    </p>
-                                    <p
-                                        id="ov-end-date"
-                                        class="text-sm text-white font-mono"
-                                    >
-                                        —
-                                    </p>
+                                    <p class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1">End Date</p>
+                                    <p id="ov-end-date" class="text-sm text-white font-mono">—</p>
                                 </div>
                             </div>
                             <div>
-                                <p
-                                    class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1"
-                                >
-                                    Created
-                                </p>
-                                <p
-                                    id="ov-created"
-                                    class="text-sm text-slate-300"
-                                >
-                                    —
-                                </p>
+                                <p class="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-1">Created</p>
+                                <p id="ov-created" class="text-sm text-slate-300">—</p>
                             </div>
                         </div>
-                        <!-- Right: Stats -->
-                        <div class="grid grid-cols-2 gap-4">
+                        <!-- Role & Team & ID -->
+                        <div class="grid grid-cols-2 gap-4 md:min-w-[200px]">
                             <div class="cyber-card p-4 text-center">
-                                <p
-                                    id="ov-team-size"
-                                    class="text-3xl font-bold text-[var(--cg-accent)] font-mono"
-                                >
-                                    —
-                                </p>
-                                <p class="text-xs text-slate-400 mt-1">
-                                    Team Members
-                                </p>
+                                <p id="ov-team-size" class="text-3xl font-bold text-[var(--cg-accent)] font-mono">—</p>
+                                <p class="text-xs text-slate-400 mt-1">Team Members</p>
                             </div>
                             <div class="cyber-card p-4 text-center">
-                                <p
-                                    id="ov-role-badge"
-                                    class="text-sm font-bold text-white mt-1"
-                                >
-                                    —
-                                </p>
-                                <p class="text-xs text-slate-400 mt-1">
-                                    Your Role
-                                </p>
+                                <p id="ov-role-badge" class="text-sm font-bold text-white mt-1">—</p>
+                                <p class="text-xs text-slate-400 mt-1">Your Role</p>
                             </div>
                             <div class="cyber-card p-4 text-center col-span-2">
-                                <p
-                                    id="ov-project-id"
-                                    class="text-xs font-mono text-[var(--cg-info)] truncate"
-                                >
-                                    —
-                                </p>
-                                <p class="text-xs text-slate-400 mt-1">
-                                    Project ID
-                                </p>
+                                <p id="ov-project-id" class="text-xs font-mono text-[var(--cg-info)] truncate">—</p>
+                                <p class="text-xs text-slate-400 mt-1">Project ID</p>
                             </div>
                         </div>
                     </div>
                 </div>
+                <!-- === END SECTION: SECURITY HEALTH SCORE WIDGET === -->
+
+                <!-- === SECTION: QUICK STATS ROW === -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="ov-quick-stats">
+                    <!-- Targets Card -->
+                    <div class="cyber-card p-4 cursor-pointer hover:border-[rgba(167,139,250,0.4)] transition-all"
+                         onclick="switchDetailTab('targets')" title="Go to Targets tab">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="ov-stat-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+                                    <line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/>
+                                    <line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/>
+                                </svg>
+                            </div>
+                            <span class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Targets</span>
+                        </div>
+                        <p id="ov-stat-targets" class="text-2xl font-bold text-white font-mono">—</p>
+                    </div>
+                    <!-- Findings Card -->
+                    <div class="cyber-card p-4 cursor-pointer hover:border-[rgba(167,139,250,0.4)] transition-all"
+                         onclick="switchDetailTab('findings')" title="Go to Findings tab">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="ov-stat-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                                </svg>
+                            </div>
+                            <span class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Findings</span>
+                        </div>
+                        <p id="ov-stat-findings" class="text-2xl font-bold text-white font-mono">—</p>
+                    </div>
+                    <!-- Scans Card -->
+                    <div class="cyber-card p-4 cursor-pointer hover:border-[rgba(167,139,250,0.4)] transition-all"
+                         onclick="switchDetailTab('scans')" title="Go to Scans tab">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="ov-stat-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M8 12 a4 4 0 0 1 8 0"/>
+                                    <path d="M5 12 a7 7 0 0 1 14 0"/>
+                                </svg>
+                            </div>
+                            <span class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Scans</span>
+                        </div>
+                        <p id="ov-stat-scans" class="text-2xl font-bold text-white font-mono">—</p>
+                    </div>
+                    <!-- Days Left Card -->
+                    <div class="cyber-card p-4 cursor-pointer hover:border-[rgba(167,139,250,0.4)] transition-all" id="ov-stat-days-card">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="ov-stat-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                    <circle cx="12" cy="16" r="2"/>
+                                </svg>
+                            </div>
+                            <span class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Days Left</span>
+                        </div>
+                        <p id="ov-stat-days" class="text-2xl font-bold text-white font-mono">—</p>
+                    </div>
+                </div>
+                <!-- === END SECTION: QUICK STATS ROW === -->
+
+                <!-- === SECTION: PROJECT TIMELINE BAR === -->
+                <div class="cyber-card p-5" id="ov-timeline-section" style="display:none">
+                    <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--cg-accent)]">
+                            <line x1="12" y1="20" x2="12" y2="10"/>
+                            <line x1="18" y1="20" x2="18" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="16"/>
+                        </svg>
+                        Project Timeline
+                    </h3>
+                    <div class="flex items-center justify-between text-xs text-slate-500 mb-2">
+                        <span id="ov-timeline-start">—</span>
+                        <span id="ov-timeline-end">—</span>
+                    </div>
+                    <div class="relative ov-timeline-track">
+                        <div id="ov-timeline-fill" class="ov-timeline-fill" style="width:0%"></div>
+                        <!-- Today marker -->
+                        <div id="ov-timeline-today" class="ov-timeline-today" style="left:0%">
+                            <div class="ov-timeline-today-line"></div>
+                            <div class="ov-timeline-today-dot"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mt-2">
+                        <span class="text-xs text-slate-600">Project Start</span>
+                        <span id="ov-timeline-pct" class="text-xs font-bold" style="color:var(--cg-accent)">0%</span>
+                        <span class="text-xs text-slate-600">Project End</span>
+                    </div>
+                </div>
+                <!-- === END SECTION: PROJECT TIMELINE BAR === -->
+
+                <!-- === SECTION: RECENT ACTIVITY FEED === -->
+                <div class="cyber-card overflow-hidden">
+                    <div class="flex items-center justify-between px-5 py-4 border-b border-[var(--cg-border)]">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--cg-accent)]">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                            </svg>
+                            Recent Activity
+                        </h3>
+                    </div>
+                    <div id="ov-activity-feed" class="divide-y divide-[var(--cg-border)]">
+                        <!-- Activity items populated by JS -->
+                        <div class="px-5 py-8 text-center text-slate-500 text-sm">Loading activity…</div>
+                    </div>
+                    <div class="px-5 py-3 border-t border-[var(--cg-border)]">
+                        <button id="ov-load-more-activity" onclick="loadMoreActivity()"
+                            class="w-full flex items-center justify-center gap-2 text-xs text-slate-500 hover:text-[var(--cg-accent)] transition-colors py-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                            Load More
+                        </button>
+                    </div>
+                </div>
+                <!-- === END SECTION: RECENT ACTIVITY FEED === -->
+
             </div>
 
             <!-- ── Team Tab ────────────────────────────────────────────────────────── -->
@@ -631,6 +727,56 @@
                         Invite Member
                     </button>
                 </div>
+
+                <!-- === SECTION: TEAM SUMMARY STATS === -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="team-stats-bar">
+                    <!-- Total Members -->
+                    <div class="cyber-card p-4 text-center">
+                        <div class="flex items-center justify-center gap-2 mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--cg-accent)]">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                        </div>
+                        <p id="team-stat-total" class="text-2xl font-bold text-white font-mono">—</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Total Members</p>
+                    </div>
+                    <!-- Owners -->
+                    <div class="cyber-card p-4 text-center">
+                        <div class="flex items-center justify-center gap-2 mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[#A78BFA]">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                        </div>
+                        <p id="team-stat-owners" class="text-2xl font-bold text-[#A78BFA] font-mono">1</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Owner</p>
+                    </div>
+                    <!-- Editors -->
+                    <div class="cyber-card p-4 text-center">
+                        <div class="flex items-center justify-center gap-2 mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[#38BDF8]">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </div>
+                        <p id="team-stat-editors" class="text-2xl font-bold text-[#38BDF8] font-mono">—</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Editors</p>
+                    </div>
+                    <!-- Viewers -->
+                    <div class="cyber-card p-4 text-center">
+                        <div class="flex items-center justify-center gap-2 mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[#FBBF24]">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </div>
+                        <p id="team-stat-viewers" class="text-2xl font-bold text-[#FBBF24] font-mono">—</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Viewers</p>
+                    </div>
+                </div>
+                <!-- === END SECTION: TEAM SUMMARY STATS === -->
 
                 <!-- Invite Panel (inline, slides in) -->
                 <div
@@ -767,6 +913,106 @@
                     <div class="shimmer h-14 rounded-xl"></div>
                     <div class="shimmer h-14 rounded-xl"></div>
                 </div>
+
+                <!-- === SECTION: ROLES & PERMISSIONS TABLE === -->
+                <div class="cyber-card overflow-hidden">
+                    <div class="px-5 py-4 border-b border-[var(--cg-border)] flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--cg-accent)]">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        <h3 class="text-sm font-bold text-white">Roles &amp; Permissions</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="border-b border-[var(--cg-border)]">
+                                    <th class="text-left px-5 py-3 text-slate-400 font-semibold">Permission</th>
+                                    <th class="text-center px-4 py-3 text-[#A78BFA] font-semibold">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1">
+                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                        </svg>
+                                        Owner
+                                    </th>
+                                    <th class="text-center px-4 py-3 text-[#38BDF8] font-semibold">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                        </svg>
+                                        Editor
+                                    </th>
+                                    <th class="text-center px-4 py-3 text-[#FBBF24] font-semibold">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                        Viewer
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[var(--cg-border)]">
+                                <tr class="hover:bg-[var(--cg-bg-elevated)] transition-colors">
+                                    <td class="px-5 py-3 text-slate-300">View project &amp; findings</td>
+                                    <td class="text-center px-4 py-3"><span class="perm-check">&#10003;</span></td>
+                                    <td class="text-center px-4 py-3"><span class="perm-check">&#10003;</span></td>
+                                    <td class="text-center px-4 py-3"><span class="perm-check">&#10003;</span></td>
+                                </tr>
+                                <tr class="hover:bg-[var(--cg-bg-elevated)] transition-colors">
+                                    <td class="px-5 py-3 text-slate-300">Run security scans</td>
+                                    <td class="text-center px-4 py-3"><span class="perm-check">&#10003;</span></td>
+                                    <td class="text-center px-4 py-3"><span class="perm-check">&#10003;</span></td>
+                                    <td class="text-center px-4 py-3"><span class="perm-cross">&#215;</span></td>
+                                </tr>
+                                <tr class="hover:bg-[var(--cg-bg-elevated)] transition-colors">
+                                    <td class="px-5 py-3 text-slate-300">Add / edit targets</td>
+                                    <td class="text-center px-4 py-3"><span class="perm-check">&#10003;</span></td>
+                                    <td class="text-center px-4 py-3"><span class="perm-check">&#10003;</span></td>
+                                    <td class="text-center px-4 py-3"><span class="perm-cross">&#215;</span></td>
+                                </tr>
+                                <tr class="hover:bg-[var(--cg-bg-elevated)] transition-colors">
+                                    <td class="px-5 py-3 text-slate-300">Invite team members</td>
+                                    <td class="text-center px-4 py-3"><span class="perm-check">&#10003;</span></td>
+                                    <td class="text-center px-4 py-3"><span class="perm-cross">&#215;</span></td>
+                                    <td class="text-center px-4 py-3"><span class="perm-cross">&#215;</span></td>
+                                </tr>
+                                <tr class="hover:bg-[var(--cg-bg-elevated)] transition-colors">
+                                    <td class="px-5 py-3 text-slate-300">Edit project settings</td>
+                                    <td class="text-center px-4 py-3"><span class="perm-check">&#10003;</span></td>
+                                    <td class="text-center px-4 py-3"><span class="perm-cross">&#215;</span></td>
+                                    <td class="text-center px-4 py-3"><span class="perm-cross">&#215;</span></td>
+                                </tr>
+                                <tr class="hover:bg-[var(--cg-bg-elevated)] transition-colors">
+                                    <td class="px-5 py-3 text-slate-300">Delete project</td>
+                                    <td class="text-center px-4 py-3"><span class="perm-check">&#10003;</span></td>
+                                    <td class="text-center px-4 py-3"><span class="perm-cross">&#215;</span></td>
+                                    <td class="text-center px-4 py-3"><span class="perm-cross">&#215;</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- === END SECTION: ROLES & PERMISSIONS TABLE === -->
+
+                <!-- === SECTION: PENDING INVITATIONS === -->
+                <div class="cyber-card overflow-hidden" id="pending-invitations-card">
+                    <div class="px-5 py-4 border-b border-[var(--cg-border)] flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--cg-warning)]">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.65a16 16 0 0 0 6 6l.94-.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.74 16z"/>
+                            </svg>
+                            Pending Invitations
+                            <span id="pending-invitations-count" class="text-xs bg-[rgba(251,191,36,0.15)] text-[#FBBF24] px-1.5 py-0.5 rounded-full font-mono">0</span>
+                        </h3>
+                    </div>
+                    <div id="pending-invitations-list" class="divide-y divide-[var(--cg-border)]">
+                        <!-- TODO: Replace with API call to GET /api/projects/{id}/invitations -->
+                        <div class="px-5 py-6 text-center text-slate-500 text-sm">
+                            No pending invitations.
+                        </div>
+                    </div>
+                </div>
+                <!-- === END SECTION: PENDING INVITATIONS === -->
+
             </div>
 
             <!-- ── Settings Tab (owner only) ─────────────────────────────────────── -->
@@ -1503,6 +1749,7 @@
             let _currentTab = "overview";
             let _currentUserRole = "viewer"; // updated by loadTeam()
             let _editTargetType = ""; // type stored when Edit Target modal opens
+            let _projectFindings = []; // cache of all findings across targets
 
             // ─── Boot ─────────────────────────────────────────────────────────────────
             (function boot() {
@@ -1582,6 +1829,8 @@
                     renderProject();
                     loadTeam();
                     loadTargets();
+                    loadScansCount();
+                    loadProjectFindings();
                 } catch (err) {
                     showError(
                         "Network Error",
@@ -1639,10 +1888,49 @@
                 _set("ov-project-id", p.id || "—");
                 // BUG 3 FIX: "Member" is never a valid role label.
                 // Use "—" as placeholder; loadTeam() will overwrite with the real role.
-                _set(
-                    "ov-role-badge",
+                _set("ov-role-badge",
                     _isOwner ? "Owner" : p.role ? cap(p.role) : "—",
                 );
+
+                // === HEALTH SCORE WIDGET ===
+                // Compute a synthetic health score based on project data.
+                // TODO: Replace with API call to /api/projects/{id}/health
+                _renderHealthScore();
+
+                // === PROJECT TIMELINE BAR ===
+                _renderTimelineBar(p);
+
+                // === QUICK STATS — Targets, Findings, Scans, Days Left ===
+                // Show dashes for targets/findings/scans (need separate API calls)
+                // Days left calculated from end_date
+                _set("ov-stat-targets", p.targets_count != null ? String(p.targets_count) : "—");
+                _set("ov-stat-findings", p.findings_count != null ? String(p.findings_count) : "—");
+                _set("ov-stat-scans", p.scans_count != null ? String(p.scans_count) : "—");
+                if (p.end_date) {
+                    const endDateParsed = parseSafeDate(p.end_date);
+                    const daysLeft = endDateParsed ? Math.ceil(
+                        (endDateParsed.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+                    ) : NaN;
+                    const daysEl = document.getElementById("ov-stat-days");
+                    if (daysEl) {
+                        if (isNaN(daysLeft)) {
+                            daysEl.textContent = "—";
+                            daysEl.style.color = "var(--cg-text-1)";
+                        } else if (daysLeft < 0) {
+                            daysEl.textContent = "Overdue";
+                            daysEl.style.color = "var(--cg-danger)";
+                        } else {
+                            daysEl.textContent = String(daysLeft);
+                            daysEl.style.color = daysLeft <= 7 ? "var(--cg-warning)" : "var(--cg-text-1)";
+                        }
+                    }
+                } else {
+                    _set("ov-stat-days", "—");
+                }
+
+                // === ACTIVITY FEED ===
+                // TODO: Replace with API call to /api/projects/{id}/activity
+                _renderActivityFeed(p);
 
                 // Settings form
                 _val("s-name", p.name || "");
@@ -1696,7 +1984,8 @@
                           : [];
 
                     // Update team count on overview
-                    _set("ov-team-size", String(members.length));
+                    const hasOwnerInList = members.some((m) => (m.role || "") === "owner");
+                    _set("ov-team-size", String(members.length + (_isOwner && !hasOwnerInList ? 1 : 0)));
 
                     // BUG 3 FIX: derive the current user's actual role from the
                     // collaborators list — never show a generic "Member" label.
@@ -1722,17 +2011,301 @@
                     if (!listEl) return;
                     if (members.length === 0) {
                         listEl.innerHTML = `<div class="text-center py-8 text-sm text-slate-500">No team members yet. Invite someone to collaborate.</div>`;
+                        // Reset stats to zero
+                        _updateTeamStats([]);
                         return;
                     }
                     listEl.innerHTML = members
                         .map((m) => renderMemberRow(m))
                         .join("");
+
+                    // === Update Team Stats Bar ===
+                    _updateTeamStats(members);
                 } catch (_) {
                     if (listEl)
                         listEl.innerHTML = errMsg(
                             "Network error loading team.",
                         );
                 }
+            }
+
+            async function loadScansCount() {
+                try {
+                    if (window.scannerAPI) {
+                        const scans = await window.scannerAPI.getProjectScans(_projectId);
+                        _set("ov-stat-scans", String(scans.length));
+                        
+                        const badge = document.getElementById("scans-tab-badge");
+                        if (badge) {
+                            badge.textContent = scans.length;
+                            badge.style.display = scans.length > 0 ? "inline-flex" : "none";
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to load scans count", e);
+                }
+            }
+
+            /**
+             * Update the Team Stats Bar (Total Members, Owners, Editors, Viewers).
+             * @param {Array} members - Array of member objects from API
+             */
+            function _updateTeamStats(members) {
+                const hasOwnerInList = members.some((m) => (m.role || "") === "owner");
+                const total   = members.length;
+                const owners  = members.filter((m) => (m.role || "") === "owner").length;
+                const editors = members.filter((m) => (m.role || "") === "editor").length;
+                const viewers = members.filter((m) => (m.role || "") === "viewer").length;
+
+                const _set2 = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = val;
+                };
+                // Include owner in total and owner stats only if not already present in collaborators list
+                _set2("team-stat-total",   String(total + (_isOwner && !hasOwnerInList ? 1 : 0)));
+                _set2("team-stat-owners",  String(owners  + (_isOwner && !hasOwnerInList ? 1 : 0)));
+                _set2("team-stat-editors", String(editors));
+                _set2("team-stat-viewers", String(viewers));
+            }
+
+            // ─── Overview Tab Helpers ──────────────────────────────────────────────────
+
+            /**
+             * Asynchronously load findings for all project targets and trigger score rendering.
+             */
+            async function loadProjectFindings() {
+                try {
+                    // 1. Fetch all targets of the project
+                    const res = await apiFetch(`/projects/${_projectId}/targets`);
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    const targets = Array.isArray(data.targets)
+                        ? data.targets
+                        : Array.isArray(data)
+                          ? data
+                          : [];
+
+                    // 2. Fetch findings for all targets in parallel
+                    const findingsPromises = targets.map(async (target) => {
+                        try {
+                            const fRes = await apiFetch(`/targets/${target.id}/findings`);
+                            if (fRes.ok) {
+                                return await fRes.json();
+                            }
+                        } catch (e) {
+                            console.error(`Error loading findings for target ${target.id}:`, e);
+                        }
+                        return [];
+                    });
+
+                    const findingsResults = await Promise.all(findingsPromises);
+
+                    // 3. Aggregate all findings
+                    let all = [];
+                    findingsResults.forEach((list) => {
+                        const arr = Array.isArray(list) ? list : (list.findings || list.data || []);
+                        all = all.concat(arr);
+                    });
+
+                    _projectFindings = all;
+
+                    // 4. Update the quick stats "ov-stat-findings" count in the Overview tab
+                    _set("ov-stat-findings", String(_projectFindings.length));
+
+                    // 5. Update findings tab badge count
+                    const badge = document.getElementById("findings-tab-badge");
+                    if (badge) {
+                        badge.textContent = _projectFindings.length;
+                        badge.style.display = _projectFindings.length > 0 ? "inline-flex" : "none";
+                    }
+
+                    // 6. Recalculate health score and render ring
+                    _renderHealthScore();
+                } catch (err) {
+                    console.error("Error loading project findings:", err);
+                }
+            }
+
+            /**
+             * Render the circular health score ring based on target findings.
+             */
+            function _renderHealthScore() {
+                const ring    = document.getElementById("health-score-ring");
+                const numEl   = document.getElementById("health-score-number");
+                const labelEl = document.getElementById("health-score-label");
+                if (!ring || !numEl || !labelEl) return;
+
+                // Count severities
+                const counts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+                _projectFindings.forEach((f) => {
+                    const sev = (f.severity || "info").toLowerCase();
+                    if (counts[sev] !== undefined) {
+                        counts[sev]++;
+                    }
+                });
+
+                // Calculate health score:
+                // Start at 100, apply standard weighted penalty:
+                // Critical = -25, High = -15, Medium = -5, Low = -1, Info = 0
+                let score = 100;
+                score -= (counts.critical * 25) + (counts.high * 15) + (counts.medium * 5) + (counts.low * 1);
+                score = Math.min(100, Math.max(0, score));
+
+                // Color thresholds & Labels:
+                // Score >= 80: Healthy (Green)
+                // Score between 50 and 79: At Risk (Orange)
+                // Score < 50: Critical (Red)
+                let color  = "#34d399"; // Green
+                let hlabel = "Healthy";
+                if (score < 50) { 
+                    color = "#f87171"; // Red
+                    hlabel = "Critical"; 
+                } else if (score < 80) { 
+                    color = "#fb923c"; // Orange
+                    hlabel = "At Risk"; 
+                }
+
+                // Animate ring after paint
+                const circumference = 314; // 2 * Math.PI * 50
+                const offset = circumference - (score / 100) * circumference;
+                ring.style.stroke = color;
+                setTimeout(() => { ring.style.strokeDashoffset = String(offset); }, 80);
+
+                numEl.textContent  = String(score);
+                labelEl.textContent = hlabel;
+                labelEl.style.color = color;
+            }
+
+            /**
+             * Render the project timeline progress bar.
+             * @param {Object} p - Project data object
+             */
+            function _renderTimelineBar(p) {
+                const section    = document.getElementById("ov-timeline-section");
+                const fillEl     = document.getElementById("ov-timeline-fill");
+                const todayEl    = document.getElementById("ov-timeline-today");
+                const pctLabel   = document.getElementById("ov-timeline-pct");
+                const startLabel = document.getElementById("ov-timeline-start");
+                const endLabel   = document.getElementById("ov-timeline-end");
+
+                if (!section || !p.start_date || !p.end_date) {
+                    if (section) section.style.display = "none";
+                    return;
+                }
+                section.style.display = "";
+
+                const startDateParsed = parseSafeDate(p.start_date);
+                const endDateParsed   = parseSafeDate(p.end_date);
+
+                if (!startDateParsed || !endDateParsed || isNaN(startDateParsed.getTime()) || isNaN(endDateParsed.getTime())) {
+                    if (pctLabel) pctLabel.textContent = "—%";
+                    return;
+                }
+
+                const start = startDateParsed.getTime();
+                const end   = endDateParsed.getTime();
+                const now   = Date.now();
+                const total = end - start;
+                const elapsed = total > 0 ? Math.min(100, Math.max(0, ((now - start) / total) * 100)) : 0;
+
+                if (startLabel) startLabel.textContent = fmtDate(p.start_date);
+                if (endLabel)   endLabel.textContent   = fmtDate(p.end_date);
+                if (pctLabel) {
+                    pctLabel.textContent = `${Math.round(elapsed)}%`;
+                    pctLabel.style.color = elapsed >= 80 ? "var(--cg-warning)" : "var(--cg-accent)";
+                }
+
+                // Animate bar + today marker
+                setTimeout(() => {
+                    if (fillEl) fillEl.style.width = `${elapsed}%`;
+                    if (todayEl) todayEl.style.left = `${elapsed}%`;
+                }, 120);
+            }
+
+            /**
+             * Render a synthetic activity feed for the project overview.
+             * Uses existing project metadata (created_at, start_date, etc.) to build events.
+             * TODO: Replace with real API call to /api/projects/{id}/activity
+             * @param {Object} p - Project data object
+             */
+            function _renderActivityFeed(p) {
+                const feed = document.getElementById("ov-activity-feed");
+                if (!feed) return;
+
+                // Build synthetic events from project metadata
+                const events = [];
+
+                if (p.created_at) {
+                    events.push({
+                        type: "update",
+                        title: "Project created",
+                        time: p.created_at,
+                        icon: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>`,
+                    });
+                }
+                if (p.start_date) {
+                    events.push({
+                        type: "scan",
+                        title: "Assessment period started",
+                        time: p.start_date + "T00:00:00",
+                        icon: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+                    });
+                }
+                if (p.status === "completed") {
+                    events.push({
+                        type: "find",
+                        title: "Project marked as completed",
+                        time: p.end_date ? p.end_date + "T00:00:00" : (p.updated_at || p.created_at),
+                        icon: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+                    });
+                }
+
+                if (events.length === 0) {
+                    feed.innerHTML = `<div class="px-5 py-6 text-center text-slate-500 text-sm">No activity recorded yet.</div>`;
+                    const loadMoreBtn = document.getElementById("ov-load-more-activity");
+                    if (loadMoreBtn) loadMoreBtn.style.display = "none";
+                    return;
+                }
+
+                // Sort by time descending
+                events.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+
+                feed.innerHTML = events.map((ev) => `
+                    <div class="activity-item">
+                        <div class="activity-icon ${ev.type}">${ev.icon}</div>
+                        <div class="activity-body">
+                            <div class="activity-title">${esc(ev.title)}</div>
+                            <div class="activity-time">${fmtRelative(ev.time)}</div>
+                        </div>
+                    </div>`).join("");
+
+                // Hide "Load More" if all events shown
+                const loadMoreBtn = document.getElementById("ov-load-more-activity");
+                if (loadMoreBtn) loadMoreBtn.style.display = "none";
+            }
+
+            /** Load more activity items (placeholder). */
+            function loadMoreActivity() {
+                // TODO: Implement pagination when API is available
+                const btn = document.getElementById("ov-load-more-activity");
+                if (btn) btn.style.display = "none";
+            }
+
+            /**
+             * Switch the detail page to a specific tab.
+             * @param {string} tabName - 'overview' | 'team' | 'targets' | 'findings' | 'scans'
+             */
+            function switchDetailTab(tabName) {
+                // Map tab name to button ID
+                const btnMap = {
+                    overview: "overview-tab-btn",
+                    team:     "team-tab-btn",
+                    targets:  "targets-tab-btn",
+                    findings: "findings-tab-btn",
+                    scans:    "scans-tab-btn",
+                };
+                const btn = document.getElementById(btnMap[tabName]);
+                if (btn) btn.click();
             }
 
             function renderMemberRow(member) {
@@ -1788,14 +2361,25 @@
          </button>`
                     : "";
 
+                // Join date display
+                const joinedAt = member.created_at || member.joined_at || "";
+                const joinedStr = joinedAt
+                    ? `Joined ${fmtDate(joinedAt.split("T")[0])}`
+                    : jobTitle || email || "";
+
                 return `
     <div class="cyber-card p-3 flex items-center gap-3">
-      <div class="cyber-avatar-sm flex-shrink-0 flex items-center justify-center">
-        <span class="text-xs font-bold text-white">${initials}</span>
+      <div class="relative flex-shrink-0">
+        <div class="cyber-avatar-sm flex items-center justify-center">
+          <span class="text-xs font-bold text-white">${initials}</span>
+        </div>
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-sm font-semibold text-white truncate">${name}${isSelf ? ' <span class="text-xs text-slate-400 font-normal">(you)</span>' : ""}</p>
-        <p class="text-xs text-slate-400 truncate">${email || jobTitle || role}</p>
+        <div class="flex items-center gap-2 flex-wrap">
+          <p class="text-sm font-semibold text-white truncate">${name}${isSelf ? ' <span class="text-xs text-slate-400 font-normal">(you)</span>' : ""}</p>
+          <span class="text-xs px-1.5 py-0.5 rounded-full border font-semibold ${roleCls}">${cap(role)}</span>
+        </div>
+        <p class="text-xs text-slate-500 truncate mt-0.5">${joinedStr}</p>
       </div>
       <div class="flex items-center gap-2 flex-shrink-0">
         ${roleControl}
@@ -2368,6 +2952,7 @@
                     hideAddTargetModal();
                     notify("Target added successfully.", "success");
                     loadTargets();
+                    loadProjectFindings();
                 } catch (_) {
                     notify("Network error.", "error");
                 } finally {
@@ -2510,6 +3095,7 @@
                     } else {
                         loadTargets();
                     }
+                    loadProjectFindings();
 
                     hideEditTargetModal();
                     notify("Target updated successfully.", "success");
@@ -2570,6 +3156,7 @@
                         `[data-target-id="${targetId}"]`,
                     );
                     if (row) row.remove();
+                    loadProjectFindings();
 
                     // Show empty state if list is now empty
                     const listEl = document.getElementById("targets-list");
@@ -2717,10 +3304,17 @@
                     : (p[0][0] + p[p.length - 1][0]).toUpperCase();
             }
 
+             function parseSafeDate(s) {
+                if (!s) return null;
+                const hasT = s.includes("T");
+                const d = new Date(hasT ? s : `${s}T00:00:00`);
+                return isNaN(d) ? new Date(s) : d;
+            }
+
             function fmtDate(s) {
                 if (!s) return "—";
-                const d = new Date(s.includes("T") ? s : `${s}T00:00:00`);
-                return isNaN(d)
+                const d = parseSafeDate(s);
+                return !d || isNaN(d.getTime())
                     ? s
                     : d.toLocaleDateString("en-US", {
                           year: "numeric",
@@ -2730,7 +3324,9 @@
             }
             function fmtRelative(s) {
                 if (!s) return "—";
-                const days = Math.floor((Date.now() - new Date(s)) / 86400000);
+                const d = parseSafeDate(s);
+                if (!d || isNaN(d.getTime())) return "—";
+                const days = Math.floor((Date.now() - d.getTime()) / 86400000);
                 if (days === 0) return "Today";
                 if (days === 1) return "Yesterday";
                 if (days < 30) return `${days} days ago`;

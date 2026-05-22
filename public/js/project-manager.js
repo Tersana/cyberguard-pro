@@ -600,6 +600,74 @@ class ProjectManager {
       </div>`
         : "";
 
+    // === PROGRESS BAR calculation ===
+    let progressPct = 0;
+    let progressColor = "#34D399"; // green
+    let isOverdue = false;
+    if (project.start_date && project.end_date) {
+      const now = Date.now();
+      const start = new Date(project.start_date + "T00:00:00").getTime();
+      const end = new Date(project.end_date + "T00:00:00").getTime();
+      const total = end - start;
+      if (total > 0) {
+        progressPct = Math.min(100, Math.max(0, ((now - start) / total) * 100));
+        if (now > end) {
+          isOverdue = true;
+          progressPct = 100;
+          progressColor = "#f87171"; // red
+        } else if (progressPct >= 80) {
+          progressColor = "#fb923c"; // orange
+        }
+      }
+    } else if (project.status === "completed") {
+      progressPct = 100;
+      progressColor = "#38BDF8";
+    }
+    const progressBar = (project.start_date && project.end_date) || project.status === "completed"
+      ? `
+      <div class="mb-3">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs text-slate-500 font-medium">Project Progress</span>
+          <span class="text-xs font-bold" style="color:${progressColor}">${isOverdue ? "Overdue" : Math.round(progressPct) + "%"}</span>
+        </div>
+        <div class="project-progress-track">
+          <div class="project-progress-fill" style="width:0%;background:${progressColor}" data-target-width="${Math.round(progressPct)}%"></div>
+        </div>
+      </div>` : "";
+
+    // === QUICK INFO ROW ===
+    // TODO: Replace with API call to fetch actual targets/findings/last scan data
+    const targetsCount = project.targets_count ?? "—";
+    const findingsCount = project.findings_count ?? "—";
+    const lastScanText = project.last_scan_at
+      ? this.formatDate(project.last_scan_at)
+      : "Never";
+
+    const quickInfoRow = `
+      <div class="flex items-center gap-4 text-xs text-slate-500 mb-3">
+        <span class="flex items-center gap-1.5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+            <line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/>
+          </svg>
+          ${targetsCount}
+        </span>
+        <span class="flex items-center gap-1.5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          ${findingsCount}
+        </span>
+        <span class="flex items-center gap-1.5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          ${lastScanText}
+        </span>
+      </div>`;
+
     // Owner-only action buttons (edit / delete)
     const ownerBtns = isOwner
       ? `
@@ -622,7 +690,11 @@ class ProjectManager {
     const detailUrl = `/project-detail?id=${this.escapeAttr(String(project.id))}${isOwner ? "&owned=true" : ""}`;
 
     return `
-      <div class="cyber-card p-5 hover:border-[rgba(167,139,250,0.4)] transition-all group" data-project-id="${this.escapeAttr(String(project.id))}">
+      <div class="cyber-card p-5 hover:border-[rgba(167,139,250,0.4)] transition-all group project-card-item"
+           data-project-id="${this.escapeAttr(String(project.id))}"
+           data-project-name="${this.escapeAttr(project.name)}"
+           data-project-status="${this.escapeAttr(project.status || 'active')}"
+           data-project-created="${this.escapeAttr(project.created_at || '')}">
         <div class="flex items-start justify-between mb-3">
           <div class="flex-1 min-w-0 mr-3">
             <h3 class="text-base font-bold text-white mb-1 truncate">${this.escapeHtml(project.name)}</h3>
@@ -634,8 +706,12 @@ class ProjectManager {
           </div>
         </div>
         ${dateRow}
+        ${progressBar}
+        ${quickInfoRow}
         <div class="flex items-center justify-between pt-3 border-t border-white/5">
-          <span class="text-xs text-slate-500">Created ${this.formatDate(project.created_at)}</span>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-500">Created ${this.formatDate(project.created_at)}</span>
+          </div>
           <div class="flex items-center gap-1">
             <a href="${detailUrl}"
                class="cyber-btn-ghost text-xs px-2 py-1.5 rounded flex items-center gap-1"
