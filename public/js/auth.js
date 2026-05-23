@@ -898,6 +898,18 @@ class AuthManager {
     return this.currentUser;
   }
 
+  // Update user profile data helper
+  updateUserProfile(profileData) {
+    if (!this.currentUser) return false;
+    this.currentUser = {
+      ...this.currentUser,
+      ...profileData
+    };
+    this.saveUserSession(this.currentUser);
+    this.updateUI();
+    return true;
+  }
+
   // Update UI based on authentication status
   updateUI() {
     const authElements = document.querySelectorAll("[data-auth]");
@@ -995,6 +1007,11 @@ class AuthManager {
       // Calculate and display user initials from full_name
       if (sidebarInitials) {
         sidebarInitials.textContent = initials;
+      }
+
+      // Sync navbar settings panel trigger
+      if (window.SettingsPanel && typeof window.SettingsPanel.updateNavbarTrigger === "function") {
+        window.SettingsPanel.updateNavbarTrigger();
       }
     } else {
       // Mark document state for CSS overrides

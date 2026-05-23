@@ -2836,11 +2836,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Close setup modal when clicking outside it
-  twofaSetupModal.addEventListener("click", (e) => {
-    if (e.target === twofaSetupModal) {
-      hide2FASetup();
-    }
-  });
+  if (twofaSetupModal) {
+    twofaSetupModal.addEventListener("click", (e) => {
+      if (e.target === twofaSetupModal) {
+        hide2FASetup();
+      }
+    });
+  }
 
   // --- 2FA Status (always fetch from API, never guess from local state) ---
 
