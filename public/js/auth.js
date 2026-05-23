@@ -1499,7 +1499,7 @@ class AuthManager {
         id: "admin_" + Math.random().toString(36).substr(2, 9),
         email: "admin@test.com",
         name: "Admin User",
-        company: "CyberGuard Pro",
+        company: "CyberGuard",
         password: "admin123", // Simple password for testing
         role: "admin",
         preferences: {
@@ -1717,11 +1717,11 @@ window.clearAuthStorage = function() {
 
 window.showLoginRequiredModal = function() {
   if (typeof CyberNotify !== 'undefined' && CyberNotify.confirm) {
-    CyberNotify.confirm("You must log in first before using CyberGuard Pro tools.", () => {
+    CyberNotify.confirm("You must log in first before using CyberGuard tools.", () => {
       window.location.href = '/login';
     });
   } else {
-    alert("You must log in first before using CyberGuard Pro tools.");
+    alert("You must log in first before using CyberGuard tools.");
     window.location.href = '/login';
   }
 };

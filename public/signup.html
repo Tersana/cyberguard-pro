@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Sign Up - CyberGuard Pro</title>
+        <title>Sign Up - CyberGuard</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <script>
             tailwind.config = {
@@ -33,6 +33,7 @@
             * {
                 box-sizing: border-box;
             }
+            html,
             body {
                 font-family:
                     "Inter",
@@ -40,15 +41,28 @@
                     BlinkMacSystemFont,
                     sans-serif;
                 -webkit-font-smoothing: antialiased;
+                background-color: var(--cg-bg-base);
+            }
+
+            /* Dot grid overlay */
+            .dot-grid-overlay {
+                background-image: radial-gradient(
+                    circle,
+                    rgba(167, 139, 250, 0.05) 1px,
+                    transparent 1px
+                );
+                background-size: 35px 35px;
             }
 
             /* Animated radial glows */
             .glow-orb {
                 position: fixed;
                 border-radius: 50%;
-                filter: blur(80px);
-                opacity: 0.5;
-                animation: float 8s ease-in-out infinite;
+                filter: blur(100px);
+                opacity: 0.4;
+                animation: float 12s ease-in-out infinite;
+                pointer-events: none;
+                z-index: 0;
             }
 
             .glow-orb-1 {
@@ -56,11 +70,11 @@
                 height: 600px;
                 background: radial-gradient(
                     circle,
-                    rgba(167, 139, 250, 0.35) 0%,
+                    rgba(167, 139, 250, 0.25) 0%,
                     transparent 70%
                 );
                 top: -200px;
-                left: -100px;
+                left: -200px;
                 animation-delay: 0s;
             }
 
@@ -69,12 +83,25 @@
                 height: 500px;
                 background: radial-gradient(
                     circle,
-                    rgba(167, 139, 250, 0.18) 0%,
+                    rgba(139, 92, 246, 0.18) 0%,
                     transparent 70%
                 );
                 bottom: -150px;
                 right: -150px;
                 animation-delay: 4s;
+            }
+
+            .glow-orb-3 {
+                width: 450px;
+                height: 450px;
+                background: radial-gradient(
+                    circle,
+                    rgba(167, 139, 250, 0.15) 0%,
+                    transparent 70%
+                );
+                top: 30%;
+                right: -150px;
+                animation-delay: 8s;
             }
 
             @keyframes float {
@@ -83,8 +110,26 @@
                     transform: translate(0, 0) scale(1);
                 }
                 50% {
-                    transform: translate(30px, -30px) scale(1.1);
+                    transform: translate(30px, -30px) scale(1.08);
                 }
+            }
+
+            /* Benefits panel card */
+            .benefits-card {
+                background: linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(8, 11, 20, 0.8) 100%);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border: 1px solid rgba(167, 139, 250, 0.15);
+                box-shadow: 
+                    0 0 50px rgba(167, 139, 250, 0.05),
+                    0 8px 32px rgba(0, 0, 0, 0.5);
+                transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            }
+            .benefits-card:hover {
+                border-color: rgba(167, 139, 250, 0.25);
+                box-shadow: 
+                    0 0 60px rgba(167, 139, 250, 0.1),
+                    0 8px 32px rgba(0, 0, 0, 0.5);
             }
 
             /* Glass card styles */
@@ -95,6 +140,14 @@
                 border: 1px solid var(--cg-border-subtle);
                 box-shadow:
                     0 0 60px rgba(167, 139, 250, 0.15),
+                    0 8px 24px rgba(0, 0, 0, 0.5);
+                transition: border-color var(--cg-transition-base), box-shadow var(--cg-transition-base);
+            }
+            .glass-card:focus-within {
+                border-color: rgba(167, 139, 250, 0.4);
+                box-shadow:
+                    0 0 40px rgba(167, 139, 250, 0.15),
+                    0 0 80px rgba(167, 139, 250, 0.10),
                     0 8px 24px rgba(0, 0, 0, 0.5);
             }
 
@@ -129,7 +182,7 @@
                     0 0 16px rgba(239, 68, 68, 0.3);
             }
 
-            /* Neon button */
+            /* Neon button with shimmer */
             .btn-neon {
                 background: linear-gradient(
                     135deg,
@@ -138,11 +191,34 @@
                 );
                 box-shadow: 0 0 30px rgba(167, 139, 250, 0.5);
                 transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
             }
 
             .btn-neon:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 0 40px rgba(167, 139, 250, 0.7);
+            }
+
+            .btn-neon::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(
+                    90deg,
+                    transparent,
+                    rgba(255, 255, 255, 0.2),
+                    transparent
+                );
+                transition: none;
+            }
+
+            .btn-neon:hover::after {
+                left: 100%;
+                transition: all 0.8s ease-in-out;
             }
 
             /* Secondary button */
@@ -159,28 +235,43 @@
             }
 
             /* Step indicators */
-            .step-dot {
-                width: 12px;
-                height: 12px;
+            .step-circle {
+                width: 32px;
+                height: 32px;
                 border-radius: 50%;
-                background: var(--cg-border-subtle);
+                border: 2px solid var(--cg-border-subtle);
+                background: var(--cg-bg-surface);
+                color: var(--cg-text-2);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+                font-size: 0.75rem;
                 transition: all 0.3s ease;
+                z-index: 10;
             }
-
-            .step-dot.active {
+            .step-circle.active {
+                border-color: var(--cg-accent);
                 background: var(--cg-accent);
-                box-shadow: 0 0 15px rgba(167, 139, 250, 0.6);
-                transform: scale(1.2);
+                color: #ffffff;
+                box-shadow: 0 0 15px rgba(167, 139, 250, 0.4);
+            }
+            .step-circle.completed {
+                border-color: var(--cg-accent);
+                background: var(--cg-accent);
+                color: #ffffff;
+            }
+            .step-circle.completed span {
+                display: none;
+            }
+            .step-circle.completed::after {
+                content: "✓";
+                font-size: 0.9rem;
+                font-weight: bold;
             }
 
-            .step-dot.completed {
-                background: var(--cg-success);
-            }
-
-            /* Perks box */
-            .perks-box {
-                background: rgba(52, 211, 153, 0.08);
-                border: 1px solid rgba(52, 211, 153, 0.25);
+            .step-label {
+                transition: color 0.3s ease;
             }
 
             /* Form steps */
@@ -196,11 +287,11 @@
             @keyframes fadeInStep {
                 from {
                     opacity: 0;
-                    transform: translateX(16px);
+                    transform: scale(0.98) translateY(8px);
                 }
                 to {
                     opacity: 1;
-                    transform: translateX(0);
+                    transform: scale(1) translateY(0);
                 }
             }
 
@@ -254,59 +345,204 @@
         </style>
     </head>
     <body
-        class="min-h-screen text-white overflow-x-hidden flex items-center justify-center p-4"
-        style="background-color: var(--cg-bg-base)"
+        class="min-h-screen lg:h-screen text-white overflow-x-hidden lg:overflow-hidden flex flex-col relative"
+        style="background-color: var(--cg-bg-base);"
     >
-        <!-- Ambient Glow Effects -->
+        <!-- Ambient Background Grid, Particles, and Glows -->
+        <div class="fixed inset-0 opacity-10 dot-grid-overlay pointer-events-none z-0"></div>
+        
         <div class="glow-orb glow-orb-1"></div>
         <div class="glow-orb glow-orb-2"></div>
+        <div class="glow-orb glow-orb-3"></div>
 
-        <!-- Main Container -->
-        <div class="w-full max-w-md relative z-10">
-            <!-- Glass Card -->
-            <div class="glass-card rounded-3xl p-8 animate-slide-in">
-                <!-- Header -->
-                <div class="text-center mb-6">
-                    <div
-                        class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-green-400 to-neon-purple flex items-center justify-center shadow-lg shadow-neon-purple/40"
-                    >
-                        <svg
-                            class="w-8 h-8 text-white"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            stroke-width="2"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0zM4 19.235v-.11a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm0 0c.414 0 .75.336.75.75h.008a.756.756 0 00.75-.75v-.008a.756.756 0 00-.75-.75h-.008a.756.756 0 00-.75.75v.008c0 .414.336.75.75.75z"
-                            />
-                        </svg>
+        <!-- Main Layout Container (Full Viewport Split 50/50) -->
+        <div class="flex-1 flex flex-col lg:flex-row items-stretch relative z-10 w-full">
+            
+             <!-- LEFT PANEL (50% width, full height) -->
+             <div class="hidden lg:flex lg:w-1/2 flex flex-col justify-center p-8 lg:p-12 xl:p-16 relative z-10 lg:overflow-y-auto" style="backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+                 <div class="max-w-md mx-auto w-full flex flex-col justify-between h-full lg:py-8">
+                      <!-- Brand / Top Header -->
+                      <div class="flex items-center gap-4 mb-8 lg:mb-0">
+                         <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-neon-purple to-purple-600 flex items-center justify-center shadow-lg shadow-neon-purple/30 border border-purple-400/20">
+                             <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                             </svg>
+                         </div>
+                         <div>
+                             <span class="text-xl lg:text-2xl font-black text-white tracking-wide leading-none"><span class="brand-name"><span class="brand-cyber">Cyber</span><span class="brand-guard">Guard</span></span></span>
+                             <p class="text-[10px] lg:text-[11px] text-gray-400 uppercase tracking-widest font-bold mt-1">Enterprise Security Platform</p>
+                         </div>
+                      </div>
+
+                    <!-- Benefits Showcase -->
+                    <div class="my-auto py-6 lg:py-8">
+                        <h2 class="text-2xl lg:text-3xl font-extrabold text-white mb-6 leading-tight">Why CyberGuard?</h2>
+                        <div class="space-y-4">
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mt-0.5 flex-shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                    </svg>
+                                </div>
+                                <span class="text-base text-gray-300 font-medium">Advanced threat detection & analysis</span>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mt-0.5 flex-shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                    </svg>
+                                </div>
+                                <span class="text-base text-gray-300 font-medium">Real-time security monitoring</span>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mt-0.5 flex-shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                    </svg>
+                                </div>
+                                <span class="text-base text-gray-300 font-medium">Professional security reports</span>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mt-0.5 flex-shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                    </svg>
+                                </div>
+                                <span class="text-base text-gray-300 font-medium">Team collaboration tools</span>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mt-0.5 flex-shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                    </svg>
+                                </div>
+                                <span class="text-base text-gray-300 font-medium">20+ security scanning tools</span>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-6 h-6 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mt-0.5 flex-shrink-0">
+                                    <svg class="w-3.5 h-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                    </svg>
+                                </div>
+                                <span class="text-base text-gray-300 font-medium">AI-powered vulnerability insights</span>
+                            </div>
+                        </div>
                     </div>
-                    <h1 class="text-2xl font-bold text-white mb-1">
-                        Join CyberGuard Pro
-                    </h1>
-                    <p class="text-sm text-gray-400">
-                        Create your secure account today
-                    </p>
-                </div>
 
-                <!-- Step Indicator -->
-                <div class="flex items-center justify-center gap-4 mb-8">
-                    <div class="step-dot active" data-step="1"></div>
-                    <div class="w-8 h-px bg-white/20"></div>
-                    <div class="step-dot" data-step="2"></div>
-                    <div class="w-8 h-px bg-white/20"></div>
-                    <div class="step-dot" data-step="3"></div>
+                    <!-- Divider -->
+                    <div class="border-t border-[rgba(167,139,250,0.1)] my-4 hidden lg:block"></div>
+ 
+                    <!-- Trust Stats Row -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <!-- Stat 1 -->
+                        <div class="flex flex-col items-center p-3 rounded-2xl bg-white/[0.02] border border-white/[0.05] transition-all duration-300 hover:bg-white/[0.04]">
+                            <div class="p-1.5 rounded-lg bg-purple-500/10 text-neon-purple mb-1.5">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <span class="text-sm font-bold text-white leading-none">99.9%</span>
+                            <span class="text-[9px] text-gray-400 mt-1 uppercase tracking-wider font-semibold text-center text-wrap">Detection Rate</span>
+                        </div>
+                        <!-- Stat 2 -->
+                        <div class="flex flex-col items-center p-3 rounded-2xl bg-white/[0.02] border border-white/[0.05] transition-all duration-300 hover:bg-white/[0.04]">
+                            <div class="p-1.5 rounded-lg bg-purple-500/10 text-neon-purple mb-1.5">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3V7.5a3 3 0 013-3h13.5a3 3 0 013 3v3.75a3 3 0 01-3 3M5.25 14.25a3 3 0 00-3 3v2.25a3 3 0 003 3h13.5a3 3 0 003-3v-2.25a3 3 0 00-3-3m-13.5 0h13.5" />
+                                </svg>
+                            </div>
+                            <span class="text-sm font-bold text-white leading-none">10k+</span>
+                            <span class="text-[9px] text-gray-400 mt-1 uppercase tracking-wider font-semibold text-center text-wrap">Protected Assets</span>
+                        </div>
+                        <!-- Stat 3 -->
+                        <div class="flex flex-col items-center p-3 rounded-2xl bg-white/[0.02] border border-white/[0.05] transition-all duration-300 hover:bg-white/[0.04]">
+                            <div class="p-1.5 rounded-lg bg-purple-500/10 text-neon-purple mb-1.5">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+                                </svg>
+                            </div>
+                            <span class="text-sm font-bold text-white leading-none">20+</span>
+                            <span class="text-[9px] text-gray-400 mt-1 uppercase tracking-wider font-semibold text-center text-wrap">Scan Tools</span>
+                        </div>
+                    </div>
                 </div>
-
-                <!-- Sign Up Form -->
+            </div>
+ 
+            <!-- RIGHT PANEL (50% width, full height) -->
+            <div class="w-full lg:w-1/2 flex flex-col justify-center p-8 lg:p-12 xl:p-16 relative z-10 lg:overflow-y-auto" style="backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+                <div class="max-w-xl mx-auto w-full my-auto animate-slide-in">
+                        <!-- Header -->
+                        <div class="text-center mb-3">
+                            <div
+                                class="w-10 h-10 mx-auto mb-2 rounded-xl bg-gradient-to-br from-neon-purple to-purple-600 flex items-center justify-center shadow-lg shadow-neon-purple/40 border border-purple-400/20 animate-pulse"
+                            >
+                                <svg
+                                    class="w-5.5 h-5.5 text-white"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z"
+                                    />
+                                </svg>
+                            </div>
+                            <h1 class="text-xl lg:text-2xl font-bold text-white mb-0.5">
+                                Join CyberGuard
+                            </h1>
+                            <p class="text-xs text-gray-400">
+                                Create your secure account today
+                            </p>
+                        </div>
+ 
+                        <!-- Step Indicator -->
+                        <div class="step-indicator-container mb-4 relative">
+                            <div class="flex items-center justify-between relative px-2 z-10">
+                                <!-- Progress connecting line background -->
+                                <div class="absolute left-6 right-6 top-4 h-[2px] bg-gray-800 z-0">
+                                    <!-- Glowing active line -->
+                                    <div id="stepProgress" class="h-full bg-gradient-to-r from-neon-purple to-purple-500 transition-all duration-300" style="width: 0%"></div>
+                                </div>
+ 
+                                <!-- Step 1 -->
+                                <div class="flex flex-col items-center z-10 relative">
+                                    <div class="step-circle active" data-step="1">
+                                        <span>1</span>
+                                    </div>
+                                    <span class="step-label text-[10px] mt-1.5 font-medium transition-all duration-300 text-white text-center">Basic Info</span>
+                                </div>
+ 
+                                <!-- Step 2 -->
+                                <div class="flex flex-col items-center z-10 relative">
+                                    <div class="step-circle" data-step="2">
+                                        <span>2</span>
+                                    </div>
+                                    <span class="step-label text-[10px] mt-1.5 font-medium transition-all duration-300 text-gray-500 text-center">Security</span>
+                                </div>
+ 
+                                <!-- Step 3 -->
+                                <div class="flex flex-col items-center z-10 relative">
+                                    <div class="step-circle" data-step="3">
+                                        <span>3</span>
+                                    </div>
+                                    <span class="step-label text-[10px] mt-1.5 font-medium transition-all duration-300 text-gray-500 text-center">Complete</span>
+                                </div>
+                            </div>
+                            <!-- Step X of 3 label -->
+                            <div id="step-count-label" class="text-center text-xs text-gray-500 mt-1.5 font-medium">
+                                Step 1 of 3
+                            </div>
+                        </div>
+ 
+                        <!-- Sign Up Form -->
                 <form id="signupForm">
                     <!-- Step 1: Basic Information -->
                     <div class="form-step active" id="step1">
                         <h3
-                            class="text-lg font-semibold text-white mb-4 flex items-center gap-2"
+                            class="text-base font-semibold text-white mb-2 flex items-center gap-2"
                         >
                             <span
                                 class="w-6 h-6 rounded-full bg-neon-cyan text-xs flex items-center justify-center text-white font-bold"
@@ -314,11 +550,11 @@
                             >
                             Basic Information
                         </h3>
-
+ 
                         <!-- Full Name -->
-                        <div class="mb-4">
+                        <div class="mb-2.5">
                             <label
-                                class="block text-sm font-medium text-gray-300 mb-2"
+                                class="block text-sm font-medium text-gray-300 mb-1"
                                 >Full Name</label
                             >
                             <div class="relative">
@@ -344,16 +580,21 @@
                                     id="fullName"
                                     name="fullName"
                                     placeholder=" Mohamed Gamal"
-                                    class="cyber-input w-full pl-12 pr-4 py-3 rounded-xl text-white placeholder-gray-500"
+                                    class="cyber-input w-full pl-12 pr-12 py-2.5 rounded-xl text-white placeholder-gray-500"
                                     required
                                 />
+                                <span id="fullNameStatusIcon" class="absolute right-4 top-1/2 -translate-y-1/2 hidden text-green-400 transition-all duration-300">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                    </svg>
+                                </span>
                             </div>
                         </div>
-
+ 
                         <!-- Email -->
-                        <div class="mb-4">
+                        <div class="mb-2.5">
                             <label
-                                class="block text-sm font-medium text-gray-300 mb-2"
+                                class="block text-sm font-medium text-gray-300 mb-1"
                                 >Email Address</label
                             >
                             <div class="relative">
@@ -379,23 +620,26 @@
                                     id="email"
                                     name="email"
                                     placeholder="tersana@company.com"
-                                    class="cyber-input w-full pl-12 pr-4 py-3 rounded-xl text-white placeholder-gray-500"
+                                    class="cyber-input w-full pl-12 pr-12 py-2.5 rounded-xl text-white placeholder-gray-500"
                                     required
                                 />
+                                <span id="emailStatusIcon" class="absolute right-4 top-1/2 -translate-y-1/2 hidden transition-all duration-300">
+                                    <!-- Populated dynamically -->
+                                </span>
                             </div>
                             <!-- Email Error Message -->
-                            <div id="emailError" class="hidden mt-2 text-sm text-red-400 flex items-center gap-2">
+                            <div id="emailError" class="hidden mt-1.5 text-sm text-red-400 flex items-center gap-2">
                                 <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                                 </svg>
                                 <span id="emailErrorText">Please enter a valid email address</span>
                             </div>
                         </div>
-
+ 
                         <!-- Job Title -->
-                        <div class="mb-4">
+                        <div class="mb-2.5">
                             <label
-                                class="block text-sm font-medium text-gray-300 mb-2"
+                                class="block text-sm font-medium text-gray-300 mb-1"
                                 >Job Title</label
                             >
                             <div class="relative">
@@ -421,16 +665,24 @@
                                     id="jobTitle"
                                     name="jobTitle"
                                     placeholder="Security Analyst"
-                                    class="cyber-input w-full pl-12 pr-4 py-3 rounded-xl text-white placeholder-gray-500"
+                                    class="cyber-input w-full pl-12 pr-12 py-2.5 rounded-xl text-white placeholder-gray-500"
                                     required
                                 />
+                                <span id="jobTitleStatusIcon" class="absolute right-4 top-1/2 -translate-y-1/2 hidden transition-all duration-300"></span>
+                            </div>
+                            <!-- Job Title Error Message -->
+                            <div id="jobTitleError" class="hidden mt-1.5 text-[11px] text-red-400 flex items-center gap-2">
+                                <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                                </svg>
+                                <span id="jobTitleErrorText">Please enter a valid job title</span>
                             </div>
                         </div>
-
+ 
                         <!-- Company (Optional) -->
-                        <div class="mb-6">
+                        <div class="mb-3.5">
                             <label
-                                class="block text-sm font-medium text-gray-300 mb-2"
+                                class="block text-sm font-medium text-gray-300 mb-1"
                                 >Company
                                 <span class="text-gray-500"
                                     >(Optional)</span
@@ -459,14 +711,14 @@
                                     id="company"
                                     name="company"
                                     placeholder="BSNU"
-                                    class="cyber-input w-full pl-12 pr-4 py-3 rounded-xl text-white placeholder-gray-500"
+                                    class="cyber-input w-full pl-12 pr-4 py-2.5 rounded-xl text-white placeholder-gray-500"
                                 />
                             </div>
                         </div>
-
+ 
                         <button
                             type="button"
-                            class="btn-neon w-full py-3.5 rounded-xl font-bold text-white flex items-center justify-center gap-2"
+                            class="btn-neon w-full py-2.5 rounded-xl font-bold text-white flex items-center justify-center gap-2"
                             onclick="nextStep()"
                         >
                             Continue
@@ -484,12 +736,51 @@
                                 />
                             </svg>
                         </button>
-                    </div>
 
+                        <!-- Divider -->
+                        <div class="flex items-center gap-3 py-4">
+                            <div class="flex-grow border-t border-white/10"></div>
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest select-none">Or continue with</span>
+                            <div class="flex-grow border-t border-white/10"></div>
+                        </div>
+
+                        <!-- Social Sign Up -->
+                        <div class="w-full">
+                            <button
+                                type="button"
+                                class="btn-secondary-glass w-full py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 text-sm font-medium"
+                            >
+                                <svg
+                                    class="w-4 h-4"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                >
+                                    <path
+                                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                                        fill="#4285F4"
+                                    />
+                                    <path
+                                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                        fill="#34A853"
+                                    />
+                                    <path
+                                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                                        fill="#FBBC05"
+                                    />
+                                    <path
+                                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                        fill="#EA4335"
+                                    />
+                                </svg>
+                                Sign Up with Google
+                            </button>
+                        </div>
+                    </div>
+ 
                     <!-- Step 2: Security -->
                     <div class="form-step" id="step2">
                         <h3
-                            class="text-lg font-semibold text-white mb-4 flex items-center gap-2"
+                            class="text-base font-semibold text-white mb-2 flex items-center gap-2"
                         >
                             <span
                                 class="w-6 h-6 rounded-full bg-neon-cyan text-xs flex items-center justify-center text-white font-bold"
@@ -497,11 +788,11 @@
                             >
                             Security Setup
                         </h3>
-
+ 
                         <!-- Password -->
-                        <div class="mb-4">
+                        <div class="mb-2.5">
                             <label
-                                class="block text-sm font-medium text-gray-300 mb-2"
+                                class="block text-sm font-medium text-gray-300 mb-1"
                                 >Password</label
                             >
                             <div class="relative">
@@ -527,7 +818,7 @@
                                     id="password"
                                     name="password"
                                     placeholder="Create a strong password"
-                                    class="cyber-input w-full pl-12 pr-12 py-3 rounded-xl text-white placeholder-gray-500"
+                                    class="cyber-input w-full pl-12 pr-12 py-2.5 rounded-xl text-white placeholder-gray-500"
                                     required
                                 />
                                 <button
@@ -556,11 +847,11 @@
                                     </svg>
                                 </button>
                             </div>
-
+ 
                             <!-- Password Strength -->
-                            <div class="mt-2">
+                            <div class="mt-1.5">
                                 <div
-                                    class="flex justify-between text-xs text-gray-400 mb-1"
+                                    class="flex justify-between text-xs text-gray-400 mb-0.5"
                                 >
                                     <span>Password Strength</span>
                                     <span id="strengthText">Weak</span>
@@ -575,11 +866,11 @@
                                 </div>
                             </div>
                         </div>
-
+ 
                         <!-- Confirm Password -->
-                        <div class="mb-6">
+                        <div class="mb-3">
                             <label
-                                class="block text-sm font-medium text-gray-300 mb-2"
+                                class="block text-sm font-medium text-gray-300 mb-1"
                                 >Confirm Password</label
                             >
                             <div class="relative">
@@ -605,7 +896,7 @@
                                     id="confirmPassword"
                                     name="confirmPassword"
                                     placeholder="Confirm your password"
-                                    class="cyber-input w-full pl-12 pr-12 py-3 rounded-xl text-white placeholder-gray-500"
+                                    class="cyber-input w-full pl-12 pr-12 py-2.5 rounded-xl text-white placeholder-gray-500"
                                     required
                                 />
                                 <button
@@ -635,16 +926,16 @@
                                 </button>
                             </div>
                         </div>
-
+ 
                         <!-- Security Question -->
-                        <div class="mb-6">
+                        <div class="mb-3">
                             <label
-                                class="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2"
+                                class="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1"
                                 >Security Question</label
                             >
                             <select
                                 id="securityQuestion1"
-                                class="cyber-input w-full px-4 py-3 rounded-xl text-white bg-[#0F172A]"
+                                class="cyber-input w-full px-4 py-2.5 rounded-xl text-white bg-[#0F172A]"
                             >
                                 <option value="" class="bg-[#0F172A]">
                                     Select a security question
@@ -666,14 +957,14 @@
                                 type="text"
                                 id="securityAnswer1"
                                 placeholder="Your answer"
-                                class="cyber-input w-full px-4 py-3 rounded-xl text-white placeholder-gray-500 mt-3"
+                                class="cyber-input w-full px-4 py-2.5 rounded-xl text-white placeholder-gray-500 mt-2"
                             />
                         </div>
-
+ 
                         <div class="flex gap-3">
                             <button
                                 type="button"
-                                class="btn-secondary-glass flex-1 py-3.5 rounded-xl font-semibold text-gray-300 flex items-center justify-center gap-2"
+                                class="btn-secondary-glass flex-1 py-2.5 rounded-xl font-semibold text-gray-300 flex items-center justify-center gap-2"
                                 onclick="prevStep()"
                             >
                                 <svg
@@ -693,7 +984,7 @@
                             </button>
                             <button
                                 type="button"
-                                class="btn-neon flex-1 py-3.5 rounded-xl font-bold text-white flex items-center justify-center gap-2"
+                                class="btn-neon flex-1 py-2.5 rounded-xl font-bold text-white flex items-center justify-center gap-2"
                                 onclick="nextStep()"
                             >
                                 Continue
@@ -713,11 +1004,11 @@
                             </button>
                         </div>
                     </div>
-
+ 
                     <!-- Step 3: Preferences & Terms -->
                     <div class="form-step" id="step3">
                         <h3
-                            class="text-lg font-semibold text-white mb-4 flex items-center gap-2"
+                            class="text-base font-semibold text-white mb-2 flex items-center gap-2"
                         >
                             <span
                                 class="w-6 h-6 rounded-full bg-neon-cyan text-xs flex items-center justify-center text-white font-bold"
@@ -725,16 +1016,16 @@
                             >
                             Preferences & Terms
                         </h3>
-
+ 
                         <!-- Notifications -->
-                        <div class="mb-5">
+                        <div class="mb-3">
                             <label
-                                class="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-3"
+                                class="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1.5"
                                 >Notification Preferences</label
                             >
-                            <div class="space-y-3">
+                            <div class="space-y-2">
                                 <label
-                                    class="flex items-center gap-3 cursor-pointer"
+                                    class="flex items-center gap-2 cursor-pointer"
                                 >
                                     <input
                                         type="checkbox"
@@ -747,7 +1038,7 @@
                                     >
                                 </label>
                                 <label
-                                    class="flex items-center gap-3 cursor-pointer"
+                                    class="flex items-center gap-2 cursor-pointer"
                                 >
                                     <input
                                         type="checkbox"
@@ -759,7 +1050,7 @@
                                     >
                                 </label>
                                 <label
-                                    class="flex items-center gap-3 cursor-pointer"
+                                    class="flex items-center gap-2 cursor-pointer"
                                 >
                                     <input
                                         type="checkbox"
@@ -771,11 +1062,11 @@
                                 </label>
                             </div>
                         </div>
-
+ 
                         <!-- Terms -->
-                        <div class="mb-6 space-y-3">
+                        <div class="mb-3 space-y-2">
                             <label
-                                class="flex items-start gap-3 cursor-pointer"
+                                class="flex items-start gap-2 cursor-pointer"
                             >
                                 <input
                                     type="checkbox"
@@ -798,7 +1089,7 @@
                                 </span>
                             </label>
                             <label
-                                class="flex items-start gap-3 cursor-pointer"
+                                class="flex items-start gap-2 cursor-pointer"
                             >
                                 <input
                                     type="checkbox"
@@ -810,11 +1101,11 @@
                                 >
                             </label>
                         </div>
-
+ 
                         <div class="flex gap-3">
                             <button
                                 type="button"
-                                class="btn-secondary-glass flex-1 py-3.5 rounded-xl font-semibold text-gray-300 flex items-center justify-center gap-2"
+                                class="btn-secondary-glass flex-1 py-2.5 rounded-xl font-semibold text-gray-300 flex items-center justify-center gap-2"
                                 onclick="prevStep()"
                             >
                                 <svg
@@ -834,7 +1125,7 @@
                             </button>
                             <button
                                 type="submit"
-                                class="btn-neon flex-1 py-3.5 rounded-xl font-bold text-white flex items-center justify-center gap-2"
+                                class="btn-neon flex-1 py-2.5 rounded-xl font-bold text-white flex items-center justify-center gap-2"
                             >
                                 <svg
                                     class="w-5 h-5"
@@ -856,7 +1147,7 @@
                 </form>
 
                 <!-- Sign In Link -->
-                <p class="text-center mt-6 text-gray-400 text-sm">
+                <p class="text-center mt-2.5 text-gray-400 text-sm">
                     Already have an account?
                     <a
                         href="/login"
@@ -864,118 +1155,33 @@
                         >Sign in here</a
                     >
                 </p>
+ 
 
-                <!-- Security Features -->
-                <div class="perks-box rounded-xl p-4 mt-6">
-                    <h4
-                        class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-3 flex items-center gap-2"
-                    >
-                        <svg
-                            class="w-4 h-4 text-neon-purple"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            stroke-width="2"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z"
-                            />
-                        </svg>
-                        What you get with CyberGuard Pro
-                    </h4>
-                    <div class="space-y-2 text-sm text-gray-400">
-                        <div class="flex items-center gap-2">
-                            <svg
-                                class="w-4 h-4 text-green-400 flex-shrink-0"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                stroke-width="2"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
-                            </svg>
-                            <span>Advanced threat detection & analysis</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <svg
-                                class="w-4 h-4 text-green-400 flex-shrink-0"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                stroke-width="2"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
-                            </svg>
-                            <span>Real-time security monitoring</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <svg
-                                class="w-4 h-4 text-green-400 flex-shrink-0"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                stroke-width="2"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
-                            </svg>
-                            <span>Professional security reports</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <svg
-                                class="w-4 h-4 text-green-400 flex-shrink-0"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                stroke-width="2"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
-                            </svg>
-                            <span>24/7 security support</span>
-                        </div>
-                    </div>
-                </div>
             </div>
+        </div>
+        </div>
 
-            <!-- Back to Home -->
-            <div class="text-center mt-6">
-                <a
-                    href="/"
-                    class="inline-flex items-center gap-2 text-gray-500 hover:text-white transition-colors text-sm"
+        <!-- Back to CyberGuard Link -->
+        <div class="w-full text-center py-4 mt-auto lg:absolute lg:bottom-6 lg:left-0 lg:right-0 z-20 lg:bg-transparent relative">
+            <a
+                href="/"
+                class="inline-flex items-center gap-2 text-gray-500 hover:text-white transition-colors text-sm"
+            >
+                <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
                 >
-                    <svg
-                        class="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-                        />
-                    </svg>
-                    Back to CyberGuard Pro
-                </a>
-            </div>
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+                    />
+                </svg>
+                Back to CyberGuard
+            </a>
         </div>
 
         <!-- Loading Overlay -->
@@ -1024,9 +1230,13 @@
         <!-- Authentication System -->
         <script src="js/auth.js"></script>
 
+        <!-- Animated Background -->
+        <script src="js/animated-background.js?v=2"></script>
+
         <script>
             let currentStep = 1;
             const totalSteps = 3;
+            let jobTitleErrorShown = false;
 
             // Step navigation
             function nextStep() {
@@ -1035,21 +1245,14 @@
                         document
                             .getElementById(`step${currentStep}`)
                             .classList.remove("active");
-                        document
-                            .querySelector(`[data-step="${currentStep}"]`)
-                            .classList.remove("active");
-                        document
-                            .querySelector(`[data-step="${currentStep}"]`)
-                            .classList.add("completed");
 
                         currentStep++;
 
                         document
                             .getElementById(`step${currentStep}`)
                             .classList.add("active");
-                        document
-                            .querySelector(`[data-step="${currentStep}"]`)
-                            .classList.add("active");
+                        
+                        updateStepProgress();
                     }
                 }
             }
@@ -1059,20 +1262,113 @@
                     document
                         .getElementById(`step${currentStep}`)
                         .classList.remove("active");
-                    document
-                        .querySelector(`[data-step="${currentStep}"]`)
-                        .classList.remove("active");
 
                     currentStep--;
 
                     document
                         .getElementById(`step${currentStep}`)
                         .classList.add("active");
-                    document
-                        .querySelector(`[data-step="${currentStep}"]`)
-                        .classList.add("active");
+                    
+                    updateStepProgress();
                 }
             }
+
+            // Update step indicator visualization
+            function updateStepProgress() {
+                const progressLine = document.getElementById("stepProgress");
+                const stepLabel = document.getElementById("step-count-label");
+                
+                if (progressLine) {
+                    const progressPercentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
+                    progressLine.style.width = `${progressPercentage}%`;
+                }
+                
+                if (stepLabel) {
+                    stepLabel.textContent = `Step ${currentStep} of ${totalSteps}`;
+                }
+                
+                for (let i = 1; i <= totalSteps; i++) {
+                    const circle = document.querySelector(`.step-circle[data-step="${i}"]`);
+                    const label = circle?.nextElementSibling;
+                    
+                    if (circle) {
+                        if (i < currentStep) {
+                            circle.className = "step-circle completed";
+                            if (label) {
+                                label.classList.remove("text-white", "text-gray-500");
+                                label.classList.add("text-neon-purple");
+                            }
+                        } else if (i === currentStep) {
+                            circle.className = "step-circle active";
+                            if (label) {
+                                label.classList.remove("text-neon-purple", "text-gray-500");
+                                label.classList.add("text-white");
+                            }
+                        } else {
+                            circle.className = "step-circle";
+                            if (label) {
+                                label.classList.remove("text-white", "text-neon-purple");
+                                label.classList.add("text-gray-500");
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Initialize assets and setup real-time validation listeners
+            document.addEventListener("DOMContentLoaded", function() {
+                updateStepProgress();
+                
+                // Real-time validation for Full Name
+                const fullNameEl = document.getElementById("fullName");
+                const fullNameIcon = document.getElementById("fullNameStatusIcon");
+                if (fullNameEl && fullNameIcon) {
+                    fullNameEl.addEventListener("input", function() {
+                        if (this.value.trim().length >= 2) {
+                            fullNameIcon.classList.remove("hidden");
+                        } else {
+                            fullNameIcon.classList.add("hidden");
+                        }
+                    });
+                }
+                
+                // Validation for Job Title
+                const jobTitleEl = document.getElementById("jobTitle");
+                if (jobTitleEl) {
+                    jobTitleEl.addEventListener("input", function() {
+                        // Clear error immediately when user starts typing again
+                        if (jobTitleErrorShown) {
+                            hideJobTitleError();
+                            jobTitleErrorShown = false;
+                        }
+                        
+                        // Show checkmark only when input passes ALL valid conditions
+                        const isValid = validateJobTitle(this.value);
+                        const jobTitleStatusIcon = document.getElementById("jobTitleStatusIcon");
+                        if (isValid && jobTitleStatusIcon) {
+                            jobTitleStatusIcon.innerHTML = `
+                                <svg class="w-5 h-5 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 6 9 17l-5-5"/>
+                                </svg>
+                            `;
+                            jobTitleStatusIcon.classList.remove("hidden");
+                        } else if (jobTitleStatusIcon) {
+                            jobTitleStatusIcon.classList.add("hidden");
+                        }
+                    });
+
+                    jobTitleEl.addEventListener("blur", function() {
+                        const isValid = validateJobTitle(this.value);
+                        if (isValid) {
+                            hideJobTitleError();
+                            jobTitleErrorShown = false;
+                        } else {
+                            showJobTitleError("Please enter a valid job title");
+                            jobTitleErrorShown = true;
+                        }
+                    });
+                }
+            });
 
             // Validation
             function validateCurrentStep() {
@@ -1110,14 +1406,12 @@
                     }
                     
                     // Validate job title
-                    if (!jobTitle) {
-                        showMessage(
-                            "error",
-                            "Required Field",
-                            "Job title is required",
-                        );
+                    if (!validateJobTitle(jobTitle)) {
+                        showJobTitleError("Please enter a valid job title");
                         document.getElementById("jobTitle").focus();
                         return false;
+                    } else {
+                        hideJobTitleError();
                     }
                 }
 
@@ -1248,26 +1542,169 @@
                 return true;
             }
 
+            // Job Title validation function
+            function validateJobTitle(value) {
+                if (!value) return false;
+                const trimmed = value.trim();
+
+                // Length >= 2 characters after trim
+                if (trimmed.length < 2) {
+                    return false;
+                }
+
+                // Contains only letters, spaces, hyphens, and dots
+                // No numbers
+                // No special characters (!@#$%^&*() etc.)
+                if (!/^[a-zA-ZÀ-ÿ\s\.\-]+$/.test(trimmed)) {
+                    return false;
+                }
+
+                // Must contain at least one letter character
+                if (!/[a-zA-ZÀ-ÿ]/.test(trimmed)) {
+                    return false;
+                }
+
+                // No repeated meaningless characters (e.g., "aaaa", "xxxx", "zzzzz")
+                // Check if all characters are the same letter -> flag as invalid
+                const lettersOnly = trimmed.toLowerCase().replace(/[\s\.\-]/g, '');
+                if (lettersOnly.length > 0) {
+                    const uniqueChars = new Set(lettersOnly);
+                    if (uniqueChars.size === 1) {
+                        return false;
+                    }
+                }
+
+                // Check if the input has no vowels at all (a, e, i, o, u) AND length > 3 → flag as invalid
+                const hasVowels = /[aeiou]/i.test(trimmed);
+                if (!hasVowels && trimmed.length > 3) {
+                    return false;
+                }
+
+                // Random keyboard mashing patterns (e.g., "asdfgh", "qwerty")
+                const lowercase = trimmed.toLowerCase();
+                const mashPatterns = [
+                    "asdf", "sdfg", "dfgh", "fghj", "ghjk", "hjkl",
+                    "qwer", "wert", "erty", "rtyu", "tyui", "yuio", "uiop",
+                    "zxcv", "xcvb", "cvbn", "vbnm",
+                    "lkjh", "kjhg", "jhgf", "hgfd", "gfds", "fdsa",
+                    "mnbc", "nbcv", "bcvi",
+                    "poiuy", "oiuyt", "iuytr", "uytre", "ytrew", "trewq"
+                ];
+                for (const pattern of mashPatterns) {
+                    if (lowercase.includes(pattern)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            // Show job title error
+            function showJobTitleError(message) {
+                const jobTitleInput = document.getElementById("jobTitle");
+                const jobTitleError = document.getElementById("jobTitleError");
+                const jobTitleErrorText = document.getElementById("jobTitleErrorText");
+                const jobTitleStatusIcon = document.getElementById("jobTitleStatusIcon");
+                
+                if (jobTitleInput) {
+                    jobTitleInput.classList.add("border-red-500");
+                    jobTitleInput.classList.remove("border-gray-600");
+                    jobTitleInput.style.borderColor = "";
+                    jobTitleInput.style.boxShadow = "";
+                }
+                if (jobTitleError) {
+                    jobTitleError.classList.remove("hidden");
+                }
+                if (jobTitleErrorText) {
+                    jobTitleErrorText.textContent = message;
+                }
+                
+                if (jobTitleStatusIcon) {
+                    jobTitleStatusIcon.innerHTML = `
+                        <svg class="w-5 h-5 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 6 6 18M6 6l12 12"/>
+                        </svg>
+                    `;
+                    jobTitleStatusIcon.classList.remove("hidden");
+                }
+            }
+
+            // Hide job title error
+            function hideJobTitleError() {
+                const jobTitleInput = document.getElementById("jobTitle");
+                const jobTitleError = document.getElementById("jobTitleError");
+                const jobTitleStatusIcon = document.getElementById("jobTitleStatusIcon");
+                
+                if (jobTitleInput) {
+                    jobTitleInput.classList.remove("border-red-500");
+                    jobTitleInput.classList.add("border-gray-600");
+                    jobTitleInput.style.borderColor = "";
+                    jobTitleInput.style.boxShadow = "";
+                }
+                if (jobTitleError) {
+                    jobTitleError.classList.add("hidden");
+                }
+                
+                if (jobTitleStatusIcon) {
+                    const value = jobTitleInput.value;
+                    if (validateJobTitle(value)) {
+                        jobTitleStatusIcon.innerHTML = `
+                            <svg class="w-5 h-5 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 6 9 17l-5-5"/>
+                            </svg>
+                        `;
+                        jobTitleStatusIcon.classList.remove("hidden");
+                    } else {
+                        jobTitleStatusIcon.classList.add("hidden");
+                    }
+                }
+            }
+
             // Show email error
             function showEmailError(message) {
                 const emailInput = document.getElementById("email");
                 const emailError = document.getElementById("emailError");
                 const emailErrorText = document.getElementById("emailErrorText");
+                const emailStatusIcon = document.getElementById("emailStatusIcon");
                 
                 emailInput.classList.add("border-red-500");
                 emailInput.classList.remove("border-gray-600");
                 emailError.classList.remove("hidden");
                 emailErrorText.textContent = message;
+                
+                if (emailStatusIcon) {
+                    emailStatusIcon.innerHTML = `
+                        <svg class="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    `;
+                    emailStatusIcon.classList.remove("hidden");
+                }
             }
 
             // Hide email error
             function hideEmailError() {
                 const emailInput = document.getElementById("email");
                 const emailError = document.getElementById("emailError");
+                const emailStatusIcon = document.getElementById("emailStatusIcon");
                 
                 emailInput.classList.remove("border-red-500");
                 emailInput.classList.add("border-gray-600");
                 emailError.classList.add("hidden");
+                
+                if (emailStatusIcon) {
+                    const email = emailInput.value.trim();
+                    if (validateEmail(email)) {
+                        emailStatusIcon.innerHTML = `
+                            <svg class="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                        `;
+                        emailStatusIcon.classList.remove("hidden");
+                    } else {
+                        emailStatusIcon.classList.add("hidden");
+                    }
+                }
             }
 
             // Validate all previous steps before final submission
@@ -1755,20 +2192,24 @@
                 );
 
                 if (fieldEl) {
-                    // Add error styling
-                    fieldEl.style.borderColor = "#EF4444";
-                    fieldEl.style.boxShadow = "0 0 20px rgba(239, 68, 68, 0.3)";
+                    if (fieldId === "jobTitle") {
+                        showJobTitleError(message);
+                    } else {
+                        // Add error styling
+                        fieldEl.style.borderColor = "#EF4444";
+                        fieldEl.style.boxShadow = "0 0 20px rgba(239, 68, 68, 0.3)";
 
-                    // Create/update error message
-                    let errorEl =
-                        fieldEl.parentElement.querySelector(".field-error");
-                    if (!errorEl) {
-                        errorEl = document.createElement("p");
-                        errorEl.className =
-                            "field-error text-xs text-red-400 mt-1";
-                        fieldEl.parentElement.appendChild(errorEl);
+                        // Create/update error message
+                        let errorEl =
+                            fieldEl.parentElement.querySelector(".field-error");
+                        if (!errorEl) {
+                            errorEl = document.createElement("p");
+                            errorEl.className =
+                                "field-error text-xs text-red-400 mt-1";
+                            fieldEl.parentElement.appendChild(errorEl);
+                        }
+                        errorEl.textContent = message;
                     }
-                    errorEl.textContent = message;
 
                     // Navigate to the step containing the error field
                     // Only navigate if the error step is different from current AND
@@ -1783,18 +2224,14 @@
                             document
                                 .getElementById(`step${currentStep}`)
                                 .classList.remove("active");
-                            document
-                                .querySelector(`[data-step="${currentStep}"]`)
-                                .classList.remove("active");
 
                             currentStep = stepNumber;
 
                             document
                                 .getElementById(`step${currentStep}`)
                                 .classList.add("active");
-                            document
-                                .querySelector(`[data-step="${currentStep}"]`)
-                                .classList.add("active");
+                                
+                            updateStepProgress();
                         }
                     }
 
@@ -1826,6 +2263,7 @@
                     input.style.borderColor = "";
                     input.style.boxShadow = "";
                 });
+                hideJobTitleError();
             }
 
             // Clear error when user starts typing
@@ -1887,7 +2325,7 @@
 
                 // Hide step indicators
                 const stepIndicators = document.querySelector(
-                    ".flex.items-center.justify-center.gap-4.mb-8",
+                    ".step-indicator-container",
                 );
                 if (stepIndicators) stepIndicators.style.display = "none";
 

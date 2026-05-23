@@ -3,10 +3,10 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Verify Email — CyberGuard Pro</title>
+        <title>Verify Email — CyberGuard</title>
         <meta
             name="description"
-            content="Email verification successful for CyberGuard Pro."
+            content="Email verification successful for CyberGuard."
         />
         <script src="https://cdn.tailwindcss.com"></script>
         <script>
@@ -37,6 +37,7 @@
             * {
                 box-sizing: border-box;
             }
+            html,
             body {
                 font-family:
                     "Inter",
@@ -202,7 +203,7 @@
         <div class="glow-orb glow-orb-2"></div>
 
         <!-- Main Container -->
-        <div class="min-h-screen flex">
+        <div class="min-h-screen flex relative z-10">
             <!-- LEFT PANEL - Brand Showcase -->
             <div
                 class="hidden lg:flex lg:w-1/2 xl:w-[55%] relative p-12 xl:p-16 flex-col justify-between"
@@ -231,9 +232,7 @@
                             </svg>
                         </div>
                         <div>
-                            <span class="text-xl font-bold"
-                                >CyberGuard Pro</span
-                            >
+                            <span class="text-xl font-bold"><span class="brand-name"><span class="brand-cyber">Cyber</span><span class="brand-guard">Guard</span></span></span>
                             <p class="text-xs text-gray-400">
                                 Enterprise Security Platform
                             </p>
@@ -360,7 +359,7 @@
 
                 <!-- Footer -->
                 <div class="relative z-10 text-sm text-gray-500">
-                    &copy; 2026 CyberGuard Pro — Built with security in mind
+                    &copy; 2026 CyberGuard — Built with security in mind
                 </div>
             </div>
 
@@ -403,7 +402,7 @@
                                 </div>
                                 <div>
                                     <h4 class="text-sm font-semibold text-emerald-400 mb-1">Identity Confirmed</h4>
-                                    <p class="text-xs text-emerald-400/80">You now have full access to CyberGuard Pro's enterprise features.</p>
+                                    <p class="text-xs text-emerald-400/80">You now have full access to CyberGuard's enterprise features.</p>
                                 </div>
                             </div>
                             <a href="/login" class="btn-neon w-full py-4 rounded-xl font-bold text-white flex items-center justify-center gap-2">
@@ -446,6 +445,7 @@
 
         <!-- API Client (provides API_BASE_URL and NGROK_HEADER) -->
         <script src="js/api-client.js"></script>
+        <script src="js/animated-background.js?v=2"></script>
         <script>
         (function () {
             const RESEND_COOLDOWN_MS = 10000;
