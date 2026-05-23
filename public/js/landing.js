@@ -564,11 +564,11 @@ style.textContent = `
 document.head.appendChild(style);
 
 console.log(
-  "%c🛡️ CyberGuard Pro",
+  "%c🛡️ CyberGuard",
   "font-size: 24px; font-weight: bold; color: #667eea;"
 );
 console.log(
-  "%cWelcome to CyberGuard Pro! Your comprehensive cybersecurity toolkit.",
+  "%cWelcome to CyberGuard! Your comprehensive cybersecurity toolkit.",
   "font-size: 14px; color: #64748b;"
 );
 console.log(

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Project Invitation — CyberGuard Pro</title>
+        <title>Project Invitation — CyberGuard</title>
         <!--
     NOTE: NO external CSS files are linked here on purpose.
     When Vercel rewrites /invite/TOKEN → invite.html the browser URL stays
@@ -313,6 +313,24 @@
                     box-shadow: 0 0 44px rgba(167, 139, 250, 0.7);
                 }
             }
+            
+            .brand-cyber {
+                color: #8B5CF6;
+                font-weight: inherit;
+                font-size: inherit;
+            }
+            .brand-guard {
+                color: #FFFFFF;
+                font-weight: inherit;
+                font-size: inherit;
+            }
+            .brand-name {
+                display: inline-flex;
+                align-items: center;
+                gap: 0;
+                font-weight: bold;
+                letter-spacing: -0.5px;
+            }
         </style>
     </head>
     <body>
@@ -358,7 +376,7 @@
                     letter-spacing: -0.3px;
                 "
             >
-                CyberGuard Pro
+                <span class="brand-name"><span class="brand-cyber">Cyber</span><span class="brand-guard">Guard</span></span>
             </p>
             <p
                 style="

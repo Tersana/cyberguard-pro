@@ -108,3 +108,21 @@
        --cg-danger   5.6:1  (AA)
        --cg-warning 10.2:1  (AAA)
    ============================================================ */
+
+.brand-cyber {
+  color: var(--cg-accent-hover, #8B5CF6);        /* purple — match existing accent color token */
+  font-weight: inherit;
+  font-size: inherit;
+}
+.brand-guard {
+  color: #FFFFFF;        /* white */
+  font-weight: inherit;
+  font-size: inherit;
+}
+.brand-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  font-weight: bold;
+  letter-spacing: -0.5px;
+}

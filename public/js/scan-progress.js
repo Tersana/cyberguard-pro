@@ -120,7 +120,7 @@
     renderStatusBadge(s.status);
 
     // Update document title
-    document.title = `Scan ${(s.id || "").substring(0, 8)} — CyberGuard Pro`;
+    document.title = `Scan ${(s.id || "").substring(0, 8)} — CyberGuard`;
   }
 
   function renderStatusBadge(status) {

@@ -94,7 +94,7 @@ describe('Export Functionality - Task 10', () => {
         
         doc.setFontSize(20);
         doc.setFont('helvetica', 'bold');
-        doc.text('CyberGuard Pro Security Report', 20, 20);
+        doc.text('CyberGuard Security Report', 20, 20);
         
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
@@ -131,7 +131,7 @@ describe('Export Functionality - Task 10', () => {
       exportToPDF();
       
       expect(mockDoc.setFontSize).toHaveBeenCalledWith(20);
-      expect(mockDoc.text).toHaveBeenCalledWith('CyberGuard Pro Security Report', 20, 20);
+      expect(mockDoc.text).toHaveBeenCalledWith('CyberGuard Security Report', 20, 20);
       expect(mockDoc.autoTable).toHaveBeenCalled();
       expect(mockDoc.save).toHaveBeenCalled();
     });
@@ -158,7 +158,7 @@ describe('Export Functionality - Task 10', () => {
         const doc = new jsPDF();
         
         doc.setFontSize(20);
-        doc.text('CyberGuard Pro Security Report', 20, 20);
+        doc.text('CyberGuard Security Report', 20, 20);
         
         doc.setFontSize(10);
         doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 30);

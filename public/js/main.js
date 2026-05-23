@@ -3394,7 +3394,7 @@ document.addEventListener("DOMContentLoaded", () => {
       logResult(
         new Date(),
         "System",
-        "🛡️ CyberGuard Pro initialized successfully! Ready for cybersecurity analysis.",
+        "🛡️ CyberGuard initialized successfully! Ready for cybersecurity analysis.",
         "success",
       );
     }, 300);
@@ -4442,7 +4442,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Add title
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text("CyberGuard Pro Security Report", 20, 20);
+    doc.text("CyberGuard Security Report", 20, 20);
 
     // Add metadata
     doc.setFontSize(10);
@@ -10839,7 +10839,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Set to true to use Groq instead of OpenRouter
   const USE_GROQ = false;
 
-  const SYSTEM_PROMPT = `You are a helpful AI assistant built into CyberGuard Pro, a cybersecurity dashboard.
+  const SYSTEM_PROMPT = `You are a helpful AI assistant built into CyberGuard, a cybersecurity dashboard.
 You help users understand and use the dashboard's tools:
 - Network Scanner: reverse DNS, IP geolocation, WHOIS lookup, port scanner (TCP/UDP), threat intelligence
 - Web Security: URL phishing analyser, XSS tester, SSL/TLS checker, DNS spoofing detector, VirusTotal integration
@@ -10999,7 +10999,7 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
         "Content-Type": "application/json",
         Authorization: `Bearer ${OPENROUTER_API_KEY}`,
         "HTTP-Referer": window.location.href,
-        "X-Title": "CyberGuard Pro AI Assistant",
+        "X-Title": "CyberGuard AI Assistant",
       };
       body = JSON.stringify({
         model: OPENROUTER_MODEL,
@@ -11037,7 +11037,7 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
       return `**Hash & Crypto Tools** available:\n\n- **String Hashing** – generate MD5, SHA-1, SHA-256, SHA-512 hashes\n- **File Hashing** – compute hash of any local file\n- **Password Strength** – analyse entropy, patterns, and crackability\n\nSwitch to the **Hash** tab to use these tools.`;
 
     if (/\b(what|tools|feature|can|do|help|dashboard)\b/.test(q))
-      return `**CyberGuard Pro** offers three main tool categories:\n\n1. 🌐 **Network** – port scanning, WHOIS, IP geolocation, threat intel\n2. 🔒 **Web Security** – phishing detection, XSS, SSL/TLS, VirusTotal\n3. #️⃣ **Hash & Crypto** – MD5/SHA hashing, password strength analysis\n\nClick any tab at the top to explore. You can also ask me specific questions!`;
+      return `**CyberGuard** offers three main tool categories:\n\n1. 🌐 **Network** – port scanning, WHOIS, IP geolocation, threat intel\n2. 🔒 **Web Security** – phishing detection, XSS, SSL/TLS, VirusTotal\n3. #️⃣ **Hash & Crypto** – MD5/SHA hashing, password strength analysis\n\nClick any tab at the top to explore. You can also ask me specific questions!`;
 
     if (/\b(phish|phishing)\b/.test(q))
       return `**Phishing** is a social-engineering attack where attackers impersonate legitimate websites to steal credentials or install malware.\n\n**How to detect it:**\n- Check the domain carefully (e.g. paypa1.com vs paypal.com)\n- Look for HTTPS and a valid SSL certificate\n- Use CyberGuard's URL Phishing Analyser for automated detection\n- Hover over links before clicking to preview the actual URL`;

@@ -40,7 +40,7 @@ class NotificationSettings {
         pane.innerHTML = `
             <form id="notification-settings-form" class="space-y-6" onsubmit="return false;">
                 <p class="text-sm text-slate-400 mb-6">
-                    Configure how and when you receive email notifications from CyberGuard Pro.
+                    Configure how and when you receive email notifications from CyberGuard.
                 </p>
 
                 <div class="space-y-4">

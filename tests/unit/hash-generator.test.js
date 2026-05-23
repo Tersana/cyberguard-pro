@@ -164,7 +164,7 @@ describe('Hash Generator - Core Functionality', () => {
   
   describe('Multiple Hash Types - Requirement 1.2', () => {
     it('should generate all four hash types from same input', () => {
-      const input = 'CyberGuard Pro';
+      const input = 'CyberGuard';
       
       const md5 = CryptoJS.MD5(input).toString();
       const sha1 = CryptoJS.SHA1(input).toString();
