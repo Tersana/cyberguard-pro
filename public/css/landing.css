@@ -1609,70 +1609,135 @@ body::before {
   transition: all 0.8s ease-out;
 }
 
-.security-shield {
+/* Zero-Trust Network Graph Styles */
+.zero-trust-graph-container {
   position: relative;
   width: 320px;
   height: 320px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--cg-focus-ring) 0%, var(--cg-accent-muted) 100%);
+  background: rgba(10, 15, 30, 0.4);
+  border: 1px solid var(--cg-border);
+  box-shadow: 0 0 60px rgba(167, 139, 250, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 80px var(--cg-focus-ring), 0 0 40px var(--cg-accent-muted);
-  animation: shieldPulse 4s ease-in-out infinite;
-  border: 1px solid var(--cg-focus-ring);
+  overflow: visible;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-.security-shield::before,
-.security-shield::after {
+.zero-trust-graph-container::before {
   content: '';
   position: absolute;
+  inset: -16px;
   border-radius: 50%;
-  border: 1px solid var(--cg-focus-ring);
-  animation: ringExpand 4s ease-out infinite;
+  border: 1px dashed rgba(167, 139, 250, 0.12);
+  pointer-events: none;
 }
 
-.security-shield::before {
-  inset: -20px;
-  animation-delay: 0.5s;
+#zeroTrustCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
 }
 
-.security-shield::after {
-  inset: -44px;
-  animation-delay: 1s;
+.zero-trust-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
 }
 
-@keyframes shieldPulse {
-
-  0%,
-  100% {
-    box-shadow: 0 0 80px var(--cg-focus-ring), 0 0 40px var(--cg-accent-muted);
-  }
-
-  50% {
-    box-shadow: 0 0 120px var(--cg-focus-ring), 0 0 60px var(--cg-focus-ring);
-    transform: scale(1.02);
-  }
+.graph-path {
+  fill: none;
+  stroke: rgba(167, 139, 250, 0.18);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
 }
 
-@keyframes ringExpand {
-  0% {
-    opacity: 0.6;
-    transform: scale(1);
-  }
-
-  100% {
-    opacity: 0;
-    transform: scale(1.35);
-  }
+.graph-node {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--cg-bg-surface);
+  border: 1.5px solid var(--cg-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  transition: all var(--cg-transition-base);
+  box-shadow: var(--cg-shadow-md);
+  cursor: pointer;
 }
 
-.security-shield svg {
-  width: 140px;
-  height: 140px;
-  color: var(--cg-text-1);
-  filter: drop-shadow(0 0 20px var(--cg-accent));
+.graph-node:hover {
+  transform: translate(-50%, -50%) scale(1.12);
+  box-shadow: 0 0 24px var(--cg-focus-ring);
 }
+
+.node-icon-wrapper {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--cg-transition-base);
+}
+
+.node-icon-wrapper svg {
+  width: 100%;
+  height: 100%;
+}
+
+.node-label {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--cg-text-3);
+  white-space: nowrap;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.node-api {
+  border-color: #3b82f6;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+}
+.node-api .node-icon-wrapper { color: #60a5fa; }
+.node-api:hover { border-color: #60a5fa; }
+
+.node-gw {
+  border-color: var(--cg-accent);
+  box-shadow: 0 0 15px rgba(167, 139, 250, 0.2);
+}
+.node-gw .node-icon-wrapper { color: var(--cg-accent); }
+.node-gw:hover { border-color: var(--cg-accent-hover); }
+
+.node-auth {
+  border-color: #10b981;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+}
+.node-auth .node-icon-wrapper { color: #34d399; }
+.node-auth:hover { border-color: #34d399; }
+
+.node-db {
+  border-color: #a855f7;
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+}
+.node-db .node-icon-wrapper { color: #c084fc; }
+.node-db:hover { border-color: #c084fc; }
 
 /* ===========================
    CTA Section

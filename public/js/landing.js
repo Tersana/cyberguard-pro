@@ -603,6 +603,102 @@ document.addEventListener("DOMContentLoaded", () => {
   appendLog();
 });
 
+// ===========================
+// Zero-Trust Network Graph Animation
+// ===========================
+document.addEventListener("DOMContentLoaded", () => {
+  const canvas = document.getElementById("zeroTrustCanvas");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  
+  canvas.width = 320;
+  canvas.height = 320;
+
+  const nodes = {
+    api:  { x: 160, y: 50 },
+    gw:   { x: 70,  y: 160 },
+    auth: { x: 250, y: 160 },
+    db:   { x: 160, y: 270 }
+  };
+
+  const connections = [
+    { from: nodes.api, to: nodes.gw,   color: '#3b82f6' },
+    { from: nodes.gw,  to: nodes.db,   color: '#a855f7' },
+    { from: nodes.db,  to: nodes.auth, color: '#10b981' },
+    { from: nodes.auth,to: nodes.api,  color: '#8b5cf6' },
+    { from: nodes.api, to: nodes.db,   color: '#6366f1' },
+    { from: nodes.gw,  to: nodes.auth, color: '#6366f1' }
+  ];
+
+  class Comet {
+    constructor(connection) {
+      this.from = connection.from;
+      this.to = connection.to;
+      this.color = connection.color;
+      this.progress = Math.random();
+      this.speed = Math.random() * 0.005 + 0.003;
+      this.size = Math.random() * 2 + 1.5;
+    }
+
+    update() {
+      this.progress += this.speed;
+      if (this.progress >= 1) {
+        this.progress = 0;
+        if (Math.random() > 0.5) {
+          const temp = this.from;
+          this.from = this.to;
+          this.to = temp;
+        }
+      }
+    }
+
+    draw() {
+      const x = this.from.x + (this.to.x - this.from.x) * this.progress;
+      const y = this.from.y + (this.to.y - this.from.y) * this.progress;
+
+      ctx.beginPath();
+      ctx.arc(x, y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = this.color;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = this.color;
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      for (let i = 1; i <= 5; i++) {
+        const trailProgress = this.progress - (i * 0.015);
+        if (trailProgress >= 0 && trailProgress <= 1) {
+          const tx = this.from.x + (this.to.x - this.from.x) * trailProgress;
+          const ty = this.from.y + (this.to.y - this.from.y) * trailProgress;
+          ctx.beginPath();
+          ctx.arc(tx, ty, this.size * (1 - i * 0.16), 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
+          ctx.fill();
+        }
+      }
+    }
+  }
+
+  const comets = connections.map(conn => new Comet(conn));
+
+  function animateGraph() {
+    if (!document.getElementById("zeroTrustCanvas")) return;
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    comets.forEach(comet => {
+      comet.update();
+      comet.draw();
+    });
+
+    requestAnimationFrame(animateGraph);
+  }
+
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    animateGraph();
+  }
+});
+
 console.log(
   "%c🛡️ CyberGuard",
   "font-size: 24px; font-weight: bold; color: #667eea;"
