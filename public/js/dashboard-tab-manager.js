@@ -137,7 +137,7 @@ const DashboardTabManager = {
     });
 
     // Toggle results section visibility
-    const TABS_WITHOUT_RESULTS = ['projects', 'threat-intel', 'billing-history', 'ai-assistant'];
+    const TABS_WITHOUT_RESULTS = ['projects', 'threat-intel', 'billing-history', 'ai-assistant', 'hash-tools'];
     const resultsSection = document.getElementById('professional-results-section');
     if (resultsSection) {
       if (TABS_WITHOUT_RESULTS.includes(activeTabId)) {
@@ -203,6 +203,16 @@ const DashboardTabManager = {
       }
     } else {
       console.warn('DashboardTabManager: CyberGuardHashTools not found');
+    }
+    if (typeof CyberGuardJWTDebugger !== 'undefined') {
+      try {
+        CyberGuardJWTDebugger.init();
+        console.log('DashboardTabManager: JWT Debugger initialized');
+      } catch (error) {
+        console.error('DashboardTabManager: Error initializing JWT Debugger:', error);
+      }
+    } else {
+      console.warn('DashboardTabManager: CyberGuardJWTDebugger not found');
     }
   },
   
