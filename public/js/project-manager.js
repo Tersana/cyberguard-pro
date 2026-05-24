@@ -492,6 +492,10 @@ class ProjectManager {
       const collabCountEl = document.getElementById("collaborating-count");
       if (ownedCountEl) ownedCountEl.textContent = owned.length;
       if (collabCountEl) collabCountEl.textContent = collaborating.length;
+
+      // Lazy load actual metrics (targets, findings, scans) from right API endpoints
+      const allProjects = [...owned, ...collaborating];
+      allProjects.forEach((p) => this.lazyLoadProjectMetrics(p.id));
     } catch (error) {
       console.error("[ProjectManager] renderProjectsList error:", error);
       if (window.CyberNotify) {
@@ -499,6 +503,131 @@ class ProjectManager {
           type: "error",
         });
       }
+    }
+  }
+
+  /**
+   * Asynchronously fetch correct targets, findings, and scans counts from the right endpoints,
+   * then dynamically update card values and re-calculate/render Risk Score in real time.
+   * @param {string} projectId
+   */
+  async lazyLoadProjectMetrics(projectId) {
+    console.log("[ProjectManager] lazyLoadProjectMetrics starting for project:", projectId);
+    try {
+      // 1. Fetch correct targets count
+      const targetsRes = await this.apiClient.get(`/projects/${projectId}/targets`)
+        .then(res => {
+          console.log(`[ProjectManager] Fetch targets success for ${projectId}:`, res);
+          return res;
+        })
+        .catch((err) => {
+          console.error(`[ProjectManager] Fetch targets failed for ${projectId}:`, err);
+          return { targets: [] };
+        });
+      const targets = Array.isArray(targetsRes.targets) ? targetsRes.targets : (Array.isArray(targetsRes) ? targetsRes : []);
+      
+      const targetsEls = document.querySelectorAll(`.project-targets-count-val[data-project-id="${projectId}"]`);
+      console.log(`[ProjectManager] Found ${targetsEls.length} targetsEls for ${projectId}. Updating to: ${targets.length}`);
+      targetsEls.forEach(el => {
+        el.textContent = `${targets.length} target${targets.length !== 1 ? "s" : ""}`;
+      });
+
+      // 2. Fetch correct scans count
+      const scansRes = await this.apiClient.get(`/projects/${projectId}/scans`)
+        .then(res => {
+          console.log(`[ProjectManager] Fetch scans success for ${projectId}:`, res);
+          return res;
+        })
+        .catch((err) => {
+          console.error(`[ProjectManager] Fetch scans failed for ${projectId}:`, err);
+          return { scans: [] };
+        });
+      const scans = Array.isArray(scansRes.scans) ? scansRes.scans : (Array.isArray(scansRes) ? scansRes : []);
+      
+      const scansEls = document.querySelectorAll(`.project-scans-count-val[data-project-id="${projectId}"]`);
+      console.log(`[ProjectManager] Found ${scansEls.length} scansEls for ${projectId}. Updating to: ${scans.length}`);
+      scansEls.forEach(el => {
+        el.textContent = `${scans.length} scan${scans.length !== 1 ? "s" : ""}`;
+      });
+
+      // 3. Fetch correct findings count for all targets in parallel
+      const findingsPromises = targets.map(async (target) => {
+        try {
+          console.log(`[ProjectManager] Fetching findings for target ${target.id} of project ${projectId}`);
+          const res = await this.apiClient.get(`/targets/${target.id}/findings`).catch((err) => {
+            console.error(`[ProjectManager] Fetch findings failed for target ${target.id}:`, err);
+            return [];
+          });
+          console.log(`[ProjectManager] Fetch findings success for target ${target.id}:`, res);
+          return Array.isArray(res) ? res : (res.findings || res.data || []);
+        } catch (_) {
+          return [];
+        }
+      });
+      const findingsResults = await Promise.all(findingsPromises);
+      let allFindings = [];
+      findingsResults.forEach(list => {
+        allFindings = allFindings.concat(list);
+      });
+
+      const findingsEls = document.querySelectorAll(`.project-findings-count-val[data-project-id="${projectId}"]`);
+      console.log(`[ProjectManager] Found ${findingsEls.length} findingsEls for ${projectId}. Updating to: ${allFindings.length}`);
+      findingsEls.forEach(el => {
+        el.textContent = `${allFindings.length} finding${allFindings.length !== 1 ? "s" : ""}`;
+      });
+
+      // 4. Calculate Risk Score dynamically using exact details page metrics formula
+      let openCritical = 0;
+      let openHigh = 0;
+      let openMedium = 0;
+      let openLow = 0;
+      let totalOpen = 0;
+
+      allFindings.forEach(f => {
+        if ((f.status || "open").toLowerCase() === "open") {
+          totalOpen++;
+          const sev = (f.severity || "info").toLowerCase();
+          if (sev === "critical") openCritical++;
+          else if (sev === "high") openHigh++;
+          else if (sev === "medium") openMedium++;
+          else if (sev === "low") openLow++;
+        }
+      });
+
+      let riskScore = (openCritical * 1.5 + openHigh * 0.8 + openMedium * 0.4 + openLow * 0.1);
+      riskScore = Math.max(0, Math.min(10.0, riskScore));
+
+      const riskScoreStr = riskScore.toFixed(1);
+      const fillWidth = Math.round((riskScore / 10) * 100);
+
+      let scoreColor = "#34D399"; // green
+      if (riskScore > 7.0) {
+        scoreColor = "#f87171"; // red
+      } else if (riskScore > 3.0) {
+        scoreColor = "#fbbf24"; // orange/yellow
+      }
+
+      console.log(`[ProjectManager] Calculated Risk Score for ${projectId}:`, {
+        openCritical, openHigh, openMedium, openLow, totalOpen, riskScore, riskScoreStr, fillWidth
+      });
+
+      // Update risk score text value in DOM
+      const scoreEls = document.querySelectorAll(`.project-risk-score-value[data-project-id="${projectId}"]`);
+      scoreEls.forEach(el => {
+        el.textContent = `${riskScoreStr} / 10`;
+        el.style.color = scoreColor;
+        el.style.background = `${scoreColor}15`;
+        el.style.borderColor = `${scoreColor}30`;
+      });
+
+      // Update progress fill width and background in DOM
+      const fillEls = document.querySelectorAll(`.project-progress-fill[data-progress-project-id="${projectId}"]`);
+      fillEls.forEach(el => {
+        el.style.width = `${fillWidth}%`;
+        el.style.background = scoreColor;
+      });
+    } catch (error) {
+      console.error(`[ProjectManager] Failed to lazy load metrics for project ${projectId}:`, error);
     }
   }
 
@@ -540,15 +669,15 @@ class ProjectManager {
     // Status badge
     const STATUS = {
       active: {
-        cls: "text-[#34D399] bg-[rgba(52,211,153,0.15)]  border-[rgba(52,211,153,0.3)]",
+        cls: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)]  border-[rgba(167,139,250,0.3)]",
         label: "Active",
       },
       completed: {
-        cls: "text-[#38BDF8] bg-[rgba(56,189,248,0.15)]  border-[rgba(56,189,248,0.3)]",
+        cls: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)]  border-[rgba(167,139,250,0.3)]",
         label: "Completed",
       },
       archived: {
-        cls: "text-[#FBBF24] bg-[rgba(251,191,36,0.15)]  border-[rgba(251,191,36,0.3)]",
+        cls: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)]  border-[rgba(167,139,250,0.3)]",
         label: "Archived",
       },
     };
@@ -600,72 +729,66 @@ class ProjectManager {
       </div>`
         : "";
 
-    // === PROGRESS BAR calculation ===
-    let progressPct = 0;
-    let progressColor = "#34D399"; // green
-    let isOverdue = false;
-    if (project.start_date && project.end_date) {
-      const now = Date.now();
-      const start = new Date(project.start_date + "T00:00:00").getTime();
-      const end = new Date(project.end_date + "T00:00:00").getTime();
-      const total = end - start;
-      if (total > 0) {
-        progressPct = Math.min(100, Math.max(0, ((now - start) / total) * 100));
-        if (now > end) {
-          isOverdue = true;
-          progressPct = 100;
-          progressColor = "#f87171"; // red
-        } else if (progressPct >= 80) {
-          progressColor = "#fb923c"; // orange
-        }
-      }
-    } else if (project.status === "completed") {
-      progressPct = 100;
-      progressColor = "#38BDF8";
+    // === RISK SCORE calculation ===
+    const targetsCount = project.targets_count ?? 0;
+    const findingsCount = project.findings_count ?? 0;
+    const scansCount = project.scans_count ?? 0;
+
+    let riskScore = 0;
+    if (project.risk_score !== undefined && project.risk_score !== null) {
+      riskScore = Number(project.risk_score);
+    } else if (findingsCount > 0) {
+      riskScore = 1.0 + Math.log2(findingsCount) * 1.5;
+      riskScore = Math.min(10.0, Math.max(0.0, riskScore));
     }
-    const progressBar = (project.start_date && project.end_date) || project.status === "completed"
-      ? `
-      <div class="mb-3">
-        <div class="flex items-center justify-between mb-1">
-          <span class="text-xs text-slate-500 font-medium">Project Progress</span>
-          <span class="text-xs font-bold" style="color:${progressColor}">${isOverdue ? "Overdue" : Math.round(progressPct) + "%"}</span>
-        </div>
-        <div class="project-progress-track">
-          <div class="project-progress-fill" style="width:0%;background:${progressColor}" data-target-width="${Math.round(progressPct)}%"></div>
-        </div>
-      </div>` : "";
 
-    // === QUICK INFO ROW ===
-    // TODO: Replace with API call to fetch actual targets/findings/last scan data
-    const targetsCount = project.targets_count ?? "—";
-    const findingsCount = project.findings_count ?? "—";
-    const lastScanText = project.last_scan_at
-      ? this.formatDate(project.last_scan_at)
-      : "Never";
+    const riskScoreStr = riskScore.toFixed(1);
+    const fillWidth = Math.round((riskScore / 10) * 100);
 
-    const quickInfoRow = `
-      <div class="flex items-center gap-4 text-xs text-slate-500 mb-3">
-        <span class="flex items-center gap-1.5">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
-            <line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/>
-            <line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/>
+    let scoreColor = "#34D399"; // green
+    if (riskScore > 7.0) {
+      scoreColor = "#f87171"; // red
+    } else if (riskScore > 3.0) {
+      scoreColor = "#fbbf24"; // orange/yellow
+    }
+
+    // === METADATA ROW ===
+    const metadataRow = `
+      <div class="flex items-center gap-4 text-xs text-slate-400 mb-3.5 font-semibold">
+        <span class="flex items-center gap-1.5" title="Targets inside project">
+          <svg class="w-3.5 h-3.5 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <circle cx="12" cy="12" r="6"/>
+            <circle cx="12" cy="12" r="2"/>
           </svg>
-          ${targetsCount}
+          <span class="project-targets-count-val" data-project-id="${project.id}">${targetsCount} targets</span>
         </span>
-        <span class="flex items-center gap-1.5">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        <span class="flex items-center gap-1.5" title="Total findings">
+          <svg class="w-3.5 h-3.5 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="8" height="14" x="8" y="6" rx="4"/>
+            <path d="m19 7-3 2M5 7l3 2M19 19l-3-2M5 19l3-2M20 13h-4M4 13h4M10 4l1-2M14 4l-1-2"/>
           </svg>
-          ${findingsCount}
+          <span class="project-findings-count-val" data-project-id="${project.id}">${findingsCount} findings</span>
         </span>
-        <span class="flex items-center gap-1.5">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        <span class="flex items-center gap-1.5" title="Total scans done">
+          <svg class="w-3.5 h-3.5 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
           </svg>
-          ${lastScanText}
+          <span class="project-scans-count-val" data-project-id="${project.id}">${scansCount} scans</span>
         </span>
+      </div>`;
+
+    // === RISK SCORE BAR ===
+    const riskScoreBar = `
+      <div class="mb-4">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs text-slate-400 font-medium">Risk Score</span>
+          <span class="text-xs font-bold px-2 py-0.5 rounded project-risk-score-value" data-project-id="${project.id}" style="color: ${scoreColor}; background: ${scoreColor}15; border: 1px solid ${scoreColor}30">${riskScoreStr} / 10</span>
+        </div>
+        <div class="project-progress-track" style="background: rgba(255, 255, 255, 0.05); height: 6px; border-radius: 999px; overflow: hidden; position: relative;">
+          <div class="project-progress-fill" data-progress-project-id="${project.id}" style="width: ${fillWidth}%; height: 100%; border-radius: 999px; background: ${scoreColor}; transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+        </div>
       </div>`;
 
     // Owner-only action buttons (edit / delete)
@@ -706,8 +829,8 @@ class ProjectManager {
           </div>
         </div>
         ${dateRow}
-        ${progressBar}
-        ${quickInfoRow}
+        ${metadataRow}
+        ${riskScoreBar}
         <div class="flex items-center justify-between pt-3 border-t border-white/5">
           <div class="flex items-center gap-2">
             <span class="text-xs text-slate-500">Created ${this.formatDate(project.created_at)}</span>

@@ -260,6 +260,143 @@
                 border-radius:10px; overflow:hidden;
             }
             .target-history-panel.hidden { display:none; }
+
+            /* ── Option A: Tech-Glass Cyber Cards & 3D Card Flip ── */
+            .target-card-container {
+                perspective: 1000px;
+                height: 220px;
+            }
+            .target-card-inner {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                transform-style: preserve-3d;
+            }
+            .target-card-container.flipped .target-card-inner {
+                transform: rotateY(180deg);
+            }
+            .target-card-front, .target-card-back {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                -webkit-backface-visibility: hidden;
+                backface-visibility: hidden;
+                border-radius: var(--cg-radius-lg);
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                padding: var(--cg-space-4);
+                border: 1px solid var(--cg-border);
+                box-sizing: border-box;
+            }
+            .target-card-front {
+                background: rgba(17, 24, 39, 0.45);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                transition: border-color var(--cg-transition-fast), box-shadow var(--cg-transition-fast), transform var(--cg-transition-fast);
+            }
+            .target-card-container:hover .target-card-front {
+                transform: translateY(-2px);
+            }
+            .target-card-back {
+                background: rgba(17, 24, 39, 0.85);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                transform: rotateY(180deg);
+                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            }
+            /* Neon color highlighting by type (unified purple) */
+            .target-card-type-domain, .target-card-type-ip, .target-card-type-network {
+                border-top: 4px solid var(--cg-accent);
+            }
+            .target-card-container:hover .target-card-type-domain,
+            .target-card-container:hover .target-card-type-ip,
+            .target-card-container:hover .target-card-type-network {
+                border-color: rgba(167, 139, 250, 0.4);
+                box-shadow: 0 0 20px rgba(167, 139, 250, 0.15);
+            }
+
+            /* ── Full screen scanner dashboard overlay transition ── */
+            #scan-scanner-modal {
+                animation: scan-dashboard-fade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            @keyframes scan-dashboard-fade {
+                from {
+                    opacity: 0;
+                    transform: scale(0.98);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+            }
+
+            /* Custom styled switch toggles inside scanner cards */
+            .scan-cb:checked + .switch-bg {
+                background-color: var(--cg-accent) !important;
+            }
+            .scan-cb:checked + .switch-bg .switch-dot {
+                transform: translateX(16px);
+                background-color: #fff !important;
+            }
+
+            /* Scanner interactive card states */
+            .scanner-interactive-card {
+                transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+            }
+            .scanner-interactive-card.selected {
+                border-color: rgba(167, 139, 250, 0.5) !important;
+                background-color: rgba(167, 139, 250, 0.06) !important;
+                box-shadow: 0 0 15px rgba(167, 139, 250, 0.08);
+            }
+            .scanner-interactive-card.selected .switch-dot {
+                transform: translateX(16px);
+                background-color: #fff !important;
+            }
+            .scanner-interactive-card.selected .switch-bg {
+                background-color: var(--cg-accent) !important;
+            }
+
+            /* ── Finding Details Modal Transitions ── */
+            #finding-detail-modal {
+                transition: opacity 0.2s ease-out;
+            }
+            #finding-detail-modal-content {
+                transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease-out;
+            }
+
+            /* ── Collapsible Findings List ── */
+            .collapsible-findings {
+                transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-out;
+                max-height: 10000px;
+                opacity: 1;
+                overflow: hidden;
+            }
+            .collapsible-findings.collapsed {
+                max-height: 0 !important;
+                opacity: 0;
+            }
+            #toggle-all-findings-chevron.rotated {
+                transform: rotate(-90deg);
+            }
+
+            /* ── Settings Tab Segmented Buttons ── */
+            .status-seg-btn {
+                color: var(--cg-text-3);
+                background: transparent;
+                border: 1px solid transparent;
+            }
+            .status-seg-btn:hover {
+                color: var(--cg-text-1);
+                background: rgba(255, 255, 255, 0.03);
+            }
+            .status-seg-btn.active {
+                background: rgba(167, 139, 250, 0.08) !important;
+                color: var(--cg-accent) !important;
+                border-color: rgba(167, 139, 250, 0.25) !important;
+                box-shadow: 0 0 12px rgba(167, 139, 250, 0.08);
+            }
         </style>
     </head>
     <body class="cyber-body min-h-screen">
@@ -1233,156 +1370,169 @@
 
             <!-- ── Settings Tab (owner only) ─────────────────────────────────────── -->
             <div id="tab-settings" class="hidden space-y-6">
-                <!-- Edit Form -->
-                <div class="cyber-card p-6">
-                    <h2 class="text-base font-bold text-white mb-5">
-                        Edit Project
-                    </h2>
-                    <form
-                        id="settings-form"
-                        onsubmit="handleSettingsSave(event)"
-                        class="space-y-4"
-                    >
-                        <div>
-                            <label
-                                class="block text-sm font-semibold text-slate-300 mb-2"
-                                >Project Name
-                                <span class="text-red-400">*</span></label
-                            >
+                <form id="settings-form" onsubmit="handleSettingsSave(event)" class="space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Left Column: Project Identity (Col Span 2) -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <div class="cyber-card p-6 space-y-4">
+                                <h3 class="text-base font-bold text-white mb-2 flex items-center gap-2 border-b border-[var(--cg-border)] pb-3">
+                                    <svg class="w-5 h-5 text-[var(--cg-accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                    Project Identity
+                                </h3>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                        Project Name <span class="text-red-400">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="s-name"
+                                        class="cyber-input w-full p-3 rounded-lg text-sm focus:border-[var(--cg-accent)] focus:ring-1 focus:ring-[var(--cg-accent)]/20"
+                                        maxlength="255"
+                                        required
+                                    />
+                                    <p id="s-name-error" class="text-xs text-red-400 mt-1 hidden"></p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                        Description
+                                    </label>
+                                    <textarea
+                                        id="s-description"
+                                        rows="6"
+                                        class="cyber-input w-full p-3 rounded-lg text-sm resize-none focus:border-[var(--cg-accent)] focus:ring-1 focus:ring-[var(--cg-accent)]/20"
+                                        maxlength="500"
+                                        placeholder="Add a detailed description about the security target goals and scope..."
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Status & Timeline (Col Span 1) -->
+                        <div class="space-y-6">
+                            <div class="cyber-card p-6 space-y-4">
+                                <h3 class="text-base font-bold text-white mb-2 flex items-center gap-2 border-b border-[var(--cg-border)] pb-3">
+                                    <svg class="w-5 h-5 text-[var(--cg-accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Lifecycle & Timeline
+                                </h3>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                        Status
+                                    </label>
+                                    <input type="hidden" id="s-status" value="active" />
+                                    <div class="flex p-1 bg-slate-950/60 border border-[var(--cg-border)] rounded-xl gap-1">
+                                        <button type="button" onclick="updateSegmentedStatusButtons('active')" data-status="active" class="status-seg-btn flex-1 py-2.5 text-xs font-bold rounded-lg transition-all duration-200 active">
+                                            Active
+                                        </button>
+                                        <button type="button" onclick="updateSegmentedStatusButtons('completed')" data-status="completed" class="status-seg-btn flex-1 py-2.5 text-xs font-bold rounded-lg transition-all duration-200">
+                                            Completed
+                                        </button>
+                                        <button type="button" onclick="updateSegmentedStatusButtons('archived')" data-status="archived" class="status-seg-btn flex-1 py-2.5 text-xs font-bold rounded-lg transition-all duration-200">
+                                            Archived
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                            Start Date
+                                        </label>
+                                        <div class="relative flex items-center">
+                                            <span class="absolute left-3 text-slate-500 pointer-events-none">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                </svg>
+                                            </span>
+                                            <input
+                                                type="date"
+                                                id="s-start-date"
+                                                class="cyber-input w-full pl-10 pr-3 py-2.5 rounded-lg text-sm focus:border-[var(--cg-accent)] focus:ring-1 focus:ring-[var(--cg-accent)]/20"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                            End Date
+                                        </label>
+                                        <div class="relative flex items-center">
+                                            <span class="absolute left-3 text-slate-500 pointer-events-none">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                </svg>
+                                            </span>
+                                            <input
+                                                type="date"
+                                                id="s-end-date"
+                                                class="cyber-input w-full pl-10 pr-3 py-2.5 rounded-lg text-sm focus:border-[var(--cg-accent)] focus:ring-1 focus:ring-[var(--cg-accent)]/20"
+                                            />
+                                        </div>
+                                        <p id="s-end-date-error" class="text-xs text-red-400 mt-1 hidden"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex">
+                                <button
+                                    type="submit"
+                                    id="settings-save-btn"
+                                    class="cyber-btn-primary w-full py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2"
+                                >
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Danger Zone (Red Glassmorphic warning) -->
+                <div class="cyber-card p-6 border border-red-500/20 bg-red-950/5 rounded-xl hover:border-red-500/30 transition-all duration-300 space-y-4">
+                    <div class="flex items-start gap-4">
+                        <div class="p-3 bg-red-500/10 border border-red-500/25 rounded-xl text-[var(--cg-danger)] flex-shrink-0">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <div class="space-y-1">
+                            <h4 class="text-base font-bold text-[var(--cg-danger)]">Danger Zone</h4>
+                            <p class="text-sm text-slate-400 leading-relaxed">
+                                Deleting this project is permanent and irreversible. All scan history, targets, findings, and credentials will be deleted forever.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-2">
+                        <button
+                            id="show-delete-btn"
+                            onclick="showDeleteArea()"
+                            class="cyber-btn-danger px-5 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all duration-200"
+                        >
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                            Delete This Project
+                        </button>
+                    </div>
+
+                    <!-- Type-to-confirm area -->
+                    <div id="delete-confirm-area" class="hidden border-t border-red-500/10 pt-4 mt-4 space-y-4 transition-all duration-300">
+                        <div class="space-y-2">
+                            <p class="text-sm text-slate-300">
+                                Please type <strong id="delete-name-hint" class="text-white font-mono bg-black/35 px-2.5 py-0.5 rounded border border-white/5 select-all"></strong> to confirm deletion:
+                            </p>
                             <input
                                 type="text"
-                                id="s-name"
-                                class="cyber-input w-full p-3 rounded-lg text-sm"
-                                maxlength="255"
-                                required
+                                id="delete-confirm-input"
+                                class="cyber-input w-full p-3 rounded-lg text-sm focus:border-red-500 focus:ring-red-500/20"
+                                placeholder="Type project name…"
+                                autocomplete="off"
+                                oninput="checkDeleteMatch(this)"
                             />
-                            <p
-                                id="s-name-error"
-                                class="text-xs text-red-400 mt-1 hidden"
-                            ></p>
                         </div>
-                        <div>
-                            <label
-                                class="block text-sm font-semibold text-slate-300 mb-2"
-                                >Description</label
-                            >
-                            <textarea
-                                id="s-description"
-                                rows="3"
-                                class="cyber-input w-full p-3 rounded-lg text-sm resize-none"
-                                maxlength="500"
-                            ></textarea>
-                        </div>
-                        <div>
-                            <label
-                                class="block text-sm font-semibold text-slate-300 mb-2"
-                                >Status</label
-                            >
-                            <select
-                                id="s-status"
-                                class="cyber-input w-full p-3 rounded-lg text-sm"
-                            >
-                                <option value="active">Active</option>
-                                <option value="completed">Completed</option>
-                                <option value="archived">Archived</option>
-                            </select>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label
-                                    class="block text-sm font-semibold text-slate-300 mb-2"
-                                    >Start Date</label
-                                >
-                                <input
-                                    type="date"
-                                    id="s-start-date"
-                                    class="cyber-input w-full p-3 rounded-lg text-sm"
-                                />
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-sm font-semibold text-slate-300 mb-2"
-                                    >End Date</label
-                                >
-                                <input
-                                    type="date"
-                                    id="s-end-date"
-                                    class="cyber-input w-full p-3 rounded-lg text-sm"
-                                />
-                                <p
-                                    id="s-end-date-error"
-                                    class="text-xs text-red-400 mt-1 hidden"
-                                ></p>
-                            </div>
-                        </div>
-                        <div class="flex gap-3 pt-2">
-                            <button
-                                type="submit"
-                                id="settings-save-btn"
-                                class="cyber-btn-primary px-6 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2"
-                            >
-                                <svg
-                                    class="w-4 h-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke-width="1.5"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        d="M4.5 12.75l6 6 9-13.5"
-                                    />
-                                </svg>
-                                Save Changes
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Danger Zone -->
-                <div class="cyber-card p-6 danger-zone rounded-xl border">
-                    <h2
-                        class="text-base font-bold text-[var(--cg-danger)] mb-2 flex items-center gap-2"
-                    >
-                        <svg
-                            class="w-5 h-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
-                            />
-                        </svg>
-                        Danger Zone
-                    </h2>
-                    <p class="text-sm text-slate-400 mb-4">
-                        Deleting this project is permanent. This action cannot
-                        be undone.
-                    </p>
-
-                    <!-- Type-to-confirm -->
-                    <div id="delete-confirm-area" class="hidden space-y-3">
-                        <p class="text-sm text-slate-300">
-                            Type
-                            <strong
-                                id="delete-name-hint"
-                                class="text-white font-mono"
-                            ></strong>
-                            to confirm:
-                        </p>
-                        <input
-                            type="text"
-                            id="delete-confirm-input"
-                            class="cyber-input w-full p-3 rounded-lg text-sm"
-                            placeholder="Type project name…"
-                            autocomplete="off"
-                            oninput="checkDeleteMatch(this)"
-                        />
                         <div class="flex gap-3">
                             <button
                                 id="delete-confirm-btn"
@@ -1390,54 +1540,20 @@
                                 disabled
                                 class="cyber-btn-danger px-6 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2 disabled:opacity-40"
                             >
-                                <svg
-                                    class="w-4 h-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke-width="1.5"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-                                    />
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
-                                Delete Project
+                                Confirm Delete Project
                             </button>
                             <button
-                                onclick="
-                                    document
-                                        .getElementById('delete-confirm-area')
-                                        .classList.add('hidden')
-                                "
+                                type="button"
+                                onclick="document.getElementById('delete-confirm-area').classList.add('hidden')"
                                 class="btn-cancel px-4 py-2.5 rounded-lg text-sm"
                             >
                                 Cancel
                             </button>
                         </div>
                     </div>
-
-                    <button
-                        id="show-delete-btn"
-                        onclick="showDeleteArea()"
-                        class="btn-clear-history px-5 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2"
-                    >
-                        <svg
-                            class="w-4 h-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-                            />
-                        </svg>
-                        Delete This Project
-                    </button>
                 </div>
             </div>
 
@@ -1472,10 +1588,11 @@
                 </div>
 
                 <!-- Targets list -->
-                <div id="targets-list" class="space-y-2">
+                <div id="targets-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <!-- Shimmer placeholders shown on first load -->
-                    <div class="shimmer h-14 rounded-xl"></div>
-                    <div class="shimmer h-14 rounded-xl"></div>
+                    <div class="shimmer h-48 rounded-2xl"></div>
+                    <div class="shimmer h-48 rounded-2xl"></div>
+                    <div class="shimmer h-48 rounded-2xl"></div>
                 </div>
 
                 <!-- ── Scan Live Panel ─────────────────────────────────────── -->
@@ -1494,7 +1611,12 @@
                     <!-- Findings Header -->
                     <div class="findings-header">
                         <div>
-                            <h3 class="findings-title">Security Findings</h3>
+                            <h3 class="findings-title flex items-center gap-2 cursor-pointer select-none" onclick="toggleFindingsListVisibility()">
+                                Security Findings
+                                <svg id="toggle-all-findings-chevron" class="w-5 h-5 text-slate-400 hover:text-white transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <polyline points="6 9 12 15 18 9"/>
+                                </svg>
+                            </h3>
                             <p class="findings-subtitle">Vulnerability scan results for this target</p>
                         </div>
                         <div class="findings-header-right">
@@ -1545,7 +1667,9 @@
                     </div>
 
                     <!-- Findings List (populated by JS) -->
-                    <div id="findings-list-container"></div>
+                    <div id="findings-collapsible-section" class="collapsible-findings">
+                        <div id="findings-list-container"></div>
+                    </div>
 
                 </div>
             </div><!-- /#tab-findings -->
@@ -1861,55 +1985,148 @@
             </div>
         </div>
 
-        <!-- ─── Scanner Selection Modal ──────────────────────────────────────── -->
+        <!-- ─── Finding Details Modal (Glassmorphic) ───────────────────────── -->
+        <div
+            id="finding-detail-modal"
+            class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="finding-detail-modal-title"
+            onclick="if (event.target === this) hideFindingDetailModal()"
+        >
+            <div class="cyber-card w-full max-w-2xl rounded-2xl overflow-hidden border border-white/10 flex flex-col max-h-[85vh] shadow-2xl relative transition-all duration-300 transform scale-95 opacity-0" id="finding-detail-modal-content">
+                <!-- Header with colored top border according to severity -->
+                <div class="absolute top-0 left-0 right-0 h-1" id="fd-severity-top-bar"></div>
+                
+                <!-- Modal Header -->
+                <div class="flex items-start justify-between p-6 pb-4 border-b border-[var(--cg-border)] bg-[var(--cg-bg-surface)]/80 backdrop-blur-md mt-1">
+                    <div class="space-y-1.5 flex-1 min-w-0 pr-4">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span id="fd-severity-badge" class="severity-badge">HIGH</span>
+                            <span id="fd-cvss-badge" class="cvss-badge hidden"></span>
+                            <span id="fd-status-badge" class="finding-status"></span>
+                            <span id="fd-driver" class="text-xs font-mono text-slate-400 bg-slate-900/50 px-2 py-0.5 rounded border border-white/5"></span>
+                        </div>
+                        <h3 id="finding-detail-modal-title" class="text-lg font-bold text-white leading-snug break-words"></h3>
+                    </div>
+                    <button 
+                        onclick="hideFindingDetailModal()" 
+                        class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors flex-shrink-0"
+                        aria-label="Close details"
+                    >
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Modal Body (Scrollable) -->
+                <div class="p-6 space-y-5 overflow-y-auto flex-1 bg-[var(--cg-bg-base)]/40 text-sm">
+                    <!-- Description Block -->
+                    <div id="fd-desc-section" class="space-y-2">
+                        <div class="finding-section-label">Description</div>
+                        <div class="bg-[var(--cg-bg-surface)] border border-[var(--cg-border)] rounded-xl p-4">
+                            <p id="fd-description" class="text-slate-300 leading-relaxed break-words whitespace-pre-wrap select-text"></p>
+                        </div>
+                    </div>
+
+                    <!-- Affected URL Block -->
+                    <div id="fd-url-section" class="space-y-2">
+                        <div class="finding-section-label">Affected URL</div>
+                        <div class="flex items-center gap-2 bg-[var(--cg-bg-surface)] border border-[var(--cg-border)] rounded-xl p-3 pr-2">
+                            <div class="flex-1 min-w-0 font-mono text-xs text-[var(--cg-info)] break-all select-all select-text" id="fd-url-text"></div>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <a id="fd-url-link" href="#" target="_blank" rel="noopener" class="text-slate-400 hover:text-[var(--cg-info)] p-1.5 rounded hover:bg-white/5 transition-colors" title="Open URL in new tab">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                    </svg>
+                                </a>
+                                <button onclick="copyToClipboard('fd-url-text', this)" class="text-slate-400 hover:text-white p-1.5 rounded hover:bg-white/5 transition-colors" title="Copy URL">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CVSS Vector Block -->
+                    <div id="fd-vector-section" class="space-y-2">
+                        <div class="finding-section-label">CVSS Vector</div>
+                        <div class="flex items-center gap-2 bg-[var(--cg-bg-surface)] border border-[var(--cg-border)] rounded-xl p-3 pr-2">
+                            <code id="fd-vector-text" class="flex-1 font-mono text-xs text-slate-300 break-all select-all select-text"></code>
+                            <button onclick="copyToClipboard('fd-vector-text', this)" class="text-slate-400 hover:text-white p-1.5 rounded hover:bg-white/5 transition-colors flex-shrink-0" title="Copy CVSS Vector">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Proof Block -->
+                    <div id="fd-proof-section" class="space-y-2">
+                        <div class="finding-section-label">Proof of Concept</div>
+                        <div class="relative bg-slate-950 border border-[var(--cg-border)] rounded-xl p-4">
+                            <pre class="overflow-x-auto text-xs font-mono text-emerald-400 select-all select-text whitespace-pre-wrap break-all" id="fd-proof"></pre>
+                            <button onclick="copyToClipboard('fd-proof', this)" class="absolute top-2 right-2 text-slate-500 hover:text-white p-1.5 rounded hover:bg-white/5 transition-colors" title="Copy Proof">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Remediation Block -->
+                    <div id="fd-remediation-section" class="space-y-2">
+                        <div class="finding-section-label text-[var(--cg-accent)]">Remediation</div>
+                        <div class="bg-[rgba(167,139,250,0.03)] border border-[rgba(167,139,250,0.15)] rounded-xl p-4 space-y-2">
+                            <p id="fd-remediation" class="text-slate-300 leading-relaxed break-words whitespace-pre-wrap select-text"></p>
+                        </div>
+                    </div>
+
+                    <!-- Tags Block -->
+                    <div id="fd-tags-section" class="space-y-2">
+                        <div class="finding-section-label">Tags</div>
+                        <div id="fd-tags" class="flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-between p-6 border-t border-[var(--cg-border)] bg-[var(--cg-bg-surface)]/80 backdrop-blur-md">
+                    <div class="flex items-center gap-1 text-xs text-slate-500 font-mono">
+                        <span>Vulnerability ID:</span>
+                        <span id="fd-id" class="text-slate-400 select-all select-text font-bold"></span>
+                        <button onclick="copyToClipboard('fd-id', this)" class="text-slate-500 hover:text-white p-1 rounded hover:bg-white/5 transition-colors" title="Copy Full ID">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <button 
+                        type="button" 
+                        onclick="hideFindingDetailModal()" 
+                        class="cyber-btn-ghost px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/5 transition-colors text-slate-300 hover:text-white"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── Scanner Selection Full-Screen Dashboard ──────────────────────── -->
         <div
             id="scan-scanner-modal"
-            class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+            class="hidden fixed inset-0 z-50 bg-[var(--cg-bg-base)] overflow-y-auto flex flex-col p-6 md:p-10"
             role="dialog"
             aria-modal="true"
             aria-labelledby="scan-scanner-modal-title"
         >
-            <div
-                class="cyber-card w-full max-w-lg p-6 rounded-2xl flex flex-col gap-5 max-h-[90vh]"
-            >
-                <!-- Modal header -->
-                <div>
-                    <h3
-                        id="scan-scanner-modal-title"
-                        class="text-base font-bold text-white"
-                    >
-                        Select Scanners for:
-                        <span
-                            id="scan-modal-target-label"
-                            class="text-[var(--cg-accent)]"
-                        ></span>
-                    </h3>
-                    <p
-                        id="scan-modal-target-detail"
-                        class="text-xs text-slate-400 font-mono mt-1"
-                    ></p>
-                </div>
-
-                <!-- Scanner list (filled by ScanManager) -->
-                <div
-                    id="scan-modal-scanner-body"
-                    class="overflow-y-auto flex-1 pr-1 space-y-1"
-                    style="max-height: 52vh"
-                >
-                    <div
-                        class="flex items-center justify-center py-10 text-slate-400 text-sm gap-3"
-                    >
-                        <span class="cyber-spinner-sm"></span>Loading scanners…
-                    </div>
-                </div>
-
-                <!-- Actions -->
-                <div class="flex gap-3 pt-1 border-t border-[var(--cg-border)]">
+            <div class="max-w-6xl mx-auto w-full flex flex-col flex-1 gap-6">
+                <!-- Top Back navigation -->
+                <div class="flex items-center justify-between">
                     <button
-                        id="scan-start-btn"
-                        type="button"
-                        onclick="window.ScanManager?.startScan()"
-                        class="cyber-btn-primary px-5 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2"
+                        onclick="window.ScanManager?.closeScanModal()"
+                        class="cyber-btn-ghost text-xs px-3 py-2 rounded-lg flex items-center gap-2 font-semibold"
                     >
                         <svg
                             class="w-4 h-4"
@@ -1921,18 +2138,79 @@
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
-                                d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+                                d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
                             />
                         </svg>
-                        ▶ Start Scan
+                        Back to Targets
                     </button>
-                    <button
-                        type="button"
-                        onclick="window.ScanManager?.closeScanModal()"
-                        class="btn-cancel px-4 py-2.5 rounded-lg text-sm"
+                    <!-- Small status tracker on right -->
+                    <div class="text-xs text-slate-500 font-bold uppercase tracking-wider flex items-center gap-2 select-none">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[var(--cg-accent)]"></span>
+                        Scan Configuration
+                    </div>
+                </div>
+
+                <!-- Header: Target summary -->
+                <div class="border-b border-[var(--cg-border)] pb-6">
+                    <h1
+                        id="scan-scanner-modal-title"
+                        class="text-2xl md:text-3xl font-extrabold text-white tracking-tight"
                     >
-                        Cancel
-                    </button>
+                        Configure Security Scan
+                    </h1>
+                    <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-400">
+                        <span>Target: <strong id="scan-modal-target-label" class="text-white"></strong></span>
+                        <span class="text-slate-600">|</span>
+                        <span class="font-mono bg-black/25 px-2 py-0.5 rounded border border-white/5" id="scan-modal-target-detail"></span>
+                    </div>
+                </div>
+
+                <!-- Scanner list (filled by ScanManager as a grid) -->
+                <div
+                    id="scan-modal-scanner-body"
+                    class="flex-1 space-y-8 py-2"
+                >
+                    <div class="flex flex-col items-center justify-center py-20 text-slate-400 text-sm gap-3">
+                        <span class="cyber-spinner"></span>
+                        <span>Loading active security scanner list…</span>
+                    </div>
+                </div>
+
+                <!-- Sticky bottom / standard bottom action bar -->
+                <div class="flex items-center justify-between pt-6 border-t border-[var(--cg-border)] mt-auto bg-[var(--cg-bg-base)] sticky bottom-0 z-10 pb-4">
+                    <div class="text-xs text-slate-400 font-semibold" id="selected-scanners-count-bar">
+                        0 scanners selected
+                    </div>
+                    <div class="flex gap-3">
+                        <button
+                            id="scan-start-btn"
+                            type="button"
+                            onclick="window.ScanManager?.startScan()"
+                            class="cyber-btn-primary px-6 py-3 rounded-lg font-bold text-sm flex items-center gap-2"
+                        >
+                            <svg
+                                class="w-4 h-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="2"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+                                />
+                            </svg>
+                            Start Scan Job
+                        </button>
+                        <button
+                            type="button"
+                            onclick="window.ScanManager?.closeScanModal()"
+                            class="btn-cancel px-5 py-3 rounded-lg text-sm font-semibold"
+                        >
+                            Cancel
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2073,15 +2351,15 @@
                 // Status badge
                 const STATUS = {
                     active: {
-                        cls: "text-[#34D399] bg-[rgba(52,211,153,0.15)]  border-[rgba(52,211,153,0.3)]",
+                        cls: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)]  border-[rgba(167,139,250,0.3)]",
                         label: "Active",
                     },
                     completed: {
-                        cls: "text-[#38BDF8] bg-[rgba(56,189,248,0.15)]  border-[rgba(56,189,248,0.3)]",
+                        cls: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)]  border-[rgba(167,139,250,0.3)]",
                         label: "Completed",
                     },
                     archived: {
-                        cls: "text-[#FBBF24] bg-[rgba(251,191,36,0.15)]  border-[rgba(251,191,36,0.3)]",
+                        cls: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)]  border-[rgba(167,139,250,0.3)]",
                         label: "Archived",
                     },
                 };
@@ -2155,6 +2433,7 @@
                 _val("s-name", p.name || "");
                 _val("s-description", p.description || "");
                 _val("s-status", p.status || "active");
+                updateSegmentedStatusButtons(p.status || "active");
                 _val("s-start-date", p.start_date || "");
                 _val("s-end-date", p.end_date || "");
                 _set("delete-name-hint", p.name || "");
@@ -3118,6 +3397,18 @@
                 }
             }
 
+            function updateSegmentedStatusButtons(status) {
+                const hiddenInput = document.getElementById("s-status");
+                if (hiddenInput) {
+                    hiddenInput.value = status;
+                }
+                
+                document.querySelectorAll(".status-seg-btn").forEach(btn => {
+                    const isActive = btn.getAttribute("data-status") === status;
+                    btn.classList.toggle("active", isActive);
+                });
+            }
+
             // ─── Settings save ────────────────────────────────────────────────────────
             async function handleSettingsSave(e) {
                 e.preventDefault();
@@ -3302,7 +3593,7 @@
                     if (targets.length === 0) {
                         const canEdit = canModify();
                         listEl.innerHTML = `
-                            <div class="text-center py-10 text-slate-500 space-y-3">
+                            <div class="col-span-full text-center py-10 text-slate-500 space-y-3">
                                 <p class="text-sm">No targets yet.</p>
                                 ${canEdit ? `<button onclick="showAddTargetModal()" class="cyber-btn-primary px-4 py-2 rounded-lg text-sm font-semibold">Add First Target</button>` : ""}
                             </div>`;
@@ -3324,14 +3615,32 @@
                 const type = target.type || "domain";
                 const id = esc(String(target.id || ""));
                 const canEdit = canModify();
+                const valTypeLabel = type === "domain" ? "HOST" : type === "ip" ? "IP" : "CIDR";
 
                 const TYPE_BADGE = {
-                    domain: "text-[#38BDF8] bg-[rgba(56,189,248,0.15)] border-[rgba(56,189,248,0.3)]",
+                    domain: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border-[rgba(167,139,250,0.3)]",
                     ip: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border-[rgba(167,139,250,0.3)]",
-                    network:
-                        "text-[#FB923C] bg-[rgba(251,146,60,0.15)] border-[rgba(251,146,60,0.3)]",
+                    network: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border-[rgba(167,139,250,0.3)]",
                 };
                 const typeBadgeCls = TYPE_BADGE[type] || TYPE_BADGE.domain;
+
+                // Icons for target types
+                const TYPE_ICONS = {
+                    domain: `<svg class="w-5 h-5 text-[#A78BFA] flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-.778.099-1.533.284-2.253" />
+                    </svg>`,
+                    ip: `<svg class="w-5 h-5 text-[#A78BFA] flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
+                    </svg>`,
+                    network: `<svg class="w-5 h-5 text-[#A78BFA] flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <rect x="16" y="16" width="6" height="6" rx="1" />
+                        <rect x="2" y="16" width="6" height="6" rx="1" />
+                        <rect x="9" y="2" width="6" height="6" rx="1" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 16v-2a2 2 0 012-2h10a2 2 0 012 2v2" />
+                    </svg>`
+                };
+                const iconSvg = TYPE_ICONS[type] || TYPE_ICONS.domain;
 
                 const editDeleteBtns = canEdit
                     ? `
@@ -3339,7 +3648,7 @@
                             onclick="showEditTargetModal('${id}')"
                             title="Edit target"
                             aria-label="Edit target ${label}"
-                            class="cyber-btn-ghost text-xs px-2 py-1.5 rounded flex items-center gap-1"
+                            class="cyber-btn-ghost text-xs p-1.5 rounded flex items-center justify-center"
                         >
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/>
@@ -3349,7 +3658,7 @@
                             onclick="showDeleteTargetModal('${id}', '${label}', '${value}')"
                             title="Delete target"
                             aria-label="Delete target ${label}"
-                            class="cyber-btn-danger text-xs px-2 py-1.5 rounded flex items-center gap-1"
+                            class="cyber-btn-danger text-xs p-1.5 rounded flex items-center justify-center"
                         >
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
@@ -3366,7 +3675,7 @@
                         data-typ="${esc(type)}"
                         title="Run security scan on this target"
                         aria-label="Run scan on ${label}"
-                        class="cyber-btn-primary text-xs px-2.5 py-1.5 rounded flex items-center gap-1.5"
+                        class="cyber-btn-primary text-xs px-2.5 py-1.5 rounded flex items-center gap-1 font-semibold"
                     >
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/>
@@ -3380,7 +3689,7 @@
                         data-history-btn="${id}"
                         title="View scan history for this target"
                         aria-label="View scan history for ${label}"
-                        class="cyber-btn-ghost text-xs px-2.5 py-1.5 rounded flex items-center gap-1.5"
+                        class="cyber-btn-ghost text-xs px-2.5 py-1.5 rounded flex items-center gap-1 font-semibold"
                     >
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
@@ -3389,32 +3698,89 @@
                     </button>`;
 
                 return `
-                    <div class="space-y-1" data-target-wrapper="${id}">
-                        <div class="cyber-card p-3 flex items-center gap-3" data-target-id="${id}">
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold text-white truncate">${label}</p>
-                                <p class="text-xs text-slate-400 font-mono truncate">${value}</p>
+                    <div class="target-card-container" data-target-wrapper="${id}">
+                        <div class="target-card-inner">
+                            <!-- FRONT SIDE -->
+                            <div class="target-card-front target-card-type-${type}" data-target-id="${id}">
+                                <!-- Header: Type Badge + Icon + Status dot -->
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        ${iconSvg}
+                                        <span class="text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider ${typeBadgeCls}">${cap(type)}</span>
+                                    </div>
+                                    <!-- Status indicator -->
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="relative flex h-2 w-2">
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-[var(--cg-success)]"></span>
+                                            <span class="relative inline-flex rounded-full h-2 w-2 bg-[var(--cg-success)]"></span>
+                                        </span>
+                                        <span class="text-[10px] text-slate-500 font-bold tracking-wider uppercase">Active</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Body: Label & Value -->
+                                <div class="my-3 min-w-0">
+                                    <p class="text-sm font-bold text-white truncate mb-2" title="${label}">${label}</p>
+                                    <div class="text-xs text-slate-400 font-mono bg-black/30 px-2.5 py-1.5 rounded border border-white/5 flex items-center gap-2 min-w-0" title="${value}">
+                                        <span class="text-[9px] font-bold text-[#A78BFA] bg-[rgba(167,139,250,0.1)] px-1.5 py-0.5 rounded border border-[rgba(167,139,250,0.2)] uppercase tracking-wider flex-shrink-0 select-none">${valTypeLabel}</span>
+                                        <span class="overflow-x-auto whitespace-nowrap scrollbar-thin select-all flex-1 min-w-0 text-slate-300">${value}</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Footer Actions -->
+                                <div class="flex items-center justify-between gap-2 border-t border-white/5 pt-3">
+                                    <div class="flex items-center gap-1.5">
+                                        ${scanBtn}
+                                        ${historyBtn}
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        ${editDeleteBtns}
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-2 flex-shrink-0">
-                                <span class="text-xs px-2 py-0.5 rounded-full border font-semibold ${typeBadgeCls}">${cap(type)}</span>
-                                ${scanBtn}
-                                ${historyBtn}
-                                ${editDeleteBtns}
+                            
+                            <!-- BACK SIDE (Scan History) -->
+                            <div class="target-card-back">
+                                <!-- Header: Title & Back Button -->
+                                <div class="flex items-center justify-between border-b border-white/5 pb-2">
+                                    <div class="flex items-center gap-1.5 min-w-0">
+                                        <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                        </svg>
+                                        <span class="text-[10px] font-bold text-slate-300 truncate">History: ${label}</span>
+                                    </div>
+                                    <button
+                                        onclick="toggleTargetScanHistory('${id}')"
+                                        class="cyber-btn-ghost text-[10px] px-2 py-1 rounded flex items-center gap-1 font-semibold"
+                                    >
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                                        </svg>
+                                        Back
+                                    </button>
+                                </div>
+                                
+                                <!-- Body: Table container with scroll -->
+                                <div id="target-history-${id}" class="flex-1 overflow-y-auto my-2 pr-1 scrollbar-thin max-h-[125px]">
+                                    <table class="w-full text-[11px] text-left border-collapse">
+                                        <thead>
+                                            <tr class="border-b border-white/5 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                                                <th class="py-1">ID</th>
+                                                <th class="py-1">Status</th>
+                                                <th class="py-1">Started</th>
+                                                <th class="py-1 text-right">View</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="target-history-body-${id}">
+                                            <tr>
+                                                <td colspan="4" class="py-4 text-center text-slate-500">
+                                                    Click 'History' to load scans.
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
-                        <!-- Target scan history sub-panel (lazy loaded) -->
-                        <div id="target-history-${id}" class="target-history-panel hidden">
-                            <table class="scans-table" aria-label="Scan history for ${label}">
-                                <thead><tr>
-                                    <th class="scans-th">Scan ID</th>
-                                    <th class="scans-th">Status</th>
-                                    <th class="scans-th">Started</th>
-                                    <th class="scans-th">View</th>
-                                </tr></thead>
-                                <tbody id="target-history-body-${id}">
-                                    <tr><td colspan="4" class="scans-empty">Loading…</td></tr>
-                                </tbody>
-                            </table>
                         </div>
                     </div>`;
             }
@@ -3658,11 +4024,11 @@
                     // Update row in place
                     const data = await res.json();
                     const updated = data.target || data;
-                    const row = document.querySelector(
-                        `[data-target-id="${targetId}"]`,
+                    const wrapper = document.querySelector(
+                        `[data-target-wrapper="${targetId}"]`,
                     );
-                    if (row) {
-                        row.outerHTML = renderTargetRow(updated);
+                    if (wrapper) {
+                        wrapper.outerHTML = renderTargetRow(updated);
                     } else {
                         loadTargets();
                     }
@@ -3723,10 +4089,10 @@
                         return;
                     }
                     // Remove the row from the DOM (requirement 9.3)
-                    const row = document.querySelector(
-                        `[data-target-id="${targetId}"]`,
+                    const wrapper = document.querySelector(
+                        `[data-target-wrapper="${targetId}"]`,
                     );
-                    if (row) row.remove();
+                    if (wrapper) wrapper.remove();
                     loadProjectFindings();
 
                     // Show empty state if list is now empty
@@ -3734,7 +4100,7 @@
                     if (listEl && !listEl.querySelector("[data-target-id]")) {
                         const canEdit = canModify();
                         listEl.innerHTML = `
-                            <div class="text-center py-10 text-slate-500 space-y-3">
+                            <div class="col-span-full text-center py-10 text-slate-500 space-y-3">
                                 <p class="text-sm">No targets yet.</p>
                                 ${canEdit ? `<button onclick="showAddTargetModal()" class="cyber-btn-primary px-4 py-2 rounded-lg text-sm font-semibold">Add First Target</button>` : ""}
                             </div>`;
@@ -4041,19 +4407,20 @@
 
             // ─── Target Scan History ──────────────────────────────────────────────────
 
-            async function toggleTargetScanHistory(targetId) {
-                const panel = document.getElementById(`target-history-${targetId}`);
-                if (!panel) return;
+            async function toggleTargetScanHistory(targetId, forceReload = false) {
+                const container = document.querySelector(`[data-target-wrapper="${targetId}"]`);
+                if (!container) return;
 
-                const isVisible = !panel.classList.contains("hidden");
-                if (isVisible) {
-                    panel.classList.add("hidden");
+                const isFlipped = container.classList.contains("flipped");
+                if (isFlipped && !forceReload) {
+                    container.classList.remove("flipped");
                     return;
                 }
 
-                panel.classList.remove("hidden");
+                container.classList.add("flipped");
+
                 const tbody = document.getElementById(`target-history-body-${targetId}`);
-                if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="scans-empty">
+                if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-500">
                     <span class="cyber-spinner-sm"></span> Loading…
                 </td></tr>`;
 
@@ -4063,7 +4430,7 @@
 
                     if (!tbody) return;
                     if (scans.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="4" class="scans-empty">No scans for this target yet.</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-500 text-[10px]">No scans yet.</td></tr>`;
                         return;
                     }
 
@@ -4083,21 +4450,21 @@
                             cancelled: "scan-pill-cancelled",
                         };
                         const pillCls = STATUS_CLS[status] || "scan-pill-default";
-                        return `<tr class="scans-row">
-                            <td class="scans-td scans-td--mono">${shortId}&hellip;</td>
-                            <td class="scans-td"><span class="scan-status-pill ${pillCls}">${esc(status.toUpperCase())}</span></td>
-                            <td class="scans-td scans-td--mono">${esc(started)}</td>
-                            <td class="scans-td">
-                                <a href="/scan/${scanId}" class="cyber-btn-ghost text-xs px-2 py-1 rounded"
+                        return `<tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+                            <td class="py-2 font-mono text-[10px]">${shortId}</td>
+                            <td class="py-2"><span class="scan-status-pill ${pillCls}">${esc(status.toUpperCase())}</span></td>
+                            <td class="py-2 font-mono text-[10px]">${esc(started)}</td>
+                            <td class="py-2 text-right">
+                                <a href="/scan/${scanId}" class="cyber-btn-ghost text-[10px] px-2 py-0.5 rounded"
                                    aria-label="View scan ${shortId}">View</a>
                             </td>
                         </tr>`;
                     }).join("");
                 } catch (err) {
                     if (tbody) tbody.innerHTML =
-                        `<tr><td colspan="4" class="scans-empty" style="color:var(--cg-danger)">
-                            Failed to load. <button onclick="toggleTargetScanHistory('${esc(targetId)}')"
-                            class="btn-retry">Retry</button>
+                        `<tr><td colspan="4" class="py-4 text-center text-[10px]" style="color:var(--cg-danger)">
+                            Failed to load. <button onclick="toggleTargetScanHistory('${esc(targetId)}', true)"
+                            class="btn-retry text-[10px] px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400">Retry</button>
                         </td></tr>`;
                 }
             }
@@ -4175,8 +4542,8 @@
                     : '';
                 const fid      = escapeHtml(String(finding.id || ''));
                 return `
-                    <div class="finding-card severity-border-${sev}" data-finding-id="${fid}" data-severity="${sev}">
-                        <div class="finding-card-header" onclick="toggleFindingCard('${fid}')">
+                    <div class="finding-card severity-border-${sev} cursor-pointer hover:bg-[var(--cg-bg-elevated)] transition-all duration-200 hover:-translate-y-0.5" data-finding-id="${fid}" data-severity="${sev}" onclick="showFindingDetailModal('${fid}')">
+                        <div class="finding-card-header !hover:bg-transparent">
                             <div class="finding-card-left">
                                 <span class="severity-badge sev-${sev}">${sevLabel}</span>
                                 <div class="finding-card-title-group">
@@ -4188,35 +4555,189 @@
                                 ${finding.cvss_score ? `<span class="cvss-badge cvss-${getCVSSSeverity(finding.cvss_score)}">CVSS ${escapeHtml(String(finding.cvss_score))}</span>` : ''}
                                 ${finding.cve_id ? `<a href="https://nvd.nist.gov/vuln/detail/${escapeHtml(finding.cve_id)}" target="_blank" rel="noopener" class="cve-link" onclick="event.stopPropagation()">${escapeHtml(finding.cve_id)}</a>` : ''}
                                 <span class="finding-date">${escapeHtml(date)}</span>
-                                <svg class="finding-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-                            </div>
-                        </div>
-                        <div class="finding-card-body" id="finding-body-${fid}">
-                            ${finding.description ? `<div class="finding-section"><div class="finding-section-label">DESCRIPTION</div><p class="finding-section-text">${escapeHtml(finding.description)}</p></div>` : ''}
-                            ${finding.affected_url ? `<div class="finding-section"><div class="finding-section-label">AFFECTED URL</div><a href="${escapeHtml(finding.affected_url)}" target="_blank" rel="noopener" class="finding-url"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>${escapeHtml(finding.affected_url)}</a></div>` : ''}
-                            ${finding.cvss_vector ? `<div class="finding-section"><div class="finding-section-label">CVSS VECTOR</div><code class="finding-code">${escapeHtml(finding.cvss_vector)}</code></div>` : ''}
-                            ${finding.proof ? `<div class="finding-section"><div class="finding-section-label">PROOF</div><p class="finding-section-text finding-proof">${escapeHtml(finding.proof)}</p></div>` : ''}
-                            ${finding.remediation ? `<div class="finding-section finding-remediation-section"><div class="finding-section-label remediation-label"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>REMEDIATION</div><p class="finding-section-text remediation-text">${escapeHtml(finding.remediation)}</p></div>` : ''}
-                            ${finding.tags && finding.tags.length ? `<div class="finding-section"><div class="finding-section-label">TAGS</div><div class="finding-tags">${finding.tags.map(t=>`<span class="finding-tag">${escapeHtml(t)}</span>`).join('')}</div></div>` : ''}
-                            <div class="finding-footer">
-                                <span class="finding-status status-${escapeHtml(finding.status || 'open')}">${escapeHtml((finding.status || 'open').toUpperCase())}</span>
-                                <span class="finding-id">ID: ${fid.slice(0,8)}...</span>
                             </div>
                         </div>
                     </div>`;
             }
 
-            function toggleFindingCard(findingId) {
-                const body    = document.getElementById(`finding-body-${findingId}`);
-                const card    = body?.closest('.finding-card');
-                const chevron = card?.querySelector('.finding-chevron');
-                if (!body) return;
-                const isOpen = body.classList.contains('expanded');
-                document.querySelectorAll('.finding-card-body.expanded').forEach(el => {
-                    el.classList.remove('expanded');
-                    el.closest('.finding-card')?.querySelector('.finding-chevron')?.classList.remove('rotated');
+            function toggleFindingsListVisibility() {
+                const section = document.getElementById('findings-collapsible-section');
+                const chevron = document.getElementById('toggle-all-findings-chevron');
+                if (!section || !chevron) return;
+                
+                const isCollapsed = section.classList.contains('collapsed');
+                if (isCollapsed) {
+                    section.classList.remove('collapsed');
+                    chevron.classList.remove('rotated');
+                } else {
+                    section.classList.add('collapsed');
+                    chevron.classList.add('rotated');
+                }
+            }
+
+            function showFindingDetailModal(findingId) {
+                const finding = _allFindings.find(f => String(f.id) === String(findingId));
+                if (!finding) return;
+
+                // Set Title & Metadata
+                document.getElementById('finding-detail-modal-title').textContent = finding.title || 'Untitled Finding';
+                
+                const driverEl = document.getElementById('fd-driver');
+                if (finding.driver_id) {
+                    driverEl.textContent = finding.driver_id;
+                    driverEl.classList.remove('hidden');
+                } else {
+                    driverEl.classList.add('hidden');
+                }
+
+                // Severity Top Bar & Badge
+                const sev = (finding.severity || 'info').toLowerCase();
+                const topBar = document.getElementById('fd-severity-top-bar');
+                const sevColors = {
+                    critical: 'var(--cg-danger)',
+                    high: '#F97316',
+                    medium: 'var(--cg-warning)',
+                    low: 'var(--cg-info)',
+                    info: 'var(--cg-text-3)'
+                };
+                topBar.style.backgroundColor = sevColors[sev] || 'var(--cg-text-3)';
+
+                const sevBadge = document.getElementById('fd-severity-badge');
+                sevBadge.textContent = sev.toUpperCase();
+                sevBadge.className = `severity-badge sev-${sev}`;
+
+                // CVSS Badge
+                const cvssBadge = document.getElementById('fd-cvss-badge');
+                if (finding.cvss_score) {
+                    cvssBadge.textContent = `CVSS ${finding.cvss_score}`;
+                    cvssBadge.className = `cvss-badge cvss-${getCVSSSeverity(finding.cvss_score)}`;
+                    cvssBadge.classList.remove('hidden');
+                } else {
+                    cvssBadge.classList.add('hidden');
+                }
+
+                // Status Badge
+                const statusBadge = document.getElementById('fd-status-badge');
+                const status = (finding.status || 'open').toLowerCase();
+                statusBadge.textContent = status.toUpperCase();
+                statusBadge.className = `finding-status status-${status}`;
+
+                // Description
+                const descSection = document.getElementById('fd-desc-section');
+                const descText = document.getElementById('fd-description');
+                if (finding.description) {
+                    descText.textContent = finding.description;
+                    descSection.classList.remove('hidden');
+                } else {
+                    descSection.classList.add('hidden');
+                }
+
+                // Affected URL
+                const urlSection = document.getElementById('fd-url-section');
+                const urlText = document.getElementById('fd-url-text');
+                const urlLink = document.getElementById('fd-url-link');
+                if (finding.affected_url) {
+                    urlText.textContent = finding.affected_url;
+                    urlLink.href = finding.affected_url;
+                    urlSection.classList.remove('hidden');
+                } else {
+                    urlSection.classList.add('hidden');
+                }
+
+                // CVSS Vector
+                const vectorSection = document.getElementById('fd-vector-section');
+                const vectorText = document.getElementById('fd-vector-text');
+                if (finding.cvss_vector) {
+                    vectorText.textContent = finding.cvss_vector;
+                    vectorSection.classList.remove('hidden');
+                } else {
+                    vectorSection.classList.add('hidden');
+                }
+
+                // Proof
+                const proofSection = document.getElementById('fd-proof-section');
+                const proofText = document.getElementById('fd-proof');
+                if (finding.proof) {
+                    proofText.textContent = finding.proof;
+                    proofSection.classList.remove('hidden');
+                } else {
+                    proofSection.classList.add('hidden');
+                }
+
+                // Remediation
+                const remSection = document.getElementById('fd-remediation-section');
+                const remText = document.getElementById('fd-remediation');
+                if (finding.remediation) {
+                    remText.textContent = finding.remediation;
+                    remSection.classList.remove('hidden');
+                } else {
+                    remSection.classList.add('hidden');
+                }
+
+                // Tags
+                const tagsSection = document.getElementById('fd-tags-section');
+                const tagsContainer = document.getElementById('fd-tags');
+                tagsContainer.innerHTML = '';
+                if (finding.tags && finding.tags.length) {
+                    finding.tags.forEach(tag => {
+                        const span = document.createElement('span');
+                        span.className = 'finding-tag';
+                        span.textContent = tag;
+                        tagsContainer.appendChild(span);
+                    });
+                    tagsSection.classList.remove('hidden');
+                } else {
+                    tagsSection.classList.add('hidden');
+                }
+
+                // Full Vulnerability ID
+                document.getElementById('fd-id').textContent = finding.id || '';
+
+                // Display Modal
+                const modal = document.getElementById('finding-detail-modal');
+                const modalContent = document.getElementById('finding-detail-modal-content');
+                modal.classList.remove('hidden');
+                
+                // Add fade-in transition
+                setTimeout(() => {
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                    modalContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            }
+
+            function hideFindingDetailModal() {
+                const modal = document.getElementById('finding-detail-modal');
+                const modalContent = document.getElementById('finding-detail-modal-content');
+                if (!modal) return;
+                
+                modalContent.classList.remove('scale-100', 'opacity-100');
+                modalContent.classList.add('scale-95', 'opacity-0');
+                
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 150);
+            }
+
+            function copyToClipboard(elementId, btnElement) {
+                const text = document.getElementById(elementId)?.textContent || '';
+                if (!text) return;
+                
+                navigator.clipboard.writeText(text).then(() => {
+                    const originalHTML = btnElement.innerHTML;
+                    btnElement.innerHTML = `
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                    `;
+                    btnElement.classList.add('bg-emerald-500/10');
+                    
+                    setTimeout(() => {
+                        btnElement.innerHTML = originalHTML;
+                        btnElement.classList.remove('bg-emerald-500/10');
+                    }, 1500);
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
                 });
-                if (!isOpen) { body.classList.add('expanded'); chevron?.classList.add('rotated'); }
             }
 
             function updateFindingsStats(findings) {
