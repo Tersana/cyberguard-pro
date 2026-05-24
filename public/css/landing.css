@@ -169,7 +169,7 @@ body::before {
 .btn-primary {
   padding: 10px 22px;
   border-radius: var(--btn-radius);
-  background: linear-gradient(135deg, var(--cg-accent) 0%, var(--cg-accent-hover) 100%);
+  background: linear-gradient(135deg, var(--cg-accent-hover) 0%, var(--cg-accent-dark) 100%);
   color: white;
   text-decoration: none;
   font-weight: 600;
@@ -196,6 +196,7 @@ body::before {
 
 .btn-primary:hover {
   transform: translateY(-2px);
+  background: linear-gradient(135deg, var(--cg-accent) 0%, var(--cg-accent-hover) 100%);
   box-shadow: 0 8px 32px var(--cg-focus-ring);
 }
 
@@ -417,7 +418,7 @@ body::before {
 .btn-glow {
   padding: 16px 28px;
   border-radius: var(--btn-radius);
-  background: linear-gradient(135deg, var(--cg-accent) 0%, var(--cg-accent-hover) 100%);
+  background: linear-gradient(135deg, var(--cg-accent-hover) 0%, var(--cg-accent-dark) 100%);
   color: white;
   text-decoration: none;
   font-weight: 600;
@@ -435,6 +436,7 @@ body::before {
 
 .btn-glow:hover {
   transform: translateY(-3px);
+  background: linear-gradient(135deg, var(--cg-accent) 0%, var(--cg-accent-hover) 100%);
   box-shadow: 0 8px 32px var(--cg-focus-ring), 0 0 60px var(--cg-focus-ring);
 }
 
@@ -1826,13 +1828,14 @@ body::before {
 }
 
 .cta-buttons .btn-primary {
-  background: linear-gradient(135deg, var(--cg-accent) 0%, var(--cg-accent-hover) 100%);
+  background: linear-gradient(135deg, var(--cg-accent-hover) 0%, var(--cg-accent-dark) 100%);
   color: white;
   box-shadow: 0 8px 32px var(--cg-focus-ring);
 }
 
 .cta-buttons .btn-primary:hover {
   transform: translateY(-3px);
+  background: linear-gradient(135deg, var(--cg-accent) 0%, var(--cg-accent-hover) 100%);
   box-shadow: 0 16px 48px var(--cg-focus-ring);
 }
 
