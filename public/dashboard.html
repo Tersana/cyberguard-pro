@@ -4207,50 +4207,104 @@
         <!-- Welcome Modal -->
         <div
             id="welcome-modal"
-            class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 hidden"
+            class="fixed inset-0 flex items-center justify-center z-50 hidden"
         >
+            <!-- Backdrop -->
+            <div class="welcome-backdrop"></div>
+
+            <!-- Modal Card -->
             <div class="welcome-popup">
-                <div
-                    class="welcome-card cyber-modal rounded-2xl shadow-2xl p-8 max-w-md mx-4 text-center"
-                >
-                    <div class="welcome-icon mb-6">
-                        <div
-                            class="w-20 h-20 mx-auto cyber-avatar-lg flex items-center justify-center"
-                        >
-                            <svg
-                                class="w-10 h-10 text-white"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="2"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.623 0-1.31-.21-2.571-.598-3.751h-.152c-3.396 0-6.648-1.355-9.06-3.70z"
-                                />
-                            </svg>
+                <div class="welcome-card">
+
+                    <!-- Animated scan line -->
+                    <div class="welcome-scan-line"></div>
+
+                    <!-- Corner brackets -->
+                    <div class="welcome-corner welcome-corner-tl"></div>
+                    <div class="welcome-corner welcome-corner-tr"></div>
+                    <div class="welcome-corner welcome-corner-bl"></div>
+                    <div class="welcome-corner welcome-corner-br"></div>
+
+                    <!-- Header -->
+                    <div class="welcome-header">
+                        <!-- Shield Icon -->
+                        <div class="welcome-shield-wrap">
+                            <div class="welcome-shield-ring"></div>
+                            <div class="welcome-shield-ring welcome-shield-ring-2"></div>
+                            <div class="welcome-shield-icon">
+                                <svg class="w-9 h-9 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.623 0-1.31-.21-2.571-.598-3.751h-.152c-3.396 0-6.648-1.355-9.06-3.70z" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Brand -->
+                        <div class="welcome-brand">
+                            <h2 class="welcome-title">
+                                <span class="brand-cyber">Cyber</span><span class="brand-guard">Guard</span>
+                            </h2>
+
                         </div>
                     </div>
-                    <h2 class="text-3xl font-bold text-white mb-3">
-                        <span class="brand-name"><span class="brand-cyber">Cyber</span><span class="brand-guard">Guard</span></span>
-                    </h2>
-                    <p class="text-base text-slate-500 mb-5">
-                        Your comprehensive cybersecurity toolkit!
-                    </p>
-                    <div class="space-y-1.5 text-sm text-slate-800 mb-6">
-                        <p>Deep-dive port scanning & infrastructure mapping.</p>
-                        <p>Multi-engine malware analysis.</p>
-                        <p>Cryptographic & DNS Auditing.</p>
-                        <p>Real-time identification of vulnerabilities.</p>
+
+                    <!-- Typewriter section -->
+                    <div class="welcome-typewriter-wrap">
+                        <span class="welcome-typewriter-prefix">❯&nbsp;</span>
+                        <span class="welcome-typewriter-text" id="welcome-typewriter"></span>
+                        <span class="welcome-typewriter-cursor">|</span>
                     </div>
-                    <button
-                        id="welcome-close-btn"
-                        class="cyber-btn-primary font-bold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105"
-                    >
-                        Start Scanning
+
+                    <!-- Feature grid -->
+                    <div class="welcome-features-grid">
+                        <div class="welcome-feature-card">
+                            <div class="welcome-feature-icon">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253" /></svg>
+                            </div>
+                            <span class="welcome-feature-label">Network Recon</span>
+                        </div>
+                        <div class="welcome-feature-card">
+                            <div class="welcome-feature-icon">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 12.75c1.148 0 2.278.08 3.383.237 1.037.146 1.866.966 1.866 2.013 0 3.728-2.35 6.75-5.25 6.75S6.75 18.728 6.75 15c0-1.046.83-1.867 1.866-2.013A24.204 24.204 0 0112 12.75zm0 0c2.883 0 5.647.508 8.207 1.44a23.91 23.91 0 01-1.152 6.06M12 12.75c-2.883 0-5.647.508-8.208 1.44A23.914 23.914 0 004.944 20.25M12 12.75a2.25 2.25 0 002.248-2.354M12 12.75a2.25 2.25 0 01-2.248-2.354M12 8.25c.995 0 1.971-.08 2.922-.236.403-.066.74-.358.795-.762a3.778 3.778 0 00-.399-2.25 2.236 2.236 0 00-1.432-.869A22.52 22.52 0 0012 4.5c-.757 0-1.5.042-2.248.127M12 8.25c-.995 0-1.971-.08-2.922-.236-.403-.066-.74-.358-.795-.762a3.778 3.778 0 01.399-2.25 2.236 2.236 0 011.432-.869A22.527 22.527 0 0112 4.5" /></svg>
+                            </div>
+                            <span class="welcome-feature-label">Malware Analysis</span>
+                        </div>
+                        <div class="welcome-feature-card">
+                            <div class="welcome-feature-icon">
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z" /></svg>
+                            </div>
+                            <span class="welcome-feature-label">Cipher Suite</span>
+                        </div>
+                        <div class="welcome-feature-card">
+                            <div class="welcome-feature-icon">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                                    <!-- Shield -->
+                                    <path d="M12 2.5L4.5 5.5V11C4.5 15.2 7.8 18.9 12 20.5C16.2 18.9 19.5 15.2 19.5 11V5.5L12 2.5Z"/>
+                                    <!-- Left circuit lines + dots -->
+                                    <line x1="4.5" y1="9"   x2="2.5" y2="9"/>  <circle cx="2"   cy="9"    r="0.65" fill="currentColor" stroke="none"/>
+                                    <line x1="4.5" y1="11.5" x2="2.5" y2="11.5"/><circle cx="2"   cy="11.5" r="0.65" fill="currentColor" stroke="none"/>
+                                    <line x1="4.5" y1="14"  x2="2.5" y2="14"/> <circle cx="2"   cy="14"   r="0.65" fill="currentColor" stroke="none"/>
+                                    <!-- Right circuit lines + dots -->
+                                    <line x1="19.5" y1="9"   x2="21.5" y2="9"/>  <circle cx="22"  cy="9"    r="0.65" fill="currentColor" stroke="none"/>
+                                    <line x1="19.5" y1="11.5" x2="21.5" y2="11.5"/><circle cx="22"  cy="11.5" r="0.65" fill="currentColor" stroke="none"/>
+                                    <line x1="19.5" y1="14"  x2="21.5" y2="14"/> <circle cx="22"  cy="14"   r="0.65" fill="currentColor" stroke="none"/>
+                                    <!-- Brain (simplified: two lobes + centre divider + stems) -->
+                                    <path d="M12 8C10.6 8 9.5 9 9.5 10.3C9.5 11.3 10.1 12.1 11 12.5V14H13V12.5C13.9 12.1 14.5 11.3 14.5 10.3C14.5 9 13.4 8 12 8Z" stroke-width="1.1"/>
+                                    <line x1="12" y1="8" x2="12" y2="9.5" stroke-width="1"/>
+                                </svg>
+                            </div>
+                            <span class="welcome-feature-label">Threat Intel</span>
+                        </div>
+                    </div>
+
+                    <!-- CTA button -->
+                    <button id="welcome-close-btn" class="welcome-cta-btn">
+                        <span class="welcome-cta-shimmer"></span>
+                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
+                        Initialize CyberGuard
                     </button>
+
+                    <!-- Footer hint -->
+                    <p class="welcome-footer-hint">Press <kbd>Esc</kbd> or click outside to dismiss</p>
                 </div>
             </div>
         </div>

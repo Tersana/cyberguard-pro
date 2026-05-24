@@ -101,54 +101,406 @@ body {
     color: var(--cg-accent);
 }
 
-/* --- Welcome Popup Animations --- */
+/* ============================================================
+   Welcome Popup —  Redesign
+   ============================================================ */
+
+/* --- Keyframes --- */
 @keyframes welcomeSlideIn {
-    0% {
-        opacity: 0;
-        transform: translateY(-50px) scale(0.8);
-    }
-    50% {
-        opacity: 0.8;
-        transform: translateY(-10px) scale(1.05);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+    0%   { opacity: 0; transform: translateY(40px) scale(0.92); }
+    60%  { opacity: 1; transform: translateY(-6px) scale(1.01); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@keyframes welcomePulse {
-    0%,
-    100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.05);
-    }
-}
-
-@keyframes welcomeGlow {
-    0%,
-    100% {
-        box-shadow: 0 0 20px rgba(167, 139, 250, 0.3);
+@keyframes welcomeCardGlow {
+    0%, 100% {
+        box-shadow:
+            0 0 0 1px rgba(139, 92, 246, 0.35),
+            0 0 40px rgba(139, 92, 246, 0.15),
+            0 32px 64px rgba(0,0,0,0.55);
     }
     50% {
         box-shadow:
-            0 0 40px rgba(167, 139, 250, 0.6),
-            0 0 60px rgba(167, 139, 250, 0.4);
+            0 0 0 1px rgba(167, 139, 250, 0.6),
+            0 0 70px rgba(139, 92, 246, 0.35),
+            0 32px 64px rgba(0,0,0,0.55);
     }
 }
 
+@keyframes welcomeScanLine {
+    0%   { top: 0; opacity: 0.8; }
+    90%  { top: calc(100% - 2px); opacity: 0.8; }
+    100% { top: calc(100% - 2px); opacity: 0; }
+}
+
+@keyframes welcomeRingPulse {
+    0%, 100% { transform: scale(1);   opacity: 0.5; }
+    50%       { transform: scale(1.12); opacity: 1; }
+}
+
+@keyframes welcomeRingPulse2 {
+    0%, 100% { transform: scale(1);   opacity: 0.25; }
+    50%       { transform: scale(1.22); opacity: 0.6; }
+}
+
+@keyframes welcomeStatusBlink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.35; }
+}
+
+@keyframes welcomeCursorBlink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+}
+
+@keyframes welcomeShimmer {
+    0%   { left: -100%; }
+    100% { left: 200%; }
+}
+
+@keyframes welcomeFeatureIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* --- Backdrop --- */
+.welcome-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 5, 15, 0.82);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* --- Popup wrapper (carries slide-in animation) --- */
 .welcome-popup {
-    animation: welcomeSlideIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    position: relative;
+    z-index: 1;
+    animation: welcomeSlideIn 0.65s cubic-bezier(0.34, 1.46, 0.64, 1) forwards;
 }
 
-.welcome-popup .welcome-icon {
-    animation: welcomePulse 2s ease-in-out infinite;
+/* --- Card --- */
+.welcome-card {
+    position: relative;
+    width: 460px;
+    max-width: calc(100vw - 32px);
+    padding: 36px 36px 28px;
+    border-radius: 20px;
+    overflow: hidden;
+    background:
+        linear-gradient(145deg, rgba(30, 20, 60, 0.97) 0%, rgba(15, 10, 35, 0.98) 100%);
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    animation: welcomeCardGlow 3.5s ease-in-out infinite;
+    text-align: center;
 }
 
-.welcome-popup .welcome-card {
-    animation: welcomeGlow 3s ease-in-out infinite;
+/* Subtle grid texture overlay */
+.welcome-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(139,92,246,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(139,92,246,0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+}
+
+/* --- Animated scan line --- */
+.welcome-scan-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(139,92,246,0.0) 10%,
+        rgba(167,139,250,0.9) 50%,
+        rgba(139,92,246,0.0) 90%,
+        transparent 100%
+    );
+    top: 0;
+    pointer-events: none;
+    animation: welcomeScanLine 3.2s ease-in-out infinite;
+    z-index: 5;
+}
+
+/* --- Corner brackets --- */
+.welcome-corner {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    pointer-events: none;
+    z-index: 5;
+}
+.welcome-corner-tl { top: 10px; left: 10px; border-top: 2px solid rgba(167,139,250,0.7); border-left: 2px solid rgba(167,139,250,0.7); border-radius: 3px 0 0 0; }
+.welcome-corner-tr { top: 10px; right: 10px; border-top: 2px solid rgba(167,139,250,0.7); border-right: 2px solid rgba(167,139,250,0.7); border-radius: 0 3px 0 0; }
+.welcome-corner-bl { bottom: 10px; left: 10px; border-bottom: 2px solid rgba(167,139,250,0.7); border-left: 2px solid rgba(167,139,250,0.7); border-radius: 0 0 0 3px; }
+.welcome-corner-br { bottom: 10px; right: 10px; border-bottom: 2px solid rgba(167,139,250,0.7); border-right: 2px solid rgba(167,139,250,0.7); border-radius: 0 0 3px 0; }
+
+/* --- Header row (shield + brand side-by-side) --- */
+.welcome-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    text-align: left;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 2;
+}
+
+/* --- Shield icon with rings --- */
+.welcome-shield-wrap {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.welcome-shield-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1.5px solid rgba(139,92,246,0.5);
+    animation: welcomeRingPulse 2s ease-in-out infinite;
+}
+
+.welcome-shield-ring-2 {
+    inset: -10px;
+    border-color: rgba(139,92,246,0.22);
+    animation: welcomeRingPulse2 2s ease-in-out infinite 0.4s;
+}
+
+.welcome-shield-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 24px rgba(109,40,217,0.6), 0 4px 12px rgba(0,0,0,0.4);
+    position: relative;
+    z-index: 1;
+}
+
+/* --- Brand text --- */
+.welcome-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.welcome-title {
+    font-size: 1.9rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.welcome-version-tag {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    color: #fff;
+    padding: 2px 7px;
+    border-radius: 6px;
+    vertical-align: middle;
+    box-shadow: 0 2px 8px rgba(109,40,217,0.4);
+}
+
+.welcome-status-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.welcome-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 8px rgba(52,211,153,0.7);
+    animation: welcomeStatusBlink 1.8s ease-in-out infinite;
+}
+
+.welcome-status-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #34d399;
+}
+
+/* --- Typewriter row --- */
+.welcome-typewriter-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(139,92,246,0.25);
+    border-radius: 10px;
+    padding: 10px 16px;
+    margin-bottom: 22px;
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 0.82rem;
+    text-align: left;
+    position: relative;
+    z-index: 2;
+    min-height: 44px;
+}
+
+.welcome-typewriter-prefix {
+    color: #8b5cf6;
+    font-weight: 700;
+    font-size: 1rem;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.welcome-typewriter-text {
+    color: #c4b5fd;
+    font-weight: 500;
+    flex: 1;
+}
+
+.welcome-typewriter-cursor {
+    color: #a78bfa;
+    font-weight: 300;
+    font-size: 1.1rem;
+    line-height: 1;
+    animation: welcomeCursorBlink 0.8s step-end infinite;
+    margin-left: 1px;
+    user-select: none;
+}
+
+/* --- Feature cards grid --- */
+.welcome-features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 2;
+}
+
+.welcome-feature-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 11px;
+    transition: all 0.25s ease;
+    cursor: default;
+    text-align: left;
+    animation: welcomeFeatureIn 0.4s ease-out forwards;
+    opacity: 0;
+}
+
+.welcome-feature-card:nth-child(1) { animation-delay: 0.55s; }
+.welcome-feature-card:nth-child(2) { animation-delay: 0.7s; }
+.welcome-feature-card:nth-child(3) { animation-delay: 0.85s; }
+.welcome-feature-card:nth-child(4) { animation-delay: 1.0s; }
+
+.welcome-feature-card:hover {
+    background: rgba(139,92,246,0.12);
+    border-color: rgba(139,92,246,0.45);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(109,40,217,0.2);
+}
+
+.welcome-feature-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, rgba(109,40,217,0.5) 0%, rgba(76,29,149,0.6) 100%);
+    border: 1px solid rgba(139,92,246,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #c4b5fd;
+    flex-shrink: 0;
+}
+
+.welcome-feature-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #c4b5fd;
+    letter-spacing: 0.01em;
+}
+
+/* --- CTA Button --- */
+.welcome-cta-btn {
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px 24px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+    color: #fff;
+    font-size: 0.92rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(109,40,217,0.45), 0 1px 3px rgba(0,0,0,0.3);
+    margin-bottom: 14px;
+    z-index: 2;
+}
+
+.welcome-cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(109,40,217,0.6), 0 1px 3px rgba(0,0,0,0.3);
+    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+}
+
+.welcome-cta-btn:active {
+    transform: translateY(0);
+}
+
+.welcome-cta-shimmer {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+    animation: welcomeShimmer 2.2s ease-in-out infinite 1.2s;
+    pointer-events: none;
+}
+
+/* --- Footer hint --- */
+.welcome-footer-hint {
+    font-size: 0.7rem;
+    color: rgba(148,163,184,0.55);
+    position: relative;
+    z-index: 2;
+}
+
+.welcome-footer-hint kbd {
+    display: inline-block;
+    padding: 1px 5px;
+    border: 1px solid rgba(148,163,184,0.3);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.68rem;
+    background: rgba(255,255,255,0.05);
+    color: rgba(148,163,184,0.7);
 }
 
 /* --- Button Disabled States --- */
