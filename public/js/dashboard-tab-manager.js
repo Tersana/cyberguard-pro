@@ -13,7 +13,8 @@ const DashboardTabManager = {
     'ai-assistant': false,
     'projects': false,
     'threat-intel': false,
-    'billing-history': false
+    'billing-history': false,
+    'jwt-debugger': false
   },
   
   // Current active tab
@@ -137,7 +138,7 @@ const DashboardTabManager = {
     });
 
     // Toggle results section visibility
-    const TABS_WITHOUT_RESULTS = ['projects', 'threat-intel', 'billing-history', 'ai-assistant', 'hash-tools'];
+    const TABS_WITHOUT_RESULTS = ['projects', 'threat-intel', 'billing-history', 'ai-assistant', 'hash-tools', 'jwt-debugger'];
     const resultsSection = document.getElementById('professional-results-section');
     if (resultsSection) {
       if (TABS_WITHOUT_RESULTS.includes(activeTabId)) {
@@ -184,6 +185,9 @@ const DashboardTabManager = {
       case 'billing-history':
         this.initializeBillingHistory();
         break;
+      case 'jwt-debugger':
+        this.initializeJWTDebugger();
+        break;
     }
     
     // Mark as initialized
@@ -204,6 +208,12 @@ const DashboardTabManager = {
     } else {
       console.warn('DashboardTabManager: CyberGuardHashTools not found');
     }
+  },
+  
+  /**
+   * Initialize JWT Debugger tab
+   */
+  initializeJWTDebugger() {
     if (typeof CyberGuardJWTDebugger !== 'undefined') {
       try {
         CyberGuardJWTDebugger.init();
@@ -238,7 +248,11 @@ const DashboardTabManager = {
    * Initialize AI Assistant tab
    */
   initializeAIAssistant() {
-    // AI Assistant initialization
+    // AI Assistant is already initialized via main.js IIFE
+    if (window.AIAssistantInitialized) {
+      console.log('DashboardTabManager: AI Assistant already initialized by main.js');
+      return;
+    }
     if (typeof initAIAssistant === 'function') {
       try {
         initAIAssistant();

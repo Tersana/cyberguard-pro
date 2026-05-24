@@ -2250,6 +2250,7 @@ body.authenticated #guest-notice {
 }
 
 .ai-msg-bubble {
+    width: fit-content;
     max-width: 75%;
     padding: 12px 16px;
     border-radius: 18px;

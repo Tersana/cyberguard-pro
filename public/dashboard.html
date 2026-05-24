@@ -88,208 +88,290 @@
                     </button>
                 </div>
 
-                <div class="cyber-divider mx-5 mb-3"></div>
+                <div class="cyber-divider mx-5 mb-2"></div>
 
                 <!-- Nav -->
-                <nav class="px-3 space-y-1 mb-4">
-                    <div class="px-3 mb-2">
-                        <span
-                            class="text-xs font-semibold text-slate-500 uppercase tracking-widest"
-                            >Overview</span
+                <nav class="px-3 flex flex-col flex-grow">
+                    <!-- Security Dashboard (Left in its place at the top) -->
+                    <div class="space-y-1 mb-2">
+                        <a
+                            href="#"
+                            class="cyber-nav-item cyber-nav-active flex items-center gap-3 px-3 py-2 rounded-lg"
                         >
+                            <svg
+                                class="w-4 h-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25A2.25 2.25 0 0 1 13.5 8.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"
+                                />
+                            </svg>
+                            <span class="text-sm font-medium"
+                                >Security Dashboard</span
+                            >
+                            <span class="cyber-active-dot"></span>
+                        </a>
                     </div>
-                    <a
-                        href="#"
-                        class="cyber-nav-item cyber-nav-active flex items-center gap-3 px-3 py-2.5 rounded-lg"
-                    >
-                        <svg
-                            class="w-4 h-4"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25A2.25 2.25 0 0 1 13.5 8.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"
-                            />
-                        </svg>
-                        <span class="text-sm font-medium"
-                            >Security Dashboard</span
-                        >
-                        <span class="ml-auto cyber-live-badge">LIVE</span>
-                    </a>
 
-                    <div class="px-3 mt-4 mb-2">
-                        <span
-                            class="text-xs font-semibold text-slate-500 uppercase tracking-widest"
-                            >Tools</span
+                    <!-- Navigation items (Flowing naturally from the top) -->
+                    <div class="space-y-1 mt-2 mb-4">
+                        <div class="px-3 mb-2">
+                            <span
+                                class="text-xs font-semibold text-slate-500 uppercase tracking-widest"
+                                >Tools</span
+                            >
+                        </div>
+                        <a
+                            href="#"
+                            class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                            onclick="
+                                switchToTab('network-tools');
+                                return false;
+                            "
                         >
+                            <svg
+                                class="w-4 h-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
+                                />
+                            </svg>
+                            <span class="text-sm font-medium"
+                                >Network Analysis</span
+                            >
+                            <span class="cyber-active-dot"></span>
+                        </a>
+                        <a
+                            href="#"
+                            class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                            onclick="
+                                switchToTab('web-security');
+                                return false;
+                            "
+                        >
+                            <svg
+                                class="w-4 h-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z"
+                                />
+                            </svg>
+                            <span class="text-sm font-medium">Web Security</span>
+                            <span class="cyber-active-dot"></span>
+                        </a>
+                        <a
+                            href="#"
+                            class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                            onclick="
+                                switchToTab('hash-tools');
+                                return false;
+                            "
+                        >
+                            <svg
+                                class="w-4 h-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                            >
+                                <!-- Concentric circuit cipher key icon -->
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 0 1 21.75 8.25Z"
+                                />
+                                <circle cx="12" cy="12" r="9" stroke-dasharray="3 3" class="opacity-60" />
+                            </svg>
+                            <span class="text-sm font-medium">Cipher Suite</span>
+                            <span class="cyber-active-dot"></span>
+                        </a>
+                        <a
+                            href="#"
+                            class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                            onclick="
+                                switchToTab('jwt-debugger');
+                                return false;
+                            "
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                            <span class="text-sm font-medium">JWT Debugger</span>
+                            <span class="cyber-active-dot"></span>
+                        </a>
+                        <a
+                            href="#"
+                            class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                            onclick="
+                                switchToTab('ai-assistant');
+                                return false;
+                            "
+                        >
+                            <svg
+                                class="w-4 h-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z"
+                                />
+                            </svg>
+                            <span class="text-sm font-medium">AI Assistant</span>
+                            <span class="cyber-active-dot"></span>
+                        </a>
+                        <a
+                            href="#"
+                            class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                            onclick="
+                                switchToTab('threat-intel');
+                                return false;
+                            "
+                        >
+                            <svg
+                                class="w-4 h-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z"
+                                />
+                            </svg>
+                            <span class="text-sm font-medium">Threat Intel</span>
+                            <span class="cyber-active-dot"></span>
+                        </a>
+                        <a
+                            href="#"
+                            class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                            onclick="
+                                switchToTab('projects');
+                                return false;
+                            "
+                        >
+                            <svg
+                                class="w-4 h-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"
+                                />
+                            </svg>
+                            <span class="text-sm font-medium">Projects</span>
+                            <span class="cyber-active-dot"></span>
+                        </a>
+
+                        <div class="px-3 mt-4 mb-2">
+                            <span
+                                class="text-xs font-semibold text-slate-500 uppercase tracking-widest"
+                                >Config</span
+                            >
+                        </div>
+                        <a
+                            href="#"
+                            id="api-keys-toggle"
+                            class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                            data-auth-required
+                        >
+                            <svg
+                                class="w-4 h-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 0 1 21.75 8.25Z"
+                                />
+                            </svg>
+                            <span class="text-sm font-medium">API Keys</span>
+                            <span class="cyber-active-dot"></span>
+                        </a>
                     </div>
-                    <a
-                        href="#"
-                        class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
-                        onclick="
-                            switchToTab('network-tools');
-                            return false;
-                        "
-                    >
-                        <svg
-                            class="w-4 h-4"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                            />
-                        </svg>
-                        <span class="text-sm font-medium"
-                            >Network Analysis</span
-                        >
-                    </a>
-                    <a
-                        href="#"
-                        class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
-                        onclick="
-                            switchToTab('web-security');
-                            return false;
-                        "
-                    >
-                        <svg
-                            class="w-4 h-4"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z"
-                            />
-                        </svg>
-                        <span class="text-sm font-medium">Web Security</span>
-                    </a>
-                    <a
-                        href="#"
-                        class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
-                        onclick="
-                            switchToTab('hash-tools');
-                            return false;
-                        "
-                    >
-                        <svg
-                            class="w-4 h-4"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
-                            />
-                        </svg>
-                        <span class="text-sm font-medium">Cryptography</span>
-                    </a>
-                    <a
-                        href="#"
-                        class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
-                        onclick="
-                            switchToTab('ai-assistant');
-                            return false;
-                        "
-                    >
-                        <svg
-                            class="w-4 h-4"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z"
-                            />
-                        </svg>
-                        <span class="text-sm font-medium">AI Assistant</span>
-                    </a>
-                    <a
-                        href="#"
-                        class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
-                        onclick="
-                            switchToTab('threat-intel');
-                            return false;
-                        "
-                    >
-                        <svg
-                            class="w-4 h-4"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z"
-                            />
-                        </svg>
-                        <span class="text-sm font-medium">Threat Intel</span>
-                    </a>
-                    <a
-                        href="#"
-                        class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
-                        onclick="
-                            switchToTab('projects');
-                            return false;
-                        "
-                    >
-                        <svg
-                            class="w-4 h-4"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke-width="1.5"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"
-                            />
-                        </svg>
-                        <span class="text-sm font-medium">Projects</span>
-                    </a>
 
-
-                    <div class="px-3 mt-4 mb-2">
-                        <span
-                            class="text-xs font-semibold text-slate-500 uppercase tracking-widest"
-                            >Config</span
-                        >
+                    <!-- System Health & Scans Widget -->
+                    <div class="mt-auto pt-4 border-t border-slate-800/35 pb-2" id="sidebar-system-health">
+                        <div class="px-3 mb-3 flex items-center justify-between">
+                            <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">System & Scans</span>
+                            <span class="flex items-center gap-1.5 text-[9px] font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20 shadow-[0_0_8px_rgba(167,139,250,0.1)]">
+                                <span class="relative flex h-1.5 w-1.5">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-purple-500 shadow-[0_0_6px_#a78bfa]"></span>
+                                </span>
+                                LIVE
+                            </span>
+                        </div>
+                        <div class="px-3 space-y-3">
+                            <!-- Meter 1: Projects Used -->
+                            <div>
+                                <div class="flex justify-between text-[10px] mb-1">
+                                    <span class="text-slate-400">Projects Used</span>
+                                    <span class="text-slate-300 font-medium" id="sidebar-projects-text">0/0 Projects</span>
+                                </div>
+                                <div class="w-full bg-slate-800/60 rounded-full h-1 overflow-hidden border border-slate-700/30">
+                                    <div class="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full transition-all duration-500" id="sidebar-projects-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <!-- Meter 2: Active Targets -->
+                            <div>
+                                <div class="flex justify-between text-[10px] mb-1">
+                                    <span class="text-slate-400">Active Targets</span>
+                                    <span class="text-slate-300 font-medium" id="sidebar-targets-text">0/0 Monitored</span>
+                                </div>
+                                <div class="w-full bg-slate-800/60 rounded-full h-1 overflow-hidden border border-slate-700/30">
+                                    <div class="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full transition-all duration-500" id="sidebar-targets-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <!-- Meter 3: Scans This Month -->
+                            <div>
+                                <div class="flex justify-between text-[10px] mb-1">
+                                    <span class="text-slate-400">Scans This Month</span>
+                                    <span class="text-slate-300 font-medium" id="sidebar-scans-text">0/0 Used</span>
+                                </div>
+                                <div class="w-full bg-slate-800/60 rounded-full h-1 overflow-hidden border border-slate-700/30">
+                                    <div class="bg-gradient-to-r from-blue-500 to-cyan-500 h-full rounded-full transition-all duration-500" id="sidebar-scans-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <a
-                        href="#"
-                        id="api-keys-toggle"
-                        class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
-                        data-auth-required
-                    >
-                        <span class="text-sm font-medium">API Keys</span>
-                    </a>
                 </nav>
 
                 <!-- User Profile / Subscription Info -->
@@ -2620,7 +2702,7 @@
                                 <!-- Section Title -->
                                 <div>
                                     <h2 class="text-2xl font-bold text-white">
-                                        Cryptographic Tools
+                                        Cipher Suite
                                     </h2>
                                     <p class="text-sm text-slate-400 mt-1">
                                         Hash generation, password strength
@@ -3160,126 +3242,263 @@
                                         </div>
                                     </div>
 
-                                    <!-- Card 5: JWT Debugger & Editor -->
-                                    <div
-                                        class="cyber-card p-6 flex flex-col gap-6 border-l-2 border-l-purple-500/30 col-span-1 md:col-span-2"
-                                        role="region"
-                                        aria-labelledby="jwt-debugger-title"
-                                    >
-                                        <!-- Card Header -->
-                                        <div class="flex items-center justify-between mb-2">
-                                            <div class="flex items-center gap-2">
-                                                <span class="material-symbols-outlined text-purple-400" aria-hidden="true">key_visualizer</span>
-                                                <h3 id="jwt-debugger-title" class="text-lg font-bold text-white">
-                                                    JWT Debugger & Editor
-                                                </h3>
-                                            </div>
-                                            <span class="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded uppercase font-bold tracking-wider">Real-Time</span>
-                                        </div>
+                                </div>
+                            </div>
+                            <!-- END HASH TOOLS TAB -->
 
-                                        <!-- JWT String Section -->
-                                        <div class="flex flex-col gap-2">
+                            <!-- ============================================================ -->
+                            <!-- JWT DEBUGGER standalone tab -->
+                            <!-- ============================================================ -->
+                            <div id="jwt-debugger" class="tab-pane hidden">
+                                <div class="flex flex-col gap-6">
+                                    <!-- Header and Mode Switcher -->
+                                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-slate-900/40 p-5 rounded-xl border border-white/5">
+                                        <div>
+                                            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                                                <span class="material-symbols-outlined text-purple-400">key_visualizer</span>
+                                                JWT Debugger
+                                            </h2>
+                                            <p class="text-xs text-slate-400 mt-1">Real-time JSON Web Token decoder and encoder suite.</p>
+                                        </div>
+                                        <!-- Mode Switcher Pills -->
+                                        <div class="flex p-1 bg-slate-950/80 rounded-lg border border-white/5 self-start md:self-auto">
+                                            <button id="jwt-mode-decoder" class="px-4 py-1.5 rounded-md text-xs font-bold transition-all duration-200 jwt-pill-active" onclick="CyberGuardJWTDebugger.setMode('decoder')">
+                                                JWT Decoder
+                                            </button>
+                                            <button id="jwt-mode-encoder" class="px-4 py-1.5 rounded-md text-xs font-bold transition-all duration-200 text-slate-400 hover:text-white" onclick="CyberGuardJWTDebugger.setMode('encoder')">
+                                                JWT Encoder
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- DROPDOWN & EXPLANATION ROW -->
+                                    <div id="jwt-header-controls" class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                        <span id="jwt-mode-description" class="text-xs text-slate-400 font-medium">Paste a JWT below that you'd like to decode, validate, and verify.</span>
+                                        <div class="flex items-center gap-2 self-end sm:self-auto">
+                                            <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Generate example</span>
+                                            <div id="jwt-custom-dropdown-container" class="relative">
+                                                <button id="jwt-dropdown-trigger" class="flex items-center justify-between gap-3 bg-slate-900/80 border border-white/10 hover:border-purple-500/40 rounded-lg py-1.5 px-4 text-xs text-white/90 font-mono transition-all duration-200 cursor-pointer min-w-[190px] text-left select-none focus:outline-none focus:border-purple-500/50" aria-haspopup="listbox" aria-expanded="false" aria-label="Select signing algorithm">
+                                                    <span id="jwt-dropdown-selected-label" class="truncate">Select signing algorithm</span>
+                                                    <span class="material-symbols-outlined text-[16px] text-slate-400 transition-transform duration-200 pointer-events-none shrink-0" id="jwt-dropdown-caret" aria-hidden="true">expand_more</span>
+                                                </button>
+                                                <div id="jwt-dropdown-options" class="absolute right-0 mt-1.5 w-48 bg-slate-950/95 backdrop-blur-md border border-white/10 rounded-lg shadow-xl overflow-hidden hidden z-50 flex flex-col transition-all duration-200 origin-top transform scale-y-95 opacity-0">
+                                                    <div class="max-h-[250px] overflow-y-auto py-1 scrollbar-thin select-none">
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="none">none</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none border-t border-white/5" data-value="HS256">HS256</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="HS384">HS384</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="HS512">HS512</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none border-t border-white/5" data-value="RS256">RS256</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="RS384">RS384</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="RS512">RS512</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none border-t border-white/5" data-value="ES256">ES256</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="ES384">ES384</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="ES512">ES512</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none border-t border-white/5" data-value="PS256">PS256</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="PS384">PS384</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="PS512">PS512</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- DECODER VIEW -->
+                                    <div id="jwt-decoder-view" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <!-- Left Column: Encoded Token -->
+                                        <div class="cyber-card p-6 flex flex-col gap-4 border-l-2 border-l-purple-500/30">
                                             <div class="flex justify-between items-center">
                                                 <label class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
-                                                    <svg class="h-3.5 w-3.5 text-purple-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                                                        <circle cx="8" cy="12" r="1.2" fill="currentColor" />
-                                                        <circle cx="12" cy="12" r="1.2" fill="currentColor" />
-                                                        <circle cx="16" cy="12" r="1.2" fill="currentColor" />
-                                                    </svg>
-                                                    <span>JWT String</span>
-                                                    <span id="jwt-signature-status" class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded ml-2 hidden"></span>
+                                                    <span class="material-symbols-outlined text-purple-400 text-sm" aria-hidden="true">terminal</span>
+                                                    <span>Encoded Token</span>
                                                 </label>
                                                 <div class="flex items-center gap-3">
-                                                    <button id="ht-jwt-sample" class="text-[10px] text-slate-400 hover:text-purple-400 transition-colors font-bold uppercase tracking-wider">
-                                                        Load Sample
-                                                    </button>
-                                                    <button id="ht-jwt-clear" class="text-[10px] text-slate-400 hover:text-red-400 transition-colors font-bold uppercase tracking-wider">
+                                                    <button id="jwt-decoder-clear" class="text-[10px] text-slate-400 hover:text-red-400 transition-colors font-bold uppercase tracking-wider" onclick="CyberGuardJWTDebugger.clearDecoder()">
                                                         Clear
                                                     </button>
-                                                    <button id="ht-jwt-copy" class="hover:text-purple-400 transition-colors flex items-center gap-1 text-[10px] text-slate-400 uppercase font-bold" aria-label="Copy JWT to clipboard">
+                                                    <button id="jwt-decoder-copy" class="hover:text-purple-400 transition-colors flex items-center gap-1 text-[10px] text-slate-400 uppercase font-bold" onclick="CyberGuardJWTDebugger.copyDecoderToken()" aria-label="Copy JWT token">
                                                         <span class="material-symbols-outlined text-[14px]" aria-hidden="true">content_copy</span>
                                                         Copy
                                                     </button>
                                                 </div>
                                             </div>
-                                            <!-- Interactive JWT Editor Box -->
-                                            <div id="jwtTokenBox" class="jwt-token-display" contenteditable="true" spellcheck="false" placeholder="Paste your JWT here..."></div>
+                                            <!-- Color-coded editable token box -->
+                                            <div id="jwt-decoder-token" class="jwt-token-display h-[360px]" contenteditable="true" spellcheck="false" placeholder="Paste your JWT here..." oninput="CyberGuardJWTDebugger.parseDecoderToken()"></div>
+                                            <!-- Status indicators -->
+                                            <div class="flex flex-col gap-2 mt-2">
+                                                <div id="jwt-decoder-format-status" class="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
+                                                    <span class="material-symbols-outlined text-sm" aria-hidden="true">info</span>
+                                                    <span>Awaiting Token</span>
+                                                </div>
+                                                <div id="jwt-decoder-sig-status" class="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
+                                                    <span class="material-symbols-outlined text-sm" aria-hidden="true">info</span>
+                                                    <span>Awaiting Secret</span>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <!-- Header & Payload sub-grid -->
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <!-- Left side: Header -->
-                                            <div class="flex flex-col gap-2">
-                                                <label for="headerInput" class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
-                                                    <svg class="h-3.5 w-3.5 text-purple-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                        <!-- Left curly brace -->
-                                                        <path d="M8 3H6a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2 2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h2" />
-                                                        <!-- Right curly brace -->
-                                                        <path d="M16 3h2a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2 2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-2" />
-                                                        <!-- Central Config/Algorithm Symbol -->
-                                                        <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-                                                        <path d="M12 7v2M12 15v2M7 12h2M15 12h2" />
-                                                    </svg>
-                                                    <span>Header (Algorithm & Token Type)</span>
-                                                </label>
-                                                <textarea id="headerInput" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-xs text-white/90 placeholder:text-slate-400 focus:border-purple-500/50 focus:ring-0 h-[180px] font-mono" style="color: #ff6b6b;" spellcheck="false"></textarea>
-                                            </div>
-
-                                            <!-- Right side: Payload -->
-                                            <div class="flex flex-col gap-2">
+                                        <!-- Right Column: Decoded Header, Decoded Payload, Secret Verification -->
+                                        <div class="flex flex-col gap-6">
+                                            <!-- Decoded Header -->
+                                            <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-orange-500/30">
                                                 <div class="flex justify-between items-center">
-                                                    <label for="payloadInput" class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
-                                                        <svg class="h-3.5 w-3.5 text-purple-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                            <!-- Document Card outline with top-right fold -->
-                                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                            <path d="M14 2v6h6" />
-                                                            <!-- User/Claims Identity silhouette inside -->
-                                                            <circle cx="12" cy="13" r="2" />
-                                                            <path d="M8 18c0-1.5 1.5-2.5 4-2.5s4 1 4 2.5" />
-                                                        </svg>
-                                                        <span>Payload (Data / Claims)</span>
-                                                    </label>
-                                                    <span id="jwt-expiry-badge" class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded hidden"></span>
+                                                    <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                                                        <span class="material-symbols-outlined text-orange-400 text-sm" aria-hidden="true">settings_input_component</span>
+                                                        Decoded Header
+                                                    </span>
+                                                    <div class="flex p-0.5 bg-slate-950/80 rounded-md border border-white/5">
+                                                        <button id="jwt-header-tab-json" class="px-3 py-1 rounded text-[10px] font-bold transition-all duration-200 jwt-pill-active" onclick="CyberGuardJWTDebugger.setHeaderTab('json')">JSON</button>
+                                                        <button id="jwt-header-tab-claims" class="px-3 py-1 rounded text-[10px] font-bold transition-all duration-200 text-slate-400 hover:text-white" onclick="CyberGuardJWTDebugger.setHeaderTab('claims')">Claims Breakdown</button>
+                                                    </div>
                                                 </div>
-                                                <textarea id="payloadInput" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-xs text-white/90 placeholder:text-slate-400 focus:border-purple-500/50 focus:ring-0 h-[180px] font-mono" style="color: #a78bfa;" spellcheck="false"></textarea>
+                                                
+                                                <div id="jwt-header-json-view">
+                                                    <div id="jwt-header-decoded-syntax" class="w-full bg-slate-950/70 border border-white/5 rounded-lg p-3.5 text-xs font-mono min-h-[100px] max-h-[140px] overflow-y-auto leading-relaxed select-text" style="color: #ff9f43;"></div>
+                                                </div>
+                                                <div id="jwt-header-claims-view" class="hidden">
+                                                    <div id="jwt-header-claims-table" class="w-full text-xs overflow-y-auto max-h-[140px] select-text"></div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Decoded Payload -->
+                                            <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-purple-500/30">
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                                                        <span class="material-symbols-outlined text-purple-400 text-sm" aria-hidden="true">article</span>
+                                                        Decoded Payload
+                                                    </span>
+                                                    <div class="flex p-0.5 bg-slate-950/80 rounded-md border border-white/5">
+                                                        <button id="jwt-payload-tab-json" class="px-3 py-1 rounded text-[10px] font-bold transition-all duration-200 jwt-pill-active" onclick="CyberGuardJWTDebugger.setPayloadTab('json')">JSON</button>
+                                                        <button id="jwt-payload-tab-claims" class="px-3 py-1 rounded text-[10px] font-bold transition-all duration-200 text-slate-400 hover:text-white" onclick="CyberGuardJWTDebugger.setPayloadTab('claims')">Claims Breakdown</button>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div id="jwt-payload-json-view">
+                                                    <div id="jwt-payload-decoded-syntax" class="w-full bg-slate-950/70 border border-white/5 rounded-lg p-3.5 text-xs font-mono min-h-[140px] max-h-[180px] overflow-y-auto leading-relaxed select-text" style="color: #a78bfa;"></div>
+                                                </div>
+                                                <div id="jwt-payload-claims-view" class="hidden">
+                                                    <div id="jwt-payload-claims-table" class="w-full text-xs overflow-y-auto max-h-[180px] select-text"></div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Verification Setup -->
+                                            <div class="cyber-card p-6 flex flex-col gap-4 border-l-2 border-l-cyan-500/30">
+                                                <div class="flex justify-between items-center">
+                                                    <label for="jwt-decoder-secret" class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                                                        <span class="material-symbols-outlined text-cyan-400 text-sm" aria-hidden="true">vpn_key</span>
+                                                        <span>JWT Signature Verification (Optional)</span>
+                                                    </label>
+                                                    <div class="flex items-center gap-2 text-[10px] text-slate-400 uppercase font-bold">
+                                                        <span>BASE64URL ENCODED</span>
+                                                        <label class="switch relative inline-block w-8 h-4">
+                                                            <input type="checkbox" id="jwt-decoder-secret-base64" class="opacity-0 w-0 h-0" checked onchange="CyberGuardJWTDebugger.verifyDecoderSignature()">
+                                                            <span class="slider absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-slate-700 transition duration-300 rounded-full before:absolute before:content-[''] before:h-3 before:w-3 before:left-0.5 before:bottom-0.5 before:bg-white before:transition before:duration-300 before:rounded-full"></span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <p class="text-[11px] text-slate-400 -mt-1">Enter the secret used to sign the JWT below:</p>
+                                                <input type="text" id="jwt-decoder-secret" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-sm text-white/90 focus:border-purple-500/50 focus:ring-0 font-mono" style="color: #4fc3f7;" placeholder="Enter secret key..." value="" oninput="CyberGuardJWTDebugger.verifyDecoderSignature()" />
+                                                <div id="jwt-decoder-secret-status" class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
+                                                    <span class="material-symbols-outlined text-sm" aria-hidden="true">info</span>
+                                                    <span>Awaiting Secret</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- ENCODER VIEW (Hidden by default) -->
+                                    <div id="jwt-encoder-view" class="grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
+                                        <!-- Left Column: Inputs -->
+                                        <div class="flex flex-col gap-6">
+                                            <!-- Header Input -->
+                                            <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-orange-500/30">
+                                                <label for="jwt-encoder-header" class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                                                    <span class="material-symbols-outlined text-orange-400 text-sm" aria-hidden="true">settings_input_component</span>
+                                                    <span>Header</span>
+                                                </label>
+                                                <textarea id="jwt-encoder-header" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3.5 text-xs text-orange-300/90 focus:border-purple-500/50 focus:ring-0 h-[100px] font-mono leading-relaxed" spellcheck="false" oninput="CyberGuardJWTDebugger.encodeToken()"></textarea>
+                                                <div id="jwt-encoder-header-status" class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-green-400">
+                                                    <span class="material-symbols-outlined text-sm" aria-hidden="true">check_circle</span>
+                                                    <span>Valid header</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Payload Input -->
+                                            <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-purple-500/30">
+                                                <label for="jwt-encoder-payload" class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                                                    <span class="material-symbols-outlined text-purple-400 text-sm" aria-hidden="true">article</span>
+                                                    <span>Payload</span>
+                                                </label>
+                                                <textarea id="jwt-encoder-payload" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3.5 text-xs text-purple-300/90 focus:border-purple-500/50 focus:ring-0 h-[180px] font-mono leading-relaxed" spellcheck="false" oninput="CyberGuardJWTDebugger.encodeToken()"></textarea>
+                                                <div id="jwt-encoder-payload-status" class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-green-400">
+                                                    <span class="material-symbols-outlined text-sm" aria-hidden="true">check_circle</span>
+                                                    <span>Valid payload</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Secret Key Input -->
+                                            <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-cyan-500/30">
+                                                <div class="flex justify-between items-center">
+                                                    <label for="jwt-encoder-secret" class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                                                        <span class="material-symbols-outlined text-cyan-400 text-sm" aria-hidden="true">vpn_key</span>
+                                                        <span>Sign JWT</span>
+                                                    </label>
+                                                    <div class="flex items-center gap-2 text-[10px] text-slate-400 uppercase font-bold">
+                                                        <span>BASE64URL ENCODED</span>
+                                                        <label class="switch relative inline-block w-8 h-4">
+                                                            <input type="checkbox" id="jwt-encoder-secret-base64" class="opacity-0 w-0 h-0" checked onchange="CyberGuardJWTDebugger.encodeToken()">
+                                                            <span class="slider absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-slate-700 transition duration-300 rounded-full before:absolute before:content-[''] before:h-3 before:w-3 before:left-0.5 before:bottom-0.5 before:bg-white before:transition before:duration-300 before:rounded-full"></span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <input type="text" id="jwt-encoder-secret" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-sm text-white/90 focus:border-purple-500/50 focus:ring-0 font-mono" style="color: #4fc3f7;" placeholder="Enter secret key..." value="" oninput="CyberGuardJWTDebugger.encodeToken()" />
+                                                <div id="jwt-encoder-secret-status" class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
+                                                    <span class="material-symbols-outlined text-sm" aria-hidden="true">info</span>
+                                                    <span>Awaiting Secret</span>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <!-- Secret key and verification -->
-                                        <div class="flex flex-col gap-2">
+                                        <!-- Right Column: Encoded Output -->
+                                        <div class="cyber-card p-6 flex flex-col gap-4 border-l-2 border-l-purple-500/30">
                                             <div class="flex justify-between items-center">
-                                                <label for="secretInput" class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
-                                                    <svg class="h-3.5 w-3.5 text-purple-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                        <!-- Key outline -->
-                                                        <path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L14 9" />
-                                                        <!-- Signature wave at bottom representing HMAC signing -->
-                                                        <path d="M18 19c-2-1.5-4-1.5-6 0s-4 1.5-6 0" />
-                                                    </svg>
-                                                    <span>Signing Key (HMAC SHA-256 Secret)</span>
+                                                <label class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                                                    <span class="material-symbols-outlined text-purple-400 text-sm" aria-hidden="true">terminal</span>
+                                                    <span>Encoded JWT</span>
                                                 </label>
-                                                <div class="flex items-center gap-2 text-[10px] text-slate-400 uppercase font-bold">
-                                                    <span>Base64 encoded key</span>
-                                                    <!-- Simple Switch -->
-                                                    <label class="switch relative inline-block w-8 h-4">
-                                                        <input type="checkbox" id="secretBase64Toggle" class="opacity-0 w-0 h-0" checked>
-                                                        <span class="slider absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-slate-700 transition duration-300 rounded-full before:absolute before:content-[''] before:h-3 before:w-3 before:left-0.5 before:bottom-0.5 before:bg-white before:transition before:duration-300 before:rounded-full"></span>
-                                                    </label>
-                                                </div>
+                                                <button id="jwt-encoder-copy" class="hover:text-purple-400 transition-colors flex items-center gap-1 text-[10px] text-slate-400 uppercase font-bold" onclick="CyberGuardJWTDebugger.copyEncoderToken()" aria-label="Copy encoded JWT token">
+                                                    <span class="material-symbols-outlined text-[14px]" aria-hidden="true">content_copy</span>
+                                                    Copy
+                                                </button>
                                             </div>
-                                            <input type="text" id="secretInput" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-sm text-white/90 focus:border-purple-500/50 focus:ring-0 font-mono" style="color: #4fc3f7;" placeholder="Enter secret key..." value="" />
+                                            <!-- Color-coded output token box -->
+                                            <div id="jwt-encoder-token" class="jwt-token-display h-[360px] select-text"></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <!-- END HASH TOOLS TAB -->
 
                             <!-- ============================================================ -->
                             <!-- AI ASSISTANT TAB -->
                             <!-- ============================================================ -->
                             <div id="ai-assistant" class="tab-pane hidden">
                                 <div class="ai-chat-wrapper">
-                                    <div class="ai-chat-header">
+                                    <!-- Chat History Sidebar -->
+                                    <div class="ai-chat-sidebar">
+                                        <div class="ai-new-chat-container">
+                                            <button id="ai-new-chat-btn" class="ai-new-chat-btn">
+                                                <span class="material-symbols-outlined text-[16px]">add</span>
+                                                <span>New Chat</span>
+                                            </button>
+                                        </div>
+                                        <div class="ai-history-section-title">Previous Chats</div>
+                                        <div id="ai-chat-history-list" class="ai-chat-history-list">
+                                            <!-- Dynamically populated chats -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Main Chat Area -->
+                                    <div class="ai-chat-main-container">
+                                        <div class="ai-chat-header">
                                         <div class="ai-chat-header-left">
                                             <div class="ai-avatar-ring">
                                                 <div class="ai-avatar">
@@ -3303,70 +3522,155 @@
                                                     CyberGuard AI Assistant
                                                 </h3>
                                                 <p class="ai-chat-subtitle">
-                                                    <span
-                                                        class="ai-status-dot"
-                                                    ></span
-                                                    >Powered by OpenRouter ·
-                                                    Llama 4 Scout
+                                                    <span class="ai-status-dot"></span>
+                                                    <span id="ai-chat-engine-label">Gemini • Active</span>
                                                 </p>
                                             </div>
                                         </div>
-                                        <button
-                                            id="ai-clear-btn"
-                                            class="ai-clear-btn"
-                                            title="Clear chat history"
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke-width="1.5"
-                                                stroke="currentColor"
+                                        <div class="flex items-center gap-2">
+                                            <button
+                                                id="ai-settings-btn"
+                                                class="ai-settings-btn"
+                                                title="AI Config Settings"
                                             >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-                                                />
-                                            </svg>
-                                            Clear Chat
-                                        </button>
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke-width="2"
+                                                    stroke="currentColor"
+                                                    class="w-4 h-4"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.43l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"
+                                                    />
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                                                    />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                id="ai-clear-btn"
+                                                class="ai-clear-btn"
+                                                title="Clear chat history"
+                                            >
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke-width="1.5"
+                                                    stroke="currentColor"
+                                                >
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                                                    />
+                                                </svg>
+                                                Clear Chat
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div
-                                        class="ai-suggestions"
-                                        id="ai-suggestions"
-                                    >
-                                        <button
-                                            class="ai-chip"
-                                            data-question="What tools are available on this dashboard?"
-                                        >
-                                            🔍 Available tools
-                                        </button>
-                                        <button
-                                            class="ai-chip"
-                                            data-question="How does the Port Scanner work?"
-                                        >
-                                            🔌 Port Scanner
-                                        </button>
-                                        <button
-                                            class="ai-chip"
-                                            data-question="What is phishing and how can I detect it?"
-                                        >
-                                            🎣 Phishing detection
-                                        </button>
-                                        <button
-                                            class="ai-chip"
-                                            data-question="How do I use the Hash Generator?"
-                                        >
-                                            🔐 Hash Generator
-                                        </button>
-                                        <button
-                                            class="ai-chip"
-                                            data-question="What is SSL/TLS and why does it matter?"
-                                        >
-                                            🔒 SSL/TLS explained
-                                        </button>
+
+                                    <!-- AI SETTINGS DRAWER PANEL -->
+                                    <div id="ai-settings-panel" class="ai-settings-panel hidden">
+                                        <h4 class="ai-settings-title flex items-center gap-2 text-white font-bold text-sm mb-3">
+                                            <span class="material-symbols-outlined text-[16px] text-purple-400">tune</span>
+                                            Assistant Configuration
+                                        </h4>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <!-- Provider Select -->
+                                            <div class="flex flex-col gap-1.5">
+                                                <label for="ai-provider-select" class="ai-settings-label">AI Engine Provider</label>
+                                                <select id="ai-provider-select" class="ai-select">
+                                                    <option value="gemini">Google Gemini (Built-in)</option>
+                                                    <option value="openrouter">OpenRouter API</option>
+                                                    <option value="groq">Groq API</option>
+                                                    <option value="offline">Offline Fallback Agent</option>
+                                                </select>
+                                            </div>
+                                            <!-- Model Presets -->
+                                            <div class="flex flex-col gap-1.5">
+                                                <label for="ai-model-select" class="ai-settings-label">Model Preset</label>
+                                                <select id="ai-model-select" class="ai-select">
+                                                    <!-- Gemini values will be injected dynamically -->
+                                                </select>
+                                                <input type="text" id="ai-model-custom" class="ai-custom-input hidden mt-1.5" placeholder="Enter custom model identifier..." />
+                                            </div>
+                                            <!-- API Key Input -->
+                                            <div class="flex flex-col gap-1.5 md:col-span-2" id="ai-key-container">
+                                                <label for="ai-key-input" class="ai-settings-label">API Access Key</label>
+                                                <div class="relative flex items-center">
+                                                    <input type="password" id="ai-key-input" class="ai-custom-input pr-10 w-full" placeholder="Enter your provider API Key..." />
+                                                    <button type="button" id="ai-key-toggle-btn" class="absolute right-3 text-slate-400 hover:text-white transition-colors cursor-pointer select-none">
+                                                        <span class="material-symbols-outlined text-[16px]">visibility</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <!-- Custom System Prompt -->
+                                            <div class="flex flex-col gap-1.5 md:col-span-2">
+                                                <label for="ai-prompt-input" class="ai-settings-label">Custom System Persona Instructions (Optional)</label>
+                                                <textarea id="ai-prompt-input" class="ai-custom-textarea w-full" rows="2" placeholder="Modify assistant persona, style, or focus..."></textarea>
+                                            </div>
+                                            <!-- Temperature -->
+                                            <div class="flex flex-col gap-1 md:col-span-2">
+                                                <div class="flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                                    <span>Creativity Temperature</span>
+                                                    <span id="ai-temp-val" class="text-purple-400 font-mono text-xs">0.7</span>
+                                                </div>
+                                                <input type="range" id="ai-temp-input" min="0" max="1" step="0.1" value="0.7" class="w-full accent-purple-500 cursor-pointer h-1 bg-slate-800 rounded-lg mt-1" />
+                                            </div>
+                                        </div>
+                                        <div class="flex justify-end gap-2.5 mt-4 pt-3 border-t border-white/5">
+                                            <button id="ai-settings-reset-btn" class="px-4 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white bg-slate-900/50 hover:bg-slate-800/80 transition-colors">
+                                                Reset Defaults
+                                            </button>
+                                            <button id="ai-settings-save-btn" class="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 transition-colors shadow-md shadow-purple-950/30">
+                                                Save Settings
+                                            </button>
+                                        </div>
                                     </div>
+
+                                    <!-- CHIPS/SUGGESTIONS WRAPPER -->
+                                    <div class="ai-suggestions-container">
+                                        <div class="ai-suggestions" id="ai-suggestions">
+                                            <button
+                                                class="ai-chip"
+                                                data-question="What tools are available on this dashboard?"
+                                            >
+                                                <svg class="w-3.5 h-3.5 mr-1.5 text-purple-400 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>Available tools
+                                            </button>
+                                            <button
+                                                class="ai-chip"
+                                                data-question="How does the Port Scanner work?"
+                                            >
+                                                <svg class="w-3.5 h-3.5 mr-1.5 text-purple-400 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Port Scanner
+                                            </button>
+                                            <button
+                                                class="ai-chip"
+                                                data-question="What is phishing and how can I detect it?"
+                                            >
+                                                <svg class="w-3.5 h-3.5 mr-1.5 text-purple-400 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>Phishing detection
+                                            </button>
+                                            <button
+                                                class="ai-chip"
+                                                data-question="How do I use the Hash Generator?"
+                                            >
+                                                <svg class="w-3.5 h-3.5 mr-1.5 text-purple-400 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>Hash Generator
+                                            </button>
+                                            <button
+                                                class="ai-chip"
+                                                data-question="What is SSL/TLS and why does it matter?"
+                                            >
+                                                <svg class="w-3.5 h-3.5 mr-1.5 text-purple-400 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>SSL/TLS explained
+                                            </button>
+                                        </div>
+                                    </div>
+
                                     <div
                                         id="ai-messages"
                                         class="ai-messages"
@@ -3400,6 +3704,10 @@
                                                 </svg>
                                             </button>
                                         </div>
+                                        <div class="ai-disclaimer text-center">
+                                            CyberGuard Assistant can operate your parent dashboard via natural language commands (e.g. "Switch to JWT tab").
+                                        </div>
+                                    </div>
                                     </div>
                                 </div>
                             </div>
@@ -5156,6 +5464,8 @@
         <script src="js/dashboard-integration.js"></script>
         <!-- Risk Gauge Dynamic Component -->
         <script src="js/risk-gauge.js"></script>
+        <!-- Sidebar System & Scans Health widget -->
+        <script src="js/sidebar-system-health.js"></script>
 
         <!-- Settings Panel tabs scripts -->
         <script src="js/profile-settings.js"></script>
@@ -5409,6 +5719,12 @@
                         "[Subscription] Fetched subscription:",
                         subscription,
                     );
+
+                    // Cache globally & dispatch event
+                    window.currentSubscription = subscription;
+                    document.dispatchEvent(new CustomEvent("cyberguard:subscriptionUpdated", {
+                        detail: { subscription: subscription }
+                    }));
 
                     // Hide loading
                     if (loadingEl) loadingEl.classList.add("hidden");

@@ -1009,7 +1009,7 @@ const CyberNotify = {
     this._currentCallback = null;
   },
 
-  _show(message, mode, callback, type) {
+  _show(message, mode, callback, type, defaultValue = "") {
     const modal = document.getElementById("cyber-notify-modal");
     const iconEl = document.getElementById("cyber-notify-icon");
     const msgEl = document.getElementById("cyber-notify-message");
@@ -1019,6 +1019,30 @@ const CyberNotify = {
     if (!modal || !iconEl || !msgEl || !confirmBtn || !cancelBtn) {
       console.error("CyberNotify: Required DOM elements not found");
       return;
+    }
+
+    // Dynamic creation of text input for prompt mode if not present
+    let inputEl = document.getElementById("cyber-notify-input");
+    if (!inputEl) {
+      inputEl = document.createElement("input");
+      inputEl.id = "cyber-notify-input";
+      inputEl.type = "text";
+      inputEl.className = "w-full bg-slate-950/80 border border-white/15 focus:border-purple-500/80 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none mt-1 mb-5 transition-colors font-sans text-center shadow-inner shadow-black/40";
+      const actions = document.getElementById("cyber-notify-actions");
+      if (actions) {
+        actions.parentNode.insertBefore(inputEl, actions);
+      }
+    }
+
+    if (mode === "prompt") {
+      inputEl.value = defaultValue || "";
+      inputEl.style.display = "block";
+      setTimeout(() => {
+        inputEl.focus();
+        inputEl.select();
+      }, 100);
+    } else {
+      inputEl.style.display = "none";
     }
 
     const { icon, color } = this._resolveIcon(type);
@@ -1046,17 +1070,40 @@ const CyberNotify = {
       const confirmHandler = () => {
         confirmBtn.removeEventListener("click", confirmHandler);
         cancelBtn.removeEventListener("click", cancelHandler);
+        if (mode === "prompt") {
+          inputEl.removeEventListener("keydown", inputKeydownHandler);
+        }
         this._hide();
-        if (typeof callback === "function") callback(true);
+        if (typeof callback === "function") {
+          callback(mode === "prompt" ? inputEl.value : true);
+        }
       };
       const cancelHandler = () => {
         confirmBtn.removeEventListener("click", confirmHandler);
         cancelBtn.removeEventListener("click", cancelHandler);
+        if (mode === "prompt") {
+          inputEl.removeEventListener("keydown", inputKeydownHandler);
+        }
         this._hide();
-        if (typeof callback === "function") callback(false);
+        if (typeof callback === "function") {
+          callback(mode === "prompt" ? null : false);
+        }
       };
+      const inputKeydownHandler = (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          confirmHandler();
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          cancelHandler();
+        }
+      };
+
       confirmBtn.addEventListener("click", confirmHandler);
       cancelBtn.addEventListener("click", cancelHandler);
+      if (mode === "prompt") {
+        inputEl.addEventListener("keydown", inputKeydownHandler);
+      }
     }
 
     modal.classList.remove("hidden");
@@ -1076,6 +1123,15 @@ const CyberNotify = {
       return;
     }
     this._show(message, "confirm", callback, options.type);
+  },
+
+  prompt(message, defaultValue, callback, options = {}) {
+    if (typeof callback !== "function") {
+      console.warn("CyberNotify.prompt: callback is not a function");
+      this._hide();
+      return;
+    }
+    this._show(message, "prompt", callback, options.type, defaultValue);
   },
 };
 
@@ -10853,53 +10909,69 @@ document.addEventListener("DOMContentLoaded", () => {
       logResult(
         new Date(),
         "System",
-        "🔄 New scan session started. Enter a target to begin.",
+        "New scan session started. Enter a target to begin.",
         "system",
       );
     });
   }
 
-  // Header Export PDF — delegates to the footer export-pdf-btn
-  const headerExportPdfBtn = document.getElementById("header-export-pdf-btn");
-  if (headerExportPdfBtn) {
-    headerExportPdfBtn.addEventListener("click", () => {
-      document.getElementById("export-pdf-btn")?.click();
-    });
+  /* ================================================================
+  AI ASSISTANT MODULE
+  ================================================================ */
+(function initAIAssistant() {
+  if (window.AIAssistantInitialized) return;
+  window.AIAssistantInitialized = true;
+
+  // Pre-saved official Gemini API key for instant out-of-the-box operation
+  const DEFAULT_GEMINI_KEY = "AIzaSyBoNolMHWKMkmuoQmk8ajNLguv4k-3qcIs";
+  
+  // Initialize default localStorage settings on first load
+  if (!localStorage.getItem("cg_ai_provider")) {
+    localStorage.setItem("cg_ai_provider", "gemini");
+  }
+  if (!localStorage.getItem("cg_ai_gemini_key")) {
+    localStorage.setItem("cg_ai_gemini_key", DEFAULT_GEMINI_KEY);
+  }
+  if (!localStorage.getItem("cg_ai_gemini_model")) {
+    localStorage.setItem("cg_ai_gemini_model", "gemini-1.5-flash");
+  }
+  if (!localStorage.getItem("cg_ai_temp")) {
+    localStorage.setItem("cg_ai_temp", "0.7");
   }
 
-  // Show welcome popup
-  // Note: Sidebar is now automatically initialized by dashboard.html
-  setTimeout(() => {
-    showWelcomePopup();
-  }, 50);
-});
+  const SYSTEM_PROMPT = `You are CyberGuard Pro AI, a premium, elite cybersecurity copilot built directly into the CyberGuard Security Dashboard.
+Your primary role is to help security engineers, developers, and administrators understand and operate the dashboard's tools:
+- Network Scanner: Reverse DNS, IP Geolocation, WHOIS, Port Scanner (TCP/UDP), Threat Intelligence (VirusTotal/AbuseIPDB)
+- Web Security: Phishing URL Analyser, XSS Tester, SSL/TLS Checker, DNS Spoofing Detector
+- Hash & Crypto: MD5/SHA-1/SHA-256 Hashing, File Integrity verification, Password Strength analysis
+- JWT Debugger: Decodes & verifies JSON Web Tokens (algorithms HS256, RS256, ES256, etc.) and signs new custom tokens.
 
-/* ================================================================
-   AI ASSISTANT MODULE
-   ================================================================
+You answer general cybersecurity questions with precision, conciseness, and depth. Use markdown bullet points, tables, and code blocks as appropriate. Keep answers practical and actionable. CRITICAL: Do NOT use any emojis, symbols, or emoticon characters (e.g. 🔍, 🌐, 🔒, 🛡️, etc.) in your response text under any circumstances. Always use pure markdown, plain text, or inline SVGs.
 
-*/
-(function initAIAssistant() {
-  // OpenRouter free model (Llama 4 Scout via Meta)
-  const OPENROUTER_API_KEY = "";
-  const OPENROUTER_MODEL = "";
+[DASHBOARD AUTOPILOT CAPABILITY]
+You can operate the dashboard for the user! To perform dashboard operations, append action command tags at the very end of your response. You can output multiple actions if needed. Supported tags:
+1. Switch to a tab: [[ACTION: switch_tab(tabId)]]
+   - Valid tabIds: "network-tools", "web-security", "hash-tools", "jwt-debugger", "threat-intel", "projects"
+2. Fill a target scan input: [[ACTION: fill_input(elementId, value)]]
+   - Valid elementIds: "target-ip" (for Network tab), "target-url" (for Web tab)
+3. Launch a scan immediately: [[ACTION: run_scan(type, target)]]
+   - type is either "network" or "web". target is the domain or IP address.
+4. Clear all results: [[ACTION: clear_results()]]
+5. Open Credentials Modal: [[ACTION: open_api_keys()]]
+6. Select or deselect a tool card: [[ACTION: select_tool(toolId, isSelected)]]
+   - toolId is one of the following:
+     - For Network tab: "port-scan-btn", "tcp-scan-btn", "udp-scan-btn", "ip-geo-btn", "reverse-dns-btn", "whois-btn", "threat-intel-btn"
+     - For Web Security tab: "xss-btn", "ssl-btn", "phishing-btn", "dns-spoof-btn"
+   - isSelected is "true" to select it, or "false" to deselect it.
+7. Select ONLY one tool in its tab (deselecting all other tools in that tab): [[ACTION: select_only_tool(toolId)]]
+   - toolId is one of the tool IDs listed above.
 
-  // Groq free model (alternative — uncomment USE_GROQ to switch)
-  const GROQ_API_KEY = "";
-  const GROQ_MODEL = "";
+Examples:
+- "Sure! I will switch you to the JWT tab now. [[ACTION: switch_tab(\"jwt-debugger\")]]"
+- "Let me load up example.com and run a web scan for you. [[ACTION: run_scan(\"web\", \"example.com\")]]"
+- "I'll run a WHOIS lookup for 8.8.8.8. I'm switching to the Network tools tab, selecting only WHOIS, and starting the scan. [[ACTION: switch_tab(\"network-tools\")]] [[ACTION: select_only_tool(\"whois-btn\")]] [[ACTION: run_scan(\"network\", \"8.8.8.8\")]]"
 
-  // Set to true to use Groq instead of OpenRouter
-  const USE_GROQ = false;
-
-  const SYSTEM_PROMPT = `You are a helpful AI assistant built into CyberGuard, a cybersecurity dashboard.
-You help users understand and use the dashboard's tools:
-- Network Scanner: reverse DNS, IP geolocation, WHOIS lookup, port scanner (TCP/UDP), threat intelligence
-- Web Security: URL phishing analyser, XSS tester, SSL/TLS checker, DNS spoofing detector, VirusTotal integration
-- Hash & Crypto: MD5/SHA hash generation, file hashing, password strength analyser
-
-You also answer general cybersecurity questions.
-Keep answers concise, clear, and practical. Use bullet points for lists.
-If asked about something unrelated to cybersecurity, politely redirect.`;
+Always align dashboard actions with what the user requests! Explain briefly what action you are taking. Use the dashboard state context provided in the prompt to make intelligent context-aware replies.`;
 
   // ─── DOM REFERENCES ─────────────────────────────────────────────
   const messagesEl = document.getElementById("ai-messages");
@@ -10907,6 +10979,24 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
   const sendBtn = document.getElementById("ai-send-btn");
   const clearBtn = document.getElementById("ai-clear-btn");
   const suggestEl = document.getElementById("ai-suggestions");
+  const settingsBtn = document.getElementById("ai-settings-btn");
+  const settingsPanel = document.getElementById("ai-settings-panel");
+  const engineLabel = document.getElementById("ai-chat-engine-label");
+  const historyListEl = document.getElementById("ai-chat-history-list");
+  const newChatBtn = document.getElementById("ai-new-chat-btn");
+
+  // Settings Panel Inputs
+  const providerSelect = document.getElementById("ai-provider-select");
+  const modelSelect = document.getElementById("ai-model-select");
+  const customModelInput = document.getElementById("ai-model-custom");
+  const keyInput = document.getElementById("ai-key-input");
+  const keyContainer = document.getElementById("ai-key-container");
+  const keyToggle = document.getElementById("ai-key-toggle-btn");
+  const promptInput = document.getElementById("ai-prompt-input");
+  const tempInput = document.getElementById("ai-temp-input");
+  const tempValue = document.getElementById("ai-temp-val");
+  const saveSettingsBtn = document.getElementById("ai-settings-save-btn");
+  const resetSettingsBtn = document.getElementById("ai-settings-reset-btn");
 
   // Guard: elements must exist
   if (!messagesEl || !inputEl || !sendBtn) return;
@@ -10914,19 +11004,394 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
   // ─── STATE ──────────────────────────────────────────────────────
   let conversationHistory = []; // { role: "user"|"assistant", content: string }
   let isWaiting = false;
+  let currentChatId = null;
+  let chatSessions = {};
+
+  // Offline Interactive Wizards state machine
+  let activeWizard = null; // "phishing", "password", "port"
+  let wizardStep = 0;
+  let wizardData = {};
+
+  // Preset model configurations
+  const MODEL_PRESETS = {
+    gemini: [
+      { value: "gemini-1.5-flash", text: "gemini-1.5-flash (Recommended)" },
+      { value: "gemini-1.5-pro", text: "gemini-1.5-pro (High intelligence)" },
+      { value: "gemini-2.0-flash-exp", text: "gemini-2.0-flash-exp" }
+    ],
+    openrouter: [
+      { value: "meta-llama/llama-3-8b-instruct:free", text: "Llama 3 8B (Free Presets)" },
+      { value: "mistralai/mistral-7b-instruct:free", text: "Mistral 7B (Free Presets)" },
+      { value: "google/gemini-2.0-flash-exp:free", text: "Gemini 2.0 Flash (Free)" },
+      { value: "custom", text: "Custom Model..." }
+    ],
+    groq: [
+      { value: "llama-3.1-8b-instant", text: "Llama 3.1 8B (Ultra-fast)" },
+      { value: "mixtral-8x7b-32768", text: "Mixtral 8x7b" },
+      { value: "custom", text: "Custom Model..." }
+    ],
+    offline: [
+      { value: "local", text: "Local Wizards (Zero API cost)" }
+    ]
+  };
 
   // ─── INIT ───────────────────────────────────────────────────────
   showWelcome();
   setupInput();
   setupButtons();
+  loadConfigurations();
+  updateEngineLabel();
+
+  // ─── CHAT SESSIONS HISTORY ──────────────────────────────────────
+  function loadChatSessions() {
+    try {
+      const saved = localStorage.getItem("cyberguard_ai_chats");
+      if (saved) {
+        chatSessions = JSON.parse(saved);
+      } else {
+        chatSessions = {};
+      }
+    } catch (e) {
+      console.error("Failed to load chat sessions from localStorage:", e);
+      chatSessions = {};
+    }
+  }
+
+  function saveChatSessions() {
+    try {
+      localStorage.setItem("cyberguard_ai_chats", JSON.stringify(chatSessions));
+    } catch (e) {
+      console.error("Failed to save chat sessions to localStorage:", e);
+    }
+  }
+
+  function renderChatHistoryList() {
+    if (!historyListEl) return;
+    historyListEl.innerHTML = "";
+
+    const sortedSessions = Object.values(chatSessions).sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return b.timestamp - a.timestamp;
+    });
+
+    if (sortedSessions.length === 0) {
+      const emptyDiv = document.createElement("div");
+      emptyDiv.className = "text-[10px] text-center text-slate-500 py-6 italic";
+      emptyDiv.textContent = "No previous chats";
+      historyListEl.appendChild(emptyDiv);
+      return;
+    }
+
+    sortedSessions.forEach(session => {
+      const item = document.createElement("div");
+      item.className = "ai-history-item" + (session.id === currentChatId ? " active" : "");
+      item.dataset.chatId = session.id;
+
+      // Click event for loading the session
+      item.addEventListener("click", () => {
+        loadChatSession(session.id);
+      });
+
+      // Icon (Pin or Chat)
+      const chatIcon = document.createElement("span");
+      if (session.isPinned) {
+        chatIcon.className = "material-symbols-outlined text-[16px] mr-2 flex-shrink-0 text-purple-400";
+        chatIcon.textContent = "push_pin";
+      } else {
+        chatIcon.className = "material-symbols-outlined text-[16px] mr-2 flex-shrink-0 opacity-60";
+        chatIcon.textContent = "chat";
+      }
+      item.appendChild(chatIcon);
+
+      // Title
+      const titleSpan = document.createElement("span");
+      titleSpan.className = "ai-history-item-title";
+      titleSpan.textContent = session.title || "New Chat";
+      item.appendChild(titleSpan);
+
+      // Menu / Dropdown Container
+      const menuContainer = document.createElement("div");
+      menuContainer.className = "ai-history-item-menu-container";
+
+      const menuBtn = document.createElement("button");
+      menuBtn.className = "ai-history-item-menu-btn";
+      menuBtn.title = "Chat actions";
+      menuBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        
+        // Close all other dropdowns
+        document.querySelectorAll(".ai-history-dropdown").forEach(d => {
+          if (d !== dropdown) d.classList.add("hidden");
+        });
+        document.querySelectorAll(".ai-history-item-menu-container").forEach(c => {
+          if (c !== menuContainer) c.classList.remove("open");
+        });
+
+        dropdown.classList.toggle("hidden");
+        menuContainer.classList.toggle("open");
+      });
+
+      const menuIcon = document.createElement("span");
+      menuIcon.className = "material-symbols-outlined text-[16px]";
+      menuIcon.textContent = "more_horiz";
+      menuBtn.appendChild(menuIcon);
+      menuContainer.appendChild(menuBtn);
+
+      const dropdown = document.createElement("div");
+      dropdown.className = "ai-history-dropdown hidden";
+
+      const renameBtn = document.createElement("button");
+      renameBtn.className = "ai-dropdown-action";
+      renameBtn.innerHTML = `<span class="material-symbols-outlined">edit</span> Rename`;
+      renameBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dropdown.classList.add("hidden");
+        menuContainer.classList.remove("open");
+        
+        CyberNotify.prompt("Rename Chat Session:", session.title, (newTitle) => {
+          if (newTitle !== null) {
+            const cleanedTitle = newTitle.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}\uFE0F\uFE0E]/gu, "").trim();
+            session.title = cleanedTitle || session.title;
+            saveChatSessions();
+            renderChatHistoryList();
+          }
+        });
+      });
+      dropdown.appendChild(renameBtn);
+
+      const pinBtn = document.createElement("button");
+      pinBtn.className = "ai-dropdown-action";
+      pinBtn.innerHTML = session.isPinned 
+        ? `<span class="material-symbols-outlined">keep_off</span> Unpin`
+        : `<span class="material-symbols-outlined">push_pin</span> Pin`;
+      pinBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dropdown.classList.add("hidden");
+        menuContainer.classList.remove("open");
+        
+        session.isPinned = !session.isPinned;
+        saveChatSessions();
+        renderChatHistoryList();
+      });
+      dropdown.appendChild(pinBtn);
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "ai-dropdown-action action-delete";
+      deleteBtn.innerHTML = `<span class="material-symbols-outlined">delete</span> Delete`;
+      deleteBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dropdown.classList.add("hidden");
+        menuContainer.classList.remove("open");
+        
+        CyberNotify.confirm("Are you sure you want to delete this chat?", (confirmed) => {
+          if (confirmed) {
+            deleteChatSession(session.id);
+          }
+        }, { type: "warning" });
+      });
+      dropdown.appendChild(deleteBtn);
+
+      menuContainer.appendChild(dropdown);
+      item.appendChild(menuContainer);
+      historyListEl.appendChild(item);
+    });
+  }
+
+  function loadChatSession(chatId) {
+    const session = chatSessions[chatId];
+    if (!session) return;
+
+    currentChatId = chatId;
+    conversationHistory = session.history || [];
+    
+    // Clear and render all messages
+    messagesEl.innerHTML = "";
+    activeWizard = null;
+
+    if (conversationHistory.length === 0) {
+      showWelcome();
+      if (suggestEl) suggestEl.parentElement.style.display = "block";
+    } else {
+      if (suggestEl) suggestEl.parentElement.style.display = "none";
+      conversationHistory.forEach(msg => {
+        appendMessage(msg.role === "model" ? "ai" : msg.role, msg.content);
+      });
+      // Scroll to bottom
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    renderChatHistoryList();
+  }
+
+  function startNewChat() {
+    currentChatId = null;
+    conversationHistory = [];
+    activeWizard = null;
+    messagesEl.innerHTML = "";
+    showWelcome();
+    if (suggestEl) suggestEl.parentElement.style.display = "block";
+    renderChatHistoryList();
+  }
+
+  function createNewChatSession(firstMsgText) {
+    const chatId = "chat_" + Date.now();
+    // Clean text and generate title
+    const titleText = firstMsgText.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}\uFE0F\uFE0E]/gu, "").trim();
+    const title = titleText.length > 25 ? titleText.slice(0, 25) + "..." : titleText || "New Chat";
+
+    chatSessions[chatId] = {
+      id: chatId,
+      title: title,
+      history: [],
+      timestamp: Date.now()
+    };
+
+    currentChatId = chatId;
+    conversationHistory = [];
+    saveChatSessions();
+    renderChatHistoryList();
+    return chatId;
+  }
+
+  function deleteChatSession(chatId) {
+    delete chatSessions[chatId];
+    saveChatSessions();
+    if (currentChatId === chatId) {
+      startNewChat();
+    } else {
+      renderChatHistoryList();
+    }
+  }
+
+  // Initialize Chat History
+  loadChatSessions();
+
+  // Close any open chat history dropdowns on clicking outside
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".ai-history-item-menu-container")) {
+      document.querySelectorAll(".ai-history-dropdown").forEach(d => d.classList.add("hidden"));
+      document.querySelectorAll(".ai-history-item-menu-container").forEach(c => c.classList.remove("open"));
+    }
+  });
+
+  const sortedSessions = Object.values(chatSessions).sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return b.timestamp - a.timestamp;
+  });
+  if (sortedSessions.length > 0) {
+    loadChatSession(sortedSessions[0].id);
+  } else {
+    startNewChat();
+  }
+
+  // ─── CONTEXT GATHERING ──────────────────────────────────────────
+  function gatherSystemContext() {
+    let projectDetails = "No active project loaded.";
+    if (window.projectManager && window.projectManager.projects && window.projectManager.projects.length > 0) {
+      const list = window.projectManager.projects;
+      const details = list.map(p => `- ${p.name} (Risk Score: ${p.risk_score ? Number(p.risk_score).toFixed(1) : "0.0"}, Targets: ${p.targets_count ?? 0})`).join("\n");
+      projectDetails = `Active projects in database:\n${details}`;
+    }
+
+    const targetDetails = `Current Active Scan Target: ${currentScanTarget || "None specified yet."}\nDashboard scan processing status: ${isRunning ? "ACTIVE" : "IDLE"}`;
+
+    let findingsDetails = "No current findings inside results display table.";
+    if (resultsData && resultsData.length > 0) {
+      const threats = resultsData.filter(r => r.status === "threat").length;
+      const warnings = resultsData.filter(r => r.status === "warning").length;
+      const safe = resultsData.filter(r => r.status === "safe").length;
+      const list = resultsData.slice(0, 10).map(r => `[${r.status.toUpperCase()}] ${r.tool}: ${r.message.slice(0, 80)}`).join("\n");
+      findingsDetails = `Current findings count: ${resultsData.length} (${threats} threats, ${warnings} warnings, ${safe} safe). Visible details:\n${list}`;
+    }
+
+    let userDetails = "Guest User (Offline sandbox)";
+    if (window.authManager && window.authManager.currentUser) {
+      const u = window.authManager.currentUser;
+      userDetails = `Active Session User: ${u.full_name || u.name} (${u.email}), Role: ${u.role || "member"}`;
+    }
+
+    let currentTab = "unknown";
+    document.querySelectorAll(".tab-pane").forEach(pane => {
+      if (!pane.classList.contains("hidden")) currentTab = pane.id;
+    });
+
+    return `
+[REAL-TIME DASHBOARD CONTEXT]
+- Active Tab: ${currentTab}
+- ${userDetails}
+- ${targetDetails}
+- ${projectDetails}
+- ${findingsDetails}
+`;
+  }
+
+  // ─── CONFIGURATION STORAGE ──────────────────────────────────────
+  function loadConfigurations() {
+    const provider = localStorage.getItem("cg_ai_provider") || "gemini";
+    providerSelect.value = provider;
+    
+    // Repopulate presets select
+    populateModelPresets(provider);
+
+    const savedKey = localStorage.getItem("cg_ai_" + provider + "_key") || "";
+    keyInput.value = savedKey;
+
+    const savedModel = localStorage.getItem("cg_ai_" + provider + "_model") || MODEL_PRESETS[provider][0].value;
+    if (MODEL_PRESETS[provider].some(m => m.value === savedModel)) {
+      modelSelect.value = savedModel;
+      customModelInput.classList.add("hidden");
+    } else if (provider !== "offline") {
+      modelSelect.value = "custom";
+      customModelInput.value = savedModel;
+      customModelInput.classList.remove("hidden");
+    }
+
+    // Toggle key visual container based on provider
+    if (provider === "offline") {
+      keyContainer.classList.add("hidden");
+    } else {
+      keyContainer.classList.remove("hidden");
+    }
+
+    promptInput.value = localStorage.getItem("cg_ai_system_prompt") || "";
+    
+    const temp = localStorage.getItem("cg_ai_temp") || "0.7";
+    tempInput.value = temp;
+    tempValue.textContent = temp;
+  }
+
+  function populateModelPresets(provider) {
+    modelSelect.innerHTML = "";
+    const list = MODEL_PRESETS[provider] || [];
+    list.forEach(m => {
+      const opt = document.createElement("option");
+      opt.value = m.value;
+      opt.textContent = m.text;
+      modelSelect.appendChild(opt);
+    });
+  }
+
+  function updateEngineLabel() {
+    if (engineLabel) {
+      const p = localStorage.getItem("cg_ai_provider") || "gemini";
+      const model = localStorage.getItem("cg_ai_" + p + "_model") || "default";
+      engineLabel.textContent = `${p.toUpperCase()} (${model.split("/").pop()}) • Active`;
+    }
+  }
 
   // ─── WELCOME ────────────────────────────────────────────────────
   function showWelcome() {
     messagesEl.innerHTML = `
       <div class="ai-welcome-card">
-        <span class="ai-welcome-icon">🛡️</span>
-        <h4>CyberGuard AI Assistant</h4>
-        <p>Ask me anything about cybersecurity or the tools available on this dashboard. Click a suggestion below to get started!</p>
+        <span class="ai-welcome-icon">
+          <svg class="w-10 h-10 mx-auto mb-2 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </span>
+        <h4>CyberGuard Pro AI Copilot</h4>
+        <p>Ask me cybersecurity questions, explain dashboard results, or command me to control your tools! Try checking out these presets below or open settings to hook your keys.</p>
       </div>`;
   }
 
@@ -10945,15 +11410,134 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
     });
   }
 
-  // ─── BUTTON WIRING ──────────────────────────────────────────────
   function setupButtons() {
     sendBtn.addEventListener("click", handleSend);
 
+    if (newChatBtn) {
+      newChatBtn.addEventListener("click", startNewChat);
+    }
+
     clearBtn.addEventListener("click", () => {
+      if (currentChatId && chatSessions[currentChatId]) {
+        chatSessions[currentChatId].history = [];
+        chatSessions[currentChatId].timestamp = Date.now();
+        saveChatSessions();
+      }
       conversationHistory = [];
+      activeWizard = null;
       showWelcome();
-      if (suggestEl) suggestEl.style.display = "flex";
+      if (suggestEl) suggestEl.parentElement.style.display = "block";
+      renderChatHistoryList();
     });
+
+    // Toggle settings panel
+    if (settingsBtn && settingsPanel) {
+      settingsBtn.addEventListener("click", () => {
+        settingsPanel.classList.toggle("hidden");
+      });
+    }
+
+    // Toggle key visibility
+    if (keyToggle && keyInput) {
+      keyToggle.addEventListener("click", () => {
+        if (keyInput.type === "password") {
+          keyInput.type = "text";
+          keyToggle.querySelector("span").textContent = "visibility_off";
+        } else {
+          keyInput.type = "password";
+          keyToggle.querySelector("span").textContent = "visibility";
+        }
+      });
+    }
+
+    // Provider select change listener
+    if (providerSelect) {
+      providerSelect.addEventListener("change", () => {
+        const prov = providerSelect.value;
+        populateModelPresets(prov);
+        if (prov === "offline") {
+          keyContainer.classList.add("hidden");
+        } else {
+          keyContainer.classList.remove("hidden");
+        }
+        // Load stored key for provider
+        keyInput.value = localStorage.getItem("cg_ai_" + prov + "_key") || "";
+        customModelInput.classList.add("hidden");
+      });
+    }
+
+    // Model select change listener
+    if (modelSelect && customModelInput) {
+      modelSelect.addEventListener("change", () => {
+        if (modelSelect.value === "custom") {
+          customModelInput.classList.remove("hidden");
+          customModelInput.focus();
+        } else {
+          customModelInput.classList.add("hidden");
+        }
+      });
+    }
+
+    // Temp range change listener
+    if (tempInput && tempValue) {
+      tempInput.addEventListener("input", () => {
+        tempValue.textContent = tempInput.value;
+      });
+    }
+
+    // Save configurations
+    if (saveSettingsBtn) {
+      saveSettingsBtn.addEventListener("click", () => {
+        const prov = providerSelect.value;
+        localStorage.setItem("cg_ai_provider", prov);
+        
+        let targetModel = modelSelect.value;
+        if (targetModel === "custom") {
+          targetModel = customModelInput.value.trim();
+        }
+        
+        localStorage.setItem("cg_ai_" + prov + "_model", targetModel);
+        if (prov !== "offline") {
+          localStorage.setItem("cg_ai_" + prov + "_key", keyInput.value.trim());
+        }
+        
+        localStorage.setItem("cg_ai_system_prompt", promptInput.value.trim());
+        localStorage.setItem("cg_ai_temp", tempInput.value);
+
+        updateEngineLabel();
+        settingsPanel.classList.add("hidden");
+        
+        if (window.CyberNotify) {
+          window.CyberNotify.alert("AI settings saved successfully!", { type: "success" });
+        }
+      });
+    }
+
+    // Reset defaults
+    if (resetSettingsBtn) {
+      resetSettingsBtn.addEventListener("click", () => {
+        localStorage.removeItem("cg_ai_provider");
+        localStorage.removeItem("cg_ai_gemini_key");
+        localStorage.removeItem("cg_ai_gemini_model");
+        localStorage.removeItem("cg_ai_openrouter_key");
+        localStorage.removeItem("cg_ai_openrouter_model");
+        localStorage.removeItem("cg_ai_groq_key");
+        localStorage.removeItem("cg_ai_groq_model");
+        localStorage.removeItem("cg_ai_system_prompt");
+        localStorage.removeItem("cg_ai_temp");
+
+        localStorage.setItem("cg_ai_provider", "gemini");
+        localStorage.setItem("cg_ai_gemini_key", DEFAULT_GEMINI_KEY);
+        localStorage.setItem("cg_ai_gemini_model", "gemini-1.5-flash");
+
+        loadConfigurations();
+        updateEngineLabel();
+
+        if (window.CyberNotify) {
+          window.CyberNotify.alert("AI settings reset to standard!", { type: "info" });
+        }
+      });
+    }
 
     // Suggestion chips
     document.querySelectorAll(".ai-chip").forEach((chip) => {
@@ -10962,8 +11546,8 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
         if (q && !isWaiting) {
           inputEl.value = q;
           handleSend();
-          // Hide chips after first use
-          if (suggestEl) suggestEl.style.display = "none";
+          // Hide chips container after sending
+          if (suggestEl) suggestEl.parentElement.style.display = "none";
         }
       });
     });
@@ -10974,141 +11558,982 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
     const text = inputEl.value.trim();
     if (!text || isWaiting) return;
 
-    // Hide suggestion chips once user starts chatting
-    if (suggestEl) suggestEl.style.display = "none";
+    if (!currentChatId) {
+      createNewChatSession(text);
+    }
 
-    // Clear welcome card on first real message
-    const welcomeCard = messagesEl.querySelector(".ai-welcome-card");
-    if (welcomeCard) welcomeCard.remove();
+    // Hide chips
+    if (suggestEl) suggestEl.parentElement.style.display = "none";
 
-    // Add user message
+    // Clear welcome message on first real message
+    const welcome = messagesEl.querySelector(".ai-welcome-card");
+    if (welcome) welcome.remove();
+
+    // Add user bubble
     appendMessage("user", text);
     conversationHistory.push({ role: "user", content: text });
+
+    // Save state
+    if (currentChatId && chatSessions[currentChatId]) {
+      chatSessions[currentChatId].history = conversationHistory;
+      chatSessions[currentChatId].timestamp = Date.now();
+      saveChatSessions();
+      renderChatHistoryList();
+    }
 
     // Reset input
     inputEl.value = "";
     inputEl.style.height = "auto";
 
-    // Show typing indicator
+    // Show typing indicators
     const typingId = showTyping();
     setWaiting(true);
 
     try {
       let reply;
-      const hasApiKey = USE_GROQ ? !!GROQ_API_KEY : !!OPENROUTER_API_KEY;
+      const prov = localStorage.getItem("cg_ai_provider") || "gemini";
+      const key = localStorage.getItem("cg_ai_" + prov + "_key") || "";
+      const model = localStorage.getItem("cg_ai_" + prov + "_model") || "";
+      const promptOverride = localStorage.getItem("cg_ai_system_prompt") || "";
+      const temp = parseFloat(localStorage.getItem("cg_ai_temp")) || 0.7;
 
-      if (hasApiKey) {
-        reply = await callAI(text);
+      const fullSystemPrompt = promptOverride ? promptOverride : SYSTEM_PROMPT;
+
+      // Check if dynamic context queries or offline wizards triggered
+      const isOfflineMode = prov === "offline" || !key && prov !== "offline" && prov !== "gemini";
+
+      if (isOfflineMode) {
+        // Run interactive offline fallback
+        reply = await processOfflineMessage(text);
       } else {
-        reply = localFallback(text);
+        // Query official REST integrations
+        if (prov === "gemini") {
+          const sysContext = gatherSystemContext();
+          const targetSystemPrompt = `${fullSystemPrompt}\n\n${sysContext}`;
+          reply = await callGeminiAPI(text, targetSystemPrompt, key || DEFAULT_GEMINI_KEY, model || "gemini-1.5-flash", temp);
+        } else if (prov === "openrouter") {
+          const sysContext = gatherSystemContext();
+          const targetSystemPrompt = `${fullSystemPrompt}\n\n${sysContext}`;
+          reply = await callOpenRouterAPI(text, targetSystemPrompt, key, model, temp);
+        } else if (prov === "groq") {
+          const sysContext = gatherSystemContext();
+          const targetSystemPrompt = `${fullSystemPrompt}\n\n${sysContext}`;
+          reply = await callGroqAPI(text, targetSystemPrompt, key, model, temp);
+        }
       }
 
       removeTyping(typingId);
-      appendMessage("ai", reply);
-      conversationHistory.push({ role: "assistant", content: reply });
+
+      // Process autopilot actions embedded in text
+      const parsedReply = parseAndExecuteAutopilot(reply);
+
+      // Emoji Cleanse: strip any emojis dynamically to enforce pure text/inline SVGs
+      const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}\uFE0F\uFE0E]/gu;
+      const cleanReply = parsedReply.replace(emojiRegex, "");
+
+      // Render response
+      appendMessage("ai", cleanReply);
+      conversationHistory.push({ role: "assistant", content: cleanReply });
+
+      // Save state
+      if (currentChatId && chatSessions[currentChatId]) {
+        chatSessions[currentChatId].history = conversationHistory;
+        chatSessions[currentChatId].timestamp = Date.now();
+        saveChatSessions();
+        renderChatHistoryList();
+      }
+
     } catch (err) {
       removeTyping(typingId);
-      const fallbackReply = localFallback(text);
+      console.error("[AI Assistant] Error handling query:", err);
+      
+      // Attempt local offline fallback on failure
+      const fallbackReply = await processOfflineMessage(text);
+      const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}\uFE0F\uFE0E]/gu;
+      const cleanFallback = fallbackReply.replace(emojiRegex, "");
       appendMessage(
         "ai",
-        `⚠️ *API error — using offline mode:*\n\n${fallbackReply}`,
+        `<div class="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg mb-3">
+          <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          <div>
+            <strong class="text-amber-400 block text-xs">API Connection failed. Operating in offline fallback:</strong>
+            <div class="mt-1">${cleanFallback}</div>
+          </div>
+        </div>`
       );
-      console.warn(
-        "[AI Assistant] API call failed, using fallback:",
-        err.message,
-      );
+      conversationHistory.push({ role: "assistant", content: cleanFallback });
+
+      // Save state
+      if (currentChatId && chatSessions[currentChatId]) {
+        chatSessions[currentChatId].history = conversationHistory;
+        chatSessions[currentChatId].timestamp = Date.now();
+        saveChatSessions();
+        renderChatHistoryList();
+      }
     } finally {
       setWaiting(false);
     }
   }
 
-  // ─── API CALL ───────────────────────────────────────────────────
-  async function callAI(userMessage) {
-    const messages = [
-      { role: "system", content: SYSTEM_PROMPT },
-      ...conversationHistory.slice(-10), // Keep last 10 turns for context
-    ];
-
-    let url, headers, body;
-
-    if (USE_GROQ) {
-      // ── Groq ────────────────────────────────────────────────────
-      url = "https://api.groq.com/openai/v1/chat/completions";
-      headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${GROQ_API_KEY}`,
-      };
-      body = JSON.stringify({
-        model: GROQ_MODEL,
-        messages,
-        max_tokens: 512,
-        temperature: 0.7,
+  // ─── DYNAMIC REST API CALLS ──────────────────────────────────────
+  async function callGeminiAPI(message, systemPrompt, apiKey, model, temp) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    
+    // Convert history format to Gemini schema
+    const contents = [];
+    conversationHistory.slice(-10).forEach(h => {
+      contents.push({
+        role: h.role === "assistant" ? "model" : "user",
+        parts: [{ text: h.content }]
       });
-    } else {
-      // ── OpenRouter ──────────────────────────────────────────────
-      url = "https://openrouter.ai/api/v1/chat/completions";
-      headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-        "HTTP-Referer": window.location.href,
-        "X-Title": "CyberGuard AI Assistant",
-      };
-      body = JSON.stringify({
-        model: OPENROUTER_MODEL,
-        messages,
-        max_tokens: 512,
-        temperature: 0.7,
-      });
-    }
+    });
 
-    const res = await fetch(url, { method: "POST", headers, body });
+    const body = JSON.stringify({
+      contents,
+      systemInstruction: {
+        parts: [{ text: systemPrompt }]
+      },
+      generationConfig: {
+        temperature: temp,
+        maxOutputTokens: 1024
+      }
+    });
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body
+    });
 
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData?.error?.message || `HTTP ${res.status}`);
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    return (
+      data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
+      "Google Gemini failed to generate a response candidate."
+    );
+  }
+
+  async function callOpenRouterAPI(message, systemPrompt, apiKey, model, temp) {
+    const url = "https://openrouter.ai/api/v1/chat/completions";
+    
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...conversationHistory.slice(-10)
+    ];
+
+    const body = JSON.stringify({
+      model: model || "meta-llama/llama-3-8b-instruct:free",
+      messages,
+      temperature: temp,
+      max_tokens: 1024
+    });
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+        "HTTP-Referer": window.location.href,
+        "X-Title": "CyberGuard Pro"
+      },
+      body
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `HTTP ${res.status}`);
     }
 
     const data = await res.json();
     return (
       data.choices?.[0]?.message?.content?.trim() ||
-      "I couldn't generate a response. Please try again."
+      "OpenRouter failed to provide a response candidate."
     );
   }
 
-  // ─── LOCAL FALLBACK (keyword matching) ──────────────────────────
-  function localFallback(query) {
+  async function callGroqAPI(message, systemPrompt, apiKey, model, temp) {
+    const url = "https://api.groq.com/openai/v1/chat/completions";
+    
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...conversationHistory.slice(-10)
+    ];
+
+    const body = JSON.stringify({
+      model: model || "llama-3.1-8b-instant",
+      messages,
+      temperature: temp,
+      max_tokens: 1024
+    });
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      },
+      body
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    return (
+      data.choices?.[0]?.message?.content?.trim() ||
+      "Groq API failed to resolve chat."
+    );
+  }
+
+  // ─── AUTOPILOT TAGS PROCESSOR ───────────────────────────────────
+  function parseAndExecuteAutopilot(text) {
+    const actionRegex = /\[\[ACTION:\s*(\w+)\((.*?)\)\]\]/g;
+    let match;
+    let cleanedText = text;
+
+    // Parse and execute actions
+    while ((match = actionRegex.exec(text)) !== null) {
+      const actionName = match[1];
+      const argsStr = match[2];
+      executeAutopilotAction(actionName, argsStr);
+    }
+
+    // Strip actions from rendered bubble so details look premium
+    cleanedText = cleanedText.replace(/\[\[ACTION:.*?\]\]/g, "");
+    return cleanedText;
+  }
+
+  function executeAutopilotAction(actionName, argsStr) {
+    const args = argsStr.split(",").map(arg => {
+      let s = arg.trim();
+      if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+        s = s.slice(1, -1);
+      }
+      return s;
+    });
+
+    console.log(`[Autopilot Engine] Executing command: ${actionName} with parameters:`, args);
+
+    // Show visual overlay toast
+    showAutopilotToast(actionName, args);
+
+    try {
+      switch (actionName) {
+        case "switch_tab": {
+          const tabId = args[0];
+          if (typeof switchToTab === "function") {
+            switchToTab(tabId);
+          } else {
+            console.error("switchToTab not defined globally!");
+          }
+          break;
+        }
+        case "fill_input": {
+          const elId = args[0];
+          const val = args[1];
+          const el = document.getElementById(elId);
+          if (el) {
+            el.value = val;
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+          break;
+        }
+        case "select_tool": {
+          const toolId = args[0];
+          const isSelected = args[1] === "true" || args[1] === true || args[1] === "1";
+          const card = document.querySelector(`.cyber-tool-card[data-tool-id="${toolId}"]`);
+          if (card) {
+            card.dataset.selected = isSelected.toString();
+            if (typeof SelectionManager !== "undefined") {
+              SelectionManager.updateVisuals(card);
+              SelectionManager.saveToLocalStorage();
+              SelectionManager.updateSelectionCount();
+            }
+            if (typeof SelectAllToggle !== "undefined" && typeof SelectAllToggle.updateButtonLabel === "function") {
+              SelectAllToggle.updateButtonLabel();
+            }
+          }
+          break;
+        }
+        case "select_only_tool": {
+          const toolId = args[0];
+          const card = document.querySelector(`.cyber-tool-card[data-tool-id="${toolId}"]`);
+          if (card) {
+            const tabPane = card.closest(".tab-pane");
+            if (tabPane) {
+              const toolCards = tabPane.querySelectorAll(".cyber-tool-card");
+              toolCards.forEach(c => {
+                c.dataset.selected = "false";
+                if (typeof SelectionManager !== "undefined") {
+                  SelectionManager.updateVisuals(c);
+                }
+              });
+            }
+            card.dataset.selected = "true";
+            if (typeof SelectionManager !== "undefined") {
+              SelectionManager.updateVisuals(card);
+              SelectionManager.saveToLocalStorage();
+              SelectionManager.updateSelectionCount();
+            }
+            if (typeof SelectAllToggle !== "undefined" && typeof SelectAllToggle.updateButtonLabel === "function") {
+              SelectAllToggle.updateButtonLabel();
+            }
+          }
+          break;
+        }
+        case "run_scan": {
+          const type = args[0]; // "network" or "web"
+          const target = args[1];
+          
+          if (type === "network") {
+            const input = document.getElementById("target-ip");
+            if (input) {
+              input.value = target;
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+            const btn = document.getElementById("execute-scan-btn");
+            if (btn) btn.click();
+          } else if (type === "web") {
+            const input = document.getElementById("target-url");
+            if (input) {
+              input.value = target;
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+            const btn = document.getElementById("run-analysis-btn");
+            if (btn) btn.click();
+          }
+          break;
+        }
+        case "clear_results": {
+          const btn = document.getElementById("clear-results-btn");
+          if (btn) btn.click();
+          break;
+        }
+        case "open_api_keys": {
+          const btn = document.getElementById("api-keys-toggle");
+          if (btn) btn.click();
+          break;
+        }
+        default:
+          console.warn(`[Autopilot Engine] Unknown action selector: ${actionName}`);
+      }
+    } catch (e) {
+      console.error("[Autopilot Engine] Failed to dispatch action:", e);
+    }
+  }
+
+  function showAutopilotToast(actionName, args) {
+    let toast = document.getElementById("ai-autopilot-toast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "ai-autopilot-toast";
+      toast.className = "ai-autopilot-toast";
+      toast.innerHTML = `
+        <div class="ai-autopilot-pulse-dot"></div>
+        <span id="ai-autopilot-toast-text">AI is adjusting dashboard controls...</span>
+      `;
+      document.body.appendChild(toast);
+    }
+
+    const textEl = document.getElementById("ai-autopilot-toast-text");
+    let desc = "AI Copilot adjusting parent workspace...";
+
+    if (actionName === "switch_tab") desc = `🤖 Autopilot: Switching tab view to ${args[0]}...`;
+    else if (actionName === "fill_input") desc = `🤖 Autopilot: Filling target value "${args[1]}"...`;
+    else if (actionName === "run_scan") desc = `🤖 Autopilot: Launching security scan on "${args[1]}"...`;
+    else if (actionName === "clear_results") desc = `🤖 Autopilot: Clearing results history...`;
+    else if (actionName === "open_api_keys") desc = `🤖 Autopilot: Loading credentials credentials configuration modal...`;
+    else if (actionName === "select_tool") desc = `🤖 Autopilot: ${args[1] === "true" ? "Selecting" : "Deselecting"} tool card "${args[0]}"...`;
+    else if (actionName === "select_only_tool") desc = `🤖 Autopilot: Selecting ONLY tool card "${args[0]}"...`;
+
+    textEl.textContent = desc;
+    toast.classList.add("active");
+
+    setTimeout(() => {
+      toast.classList.remove("active");
+    }, 3800);
+  }
+
+  // ─── INTERACTIVE OFFLINE WIZARDS ─────────────────────────────────
+  async function processOfflineMessage(query) {
     const q = query.toLowerCase();
 
-    if (/\b(network|port|scan|tcp|udp|reverse dns|geolocation|geo)\b/.test(q))
-      return `**Network Tools** on this dashboard:\n\n- **Reverse DNS** – resolve an IP to its hostname\n- **IP Geolocation** – locate an IP on a world map\n- **WHOIS Lookup** – get domain/IP registration data\n- **Port Scanner** – check which ports are open on a target\n- **TCP / UDP Scan** – protocol-specific port scanning\n- **Threat Intelligence** – cross-reference IPs against threat feeds\n\nEnter a target IP or domain in the Network tab to get started.`;
+    // Context commands trigger offline too
+    if (/\b(switch|go to|open|show)\b/.test(q)) {
+      if (/\b(network|port|scanner)\b/.test(q)) {
+        return `I've switched your dashboard to the Network Security Scanner. [[ACTION: switch_tab("network-tools")]]`;
+      }
+      if (/\b(web|phish|xss|ssl|url)\b/.test(q)) {
+        return `I've opened the Web Security Suite. [[ACTION: switch_tab("web-security")]]`;
+      }
+      if (/\b(hash|crypto|cryptography|password)\b/.test(q)) {
+        return `I will open the Hash and Cryptography panel. [[ACTION: switch_tab("hash-tools")]]`;
+      }
+      if (/\b(jwt|json web token|debugger)\b/.test(q)) {
+        return `I've transitioned your view to the JWT Debugger tab. [[ACTION: switch_tab("jwt-debugger")]]`;
+      }
+      if (/\b(threat|intel|history)\b/.test(q)) {
+        return `Opening the Threat Intelligence Hub. [[ACTION: switch_tab("threat-intel")]]`;
+      }
+      if (/\b(project|projects|collaborator)\b/.test(q)) {
+        return `Opening the Projects workspace. [[ACTION: switch_tab("projects")]]`;
+      }
+    }
 
-    if (/\b(web|phish|xss|ssl|tls|dns spoof|virustotal|vt)\b/.test(q))
-      return `**Web Security Tools** available:\n\n- **URL Phishing Analyser** – detect malicious / deceptive URLs using ML\n- **XSS Test** – check a URL for cross-site scripting vulnerabilities\n- **SSL/TLS Check** – verify certificate validity and cipher strength\n- **DNS Spoofing** – detect DNS poisoning attacks\n- **VirusTotal** – scan URLs, hashes, or files with 70+ AV engines\n\nSwitch to the **Web** tab to use these tools.`;
+    // Check for scan command with a target in query
+    let target = null;
+    const ipRegex = /\b(?:\d{1,3}\.){3}\d{1,3}\b/;
+    const domainRegex = /\b(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}\b/;
+    const ipMatch = q.match(ipRegex);
+    const domainMatch = q.match(domainRegex);
+    const localhostMatch = q.match(/\blocalhost\b/);
 
-    if (/\b(hash|md5|sha|sha256|password|crypto|encrypt)\b/.test(q))
-      return `**Hash & Crypto Tools** available:\n\n- **String Hashing** – generate MD5, SHA-1, SHA-256, SHA-512 hashes\n- **File Hashing** – compute hash of any local file\n- **Password Strength** – analyse entropy, patterns, and crackability\n\nSwitch to the **Hash** tab to use these tools.`;
+    if (ipMatch) {
+      target = ipMatch[0];
+    } else if (domainMatch) {
+      target = domainMatch[0];
+    } else if (localhostMatch) {
+      target = "localhost";
+    } else {
+      // Legacy fallback
+      const legacyMatch = /\b(scan|run|analyze|test)\s+(\S+)\b/.exec(q);
+      if (legacyMatch) {
+        target = legacyMatch[2].replace(/["']/g, "");
+      }
+    }
 
-    if (/\b(what|tools|feature|can|do|help|dashboard)\b/.test(q))
-      return `**CyberGuard** offers three main tool categories:\n\n1. 🌐 **Network** – port scanning, WHOIS, IP geolocation, threat intel\n2. 🔒 **Web Security** – phishing detection, XSS, SSL/TLS, VirusTotal\n3. #️⃣ **Hash & Crypto** – MD5/SHA hashing, password strength analysis\n\nClick any tab at the top to explore. You can also ask me specific questions!`;
+    if (target && /\b(scan|run|analyze|test|trigger)\b/.test(q)) {
+      let targetTool = null;
+      let tabId = "network-tools";
+      let scanType = "network";
 
-    if (/\b(phish|phishing)\b/.test(q))
-      return `**Phishing** is a social-engineering attack where attackers impersonate legitimate websites to steal credentials or install malware.\n\n**How to detect it:**\n- Check the domain carefully (e.g. paypa1.com vs paypal.com)\n- Look for HTTPS and a valid SSL certificate\n- Use CyberGuard's URL Phishing Analyser for automated detection\n- Hover over links before clicking to preview the actual URL`;
+      if (q.includes("xss")) {
+        targetTool = "xss-btn";
+        tabId = "web-security";
+        scanType = "web";
+      } else if (q.includes("ssl") || q.includes("tls")) {
+        targetTool = "ssl-btn";
+        tabId = "web-security";
+        scanType = "web";
+      } else if (q.includes("phish")) {
+        targetTool = "phishing-btn";
+        tabId = "web-security";
+        scanType = "web";
+      } else if (q.includes("spoof")) {
+        targetTool = "dns-spoof-btn";
+        tabId = "web-security";
+        scanType = "web";
+      } else if (q.includes("whois")) {
+        targetTool = "whois-btn";
+        tabId = "network-tools";
+        scanType = "network";
+      } else if (q.includes("geo") || q.includes("location")) {
+        targetTool = "ip-geo-btn";
+        tabId = "network-tools";
+        scanType = "network";
+      } else if (q.includes("dns") || q.includes("reverse")) {
+        targetTool = "reverse-dns-btn";
+        tabId = "network-tools";
+        scanType = "network";
+      } else if (q.includes("tcp")) {
+        targetTool = "tcp-scan-btn";
+        tabId = "network-tools";
+        scanType = "network";
+      } else if (q.includes("udp")) {
+        targetTool = "udp-scan-btn";
+        tabId = "network-tools";
+        scanType = "network";
+      } else if (q.includes("threat") || q.includes("intel") || q.includes("virus") || q.includes("vt") || q.includes("abuse")) {
+        targetTool = "threat-intel-btn";
+        tabId = "network-tools";
+        scanType = "network";
+      } else if (q.includes("port")) {
+        targetTool = "port-scan-btn";
+        tabId = "network-tools";
+        scanType = "network";
+      } else {
+        // Default fallback based on target type
+        if (target.includes("://") || target.includes("www.") || (isNaN(target.split(".")[0]) && target.includes("."))) {
+          tabId = "web-security";
+          scanType = "web";
+        } else {
+          tabId = "network-tools";
+          scanType = "network";
+        }
+      }
 
-    if (/\b(ssl|tls|certificate|https)\b/.test(q))
-      return `**SSL/TLS** is the encryption protocol securing web traffic (HTTPS).\n\n**Key points:**\n- TLS 1.2 and 1.3 are considered secure; TLS 1.0/1.1 and SSLv3 are deprecated\n- A valid certificate ensures the server is who it claims to be\n- Use CyberGuard's **SSL/TLS Check** tool to analyse any domain's certificate chain, expiry, and cipher suites`;
+      if (targetTool) {
+        return `I will switch to the ${scanType === "web" ? "Web Security" : "Network Scanner"} tab, select only the requested tool, and analyze ${target} for you. [[ACTION: switch_tab("${tabId}")]] [[ACTION: select_only_tool("${targetTool}")]] [[ACTION: run_scan("${scanType}", "${target}")]]`;
+      } else {
+        return `I will execute a ${scanType === "web" ? "Web Security" : "Network Port"} scan on the target ${target} now. [[ACTION: switch_tab("${tabId}")]] [[ACTION: run_scan("${scanType}", "${target}")]]`;
+      }
+    }
 
-    if (/\b(xss|cross.site|script)\b/.test(q))
-      return `**Cross-Site Scripting (XSS)** allows attackers to inject malicious scripts into web pages viewed by other users.\n\n**Types:**\n- **Reflected** – script in URL, executed on page load\n- **Stored** – script saved in database, served to all visitors\n- **DOM-based** – script manipulates the page's DOM\n\nUse CyberGuard's **XSS Test** tool to check a URL for reflected XSS vulnerabilities.`;
+    // Trigger Wizards
+    if (q.includes("phish") || q.includes("wizard") && q.includes("phish") || q.includes("auditor")) {
+      activeWizard = "phishing";
+      wizardStep = 1;
+      wizardData = {};
+      return renderPhishingWizardStep();
+    }
+    
+    if (q.includes("pass") && (q.includes("strength") || q.includes("entropy") || q.includes("crack"))) {
+      activeWizard = "password";
+      wizardStep = 1;
+      wizardData = {};
+      return renderPasswordWizardStep();
+    }
+    
+    if (q.includes("port") && (q.includes("catalog") || q.includes("reference") || q.includes("nmap"))) {
+      activeWizard = "port";
+      wizardStep = 1;
+      wizardData = {};
+      return renderPortWizardStep();
+    }
 
-    if (/\b(password|passphrase|credentials)\b/.test(q))
-      return `**Password security best practices:**\n\n- Use at least 16 characters\n- Mix uppercase, lowercase, numbers, and symbols\n- Never reuse passwords across sites\n- Use a password manager (Bitwarden, 1Password, etc.)\n- Enable MFA/2FA wherever possible\n\nRun CyberGuard's **Password Strength Analyser** to score your password.`;
+    // Who are you / identity
+    if (/\b(who are you|your name|what are you|who's this|identity)\b/.test(q)) {
+      return `I am the **CyberGuard Pro AI Copilot**, your elite cybersecurity assistant and dashboard co-pilot. In offline mode, I operate locally using interactive security wizards (Phishing URL audits, Password strength ratings, and Port hardening guidelines) and autopilot controls to help you navigate your dashboard. Enter a Google Gemini or OpenRouter key in the settings drawer (top-right gear icon) to unlock my full AI-powered reasoning capabilities!`;
+    }
 
-    if (/\b(hello|hi|hey|greet)\b/.test(q))
-      return `Hello! 👋 I'm the CyberGuard AI Assistant. I can help you:\n\n- Understand how to use this dashboard's tools\n- Answer cybersecurity questions\n- Explain concepts like phishing, XSS, SSL/TLS, and more\n\nWhat would you like to know?`;
+    // OWASP Top 10
+    if (/\b(owasp|top 10|top10)\b/.test(q)) {
+      return `**OWASP (Open Web Application Security Project)** is a nonprofit foundation dedicated to improving web software security.
 
-    // Default
-    return `I'm not sure I have a precise answer for that in offline mode. Here's what I can help with:\n\n- **Dashboard tools** – Network Scanner, Web Security, Hash & Crypto\n- **Cybersecurity concepts** – phishing, XSS, SSL/TLS, passwords, malware\n\nTry adding an OpenRouter or Groq API key at the top of ai-assistant.js for full AI-powered responses. Or rephrase your question!`;
+Their most famous resource is the **OWASP Top 10**, a regularly updated report outlining the 10 most critical security risks for web applications:
+
+1. **Broken Access Control** – Users can access resources outside their permissions.
+2. **Cryptographic Failures** – Weak encryption exposing sensitive data.
+3. **Injection** – Unsanitized user inputs (e.g. SQL Injection, XSS) executed as code.
+4. **Insecure Design** – Lacking security architecture and threat modeling.
+5. **Security Misconfiguration** – Default settings left unhardened (e.g., exposed ports).
+6. **Vulnerable and Outdated Components** – Using libraries with known exploits.
+7. **Identification and Authentication Failures** – Weak passwords or poor session management.
+8. **Software and Data Integrity Failures** – Unverified updates or deserialization issues.
+9. **Security Logging and Monitoring Failures** – Active attacks occurring unlogged.
+10. **Server-Side Request Forgery (SSRF)** – Web app fetching remote resources without validation.
+
+You can use CyberGuard Pro's **Web Security** suite to scan targets and detect several OWASP Top 10 vulnerabilities (like XSS and SSL/TLS misconfigurations)!`;
+    }
+
+    // Cybersecurity
+    if (/\b(cybersecurity|security|hack|hacker|attack)\b/.test(q)) {
+      return `**Cybersecurity** is the practice of protecting systems, networks, and programs from digital attacks. These attacks are usually aimed at accessing, changing, or destroying sensitive information, extorting money from users, or interrupting normal business processes.
+
+Key Pillars of Security:
+- **Confidentiality** – Ensuring only authorized users can access sensitive data.
+- **Integrity** – Preventing unauthorized modification or tampering of data.
+- **Availability** – Guaranteeing systems and services remain accessible when needed.
+
+This dashboard provides essential tools to audit these pillars, such as **Network Port Scans** (Availability & Hardening), **Phishing & SSL Checks** (Integrity & Trust), and **JWT Debugging & Hashing** (Confidentiality & Authentication).`;
+    }
+
+    // JWT
+    if (/\b(jwt|json web token|debugger)\b/.test(q)) {
+      return `A **JSON Web Token (JWT)** is a compact, URL-safe means of representing claims to be transferred between two parties. The claims in a JWT are encoded as a JSON object that is digitally signed using cryptography (HMAC or RSA).
+
+**Structure of a JWT:**
+- **Header** – Specifies the algorithm used (e.g., HS256, RS256) and token type.
+- **Payload** – Contains the claims (e.g., user ID, username, roles, expiration).
+- **Signature** – Created by hashing the header, payload, and a secret key to verify the sender and ensure the message wasn't tampered with.
+
+Switch to our **JWT Debugger** tab using this autopilot link: [[ACTION: switch_tab("jwt-debugger")]] to decode, edit, verify, or sign JWT tokens in real time!`;
+    }
+
+    // Ports
+    if (/\b(port|ports|port scanner)\b/.test(q)) {
+      return `**Network Ports** are communication endpoints used by transport protocols (TCP/UDP) to route traffic to specific services on a host.
+
+**Common Vulnerabilities:**
+- **Port 21 (FTP)** – Transmits login data in cleartext.
+- **Port 22 (SSH)** – Safe, but vulnerable to password brute force if public keys aren't enforced.
+- **Port 23 (Telnet)** – Deprecated, unencrypted remote terminal access.
+- **Port 80 (HTTP)** – Plaintext web traffic. Should redirect to Port 443.
+- **Port 3306 (MySQL)** – Exposed databases invite brute force or SQL Injection.
+
+Use our local **Port Security Catalog Wizard** to hardening these configurations or run a network scan: [[ACTION: switch_tab("network-tools")]]`;
+    }
+
+    // Phishing
+    if (/\b(phish|phishing)\b/.test(q)) {
+      return `**Phishing** is a deceptive attack where malicious actors send urgent messages or create spoofed websites to steal credentials, billing details, or install malware.
+
+**Top Phishing Indicators:**
+- **Urgent Casing**: *"Validate your identity within 12 hours to prevent account suspension!"*
+- **Typo-Spoofing / Homoglyphs**: Using domains like \`paypal-secure-login.net\` instead of the official domain.
+- **Unencrypted HTTP**: Lacking HTTPS SSL padlock encryption.
+
+You can launch our local interactive **Phishing URL Auditor Wizard** by asking me to do so, or navigate to our **Web Security** tab: [[ACTION: switch_tab("web-security")]] to run an automated ML phishing analysis on any URL!`;
+    }
+
+    // Passwords
+    if (/\b(password|passphrase|entropy)\b/.test(q)) {
+      return `**Password Strength** is mathematically measured in **Entropy Bits** (representing the complexity and number of possible combinations a hacker must brute-force).
+
+**Entropy Bit Ratings:**
+- **< 40 bits**: Very Weak (Cracked instantaneously).
+- **40–60 bits**: Medium (Can be cracked in a few days or weeks).
+- **80+ bits**: High/Military-grade (Requires trillions of centuries to crack).
+
+**Hardening Checklist:**
+- Minimum 16 characters in length.
+- Mix uppercase, lowercase, numbers, and symbols.
+- Use a dedicated password manager and enable Multi-Factor Authentication (MFA).
+
+Launch our interactive local **Password Strength Solver Wizard** by asking for it, or open the **Hash & Crypto** tab: [[ACTION: switch_tab("hash-tools")]] to generate cryptographic hashes!`;
+    }
+
+    // Default Keyword Fallback
+    if (/\b(hello|hi|hey|greet)\b/.test(q)) {
+      return `Hello! I'm the CyberGuard Pro AI assistant. I can operate your dashboard via Autopilot commands! Try asking me:
+- *"Switch to the JWT Debugger tab"*
+- *"Run a scan on google.com"*
+- *"Launch the phishing auditor wizard"*
+- *"Launch the password entropy solver wizard"*
+- *"Launch the port explorer wizard"*
+
+Or save your Google Gemini/OpenRouter keys in my settings configurations at the top right!`;
+    }
+
+    return `I'm not sure how to resolve your query in offline mode. Let's do an interactive security analysis instead! Click one of the wizards below to begin:
+    
+    <div class="flex flex-col gap-2 mt-3">
+      <button class="ai-wizard-btn flex items-center justify-center gap-2" onclick="window.CyberGuardAIChat.triggerWizard('phishing')">
+        <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+        Launch Phishing URL Auditor Wizard
+      </button>
+      <button class="ai-wizard-btn flex items-center justify-center gap-2" onclick="window.CyberGuardAIChat.triggerWizard('password')">
+        <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+        Launch Password Strength Solver Wizard
+      </button>
+      <button class="ai-wizard-btn flex items-center justify-center gap-2" onclick="window.CyberGuardAIChat.triggerWizard('port')">
+        <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+        Launch Port Security Catalog Wizard
+      </button>
+    </div>`;
   }
+
+  // Phishing wizard renderer
+  function renderPhishingWizardStep() {
+    if (wizardStep === 1) {
+      return `
+        <div class="ai-wizard-card">
+          <div class="ai-wizard-header flex items-center gap-2">
+            <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <span>URL Phishing Auditor - Step 1/3</span>
+          </div>
+          <div class="ai-wizard-body">Let's audit a domain for phishing characteristics. Select a demonstration case below, or choose a custom option:</div>
+          <div class="ai-wizard-options">
+            <button class="ai-wizard-btn" onclick="window.CyberGuardAIChat.runWizard('phishing', 2, 'alert-paypal.net')">paypal-security-alert.net (Suspicious)</button>
+            <button class="ai-wizard-btn" onclick="window.CyberGuardAIChat.runWizard('phishing', 2, 'google.com')">google.com (Legitimate)</button>
+            <button class="ai-wizard-btn" onclick="window.CyberGuardAIChat.runWizard('phishing', 2, 'secure-login-chase.com')">secure-login-chase.com (Urgent Spoof)</button>
+          </div>
+        </div>
+      `;
+    }
+    
+    if (wizardStep === 2) {
+      return `
+        <div class="ai-wizard-card">
+          <div class="ai-wizard-header flex items-center gap-2">
+            <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <span>URL Phishing Auditor - Step 2/3</span>
+          </div>
+          <div class="ai-wizard-body">Auditing: <code>${wizardData.domain}</code>. What type of transport layer protocol is in use? (Does it have HTTPS lock?)</div>
+          <div class="ai-wizard-options">
+            <button class="ai-wizard-btn" onclick="window.CyberGuardAIChat.runWizard('phishing', 3, 'https')">HTTPS (Secure Lock icon present)</button>
+            <button class="ai-wizard-btn" onclick="window.CyberGuardAIChat.runWizard('phishing', 3, 'http')">HTTP (Shows "Not Secure" alert)</button>
+          </div>
+        </div>
+      `;
+    }
+    
+    if (wizardStep === 3) {
+      return `
+        <div class="ai-wizard-card">
+          <div class="ai-wizard-header flex items-center gap-2">
+            <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <span>URL Phishing Auditor - Step 3/3</span>
+          </div>
+          <div class="ai-wizard-body">Auditing spelling and content structure. Is there urgent wording (e.g. "Validate within 24 hours or suspend!") or swapped characters?</div>
+          <div class="ai-wizard-options">
+            <button class="ai-wizard-btn" onclick="window.CyberGuardAIChat.runWizard('phishing', 4, 'yes')">Yes, urgent warnings or typos detected</button>
+            <button class="ai-wizard-btn" onclick="window.CyberGuardAIChat.runWizard('phishing', 4, 'no')">No, normal informative spelling/content</button>
+          </div>
+        </div>
+      `;
+    }
+
+    if (wizardStep === 4) {
+      // Calculate risk score
+      let riskScore = 0;
+      let reasons = [];
+
+      const dom = wizardData.domain;
+      if (dom.includes("paypal") && dom !== "paypal.com" || dom.includes("chase") && dom !== "chase.com") {
+        riskScore += 45;
+        reasons.push("Brand name spoofing inside domain string");
+      }
+      if (wizardData.protocol === "http") {
+        riskScore += 25;
+        reasons.push("Unencrypted HTTP transmission in use");
+      }
+      if (wizardData.urgency === "yes") {
+        riskScore += 30;
+        reasons.push("Stressful social-engineering urgent call-to-actions");
+      }
+
+      let badgeCls = "cyber-badge-safe";
+      let statusText = "SAFE";
+      if (riskScore > 70) {
+        badgeCls = "cyber-badge-danger";
+        statusText = "CRITICAL PHISHING RISK";
+      } else if (riskScore > 30) {
+        badgeCls = "cyber-badge-warning";
+        statusText = "SUSPICIOUS THREAT PROFILE";
+      }
+
+      return `
+        <div class="ai-wizard-card">
+          <div class="ai-wizard-header flex items-center gap-2">
+            <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <span>URL Phishing Auditor - Verdict</span>
+          </div>
+          <div class="ai-wizard-body mb-3">
+            Domain: <code>${dom}</code><br>
+            Security Score: <span class="ai-wizard-badge ${badgeCls}">${statusText} (${riskScore}%)</span>
+          </div>
+          <div class="text-xs text-slate-300 mb-2 font-bold">Risk Factors identified:</div>
+          <ul class="list-disc pl-5 text-xs text-slate-400 mb-3">
+            ${reasons.length > 0 ? reasons.map(r => `<li>${r}</li>`).join("") : "<li>No major threat indicators detected. Good job!</li>"}
+          </ul>
+          <button class="ai-wizard-btn flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800" onclick="window.CyberGuardAIChat.triggerWizard('phishing')">
+            <svg class="w-3.5 h-3.5 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M21 3v5h-5" /></svg>
+            Restart Phishing Audit
+          </button>
+        </div>
+      `;
+    }
+  }
+
+  // Password Strength wizard renderer
+  function renderPasswordWizardStep() {
+    if (wizardStep === 1) {
+      return `
+        <div class="ai-wizard-card">
+          <div class="ai-wizard-header flex items-center gap-2">
+            <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            <span>Password Entropy Auditor - Step 1/2</span>
+          </div>
+          <div class="ai-wizard-body">Select a pattern below to audit its mathematical entropy:</div>
+          <div class="ai-wizard-options">
+            <button class="ai-wizard-btn" onclick="window.CyberGuardAIChat.runWizard('password', 2, 'weak')">"password123" (Common/Dictionary)</button>
+            <button class="ai-wizard-btn" onclick="window.CyberGuardAIChat.runWizard('password', 2, 'medium')">"CyberGuard2026" (CamelCase with Numbers)</button>
+            <button class="ai-wizard-btn" onclick="window.CyberGuardAIChat.runWizard('password', 2, 'strong')">"Cg!#_Pro-2026_Sec" (Length, symbols, casing)</button>
+          </div>
+        </div>
+      `;
+    }
+
+    if (wizardStep === 2) {
+      const type = wizardData.type;
+      let pwd = "password123";
+      let entropy = 35; // bits
+      let crackTime = "Instantaneous";
+      let statusText = "CRITICAL / WEAK";
+      let badgeCls = "cyber-badge-danger";
+
+      if (type === "medium") {
+        pwd = "CyberGuard2026";
+        entropy = 62;
+        crackTime = "5.2 Months (Averaged)";
+        statusText = "MEDIUM STRENGTH";
+        badgeCls = "cyber-badge-warning";
+      } else if (type === "strong") {
+        pwd = "Cg!#_Pro-2026_Sec";
+        entropy = 112;
+        crackTime = "74.8 Trillion Centuries";
+        statusText = "MILITARY GRADE SECURE";
+        badgeCls = "cyber-badge-safe";
+      }
+
+      return `
+        <div class="ai-wizard-card">
+          <div class="ai-wizard-header flex items-center gap-2">
+            <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            <span>Password Entropy Auditor - Verdict</span>
+          </div>
+          <div class="ai-wizard-body mb-3">
+            Target Password: <code>${pwd}</code><br>
+            Entropy Rating: <span class="ai-wizard-badge ${badgeCls}">${statusText}</span>
+          </div>
+          <table class="w-full text-xs text-left text-slate-400 mb-3.5 border-t border-white/5">
+            <tr class="border-b border-white/5"><td class="py-1.5 font-bold">Bit Strength:</td><td class="font-mono text-purple-400">${entropy} bits</td></tr>
+            <tr class="border-b border-white/5"><td class="py-1.5 font-bold">Total Combinations:</td><td class="font-mono text-white">2^${entropy} combos</td></tr>
+            <tr class="border-b border-white/5"><td class="py-1.5 font-bold">Estimated Time to Crack:</td><td class="font-mono text-green-400">${crackTime}</td></tr>
+          </table>
+          <button class="ai-wizard-btn flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800" onclick="window.CyberGuardAIChat.triggerWizard('password')">
+            <svg class="w-3.5 h-3.5 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M21 3v5h-5" /></svg>
+            Audit Another Password
+          </button>
+        </div>
+      `;
+    }
+  }
+
+  // Port reference wizard renderer
+  function renderPortWizardStep() {
+    if (wizardStep === 1) {
+      return `
+        <div class="ai-wizard-card">
+          <div class="ai-wizard-header flex items-center gap-2">
+            <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            <span>Port Catalog Explorer - Select Port</span>
+          </div>
+          <div class="ai-wizard-body">Choose an active ports configuration to fetch its threat vulnerability index & security recommendation card:</div>
+          <div class="ai-wizard-options">
+            <button class="ai-wizard-btn" onclick="window.CyberGuardAIChat.runWizard('port', 2, '21')">Port 21 (FTP - File Transfer)</button>
+            <button class="ai-wizard-btn" onclick="window.CyberGuardAIChat.runWizard('port', 2, '22')">Port 22 (SSH - Secure Shell)</button>
+            <button class="ai-wizard-btn" onclick="window.CyberGuardAIChat.runWizard('port', 2, '80')">Port 80 (HTTP - Plain Web)</button>
+            <button class="ai-wizard-btn" onclick="window.CyberGuardAIChat.runWizard('port', 2, '443')">Port 443 (HTTPS - Secure Web)</button>
+            <button class="ai-wizard-btn" onclick="window.CyberGuardAIChat.runWizard('port', 2, '3306')">Port 3306 (MySQL Database)</button>
+          </div>
+        </div>
+      `;
+    }
+
+    if (wizardStep === 2) {
+      const port = wizardData.port;
+      let service = "FTP";
+      let threat = "HIGH (Transmits credentials in cleartext)";
+      let exploit = "Brute forcing, anonymous login exploits, packet sniffing.";
+      let advice = "Hardening: Enforce explicit FTPS (FTP over SSL/TLS) or migrate to SFTP (Port 22). Disable anonymous logins.";
+      let badgeCls = "cyber-badge-danger";
+
+      if (port === "22") {
+        service = "SSH";
+        threat = "LOW (Provided passwords are disabled)";
+        exploit = "Brute force attacks on weak passwords, zero-day key exploits.";
+        advice = "Hardening: Force SSH-Key authentication ONLY, change default Port 22 to a random high port, configure Fail2Ban.";
+        badgeCls = "cyber-badge-safe";
+      } else if (port === "80") {
+        service = "HTTP";
+        threat = "MEDIUM (Lacks encryption)";
+        exploit = "Man-in-the-middle sniffing, session hijacking, cookie theft.";
+        advice = "Hardening: Configure 301 Redirect to Port 443 immediately, deploy HSTS headers.";
+        badgeCls = "cyber-badge-warning";
+      } else if (port === "443") {
+        service = "HTTPS";
+        threat = "SAFE (Encrypted transport layer)";
+        exploit = "SSL certificate spoofing, TLS downgrade attacks (Heartbleed legacy).";
+        advice = "Hardening: Disable SSLv3, TLS 1.0, and TLS 1.1. Enforce TLS 1.2 and TLS 1.3 only with secure AES-GCM ciphers.";
+        badgeCls = "cyber-badge-safe";
+      } else if (port === "3306") {
+        service = "MySQL";
+        threat = "CRITICAL (If exposed externally)";
+        exploit = "SQL Injection bypasses, remote root login brute force.";
+        advice = "Hardening: Bind MySQL server to Localhost (127.0.0.1) ONLY. Never expose Port 3306 globally on a public interface.";
+        badgeCls = "cyber-badge-danger";
+      }
+
+      return `
+        <div class="ai-wizard-card">
+          <div class="ai-wizard-header flex items-center gap-2">
+            <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            <span>Port Catalog Explorer - Port ${port} (${service})</span>
+          </div>
+          <div class="ai-wizard-body text-xs text-slate-300 leading-relaxed mb-3">
+            Vulnerability Profile: <span class="ai-wizard-badge ${badgeCls}">${threat}</span><br>
+            Common Exploits: <code class="text-red-400">${exploit}</code>
+          </div>
+          <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Hardening Blueprint:</div>
+          <div class="bg-slate-950/80 p-2.5 rounded border border-white/5 text-xs text-slate-400 font-mono leading-normal mb-3">${advice}</div>
+          <button class="ai-wizard-btn flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800" onclick="window.CyberGuardAIChat.triggerWizard('port')">
+            <svg class="w-3.5 h-3.5 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M21 3v5h-5" /></svg>
+            Explore Another Port
+          </button>
+        </div>
+      `;
+    }
+  }
+
+  // Setup Global handlers for UI inline interactions
+  window.CyberGuardAIChat = {
+    triggerWizard: function(name) {
+      activeWizard = name;
+      wizardStep = 1;
+      wizardData = {};
+      
+      const welcome = messagesEl.querySelector(".ai-welcome-card");
+      if (welcome) welcome.remove();
+
+      let prompt = `Launch the ${name} wizard.`;
+      appendMessage("user", prompt);
+      conversationHistory.push({ role: "user", content: prompt });
+      
+      const typingId = showTyping();
+      setTimeout(() => {
+        removeTyping(typingId);
+        let bubbleContent = "";
+        if (name === "phishing") bubbleContent = renderPhishingWizardStep();
+        else if (name === "password") bubbleContent = renderPasswordWizardStep();
+        else if (name === "port") bubbleContent = renderPortWizardStep();
+
+        appendMessage("ai", bubbleContent);
+        conversationHistory.push({ role: "assistant", content: bubbleContent });
+      }, 400);
+    },
+
+    runWizard: function(name, nextStep, choice) {
+      // Save data
+      if (name === "phishing") {
+        if (wizardStep === 1) wizardData.domain = choice;
+        else if (wizardStep === 2) wizardData.protocol = choice;
+        else if (wizardStep === 3) wizardData.urgency = choice;
+      } else if (name === "password") {
+        if (wizardStep === 1) wizardData.type = choice;
+      } else if (name === "port") {
+        if (wizardStep === 1) wizardData.port = choice;
+      }
+
+      wizardStep = nextStep;
+
+      let bubbleContent = "";
+      if (name === "phishing") bubbleContent = renderPhishingWizardStep();
+      else if (name === "password") bubbleContent = renderPasswordWizardStep();
+      else if (name === "port") bubbleContent = renderPortWizardStep();
+
+      // Show user choice in chat bubble
+      appendMessage("user", `Selected: "${choice}"`);
+      conversationHistory.push({ role: "user", content: `Selected: "${choice}"` });
+
+      const typingId = showTyping();
+      setTimeout(() => {
+        removeTyping(typingId);
+        appendMessage("ai", bubbleContent);
+        conversationHistory.push({ role: "assistant", content: bubbleContent });
+      }, 500);
+    },
+
+    copyCode: function(base64Code, btn) {
+      try {
+        const code = decodeURIComponent(escape(atob(base64Code)));
+        navigator.clipboard.writeText(code).then(() => {
+          const orig = btn.innerHTML;
+          btn.innerHTML = `<span class="material-symbols-outlined text-[12px]" style="color:var(--cg-success)">check</span> Copied!`;
+          setTimeout(() => { btn.innerHTML = orig; }, 1800);
+        });
+      } catch (e) {
+        console.error("Copy failed:", e);
+      }
+    }
+  };
 
   // ─── UI HELPERS ─────────────────────────────────────────────────
   function appendMessage(role, text) {
@@ -11142,9 +12567,11 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
 
     // Assembly
     const inner = document.createElement("div");
-    inner.style.cssText = "display:flex;flex-direction:column;";
+    inner.style.cssText = "display:flex;flex-direction:column;flex-grow:1;min-width:0;";
     if (isUser) {
       inner.style.alignItems = "flex-end";
+    } else {
+      inner.style.alignItems = "flex-start";
     }
     inner.appendChild(bubble);
     inner.appendChild(ts);
@@ -11193,31 +12620,79 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
     inputEl.disabled = val;
   }
 
-  // Converts basic markdown-like text to safe HTML
-  function formatMessage(text) {
-    // Escape HTML first
-    let safe = text
+  // Premium Code Highlighter
+  function highlightCode(code, lang) {
+    let safe = code
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
+      
+    // JavaScript, Nmap, JSON keywords highlighting
+    const keywords = /\b(const|let|var|function|return|import|export|from|class|extends|new|if|else|for|while|await|async|try|catch|finally|nmap|curl|get|post|yes|no|bind|exposed|true|false)\b/gi;
+    safe = safe.replace(keywords, '<span class="ai-code-keyword">$1</span>');
+    
+    // Strings in quotes
+    safe = safe.replace(/(["'])(.*?)\1/g, '<span class="ai-code-string">$1$2$1</span>');
+    
+    // Comments
+    safe = safe.replace(/(\/\/.*|\/\*[\s\S]*?\*\/|#.*)/g, '<span class="ai-code-comment">$1</span>');
+    
+    // Numbers
+    safe = safe.replace(/\b(\d+)\b/g, '<span class="ai-code-number">$1</span>');
+    
+    // Operators
+    safe = safe.replace(/([=\-+*/%&|^!~<>:?]+)/g, '<span class="ai-code-operator">$1</span>');
+    
+    return safe;
+  }
 
-    // Bold: **text**
+  // safe message formatter
+  function formatMessage(text) {
+    let formatted = text;
+    
+    // Process markdown code blocks
+    const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g;
+    formatted = formatted.replace(codeBlockRegex, (match, lang, code) => {
+      const codeId = "code-" + Math.floor(Math.random() * 100000);
+      const displayLang = lang || "CODE";
+      const highlighted = highlightCode(code.trim(), lang);
+      const escapedRawCode = btoa(unescape(encodeURIComponent(code.trim())));
+      
+      return `
+        <div class="ai-code-block">
+          <div class="ai-code-header">
+            <span>${displayLang}</span>
+            <button class="ai-code-copy" onclick="window.CyberGuardAIChat.copyCode('${escapedRawCode}', this)">
+              <span class="material-symbols-outlined text-[12px]">content_copy</span>
+              Copy
+            </button>
+          </div>
+          <pre class="ai-code-pre"><code>${highlighted}</code></pre>
+        </div>
+      `;
+    });
+    
+    // Escape standard tags outside the code blocks
+    let safe = formatted
+      .replace(/&(?!amp|lt|gt|quot|#x27|nbsp|span|code|div|button|ul|li|p|h4|strong|em|br|svg|path|rect|circle|line|polyline|g)/g, "&amp;")
+      .replace(/<(?!\/?div|\/?pre|\/?code|\/?span|\/?button|\/?ul|\/?li|\/?ol|\/?p|\/?h4|\/?strong|\/?em|\/?br|\/?svg|\/?path|\/?rect|\/?circle|\/?line|\/?polyline|\/?g)/g, "&lt;")
+      .replace(/(?<!div|pre|code|span|button|ul|li|ol|p|h4|strong|em|br|svg|path|rect|circle|line|polyline|g)>/g, "&gt;");
+      
+    // Casing bold and italics
     safe = safe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-
-    // Inline code: `code`
-    safe = safe.replace(/`([^`]+)`/g, "<code>$1</code>");
-
-    // Bullet lists: lines starting with "- " or "• "
+    safe = safe.replace(/\*(.+?)\*/g, "<em>$1</em>");
+    safe = safe.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+    
     const lines = safe.split("\n");
     let inList = false;
     const out = [];
     for (let line of lines) {
-      if (/^[-•]\s/.test(line)) {
+      if (/^\s*[-•]\s/.test(line)) {
         if (!inList) {
-          out.push("<ul>");
+          out.push('<ul class="list-disc pl-5 my-1.5">');
           inList = true;
         }
-        out.push(`<li>${line.replace(/^[-•]\s/, "")}</li>`);
+        out.push(`<li>${line.replace(/^\s*[-•]\s/, "")}</li>`);
       } else {
         if (inList) {
           out.push("</ul>");
@@ -11226,15 +12701,36 @@ If asked about something unrelated to cybersecurity, politely redirect.`;
         if (line.trim() === "") {
           out.push("<br>");
         } else {
-          out.push(`<p>${line}</p>`);
+          // Keep HTML elements intact
+          if (line.trim().startsWith("<div") || line.trim().startsWith("</div") || line.trim().startsWith("<button") || line.trim().startsWith("</button") || line.trim().startsWith("<h4") || line.trim().startsWith("<pre") || line.trim().startsWith("<svg") || line.trim().startsWith("</svg") || line.trim().startsWith("<span") || line.trim().startsWith("</span")) {
+            out.push(line);
+          } else {
+            out.push(`<p class="mb-1.5">${line}</p>`);
+          }
         }
       }
     }
     if (inList) out.push("</ul>");
-
+    
     return out.join("");
   }
 })(); // end initAIAssistant IIFE
+
+  // Header Export PDF — delegates to the footer export-pdf-btn
+  const headerExportPdfBtn = document.getElementById("header-export-pdf-btn");
+  if (headerExportPdfBtn) {
+    headerExportPdfBtn.addEventListener("click", () => {
+      document.getElementById("export-pdf-btn")?.click();
+    });
+  }
+
+  // Show welcome popup
+  // Note: Sidebar is now automatically initialized by dashboard.html
+  setTimeout(() => {
+    showWelcomePopup();
+  }, 50);
+});
+
 
 // ===== PROJECT MANAGEMENT UI =====
 // Project card rendering and UI components for project management

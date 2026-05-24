@@ -496,6 +496,11 @@ class ProjectManager {
       // Lazy load actual metrics (targets, findings, scans) from right API endpoints
       const allProjects = [...owned, ...collaborating];
       allProjects.forEach((p) => this.lazyLoadProjectMetrics(p.id));
+
+      // Dispatch custom event for project changes
+      document.dispatchEvent(new CustomEvent("cyberguard:projectsUpdated", {
+        detail: { projects: allProjects }
+      }));
     } catch (error) {
       console.error("[ProjectManager] renderProjectsList error:", error);
       if (window.CyberNotify) {
