@@ -191,17 +191,6 @@ document
     toolObserver.observe(category);
   });
 
-// ===========================
-// Security Shield Rotation
-// ===========================
-const securityShield = document.querySelector(".security-shield");
-if (securityShield) {
-  let rotation = 0;
-  setInterval(() => {
-    rotation += 0.5;
-    securityShield.style.transform = `rotate(${rotation}deg)`;
-  }, 50);
-}
 
 // ===========================
 // Hero Particle Canvas Background
@@ -366,44 +355,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setTimeout(type, 1500);
 });
 
-// ===========================
-// Progress Ring Percentage Count-Up
-// ===========================
-document.addEventListener("DOMContentLoaded", () => {
-  const percentEl = document.getElementById("progressPercent");
-  if (!percentEl) return;
-
-  const targetPercent = 98.5;
-  
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    percentEl.textContent = `${targetPercent}%`;
-    return;
-  }
-
-  const duration = 2500; // 2.5s duration
-  const startTime = performance.now();
-
-  function easeOutQuad(x) {
-    return 1 - (1 - x) * (1 - x);
-  }
-
-  function updateCounter(now) {
-    const elapsed = now - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    const easedProgress = easeOutQuad(progress);
-    
-    const currentVal = (easedProgress * targetPercent).toFixed(1);
-    percentEl.textContent = `${currentVal}%`;
-
-    if (progress < 1) {
-      requestAnimationFrame(updateCounter);
-    }
-  }
-
-  setTimeout(() => {
-    requestAnimationFrame(updateCounter);
-  }, 400);
-});
 
 // ===========================
 // CTA Section Particle Effect
@@ -562,6 +513,191 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// ===========================
+// Hero Animated Terminal
+// ===========================
+document.addEventListener("DOMContentLoaded", () => {
+  const terminalBody = document.getElementById("heroTerminalBody");
+  if (!terminalBody) return;
+
+  const logs = [
+    { type: 'scan', text: 'Initializing recon on testsite.com...' },
+    { type: 'info', text: 'Auditing OWASP Top 10 vulnerabilities...' },
+    { type: 'scan', text: 'Testing SQL injection vulnerability vectors...' },
+    { type: 'ok', text: 'SQLi vectors: Sanitized / Secure' },
+    { type: 'scan', text: 'Checking for cross-site scripting (XSS)...' },
+    { type: 'blocked', text: 'VULN FOUND: XSS payload accepted on /query' },
+    { type: 'info', text: 'Severity: HIGH | CVE-2026-XSS-RECON' },
+    { type: 'scan', text: 'Analyzing file integrity signatures...' },
+    { type: 'ok', text: 'Core binaries untampered' },
+    { type: 'scan', text: 'Scanning for exposed directories...' },
+    { type: 'blocked', text: 'VULN FOUND: Exposed .env file on root' },
+    { type: 'info', text: 'Severity: CRITICAL | Credentials leaked' },
+    { type: 'scan', text: 'Checking endpoint authentication...' },
+    { type: 'ok', text: 'Access control: Strict JWT verified' },
+    { type: 'blocked', text: 'VULN FOUND: Outdated Apache (CVE-2021-41773)' },
+    { type: 'info', text: 'Severity: MEDIUM | Path Traversal possible' },
+    { type: 'info', text: 'Scan complete. 3 Vulnerabilities identified.' }
+  ];
+
+  let logIndex = 0;
+
+  function appendLog() {
+    if (!document.getElementById("heroTerminalBody")) return;
+    
+    if (logIndex >= logs.length) {
+      setTimeout(() => {
+        const body = document.getElementById("heroTerminalBody");
+        if (body) {
+          body.innerHTML = '';
+          logIndex = 0;
+          appendLog();
+        }
+      }, 5000);
+      return;
+    }
+
+    const log = logs[logIndex];
+    const line = document.createElement("div");
+    line.className = "terminal-line";
+
+    let tagClass = '';
+    let tagText = '';
+
+    if (log.type === 'scan') {
+      tagClass = 'scan';
+      tagText = 'SCAN';
+    } else if (log.type === 'info') {
+      tagClass = 'info';
+      tagText = 'INFO';
+    } else if (log.type === 'ok') {
+      tagClass = 'ok';
+      tagText = ' OK ';
+    } else if (log.type === 'blocked') {
+      tagClass = 'blocked';
+      tagText = 'VULN';
+    }
+
+    line.innerHTML = `
+      <span class="term-tag ${tagClass}">${tagText}</span>
+      <span class="term-text">${log.text}</span>
+    `;
+
+    terminalBody.appendChild(line);
+    
+    // Auto-scroll to bottom
+    terminalBody.scrollTop = terminalBody.scrollHeight;
+
+    // Keep only last 6 lines to fit the height of the terminal
+    if (terminalBody.children.length > 6) {
+      terminalBody.removeChild(terminalBody.firstChild);
+    }
+
+    logIndex++;
+    
+    const delay = Math.random() * 600 + 400;
+    setTimeout(appendLog, delay);
+  }
+
+  appendLog();
+});
+
+// ===========================
+// Zero-Trust Network Graph Animation
+// ===========================
+document.addEventListener("DOMContentLoaded", () => {
+  const canvas = document.getElementById("zeroTrustCanvas");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  
+  canvas.width = 400;
+  canvas.height = 400;
+
+  const nodes = {
+    api:  { x: 200, y: 60 },
+    gw:   { x: 80,  y: 200 },
+    auth: { x: 320, y: 200 },
+    db:   { x: 200, y: 340 }
+  };
+
+  const connections = [
+    { from: nodes.api, to: nodes.gw,   color: '#3b82f6' },
+    { from: nodes.gw,  to: nodes.db,   color: '#a855f7' },
+    { from: nodes.db,  to: nodes.auth, color: '#10b981' },
+    { from: nodes.auth,to: nodes.api,  color: '#8b5cf6' },
+    { from: nodes.api, to: nodes.db,   color: '#6366f1' },
+    { from: nodes.gw,  to: nodes.auth, color: '#6366f1' }
+  ];
+
+  class Comet {
+    constructor(connection) {
+      this.from = connection.from;
+      this.to = connection.to;
+      this.color = connection.color;
+      this.progress = Math.random();
+      this.speed = Math.random() * 0.005 + 0.003;
+      this.size = Math.random() * 2 + 1.5;
+    }
+
+    update() {
+      this.progress += this.speed;
+      if (this.progress >= 1) {
+        this.progress = 0;
+        if (Math.random() > 0.5) {
+          const temp = this.from;
+          this.from = this.to;
+          this.to = temp;
+        }
+      }
+    }
+
+    draw() {
+      const x = this.from.x + (this.to.x - this.from.x) * this.progress;
+      const y = this.from.y + (this.to.y - this.from.y) * this.progress;
+
+      ctx.beginPath();
+      ctx.arc(x, y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = this.color;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = this.color;
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      for (let i = 1; i <= 5; i++) {
+        const trailProgress = this.progress - (i * 0.015);
+        if (trailProgress >= 0 && trailProgress <= 1) {
+          const tx = this.from.x + (this.to.x - this.from.x) * trailProgress;
+          const ty = this.from.y + (this.to.y - this.from.y) * trailProgress;
+          ctx.beginPath();
+          ctx.arc(tx, ty, this.size * (1 - i * 0.16), 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
+          ctx.fill();
+        }
+      }
+    }
+  }
+
+  const comets = connections.map(conn => new Comet(conn));
+
+  function animateGraph() {
+    if (!document.getElementById("zeroTrustCanvas")) return;
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    comets.forEach(comet => {
+      comet.update();
+      comet.draw();
+    });
+
+    requestAnimationFrame(animateGraph);
+  }
+
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    animateGraph();
+  }
+});
 
 console.log(
   "%c🛡️ CyberGuard",
