@@ -3471,3 +3471,87 @@ body.authenticated [data-auth-required].cyber-tool-link::after {
 .project-card-item {
     animation: fadeInUp 0.35s ease both;
 }
+
+/* ================================================================
+   JWT DEBUGGER & EDITOR STYLES
+   ================================================================ */
+
+.jwt-token-display {
+    width: 100%;
+    min-height: 80px;
+    background-color: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--cg-border);
+    border-radius: var(--cg-radius-md);
+    color: var(--cg-text-1);
+    padding: var(--cg-space-4);
+    font-family: var(--cg-font-mono);
+    font-size: 14px;
+    box-sizing: border-box;
+    word-break: break-all;
+    white-space: pre-wrap;
+    overflow-y: auto;
+    outline: none;
+    transition: border-color var(--cg-transition-fast);
+}
+
+.jwt-token-display:focus {
+    border-color: var(--cg-accent);
+}
+
+.jwt-token-display:empty:before {
+    content: attr(placeholder);
+    color: var(--cg-text-3);
+    font-style: normal;
+}
+
+/* JWT Parts Token Colors */
+.jwt-part-header {
+    color: var(--cg-danger);
+    transition: all var(--cg-transition-fast);
+    padding: 2px 0;
+}
+
+.jwt-part-payload {
+    color: var(--cg-accent);
+    transition: all var(--cg-transition-fast);
+    padding: 2px 0;
+}
+
+.jwt-part-signature {
+    color: var(--cg-info);
+    transition: all var(--cg-transition-fast);
+    padding: 2px 0;
+}
+
+.jwt-part-dot {
+    color: var(--cg-text-1);
+}
+
+/* Active highlight styling */
+.jwt-highlight-active {
+    background-color: rgba(251, 191, 36, 0.15) !important;
+    box-shadow: 0 0 0 2px var(--cg-warning);
+    border-radius: 4px;
+    color: #ffffff !important;
+}
+
+/* Custom Toggle Switch for secret encoding */
+.switch .slider {
+    background-color: var(--cg-border-subtle);
+    border-radius: 9999px;
+    transition: var(--cg-transition-fast);
+}
+
+.switch .slider:before {
+    background-color: #ffffff;
+    border-radius: 50%;
+    transition: var(--cg-transition-fast);
+}
+
+.switch input:checked + .slider {
+    background-color: var(--cg-accent);
+}
+
+.switch input:checked + .slider:before {
+    transform: translateX(16px); /* Modified to align with the toggle dimensions */
+}
