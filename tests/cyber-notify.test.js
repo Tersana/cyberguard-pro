@@ -16,11 +16,10 @@ const CyberNotify = {
     const modal = document.getElementById('cyber-notify-modal');
     if (!modal) return;
     modal.classList.remove('cyber-notify-open');
-    // Skip the 300ms timeout in tests - add hidden immediately
     modal.classList.add('hidden');
     this._currentCallback = null;
   },
-  _show(message, mode, callback, type) {
+  _show(message, mode, callback, type, defaultValue = "") {
     const modal = document.getElementById('cyber-notify-modal');
     const iconEl = document.getElementById('cyber-notify-icon');
     const msgEl = document.getElementById('cyber-notify-message');
@@ -30,10 +29,31 @@ const CyberNotify = {
       console.error('CyberNotify: Required DOM elements not found');
       return;
     }
+
+    let inputEl = document.getElementById('cyber-notify-input');
+    if (!inputEl) {
+      inputEl = document.createElement('input');
+      inputEl.id = 'cyber-notify-input';
+      inputEl.type = 'text';
+      inputEl.className = 'w-full bg-slate-950/80 border border-white/15 focus:border-purple-500/80 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none mt-1 mb-5 transition-colors font-sans text-center shadow-inner shadow-black/40';
+      const actions = document.getElementById('cyber-notify-actions');
+      if (actions) {
+        actions.parentNode.insertBefore(inputEl, actions);
+      }
+    }
+
+    if (mode === 'prompt') {
+      inputEl.value = defaultValue || '';
+      inputEl.style.display = 'block';
+    } else {
+      inputEl.style.display = 'none';
+    }
+
     const { icon, color } = this._resolveIcon(type);
     iconEl.textContent = icon;
     iconEl.style.color = color;
     msgEl.textContent = String(message ?? '');
+
     if (mode === 'alert') {
       confirmBtn.textContent = 'OK';
       confirmBtn.style.display = '';
@@ -52,13 +72,17 @@ const CyberNotify = {
         confirmBtn.removeEventListener('click', confirmHandler);
         cancelBtn.removeEventListener('click', cancelHandler);
         this._hide();
-        if (typeof callback === 'function') callback(true);
+        if (typeof callback === 'function') {
+          callback(mode === 'prompt' ? inputEl.value : true);
+        }
       };
       const cancelHandler = () => {
         confirmBtn.removeEventListener('click', confirmHandler);
         cancelBtn.removeEventListener('click', cancelHandler);
         this._hide();
-        if (typeof callback === 'function') callback(false);
+        if (typeof callback === 'function') {
+          callback(mode === 'prompt' ? null : false);
+        }
       };
       confirmBtn.addEventListener('click', confirmHandler);
       cancelBtn.addEventListener('click', cancelHandler);
@@ -76,6 +100,14 @@ const CyberNotify = {
       return;
     }
     this._show(message, 'confirm', callback, options.type);
+  },
+  prompt(message, defaultValue, callback, options = {}) {
+    if (typeof callback !== 'function') {
+      console.warn('CyberNotify.prompt: callback is not a function');
+      this._hide();
+      return;
+    }
+    this._show(message, 'prompt', callback, options.type, defaultValue);
   },
 };
 
@@ -164,5 +196,36 @@ describe('CyberNotify — Confirm mode', () => {
   it('message is displayed correctly', () => {
     CyberNotify.confirm('Delete this item?', () => {});
     expect(document.getElementById('cyber-notify-message').textContent).toBe('Delete this item?');
+  });
+});
+
+// ─── Unit tests: Prompt mode ─────────────────────────────────────────────────
+
+describe('CyberNotify — Prompt mode', () => {
+  it('both Confirm and Cancel buttons and text input are shown', () => {
+    CyberNotify.prompt('Enter value:', 'defaultVal', () => {});
+    const confirmBtn = document.getElementById('cyber-notify-confirm-btn');
+    const cancelBtn = document.getElementById('cyber-notify-cancel-btn');
+    const inputEl = document.getElementById('cyber-notify-input');
+    expect(confirmBtn.style.display).not.toBe('none');
+    expect(cancelBtn.style.display).not.toBe('none');
+    expect(inputEl.style.display).not.toBe('none');
+    expect(inputEl.value).toBe('defaultVal');
+  });
+
+  it('calls callback with input value when confirmed, null when cancelled', () => {
+    let received = undefined;
+    CyberNotify.prompt('Enter value:', 'initialText', (v) => { received = v; });
+    const confirmBtn = document.getElementById('cyber-notify-confirm-btn');
+    const inputEl = document.getElementById('cyber-notify-input');
+    inputEl.value = 'updatedText';
+    confirmBtn.click();
+    expect(received).toBe('updatedText');
+
+    received = undefined;
+    CyberNotify.prompt('Enter value:', 'initialText', (v) => { received = v; });
+    const cancelBtn = document.getElementById('cyber-notify-cancel-btn');
+    cancelBtn.click();
+    expect(received).toBeNull();
   });
 });
