@@ -3356,11 +3356,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Show the modal with animation
     welcomeModal.classList.remove("hidden");
 
-    console.log("Modal classes after:", welcomeModal.className);
-    console.log(
-      "Modal display style:",
-      window.getComputedStyle(welcomeModal).display,
-    );
+    // Start typewriter after card slides in
+    setTimeout(() => startTypewriter(), 500);
 
     // Mark as shown in this session
     sessionStorage.setItem("cyberguard_welcome_shown", "true");
@@ -3370,9 +3367,9 @@ document.addEventListener("DOMContentLoaded", () => {
       hideWelcomePopup();
     });
 
-    // Add event listener for clicking outside the modal
+    // Add event listener for clicking outside the modal (backdrop click)
     welcomeModal.addEventListener("click", (e) => {
-      if (e.target === welcomeModal) {
+      if (e.target === welcomeModal || e.target.classList.contains("welcome-backdrop")) {
         hideWelcomePopup();
       }
     });
@@ -3385,9 +3382,63 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // --- Welcome typewriter animation ---
+  let _welcomeTypewriterTimer = null;
+
+  function startTypewriter() {
+    const el = document.getElementById("welcome-typewriter");
+    if (!el) return;
+
+    const phrases = [
+      "Port Scanning & Infrastructure Mapping",
+      "Multi-Engine Malware Analysis",
+      "Cryptographic & DNS Auditing",
+      "Real-Time Threat Intelligence",
+      "Cipher Suite Analysis",
+      "IP Geolocation & WHOIS Lookup",
+    ];
+
+    let phraseIdx = 0;
+    let charIdx = 0;
+    let deleting = false;
+
+    function tick() {
+      const current = phrases[phraseIdx];
+
+      if (!deleting) {
+        el.textContent = current.slice(0, charIdx + 1);
+        charIdx++;
+        if (charIdx === current.length) {
+          deleting = true;
+          _welcomeTypewriterTimer = setTimeout(tick, 1800);
+          return;
+        }
+        _welcomeTypewriterTimer = setTimeout(tick, 48);
+      } else {
+        el.textContent = current.slice(0, charIdx - 1);
+        charIdx--;
+        if (charIdx === 0) {
+          deleting = false;
+          phraseIdx = (phraseIdx + 1) % phrases.length;
+          _welcomeTypewriterTimer = setTimeout(tick, 300);
+          return;
+        }
+        _welcomeTypewriterTimer = setTimeout(tick, 22);
+      }
+    }
+
+    tick();
+  }
+
+  function stopTypewriter() {
+    clearTimeout(_welcomeTypewriterTimer);
+    _welcomeTypewriterTimer = null;
+  }
+
   function hideWelcomePopup() {
     const welcomeModal = document.getElementById("welcome-modal");
     welcomeModal.classList.add("hidden");
+    stopTypewriter();
 
     // Log a welcome message to results after popup is closed
     setTimeout(() => {
@@ -3399,6 +3450,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }, 300);
   }
+
 
   // WhoisXML key management
   saveWhoisKeyBtn.addEventListener("click", () => {
