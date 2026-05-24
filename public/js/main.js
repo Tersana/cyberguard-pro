@@ -11300,6 +11300,67 @@ function renderProjectCard(project) {
   // Escape ID for safe inline use (UUIDs are strings, need quotes)
   const escapedId = String(id).replace(/'/g, "\\'");
 
+  const targetsCount = targets_count ?? 0;
+  const findingsCount = project.findings_count ?? 0;
+  const scansCount = project.scans_count ?? 0;
+
+  let riskScore = 0;
+  if (project.risk_score !== undefined && project.risk_score !== null) {
+    riskScore = Number(project.risk_score);
+  } else if (findingsCount > 0) {
+    riskScore = 1.0 + Math.log2(findingsCount) * 1.5;
+    riskScore = Math.min(10.0, Math.max(0.0, riskScore));
+  }
+
+  const riskScoreStr = riskScore.toFixed(1);
+  const fillWidth = Math.round((riskScore / 10) * 100);
+
+  let scoreColor = "#34D399"; // green
+  if (riskScore > 7.0) {
+    scoreColor = "#f87171"; // red
+  } else if (riskScore > 3.0) {
+    scoreColor = "#fbbf24"; // orange/yellow
+  }
+
+  // Metadata row HTML
+  const metadataRowHTML = `
+    <div class="flex items-center gap-4 text-xs text-slate-400 mb-3.5 font-semibold">
+      <span class="flex items-center gap-1.5" title="Targets inside project">
+        <svg class="w-3.5 h-3.5 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <circle cx="12" cy="12" r="6"/>
+          <circle cx="12" cy="12" r="2"/>
+        </svg>
+        <span class="project-targets-count-val" data-project-id="${id}">${targetsCount} targets</span>
+      </span>
+      <span class="flex items-center gap-1.5" title="Total findings">
+        <svg class="w-3.5 h-3.5 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="8" height="14" x="8" y="6" rx="4"/>
+          <path d="m19 7-3 2M5 7l3 2M19 19l-3-2M5 19l3-2M20 13h-4M4 13h4M10 4l1-2M14 4l-1-2"/>
+        </svg>
+        <span class="project-findings-count-val" data-project-id="${id}">${findingsCount} findings</span>
+      </span>
+      <span class="flex items-center gap-1.5" title="Total scans done">
+        <svg class="w-3.5 h-3.5 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+        <span class="project-scans-count-val" data-project-id="${id}">${scansCount} scans</span>
+      </span>
+    </div>`;
+
+  // Risk score bar HTML
+  const riskScoreBarHTML = `
+    <div class="mb-4">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-xs text-slate-400 font-medium">Risk Score</span>
+        <span class="text-xs font-bold px-2 py-0.5 rounded project-risk-score-value" data-project-id="${id}" style="color: ${scoreColor}; background: ${scoreColor}15; border: 1px solid ${scoreColor}30">${riskScoreStr} / 10</span>
+      </div>
+      <div class="project-progress-track" style="background: rgba(255, 255, 255, 0.05); height: 6px; border-radius: 999px; overflow: hidden; position: relative;">
+        <div class="project-progress-fill" data-progress-project-id="${id}" style="width: ${fillWidth}%; height: 100%; border-radius: 999px; background: ${scoreColor}; transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+      </div>
+    </div>`;
+
   // Generate the project card HTML
   return `
     <div class="cyber-card p-5 hover:border-purple-500/40 transition-all cursor-pointer" data-project-id="${id}" onclick="editProject('${escapedId}')">
@@ -11311,12 +11372,8 @@ function renderProjectCard(project) {
         <span class="${badgeClass} ml-2 flex-shrink-0">${statusDisplay}</span>
       </div>
 
-      <div class="flex items-center gap-2 text-xs text-slate-500 mb-3">
-        <svg class="w-4 h-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25" />
-        </svg>
-        <span class="font-mono truncate">${targets_count} target${targets_count !== 1 ? "s" : ""}</span>
-      </div>
+      ${metadataRowHTML}
+      ${riskScoreBarHTML}
 
       <div class="flex items-center justify-between pt-3 border-t border-white/5">
         <div class="flex items-center gap-2 min-w-0">

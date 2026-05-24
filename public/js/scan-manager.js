@@ -75,6 +75,9 @@
     scanState.targetType  = buttonEl.dataset.typ || "domain";
     _selected.clear();
 
+    const countEl = document.getElementById("selected-scanners-count-bar");
+    if (countEl) countEl.textContent = "0 scanners selected";
+
     const modal   = document.getElementById("scan-scanner-modal");
     if (!modal) return;
 
@@ -85,13 +88,72 @@
 
     const bodyEl = document.getElementById("scan-modal-scanner-body");
     if (bodyEl) bodyEl.innerHTML = `
-      <div class="flex items-center justify-center py-10 text-slate-400 text-sm gap-3">
-        <span class="cyber-spinner-sm"></span>Loading scanners…
+      <div class="flex flex-col items-center justify-center py-20 text-slate-400 text-sm gap-3">
+        <span class="cyber-spinner"></span>
+        <span>Loading active security scanner list…</span>
       </div>`;
 
     modal.classList.remove("hidden");
     await loadScanners();
     renderScannerList();
+  }
+
+  const SCANNER_META = {
+    "Custom Subdomain Enum & Analysis": {
+      description: "Discovers active subdomains, DNS records, and hosts associated with the target domain using passive and active enumeration.",
+      icon: `<svg class="w-5 h-5 text-[#A78BFA]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+             </svg>`
+    },
+    "Web Endpoint Fuzzer & Classifier": {
+      description: "Fuzzes directory structures, paths, and files to discover hidden assets, backup files, and administrative panels.",
+      icon: `<svg class="w-5 h-5 text-[#A78BFA]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+             </svg>`
+    },
+    "SQLi Testing": {
+      description: "Scans input parameters and query strings on target endpoints to detect SQL Injection vulnerabilities.",
+      icon: `<svg class="w-5 h-5 text-[#A78BFA]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75" />
+             </svg>`
+    }
+  };
+
+  function getScannerMeta(scanner) {
+    const name = scanner.name || "";
+    const id = scanner.id || "";
+    const key = Object.keys(SCANNER_META).find(k => name.toLowerCase().includes(k.toLowerCase()) || id.toLowerCase().includes(k.toLowerCase()));
+    
+    if (key) {
+      return {
+        description: scanner.description || SCANNER_META[key].description,
+        icon: SCANNER_META[key].icon
+      };
+    }
+    
+    const cat = (scanner.category || "").toLowerCase();
+    let catIcon = `<svg class="w-5 h-5 text-[#A78BFA]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>`;
+    
+    if (cat === "recon") {
+      catIcon = `<svg class="w-5 h-5 text-[#A78BFA]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+      </svg>`;
+    } else if (cat === "vuln" || cat === "web") {
+      catIcon = `<svg class="w-5 h-5 text-[#A78BFA]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.03L12 3m0 0l-3-3m3 3l3-3m0 20.06V21m0 0l-3 3m3-3l3-3M3.22 6h17.56M3.22 18h17.56" />
+      </svg>`;
+    } else if (cat === "audit") {
+      catIcon = `<svg class="w-5 h-5 text-[#A78BFA]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.03 0 1.9.693 2.166 1.638m-7.377 2.24a.75.75 0 01-1.08 1.08L5.25 6.108a.75.75 0 010-1.08l1.08-1.08a.75.75 0 111.08 1.08L6.33 6.108l1.08 1.08zm11.306 0a.75.75 0 01-1.08 1.08l-1.08-1.08a.75.75 0 010-1.08l1.08-1.08a.75.75 0 111.08 1.08l-1.08 1.08 1.08 1.08z" />
+      </svg>`;
+    }
+    
+    return {
+      description: scanner.description || `Launches automated security ${cat || 'assessment'} testing on targets.`,
+      icon: catIcon
+    };
   }
 
   function renderScannerList() {
@@ -113,18 +175,18 @@
     let html = "";
     for (const [cat, list] of Object.entries(groups)) {
       html += `
-        <div class="mb-5" data-scan-group="${escAttr(cat)}">
-          <div class="flex items-center justify-between mb-3">
+        <div class="mb-8" data-scan-group="${escAttr(cat)}">
+          <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
             <span class="text-xs font-bold uppercase tracking-widest text-[var(--cg-accent)]">
               ${escHtml(cat)}
             </span>
             <button type="button"
-              class="text-xs text-[var(--cg-info)] hover:underline focus:outline-none"
+              class="text-xs text-[var(--cg-info)] hover:underline focus:outline-none font-semibold"
               onclick="window.ScanManager._toggleGroup('${escAttr(cat)}')">
               Select All
             </button>
           </div>
-          <div class="space-y-2">${list.map(renderScannerCard).join("")}</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">${list.map(renderScannerCard).join("")}</div>
         </div>`;
     }
     bodyEl.innerHTML = html;
@@ -133,22 +195,44 @@
   function renderScannerCard(s) {
     const id   = escAttr(s.id || "");
     const name = escHtml(s.name || "");
+    const category = escHtml((s.category || "").toUpperCase());
     const catBadgeCls = ({
       recon: "text-[#38BDF8] bg-[rgba(56,189,248,0.1)] border-[rgba(56,189,248,0.25)]",
       vuln : "text-[#FB923C] bg-[rgba(251,146,60,0.1)] border-[rgba(251,146,60,0.25)]",
       audit: "text-[#A78BFA] bg-[rgba(167,139,250,0.1)] border-[rgba(167,139,250,0.25)]",
     })[s.category] || "text-slate-400 bg-slate-800/50 border-slate-700";
 
+    const meta = getScannerMeta(s);
+    const desc = escHtml(meta.description);
+    const iconSvg = meta.icon;
+
     return `
-      <label class="scan-card flex items-center gap-3 p-3 rounded-xl border border-[var(--cg-border)]
-                    hover:border-[var(--cg-accent)] cursor-pointer transition-all select-none"
-             data-scanner-id="${id}">
-        <input type="checkbox" class="scan-cb w-4 h-4 rounded" value="${id}"
-               onchange="window.ScanManager._onCheckbox(this)" />
-        <span class="flex-1 text-sm text-white">${name}</span>
-        <span class="text-xs px-2 py-0.5 rounded-full border font-semibold ${catBadgeCls}">
-          ${escHtml(s.category || "")}
-        </span>
+      <label class="scanner-interactive-card relative flex flex-col justify-between p-5 rounded-2xl border border-[var(--cg-border)] bg-slate-900/20 hover:border-[#A78BFA]/50 hover:bg-slate-900/40 cursor-pointer transition-all duration-200 select-none min-h-[160px]" data-scanner-id="${id}">
+        <!-- Top row: Icon & Switch Toggle -->
+        <div class="flex items-start justify-between w-full">
+          <div class="p-2 bg-[rgba(167,139,250,0.1)] rounded-xl border border-[rgba(167,139,250,0.2)]">
+            ${iconSvg}
+          </div>
+          <!-- Custom styled switch -->
+          <div class="flex items-center">
+            <input type="checkbox" class="scan-cb sr-only" value="${id}"
+                   onchange="window.ScanManager._onCheckbox(this)" />
+            <div class="w-10 h-6 bg-slate-800 rounded-full p-1 transition-colors duration-200 ease-in-out switch-bg">
+              <div class="w-4 h-4 bg-slate-500 rounded-full shadow-md transform duration-200 ease-in-out switch-dot"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description Content -->
+        <div class="mt-4 flex-1">
+          <h4 class="text-sm font-bold text-white mb-1">${name}</h4>
+          <p class="text-xs text-slate-400 leading-relaxed font-sans">${desc}</p>
+        </div>
+
+        <!-- Bottom details -->
+        <div class="mt-4 pt-2 border-t border-white/5 flex items-center justify-between">
+          <span class="text-[9px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider ${catBadgeCls}">${category}</span>
+        </div>
       </label>`;
   }
 
@@ -173,11 +257,16 @@
   }
 
   function _refreshCardStyles(group) {
-    group.querySelectorAll(".scan-card").forEach((card) => {
+    const selector = group ? group.querySelectorAll(".scanner-interactive-card") : document.querySelectorAll(".scanner-interactive-card");
+    selector.forEach((card) => {
       const cb = card.querySelector(".scan-cb");
-      card.classList.toggle("border-[var(--cg-accent)]",         !!cb?.checked);
-      card.classList.toggle("bg-[rgba(167,139,250,0.07)]", !!cb?.checked);
+      card.classList.toggle("selected", !!cb?.checked);
     });
+
+    const countEl = document.getElementById("selected-scanners-count-bar");
+    if (countEl) {
+      countEl.textContent = `${_selected.size} scanner${_selected.size !== 1 ? 's' : ''} selected`;
+    }
   }
 
   function closeScanModal() {
