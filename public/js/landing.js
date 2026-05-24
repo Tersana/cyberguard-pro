@@ -612,14 +612,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const ctx = canvas.getContext("2d");
   
-  canvas.width = 320;
-  canvas.height = 320;
+  canvas.width = 400;
+  canvas.height = 400;
 
   const nodes = {
-    api:  { x: 160, y: 50 },
-    gw:   { x: 70,  y: 160 },
-    auth: { x: 250, y: 160 },
-    db:   { x: 160, y: 270 }
+    api:  { x: 200, y: 60 },
+    gw:   { x: 80,  y: 200 },
+    auth: { x: 320, y: 200 },
+    db:   { x: 200, y: 340 }
   };
 
   const connections = [

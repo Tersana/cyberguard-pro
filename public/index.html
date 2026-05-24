@@ -599,19 +599,19 @@
                         <canvas id="zeroTrustCanvas"></canvas>
                         
                         <!-- SVG for connection paths & static node overlays -->
-                        <svg class="zero-trust-svg" viewBox="0 0 320 320">
+                        <svg class="zero-trust-svg" viewBox="0 0 400 400">
                             <!-- Glowing paths (underneath nodes) -->
-                            <path class="graph-path path-api-gw" d="M160 50 L70 160" />
-                            <path class="graph-path path-gw-db" d="M70 160 L160 270" />
-                            <path class="graph-path path-db-auth" d="M160 270 L250 160" />
-                            <path class="graph-path path-auth-api" d="M250 160 L160 50" />
-                            <path class="graph-path path-api-db" d="M160 50 L160 270" />
-                            <path class="graph-path path-gw-auth" d="M70 160 L250 160" />
+                            <path class="graph-path path-api-gw" d="M200 60 L80 200" />
+                            <path class="graph-path path-gw-db" d="M80 200 L200 340" />
+                            <path class="graph-path path-db-auth" d="M200 340 L320 200" />
+                            <path class="graph-path path-auth-api" d="M320 200 L200 60" />
+                            <path class="graph-path path-api-db" d="M200 60 L200 340" />
+                            <path class="graph-path path-gw-auth" d="M80 200 L320 200" />
                         </svg>
 
                         <!-- Nodes positioned absolutely to overlay perfectly -->
                         <!-- API Gateways (Top) -->
-                        <div class="graph-node node-api" style="top: 50px; left: 160px;">
+                        <div class="graph-node node-api" style="top: 60px; left: 200px;">
                             <div class="node-icon-wrapper">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" />
@@ -621,7 +621,7 @@
                         </div>
 
                         <!-- Secure Gateways (Left) -->
-                        <div class="graph-node node-gw" style="top: 160px; left: 70px;">
+                        <div class="graph-node node-gw" style="top: 200px; left: 80px;">
                             <div class="node-icon-wrapper">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
@@ -631,7 +631,7 @@
                         </div>
 
                         <!-- User Access/Authentication (Right) -->
-                        <div class="graph-node node-auth" style="top: 160px; left: 250px;">
+                        <div class="graph-node node-auth" style="top: 200px; left: 320px;">
                             <div class="node-icon-wrapper">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
@@ -641,7 +641,7 @@
                         </div>
 
                         <!-- Secured Database (Bottom) -->
-                        <div class="graph-node node-db" style="top: 270px; left: 160px;">
+                        <div class="graph-node node-db" style="top: 340px; left: 200px;">
                             <div class="node-icon-wrapper">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V10.125m16.5 0v3.75m-16.5-3.75v3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125v-3.75" />
