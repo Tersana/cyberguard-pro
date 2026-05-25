@@ -24,8 +24,11 @@ class SettingsPanel {
     }
 
     // Modal Display Controls
-    open() {
-        if (this.isOpen) return;
+    open(tabId = "profile") {
+        if (this.isOpen) {
+            if (tabId) this.switchTab(tabId);
+            return;
+        }
         
         // Track active element to restore focus later (Accessibility)
         this.focusedElementBeforeOpen = document.activeElement;
@@ -36,8 +39,8 @@ class SettingsPanel {
             this.isOpen = true;
             document.body.style.overflow = "hidden"; // disable background scrolling
 
-            // Switch to profile tab by default on open
-            this.switchTab("profile");
+            // Switch to requested tab on open
+            this.switchTab(tabId);
             
             // Initialize tab modules
             window.ProfileSettings.init();

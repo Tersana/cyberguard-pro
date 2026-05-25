@@ -76,12 +76,20 @@ const animateOnScrollOptions = {
 };
 
 const animateOnScroll = new IntersectionObserver((entries) => {
-  entries.forEach((entry, index) => {
+  entries.forEach((entry) => {
     if (entry.isIntersecting) {
-      const delay = entry.target.getAttribute("data-delay") || 0;
-      setTimeout(() => {
+      const delay = (parseInt(entry.target.getAttribute("data-delay")) || 0) / 1000;
+      
+      if (typeof gsap !== "undefined" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        // High-end GSAP entrance animation
+        gsap.fromTo(entry.target, 
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.8, delay: delay, ease: "power2.out" }
+        );
+      } else {
+        // Fallback for CSS/Reduced motion
         entry.target.classList.add("aos-animate");
-      }, delay);
+      }
       animateOnScroll.unobserve(entry.target);
     }
   });
@@ -95,17 +103,45 @@ document.querySelectorAll("[data-aos]").forEach((element) => {
 // ===========================
 // Parallax Effect for Hero Orbs
 // ===========================
-window.addEventListener("mousemove", (e) => {
+document.addEventListener("DOMContentLoaded", () => {
   const orbs = document.querySelectorAll(".gradient-orb");
-  const mouseX = e.clientX / window.innerWidth;
-  const mouseY = e.clientY / window.innerHeight;
+  if (orbs.length === 0) return;
 
-  orbs.forEach((orb, index) => {
-    const speed = (index + 1) * 20;
-    const x = (mouseX - 0.5) * speed;
-    const y = (mouseY - 0.5) * speed;
-    orb.style.transform = `translate(${x}px, ${y}px)`;
-  });
+  if (typeof gsap !== "undefined" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const quickX = [];
+    const quickY = [];
+
+    orbs.forEach((orb) => {
+      quickX.push(gsap.quickTo(orb, "x", { duration: 0.8, ease: "power2.out" }));
+      quickY.push(gsap.quickTo(orb, "y", { duration: 0.8, ease: "power2.out" }));
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      const mouseX = e.clientX / window.innerWidth;
+      const mouseY = e.clientY / window.innerHeight;
+
+      orbs.forEach((orb, index) => {
+        const speed = (index + 1) * 20;
+        const targetX = (mouseX - 0.5) * speed;
+        const targetY = (mouseY - 0.5) * speed;
+        quickX[index](targetX);
+        quickY[index](targetY);
+      });
+    });
+  } else {
+    // Fallback if GSAP is not loaded
+    window.addEventListener("mousemove", (e) => {
+      const mouseX = e.clientX / window.innerWidth;
+      const mouseY = e.clientY / window.innerHeight;
+
+      orbs.forEach((orb, index) => {
+        const speed = (index + 1) * 20;
+        const x = (mouseX - 0.5) * speed;
+        const y = (mouseY - 0.5) * speed;
+        orb.style.transform = `translate(${x}px, ${y}px)`;
+      });
+    });
+  }
 });
 
 // ===========================
@@ -385,43 +421,74 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!typewriterSpan) return;
 
   const words = ["Cybersecurity", "Threat Detection", "Vulnerability Scan", "Network Security"];
-  let wordIndex = 0;
-  let charIndex = words[0].length; // Start with the first word complete to prevent SEO/layout shift
-  let isDeleting = true;
-  let typingSpeed = 150;
 
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    typewriterSpan.textContent = "Cybersecurity";
+    typewriterSpan.textContent = words[0];
     return;
   }
 
-  function type() {
-    const currentWord = words[wordIndex];
-    
-    if (isDeleting) {
-      typewriterSpan.textContent = currentWord.substring(0, charIndex - 1);
-      charIndex--;
-      typingSpeed = 60; // Faster deleting
-    } else {
-      typewriterSpan.textContent = currentWord.substring(0, charIndex + 1);
-      charIndex++;
-      typingSpeed = 130; // Custom typing speed
-    }
+  if (typeof gsap !== "undefined") {
+    const tl = gsap.timeline({ repeat: -1 });
 
-    if (!isDeleting && charIndex === currentWord.length) {
-      typingSpeed = 2000; // Pause at the complete word
-      isDeleting = true;
-    } else if (isDeleting && charIndex === 0) {
-      isDeleting = false;
-      wordIndex = (wordIndex + 1) % words.length;
-      typingSpeed = 500; // Pause before typing the next word
-    }
+    words.forEach((word) => {
+      const obj = { length: 0 };
+      
+      // Type write word
+      tl.to(obj, {
+        length: word.length,
+        duration: word.length * 0.08 + 0.3,
+        ease: "none",
+        onUpdate: () => {
+          typewriterSpan.textContent = word.substring(0, Math.ceil(obj.length));
+        }
+      })
+      // Pause at full word
+      .to({}, { duration: 2 })
+      // Delete word
+      .to(obj, {
+        length: 0,
+        duration: word.length * 0.04 + 0.15,
+        ease: "none",
+        onUpdate: () => {
+          typewriterSpan.textContent = word.substring(0, Math.ceil(obj.length));
+        }
+      })
+      // Pause after deletion
+      .to({}, { duration: 0.5 });
+    });
+  } else {
+    // Fallback if GSAP is not loaded
+    let wordIndex = 0;
+    let charIndex = words[0].length;
+    let isDeleting = true;
+    let typingSpeed = 150;
 
-    setTimeout(type, typingSpeed);
+    function type() {
+      const currentWord = words[wordIndex];
+      
+      if (isDeleting) {
+        typewriterSpan.textContent = currentWord.substring(0, charIndex - 1);
+        charIndex--;
+        typingSpeed = 60;
+      } else {
+        typewriterSpan.textContent = currentWord.substring(0, charIndex + 1);
+        charIndex++;
+        typingSpeed = 130;
+      }
+
+      if (!isDeleting && charIndex === currentWord.length) {
+        typingSpeed = 2000;
+        isDeleting = true;
+      } else if (isDeleting && charIndex === 0) {
+        isDeleting = false;
+        wordIndex = (wordIndex + 1) % words.length;
+        typingSpeed = 500;
+      }
+
+      setTimeout(type, typingSpeed);
+    }
+    setTimeout(type, 1500);
   }
-
-  // Initial delay before commencing loop
-  setTimeout(type, 1500);
 });
 
 
@@ -676,6 +743,71 @@ document.addEventListener("DOMContentLoaded", () => {
     animateGraph();
   }
 });
+
+// ===========================
+// Interactive Zero-Trust Node Map Tooltips (Tippy.js)
+// ===========================
+document.addEventListener("DOMContentLoaded", () => {
+  if (typeof tippy !== "undefined") {
+    // API Gateway tooltip
+    tippy(".node-api", {
+      theme: "translucent",
+      content: `
+        <div class="p-2 max-w-[220px] text-xs leading-relaxed font-sans text-left">
+          <div class="font-extrabold uppercase text-blue-400 tracking-wide mb-1">API Gateway</div>
+          <p class="text-slate-300">Central entry point for all security telemetries. Conducts rate-limiting, CORS validation, and sanitizes payload streams.</p>
+        </div>
+      `,
+      allowHTML: true,
+      placement: "top",
+      animation: "scale"
+    });
+
+    // Proxy Guard tooltip
+    tippy(".node-gw", {
+      theme: "translucent",
+      content: `
+        <div class="p-2 max-w-[220px] text-xs leading-relaxed font-sans text-left">
+          <div class="font-extrabold uppercase text-purple-400 tracking-wide mb-1">Proxy Guard</div>
+          <p class="text-slate-300">Monitors outbound reconnaissance queries. Isolates backend engines and proxies OWASP ZAP endpoints to prevent raw exposure.</p>
+        </div>
+      `,
+      allowHTML: true,
+      placement: "left",
+      animation: "scale"
+    });
+
+    // Auth Core tooltip
+    tippy(".node-auth", {
+      theme: "translucent",
+      content: `
+        <div class="p-2 max-w-[220px] text-xs leading-relaxed font-sans text-left">
+          <div class="font-extrabold uppercase text-emerald-400 tracking-wide mb-1">Auth Core</div>
+          <p class="text-slate-300">Manages secure session states, 2FA tokens, and generates cryptographically signed JWT keys for strict request verification.</p>
+        </div>
+      `,
+      allowHTML: true,
+      placement: "right",
+      animation: "scale"
+    });
+
+    // Vault Core tooltip
+    tippy(".node-db", {
+      theme: "translucent",
+      content: `
+        <div class="p-2 max-w-[220px] text-xs leading-relaxed font-sans text-left">
+          <div class="font-extrabold uppercase text-purple-300 tracking-wide mb-1">Vault Core</div>
+          <p class="text-slate-300">Encrypted relational database storing scanned telemetry, project access control scopes, and credentials vaulting.</p>
+        </div>
+      `,
+      allowHTML: true,
+      placement: "bottom",
+      animation: "scale"
+    });
+  }
+});
+
+
 
 console.log(
   "%c🛡️ CyberGuard",

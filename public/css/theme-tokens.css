@@ -91,6 +91,20 @@
     --purple-500: var(--cg-accent-hover);
     --purple-600: var(--cg-accent-dark);
     --cyan-400: var(--cg-info);
+
+    /* ===== Responsive Layout Tokens ===== */
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 0px;
+    --content-padding: clamp(12px, 2vw, 32px);
+    --card-gap: clamp(12px, 1.5vw, 24px);
+
+    /* ===== Font Sizing System (Fluid Scales) ===== */
+    --font-xs:   clamp(10px, 1.1vw, 12px);
+    --font-sm:   clamp(12px, 1.2vw, 14px);
+    --font-base: clamp(13px, 1.3vw, 16px);
+    --font-lg:   clamp(16px, 1.8vw, 20px);
+    --font-xl:   clamp(20px, 2.5vw, 28px);
+    --font-2xl:  clamp(24px, 3vw, 36px);
 }
 
 /* ============================================================
@@ -125,4 +139,38 @@
   gap: 0;
   font-weight: bold;
   letter-spacing: -0.5px;
+}
+
+/* ===== Responsive Scaling Media Queries ===== */
+
+/* 22-inch monitors (1281px - 1536px) */
+@media (max-width: 1536px) and (min-width: 1281px) {
+  :root {
+    --sidebar-width: 185px;
+    --content-padding: 24px;
+    --card-gap: 16px;
+  }
+}
+
+/* 16-inch laptops (1025px - 1280px) */
+@media (max-width: 1280px) and (min-width: 1025px) {
+  :root {
+    --sidebar-width: 170px;
+    --content-padding: 16px;
+    --card-gap: 12px;
+  }
+}
+
+/* lg and below (laptops) */
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-width: 160px;
+  }
+}
+
+/* md and below (tablets) */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 240px; /* Sidebar drawer width when open on mobile/tablet */
+  }
 }

@@ -93,8 +93,13 @@
 .cyber-sidebar {
     background: var(--cg-bg-surface);
     border-right: 1px solid var(--cg-border);
-    width: 260px;
-    min-width: 260px;
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
     /* Task 2.1: CSS transition properties for sidebar toggle */
     transition:
         transform 300ms cubic-bezier(0.4, 0, 0.2, 1),
@@ -4763,4 +4768,255 @@ body.authenticated [data-auth-required].cyber-tool-link::after {
 }
 
 
+
+
+
+/* =================================================================
+   RESPONSIVE DESIGN FOUNDATION & OVERFLOW FIXES
+   ================================================================= */
+
+/* Ensure box-sizing is consistent everywhere */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Prevent horizontal scroll on all pages */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* Make images responsive by default */
+img, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── OVERFLOW & LAYOUT SCALING FIXES ──────────────────────── */
+
+.content-area,
+.tab-content,
+.panel-content,
+.tab-pane {
+  overflow-x: hidden;
+  min-width: 0;
+}
+
+/* Code/monospace text blocks scroll horizontally rather than overflow */
+.code-block,
+pre,
+code,
+.jwt-encoded-textarea,
+.jwt-editor-textarea {
+  overflow-x: auto !important;
+  white-space: pre !important;
+  word-break: normal !important;
+}
+
+/* Text ellipsis for long URLs/targets */
+.url-text,
+.target-url,
+.finding-title,
+.project-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Button & interactive touch target enhancement for mobile devices */
+@media (max-width: 768px) {
+  .cyber-btn-primary,
+  .cyber-btn-ghost,
+  .cyber-btn-danger,
+  .cyber-btn-red,
+  .cyber-btn-glow,
+  .btn-logout,
+  .btn-cancel,
+  .settings-nav-item,
+  .cyber-nav-item {
+    min-height: 44px;         /* Touch target compliance */
+  }
+}
+
+/* Button groups wrap naturally */
+.button-group, .flex-gap-2, .flex-gap-3 {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── RESPONSIVE UTILITY HELPER CLASSES ─────────────────────── */
+
+@media (max-width: 640px) {
+  .hide-mobile { display: none !important; }
+  .show-mobile-only { display: block !important; }
+  .full-width-mobile {
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .stack-mobile {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .text-left-mobile { text-align: left !important; }
+  .text-center-mobile { text-align: center !important; }
+  
+  /* Make all primary buttons full width on small phones */
+  .btn-full-mobile {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .hide-tablet { display: none !important; }
+}
+
+@media (max-width: 1280px) {
+  .hide-laptop { display: none !important; }
+}
+
+@media (min-width: 641px) {
+  .show-mobile-only { display: none !important; }
+}
+
+
+/* ── SIDEBAR VERTICAL SCROLLBAR STYLING ─────────────────────── */
+
+.cyber-sidebar::-webkit-scrollbar,
+#sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.cyber-sidebar::-webkit-scrollbar-track,
+#sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cyber-sidebar::-webkit-scrollbar-thumb,
+#sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.cyber-sidebar::-webkit-scrollbar-thumb:hover,
+#sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── SIDEBAR VIEWPORT HEIGHT FIXES ───────────────────────────── */
+
+/* For 15.6-inch laptops at 768px height */
+@media (max-height: 800px) {
+  .cyber-sidebar {
+    overflow-y: auto;   /* Force scroll */
+  }
+  
+  /* Reduce spacing between nav items to fit more */
+  .cyber-nav-item {
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+    font-size: 13px !important;
+  }
+  
+  /* Reduce logo area height */
+  .cyber-sidebar-header {
+    padding: 10px 12px !important;
+  }
+  
+  /* Reduce separators and section margins */
+  .cyber-divider {
+    margin-bottom: 4px !important;
+  }
+  
+  .cyber-sidebar nav .space-y-1 {
+    margin-top: 4px !important;
+    margin-bottom: 4px !important;
+  }
+  
+  .cyber-sidebar nav .space-y-1 .px-3 {
+    margin-bottom: 2px !important;
+  }
+  
+  .cyber-sidebar nav .space-y-1 .px-3 span {
+    font-size: 10px !important;
+  }
+  
+  /* Compact the System & Scans metrics */
+  #sidebar-system-health {
+    padding-top: 8px !important;
+    padding-bottom: 4px !important;
+    margin-top: 8px !important;
+  }
+  
+  #sidebar-system-health .space-y-3 {
+    margin-top: 4px !important;
+  }
+  
+  #sidebar-system-health .space-y-3 > div {
+    margin-bottom: 6px !important;
+  }
+  
+  /* Compact Current Plan card */
+  #subscription-card-container {
+    margin-top: 8px !important;
+  }
+  
+  #subscription-card {
+    padding: 8px 12px !important;
+  }
+  
+  /* Hide plan feature list on short screens */
+  #subscription-card ul {
+    display: none !important;
+  }
+  
+  /* Add view details hint */
+  #subscription-card::after {
+    content: 'View Details →';
+    display: block;
+    font-size: 10px;
+    color: var(--cg-accent);
+    margin-top: 4px;
+    cursor: pointer;
+    text-align: left;
+  }
+}
+
+/* For very short viewports (< 700px height) */
+@media (max-height: 700px) {
+  .cyber-nav-item {
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+    font-size: 12px !important;
+  }
+  
+  /* Icon sizes */
+  .cyber-nav-item svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  
+  /* Compact the System & Scans metrics further */
+  #sidebar-system-health {
+    display: none !important; /* Hide health meters to prioritize nav on tiny viewports */
+  }
+}
+
+/* Interactivity & hover states for the subscription card */
+#subscription-card {
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+#subscription-card:hover {
+  background: rgba(30, 41, 59, 0.75) !important;
+  border-color: var(--cg-accent) !important;
+  transform: translateY(-1px);
+}
+
+#subscription-card:active {
+  transform: translateY(0);
+}
 

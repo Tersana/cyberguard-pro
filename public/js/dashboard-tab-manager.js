@@ -143,9 +143,17 @@ const DashboardTabManager = {
       if (pane.id === activeTabId) {
         pane.classList.remove('hidden');
         pane.classList.add('active');
-        // Reset any inline styles that might interfere
-        pane.style.opacity = '1';
-        pane.style.transform = 'none';
+        // Animated transition using GSAP if loaded
+        if (typeof gsap !== "undefined") {
+          gsap.fromTo(pane, 
+            { opacity: 0, y: 12 }, 
+            { opacity: 1, y: 0, duration: 0.35, ease: "power2.out", clearProps: "opacity,transform" }
+          );
+        } else {
+          // Reset any inline styles that might interfere
+          pane.style.opacity = '1';
+          pane.style.transform = 'none';
+        }
       } else {
         pane.classList.add('hidden');
         pane.classList.remove('active');
