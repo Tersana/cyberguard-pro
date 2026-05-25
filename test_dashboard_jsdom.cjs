@@ -33,16 +33,20 @@ const dom = new JSDOM(htmlContent, {
   runScripts: 'outside-only',
   virtualConsole,
   beforeParse(window) {
-    // Mock localStorage
-    window.localStorage = {
+    // Mock localStorage properly using defineProperty since JSDOM makes it read-only
+    const mockStorage = {
       getItem: (key) => {
-        if (key === 'cyberguard_jwt') return 'mock-jwt-token';
+        if (key === 'cyberguard_jwt') return 'mock-jwt-token-long-enough-for-length-check';
         return null;
       },
       setItem: () => {},
       removeItem: () => {},
       clear: () => {}
     };
+    Object.defineProperty(window, 'localStorage', {
+      value: mockStorage,
+      writable: true
+    });
     
     // Mock window location pathname
     window.location.pathname = '/dashboard.html';
@@ -75,6 +79,7 @@ const scriptsToLoad = [
   'public/js/network-analysis-tools.js',
   'public/js/main.js',
   'public/js/threat-intel.js',
+  'public/js/security-dashboard.js',
   'public/js/dashboard-tab-manager.js',
   'public/js/jwt-debugger.js',
   'public/js/state-manager.js',
