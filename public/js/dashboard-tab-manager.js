@@ -8,7 +8,6 @@ const DashboardTabManager = {
   // Track initialization state for each tab
   tabInitialized: {
     'security-dashboard': false,
-    'network-tools': false,
     'web-security': false,
     'hash-tools': false,
     'ai-assistant': false,
@@ -193,9 +192,6 @@ const DashboardTabManager = {
       case 'hash-tools':
         this.initializeHashTools();
         break;
-      case 'network-tools':
-        this.initializeNetworkTools();
-        break;
       case 'web-security':
         this.initializeWebSecurity();
         break;
@@ -260,15 +256,6 @@ const DashboardTabManager = {
     } else {
       console.warn('DashboardTabManager: CyberGuardJWTDebugger not found');
     }
-  },
-  
-  /**
-   * Initialize Network Tools tab
-   */
-  initializeNetworkTools() {
-    // Network tools are initialized in main.js DOMContentLoaded
-    // No additional initialization needed here
-    console.log('DashboardTabManager: Network Tools ready');
   },
   
   /**

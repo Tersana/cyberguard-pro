@@ -157,19 +157,19 @@ describe('Bug Condition Exploration - Legacy Hash Tools Event Listener Registrat
   describe('Property 2: Expected Behavior - All Event Listeners Should Register', () => {
     it('should verify that critical DOM elements exist for event listener registration', () => {
       // Verify that the elements that SHOULD have event listeners exist
-      const executeScanBtn = document.getElementById('execute-scan-btn');
+      const runAnalysisBtn = document.getElementById('run-analysis-btn');
       const toolCards = document.querySelectorAll('.cyber-tool-card');
       const filterButtons = document.querySelectorAll('.filter-pill');
       const welcomeModal = document.getElementById('welcome-modal');
 
       console.log('Verifying critical DOM elements exist:');
-      console.log('- Execute Scan button:', executeScanBtn ? 'EXISTS' : 'MISSING');
+      console.log('- Run Analysis button:', runAnalysisBtn ? 'EXISTS' : 'MISSING');
       console.log('- Tool cards:', toolCards.length, 'found');
       console.log('- Filter buttons:', filterButtons.length, 'found');
       console.log('- Welcome modal:', welcomeModal ? 'EXISTS' : 'MISSING');
 
       // These elements SHOULD exist
-      expect(executeScanBtn).not.toBeNull();
+      expect(runAnalysisBtn).not.toBeNull();
       expect(toolCards.length).toBeGreaterThan(0);
       expect(filterButtons.length).toBeGreaterThan(0);
       expect(welcomeModal).not.toBeNull();

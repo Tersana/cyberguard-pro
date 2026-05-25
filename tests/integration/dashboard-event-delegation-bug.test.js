@@ -107,7 +107,7 @@ describe('Bug Condition Exploration: Legacy Hash Tools Event Listener Registrati
       }
     });
 
-    it('should register Execute Scan button event listener', () => {
+    it('should register Run Analysis button event listener', () => {
       // This test will FAIL on unfixed code because the TypeError at line 8174
       // prevents subsequent event listeners from registering
       
@@ -126,9 +126,9 @@ describe('Bug Condition Exploration: Legacy Hash Tools Event Listener Registrati
         // Swallow error to test subsequent behavior
       }
       
-      // Assert: Execute Scan button should have event listener
-      const executeScanBtn = document.getElementById('execute-scan-btn');
-      expect(executeScanBtn).toBeTruthy();
+      // Assert: Run Analysis button should have event listener
+      const runAnalysisBtn = document.getElementById('run-analysis-btn');
+      expect(runAnalysisBtn).toBeTruthy();
       
       // Check if button has click event listener by attempting to click
       // On UNFIXED code, this will FAIL because the listener was never registered
@@ -138,7 +138,7 @@ describe('Bug Condition Exploration: Legacy Hash Tools Event Listener Registrati
       // If the listener is registered, clicking should trigger some behavior
       // We can't directly check if a listener exists, but we can verify the button is functional
       // by checking if it's not disabled and has the expected structure
-      expect(executeScanBtn.disabled).toBe(false);
+      expect(runAnalysisBtn.disabled).toBe(false);
     });
 
     it('should register tool selection checkbox event listeners', () => {
@@ -249,7 +249,7 @@ describe('Bug Condition Exploration: Legacy Hash Tools Event Listener Registrati
         fc.property(
           // Generate arbitrary dashboard load scenarios
           fc.record({
-            hasExecuteScanBtn: fc.constant(true), // Execute Scan button always exists
+            hasRunAnalysisBtn: fc.constant(true), // Run Analysis button always exists
             hasToolCards: fc.constant(true),      // Tool cards always exist
             hasFilterButtons: fc.constant(true),  // Filter buttons always exist
             hasWelcomeModal: fc.constant(true),   // Welcome modal always exists
@@ -294,8 +294,8 @@ describe('Bug Condition Exploration: Legacy Hash Tools Event Listener Registrati
             expect(errorThrown).toBeNull();
             
             // Verify critical elements are present and functional
-            if (scenario.hasExecuteScanBtn) {
-              const btn = testDocument.getElementById('execute-scan-btn');
+            if (scenario.hasRunAnalysisBtn) {
+              const btn = testDocument.getElementById('run-analysis-btn');
               expect(btn).toBeTruthy();
             }
             

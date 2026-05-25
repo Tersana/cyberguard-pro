@@ -810,14 +810,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 console.log(
-  "%c🛡️ CyberGuard",
+  "%c CyberGuard",
   "font-size: 24px; font-weight: bold; color: #667eea;"
 );
 console.log(
   "%cWelcome to CyberGuard! Your comprehensive cybersecurity toolkit.",
   "font-size: 14px; color: #64748b;"
-);
-console.log(
-  "%cTry the Konami Code for a surprise! ⬆️⬆️⬇️⬇️⬅️➡️⬅️➡️BA",
-  "font-size: 12px; color: #8b5cf6;"
 );

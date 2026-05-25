@@ -26,11 +26,11 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       <html>
         <body>
           <!-- Tab buttons -->
-          <button class="tab-button" data-tab="network-tools">Network Tools</button>
+          <button class="tab-button" data-tab="web-security">Web Security</button>
           <button class="tab-button active" data-tab="threat-intel">Threat Intel</button>
           
           <!-- Tab panes -->
-          <div id="network-tools" class="tab-pane hidden"></div>
+          <div id="web-security" class="tab-pane hidden"></div>
           <div id="threat-intel" class="tab-pane">
             <input type="text" id="threat-intel-search-input" value="" />
             <button id="threat-intel-search-btn">Search</button>
@@ -106,14 +106,14 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
     it('should hide tab using hidden class (display: none) when switching away', () => {
       // Arrange: Start on threat-intel tab
       const threatIntelTab = document.getElementById('threat-intel');
-      const networkToolsTab = document.getElementById('network-tools');
+      const webSecurityTab = document.getElementById('web-security');
       
       // Verify initial state
       expect(threatIntelTab.classList.contains('hidden')).toBe(false);
-      expect(networkToolsTab.classList.contains('hidden')).toBe(true);
+      expect(webSecurityTab.classList.contains('hidden')).toBe(true);
       
-      // Act: Switch to network-tools tab
-      DashboardTabManager.switchTab('network-tools');
+      // Act: Switch to web-security tab
+      DashboardTabManager.switchTab('web-security');
       
       // Assert: threat-intel tab should be hidden but still in DOM
       expect(threatIntelTab.classList.contains('hidden')).toBe(true);
@@ -132,7 +132,7 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       verdictText.textContent = 'VERDICT: MALICIOUS';
       
       // Act: Switch away and back
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
       
       // Assert: All content should be preserved
@@ -152,9 +152,9 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       const cardReference = verdictCard;
       
       // Act: Switch away and back multiple times
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
       
       // Assert: References should still point to same DOM elements
@@ -179,7 +179,7 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       };
       
       // Act: Switch tabs
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
       
       // Assert: State should be unchanged
@@ -213,9 +213,9 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       };
       
       // Act: Switch tabs multiple times
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
       
       // Assert: Source data should be preserved
@@ -233,7 +233,7 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       ];
       
       // Act: Switch tabs
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
       
       // Assert: History should be preserved
@@ -256,7 +256,7 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       };
       
       // Act: Switch away and back
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
       
       // Assert: No API calls should be made
@@ -270,7 +270,7 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       const initialCallCount = initSpy.mock.calls.length;
       
       // Act: Switch away and back
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
       
       // Assert: init should not be called again
@@ -302,7 +302,7 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       ThreatIntelState.sources.abuseipdb.loading = true;
       
       // Act: Switch tabs during "loading"
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
       
       // Assert: Loading state should be preserved
@@ -322,7 +322,7 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       searchBtn.textContent = 'Searching...';
       
       // Act: Switch tabs
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
       
       // Assert: Input and button state should be preserved
@@ -344,7 +344,7 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       ThreatIntelState.sources.virustotal.loading = true;
       
       // Act: Switch tabs while "loading"
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
       
       // Resolve the fetch
@@ -375,7 +375,7 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       };
       
       // Act: Switch tabs
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
       
       // Assert: Verdict should be preserved
@@ -394,7 +394,7 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       vtStatus.innerHTML = '<div class="text-red-400">Threat</div>';
       
       // Act: Switch tabs
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
       
       // Assert: Results should be preserved
@@ -417,9 +417,9 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       });
       
       // Act: Switch tabs multiple times
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
       
       // Assert: All results should be preserved
@@ -445,7 +445,7 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       const detailsSection = vtResults.querySelector('.source-details');
       
       // Act: Switch tabs
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
       
       // Assert: Details should still be expanded
@@ -463,7 +463,7 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       `;
       
       // Act: Switch tabs
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
       
       // Assert: History should be preserved
@@ -500,7 +500,7 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
       };
       
       // Act: Switch away and back
-      DashboardTabManager.switchTab('network-tools');
+      DashboardTabManager.switchTab('web-security');
       DashboardTabManager.switchTab('threat-intel');
       
       // Assert: Everything should be preserved
