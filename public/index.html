@@ -20,8 +20,82 @@
         <div class="container">
             <div class="nav-content">
                 <div class="logo">
-                    <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                    <svg
+                        class="logo-icon"
+                        viewBox="0 0 32 32"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                    >
+                        <defs>
+                            <!-- Vibrant cyber gradient: neon purple -> bright indigo -> neon cyan -->
+                            <linearGradient id="cyber-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#6d28d9" />
+                                <stop offset="50%" stop-color="#a855f7" />
+                                <stop offset="100%" stop-color="#22d3ee" />
+                            </linearGradient>
+                            <!-- Glow filter for next-gen emission -->
+                            <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="1.2" result="blur" />
+                                <feMerge>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                        </defs>
+
+                        <!-- Outer Tech Shield with glowing segments -->
+                        <!-- Segment 1: Left Tech Arc -->
+                        <path
+                            d="M15 3.5 L6.5 6.5 V14.5 C6.5 20 10 24.5 15 26.5"
+                            stroke="url(#cyber-grad)"
+                            stroke-width="2.2"
+                            stroke-linecap="round"
+                            filter="url(#neon-glow)"
+                        />
+
+                        <!-- Segment 2: Right Tech Arc -->
+                        <path
+                            d="M17 3.5 L25.5 6.5 V14.5 C25.5 20 22 24.5 17 26.5"
+                            stroke="url(#cyber-grad)"
+                            stroke-width="2.2"
+                            stroke-linecap="round"
+                            filter="url(#neon-glow)"
+                        />
+
+                        <!-- Segment 3: Floating Top/Bottom Shield Cap lines -->
+                        <path d="M13 2.5 H19" stroke="url(#cyber-grad)" stroke-width="1.8" stroke-linecap="round" opacity="0.8" />
+                        <path d="M13 28.5 H19" stroke="url(#cyber-grad)" stroke-width="1.8" stroke-linecap="round" opacity="0.8" />
+
+                        <!-- Futuristic Digital Lock Core -->
+                        <!-- Hexagonal Lock Body -->
+                        <polygon
+                            points="16,8.5 21,11.5 21,17.5 16,20.5 11,17.5 11,11.5"
+                            fill="rgba(17, 24, 39, 0.75)"
+                            stroke="url(#cyber-grad)"
+                            stroke-width="1.5"
+                            stroke-linejoin="round"
+                        />
+
+                        <!-- Glowing Keyhole/Lock Symbol -->
+                        <path
+                            d="M16 11.5 A2 2 0 0 0 14 13.5 C14 14.3 14.5 15.0 15.2 15.3 L14.5 18.5 H17.5 L16.8 15.3 C17.5 15.0 18 14.3 18 13.5 A2 2 0 0 0 16 11.5 Z"
+                            fill="url(#cyber-grad)"
+                            filter="url(#neon-glow)"
+                        />
+
+                        <!-- Interconnected Circuit Traces -->
+                        <path
+                            d="M7.5 10 L11 11.5 M24.5 10 L21 11.5 M7.5 18 L11 16.5 M24.5 18 L21 16.5"
+                            stroke="url(#cyber-grad)"
+                            stroke-width="1.2"
+                            opacity="0.8"
+                        />
+
+                        <!-- Micro Node Dots -->
+                        <circle cx="7.5" cy="10" r="1.2" fill="#22d3ee" />
+                        <circle cx="24.5" cy="10" r="1.2" fill="#6d28d9" />
+                        <circle cx="7.5" cy="18" r="1.2" fill="#6d28d9" />
+                        <circle cx="24.5" cy="18" r="1.2" fill="#22d3ee" />
                     </svg>
                     <span class="logo-text"><span class="brand-name"><span class="brand-cyber">Cyber</span><span class="brand-guard">Guard</span></span></span>
                 </div>
@@ -792,8 +866,8 @@
     <section class="cta">
         <div class="container">
             <div class="cta-content" data-aos="zoom-in">
-                <h2 class="cta-title">Next-Gen Security Intelligence</h2>
-                <p class="cta-description">Your all-in-one platform for deep reconnaissance, network analysis, threat intelligence and cryptographic excellence.</p>
+                <h2 class="cta-title">Uncover Vulnerabilities Before Exploitation</h2>
+                <p class="cta-description">Run on-demand security audits, conduct deep network reconnaissance, track active threat vectors, and execute precise cryptographic operations from a single unified console.</p>
                 <div class="cta-buttons">
                     <a href="/login" class="btn-primary btn-large">
                         <span>Get Started</span>
@@ -812,8 +886,82 @@
             <div class="footer-content">
                 <div class="footer-brand">
                     <div class="logo">
-                        <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                        <svg
+                            class="logo-icon"
+                            viewBox="0 0 32 32"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                        >
+                            <defs>
+                                <!-- Vibrant cyber gradient: neon purple -> bright indigo -> neon cyan -->
+                                <linearGradient id="cyber-grad-footer" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#6d28d9" />
+                                    <stop offset="50%" stop-color="#a855f7" />
+                                    <stop offset="100%" stop-color="#22d3ee" />
+                                </linearGradient>
+                                <!-- Glow filter for next-gen emission -->
+                                <filter id="neon-glow-footer" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="1.2" result="blur" />
+                                    <feMerge>
+                                        <feMergeNode in="blur" />
+                                        <feMergeNode in="SourceGraphic" />
+                                    </feMerge>
+                                </filter>
+                            </defs>
+
+                            <!-- Outer Tech Shield with glowing segments -->
+                            <!-- Segment 1: Left Tech Arc -->
+                            <path
+                                d="M15 3.5 L6.5 6.5 V14.5 C6.5 20 10 24.5 15 26.5"
+                                stroke="url(#cyber-grad-footer)"
+                                stroke-width="2.2"
+                                stroke-linecap="round"
+                                filter="url(#neon-glow-footer)"
+                            />
+
+                            <!-- Segment 2: Right Tech Arc -->
+                            <path
+                                d="M17 3.5 L25.5 6.5 V14.5 C25.5 20 22 24.5 17 26.5"
+                                stroke="url(#cyber-grad-footer)"
+                                stroke-width="2.2"
+                                stroke-linecap="round"
+                                filter="url(#neon-glow-footer)"
+                            />
+
+                            <!-- Segment 3: Floating Top/Bottom Shield Cap lines -->
+                            <path d="M13 2.5 H19" stroke="url(#cyber-grad-footer)" stroke-width="1.8" stroke-linecap="round" opacity="0.8" />
+                            <path d="M13 28.5 H19" stroke="url(#cyber-grad-footer)" stroke-width="1.8" stroke-linecap="round" opacity="0.8" />
+
+                            <!-- Futuristic Digital Lock Core -->
+                            <!-- Hexagonal Lock Body -->
+                            <polygon
+                                points="16,8.5 21,11.5 21,17.5 16,20.5 11,17.5 11,11.5"
+                                fill="rgba(17, 24, 39, 0.75)"
+                                stroke="url(#cyber-grad-footer)"
+                                stroke-width="1.5"
+                                stroke-linejoin="round"
+                            />
+
+                            <!-- Glowing Keyhole/Lock Symbol -->
+                            <path
+                                d="M16 11.5 A2 2 0 0 0 14 13.5 C14 14.3 14.5 15.0 15.2 15.3 L14.5 18.5 H17.5 L16.8 15.3 C17.5 15.0 18 14.3 18 13.5 A2 2 0 0 0 16 11.5 Z"
+                                fill="url(#cyber-grad-footer)"
+                                filter="url(#neon-glow-footer)"
+                            />
+
+                            <!-- Interconnected Circuit Traces -->
+                            <path
+                                d="M7.5 10 L11 11.5 M24.5 10 L21 11.5 M7.5 18 L11 16.5 M24.5 18 L21 16.5"
+                                stroke="url(#cyber-grad-footer)"
+                                stroke-width="1.2"
+                                opacity="0.8"
+                            />
+
+                            <!-- Micro Node Dots -->
+                            <circle cx="7.5" cy="10" r="1.2" fill="#22d3ee" />
+                            <circle cx="24.5" cy="10" r="1.2" fill="#6d28d9" />
+                            <circle cx="7.5" cy="18" r="1.2" fill="#6d28d9" />
+                            <circle cx="24.5" cy="18" r="1.2" fill="#22d3ee" />
                         </svg>
                         <span class="logo-text"><span class="brand-name"><span class="brand-cyber">Cyber</span><span class="brand-guard">Guard</span></span></span>
                     </div>
