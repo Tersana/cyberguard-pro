@@ -67,12 +67,45 @@
       // Load initial findings
       await loadFindings();
 
-      // Connect WebSocket
-      connectWebSocket();
+      // Load historical logs if any exist
+      if (scanSession && Array.isArray(scanSession.logs) && scanSession.logs.length > 0) {
+        const terminal = document.getElementById("sp-terminal");
+        if (terminal) {
+          terminal.innerHTML = "";
+          terminalLines = 0;
+        }
+        scanSession.logs.forEach(line => {
+          appendTerminalLineRaw(line);
+        });
+      }
 
-      // Start polling (status + findings)
-      startStatusPolling();
-      startFindingsPolling();
+      // Connect WebSocket & Polling only for active scans
+      if (currentStatus === "running" || currentStatus === "pending") {
+        connectWebSocket();
+        startStatusPolling();
+        startFindingsPolling();
+      }
+
+      // Check if there are any pending frontend tools to execute
+      try {
+        const pendingRaw = sessionStorage.getItem("cg_pending_scan");
+        if (pendingRaw) {
+          const pending = JSON.parse(pendingRaw);
+          if (pending.sessionId === scanJobId && pending.selectedFrontendTools?.length > 0) {
+            const toolsToRun = pending.selectedFrontendTools;
+            // Remove them from sessionStorage so they don't execute again on page refresh
+            pending.selectedFrontendTools = [];
+            sessionStorage.setItem("cg_pending_scan", JSON.stringify(pending));
+
+            // Execute the tools asynchronously
+            setTimeout(() => {
+              runFrontendTools(toolsToRun, pending.targetValue);
+            }, 1000);
+          }
+        }
+      } catch (err) {
+        console.error("[ScanProgress] Failed to run pending frontend tools:", err);
+      }
 
     } catch (err) {
       hideSkeleton();
@@ -85,6 +118,80 @@
       } else {
         showPageError("Error Loading Scan",
           err.message || "Could not load scan data. Please try again.");
+      }
+    }
+  }
+
+  // Execute selected frontend tools
+  async function runFrontendTools(selectedTools, targetValue) {
+    appendTerminalSystem("Starting selected frontend-only network analysis tools…");
+
+    // Define custom hooks to route frontend tools' outputs into the progress page UI
+    window.onFrontendToolLog = function (msg, scanner) {
+      appendTerminalLine(`[INFO] [${scanner}] ${msg}`);
+    };
+
+    window.onFrontendToolResult = function ({ timestamp, feature, message, status, details }) {
+      let badge = "[INFO]";
+      if (status === "danger" || status === "threat") badge = "[ERROR]";
+      else if (status === "warning") badge = "[WARN]";
+      else if (status === "success" || status === "safe") badge = "[LIVE]";
+
+      appendTerminalLine(`${badge} [${feature}] ${message}`);
+
+      // Record final report as finding
+      if (status === "danger" || status === "threat" || status === "success" || status === "safe" || message.includes("COMPLETE") || message.includes("Detailed")) {
+        const severity = (status === "danger" || status === "threat") ? "high" : (status === "warning" ? "medium" : "info");
+        const finding = {
+          id: `frontend-${feature.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`,
+          title: `${feature}: Analysis Complete`,
+          severity: severity,
+          status: "open",
+          driver_id: feature.toUpperCase().replace(/\s+/g, "_"),
+          description: message,
+          created_at: new Date().toISOString()
+        };
+        // Save to mock database so polling loadFindings() doesn't overwrite it
+        if (window.scannerAPI && typeof window.scannerAPI.addFrontendFinding === "function") {
+          window.scannerAPI.addFrontendFinding(scanJobId, finding);
+        }
+        handleNewFinding(finding);
+      }
+    };
+
+    window.onFrontendToolStatus = function (statusText) {
+      appendTerminalLine(`[SYS] ${statusText}`);
+    };
+
+    // Run them sequentially
+    for (const toolId of selectedTools) {
+      appendTerminalSystem(`Initialising ${toolId.replace("frontend-", "").toUpperCase().replace("-", " ")}…`);
+      try {
+        if (toolId === "frontend-port-scanner") {
+          await window.portScan(targetValue);
+        } else if (toolId === "frontend-tcp-connectivity") {
+          await window.realTcpPortScan(targetValue);
+        } else if (toolId === "frontend-udp-services") {
+          await window.realUdpConnectivityTest(targetValue);
+        } else if (toolId === "frontend-ip-geolocation") {
+          await window.ipGeolocation(targetValue);
+        } else if (toolId === "frontend-reverse-dns") {
+          await window.reverseDns(targetValue);
+        } else if (toolId === "frontend-whois-lookup") {
+          await window.whoisLookup(targetValue);
+        }
+      } catch (err) {
+        console.error(`[Frontend Tool Error] ${toolId}:`, err);
+        appendTerminalLine(`[ERROR] [${toolId}] Execution failed: ${err.message}`);
+      }
+    }
+
+    appendTerminalSystem("All selected frontend-only network analysis tools completed.");
+
+    // Mark frontend scan completed
+    if (typeof scanJobId === "string" && scanJobId.startsWith("frontend_")) {
+      if (window.scannerAPI && typeof window.scannerAPI.completeFrontendScan === "function") {
+        window.scannerAPI.completeFrontendScan(scanJobId);
       }
     }
   }
@@ -315,6 +422,11 @@
     try {
       const findings = await window.scannerAPI.getScanFindings(scanJobId);
       allFindings = findings;
+      seenFindingIds.clear();
+      findings.forEach(f => {
+        const id = f.id || `${f.title}::${f.severity}`;
+        seenFindingIds.add(id);
+      });
       renderFindingsTable(findings);
       if (countEl) {
         countEl.textContent = `${findings.length} finding${findings.length !== 1 ? "s" : ""} discovered`;
@@ -537,7 +649,7 @@
   /* ═══════════════════════════════════════════════════════════════════════
      TERMINAL UI
   ═══════════════════════════════════════════════════════════════════════ */
-  function appendTerminalLine(text) {
+  function appendTerminalLineRaw(text) {
     const terminal = document.getElementById("sp-terminal");
     if (!terminal) return;
 
@@ -553,6 +665,15 @@
     terminal.appendChild(line);
     terminalLines++;
     terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  function appendTerminalLine(text) {
+    if (typeof scanJobId === "string" && scanJobId.startsWith("frontend_")) {
+      if (window.scannerAPI && typeof window.scannerAPI.addFrontendLog === "function") {
+        window.scannerAPI.addFrontendLog(scanJobId, text);
+      }
+    }
+    appendTerminalLineRaw(text);
   }
 
   function appendTerminalSystem(msg) {

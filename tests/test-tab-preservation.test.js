@@ -88,13 +88,13 @@ describe('Task 13.1: DOM Preservation on Tab Switch', () => {
     };
 
     // Load the modules
-    const threatIntelModule = await import('./threat-intel.js');
+    const threatIntelModule = await import('../public/js/threat-intel.js');
     ThreatIntelHub = threatIntelModule.ThreatIntelHub;
     ThreatIntelState = threatIntelModule.ThreatIntelState;
     UIRenderer = threatIntelModule.UIRenderer;
     
-    const tabManagerModule = await import('./dashboard-tab-manager.js');
-    DashboardTabManager = tabManagerModule.default;
+    const tabManagerModule = await import('../public/js/dashboard-tab-manager.js');
+    DashboardTabManager = tabManagerModule.default || tabManagerModule.DashboardTabManager || tabManagerModule;
   });
 
   afterEach(() => {
