@@ -174,25 +174,16 @@
             }
 
             .shield-icon {
-                width: 44px;
-                height: 44px;
-                background: linear-gradient(
-                    135deg,
-                    var(--cg-accent) 0%,
-                    var(--cg-accent-dark) 100%
-                );
-                border-radius: 12px;
+                width: 48px;
+                height: 48px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                box-shadow: 0 4px 14px rgba(167, 139, 250, 0.5);
                 flex-shrink: 0;
-                animation: glowPulse 3s ease-in-out infinite;
             }
             .shield-icon svg {
-                width: 24px;
-                height: 24px;
-                fill: white;
+                width: 48px;
+                height: 48px;
             }
 
             @keyframes glowPulse {
@@ -541,12 +532,62 @@
                         <div class="shield-icon">
                             <!-- Shield SVG -->
                             <svg
-                                viewBox="0 0 24 24"
+                                viewBox="0 0 32 32"
                                 xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
                             >
+                                <defs>
+                                    <linearGradient id="cyber-grad-email" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#6d28d9" />
+                                        <stop offset="50%" stop-color="#a855f7" />
+                                        <stop offset="100%" stop-color="#22d3ee" />
+                                    </linearGradient>
+                                    <filter id="neon-glow-email" x="-20%" y="-20%" width="140%" height="140%">
+                                        <feGaussianBlur stdDeviation="1.2" result="blur" />
+                                        <feMerge>
+                                            <feMergeNode in="blur" />
+                                            <feMergeNode in="SourceGraphic" />
+                                        </feMerge>
+                                    </filter>
+                                </defs>
                                 <path
-                                    d="M12 1L3 5v6c0 5.25 3.75 10.15 9 11.35C17.25 21.15 21 16.25 21 11V5l-9-4zm-2 14l-4-4 1.41-1.41L10 12.17l6.59-6.59L18 7l-8 8z"
+                                    d="M15 3.5 L6.5 6.5 V14.5 C6.5 20 10 24.5 15 26.5"
+                                    stroke="url(#cyber-grad-email)"
+                                    stroke-width="2.2"
+                                    stroke-linecap="round"
+                                    filter="url(#neon-glow-email)"
                                 />
+                                <path
+                                    d="M17 3.5 L25.5 6.5 V14.5 C25.5 20 22 24.5 17 26.5"
+                                    stroke="url(#cyber-grad-email)"
+                                    stroke-width="2.2"
+                                    stroke-linecap="round"
+                                    filter="url(#neon-glow-email)"
+                                />
+                                <path d="M13 2.5 H19" stroke="url(#cyber-grad-email)" stroke-width="1.8" stroke-linecap="round" opacity="0.8" />
+                                <path d="M13 28.5 H19" stroke="url(#cyber-grad-email)" stroke-width="1.8" stroke-linecap="round" opacity="0.8" />
+                                <polygon
+                                    points="16,8.5 21,11.5 21,17.5 16,20.5 11,17.5 11,11.5"
+                                    fill="rgba(17, 24, 39, 0.75)"
+                                    stroke="url(#cyber-grad-email)"
+                                    stroke-width="1.5"
+                                    stroke-linejoin="round"
+                                />
+                                <path
+                                    d="M16 11.5 A2 2 0 0 0 14 13.5 C14 14.3 14.5 15.0 15.2 15.3 L14.5 18.5 H17.5 L16.8 15.3 C17.5 15.0 18 14.3 18 13.5 A2 2 0 0 0 16 11.5 Z"
+                                    fill="url(#cyber-grad-email)"
+                                    filter="url(#neon-glow-email)"
+                                />
+                                <path
+                                    d="M7.5 10 L11 11.5 M24.5 10 L21 11.5 M7.5 18 L11 16.5 M24.5 18 L21 16.5"
+                                    stroke="url(#cyber-grad-email)"
+                                    stroke-width="1.2"
+                                    opacity="0.8"
+                                />
+                                <circle cx="7.5" cy="10" r="1.2" fill="#22d3ee" />
+                                <circle cx="24.5" cy="10" r="1.2" fill="#6d28d9" />
+                                <circle cx="7.5" cy="18" r="1.2" fill="#6d28d9" />
+                                <circle cx="24.5" cy="18" r="1.2" fill="#22d3ee" />
                             </svg>
                         </div>
                         <div class="brand-name">

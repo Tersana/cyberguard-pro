@@ -113,8 +113,8 @@ body::before {
 }
 
 .logo-icon {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   color: var(--cg-accent);
   filter: drop-shadow(0 0 12px var(--cg-accent));
 }
@@ -1792,22 +1792,35 @@ body::before {
   background: var(--cg-bg-surface);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--cg-border);
+  border: 1px solid rgba(167, 139, 250, 0.12);
   border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   opacity: 0;
   transform: scale(0.95) translateY(20px);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s ease, border-color 0.5s ease, opacity 0.8s ease-out;
 }
 
 .cta-content.aos-animate {
   opacity: 1;
   transform: scale(1) translateY(0);
-  transition: all 0.8s ease-out;
+}
+
+.cta-content.aos-animate:hover {
+  transform: scale(1) translateY(-6px);
+  border-color: rgba(167, 139, 250, 0.3);
+  box-shadow: 
+    0 30px 60px rgba(0, 0, 0, 0.4), 
+    0 0 40px rgba(167, 139, 250, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .cta-title {
   font-size: 48px;
   font-weight: 900;
-  color: var(--cg-text-1);
+  background: linear-gradient(135deg, #ffffff 40%, var(--cg-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 18px;
   line-height: 1.15;
   letter-spacing: -0.025em;
@@ -1860,8 +1873,17 @@ body::before {
   background: transparent;
   color: var(--cg-text-3);
   padding: 60px 0 32px;
-  border-top: 1px solid var(--cg-border);
   position: relative;
+}
+
+.footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(167, 139, 250, 0.2) 50%, transparent 100%);
 }
 
 .footer-content {
@@ -1873,6 +1895,9 @@ body::before {
 
 .footer-brand {
   max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .footer-brand .logo {
@@ -1909,11 +1934,12 @@ body::before {
   text-decoration: none;
   font-size: 14px;
   margin-bottom: 12px;
-  transition: color var(--cg-transition-fast);
+  transition: color var(--cg-transition-fast), transform var(--cg-transition-fast);
 }
 
 .footer-column a:hover {
   color: var(--cg-accent);
+  transform: translateX(4px);
 }
 
 .footer-bottom {

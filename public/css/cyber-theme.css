@@ -168,15 +168,20 @@ main {
 }
 
 .cyber-logo-icon {
-    width: 2rem;
-    height: 2rem;
-    background: var(--cg-accent-muted);
-    border: 1px solid var(--cg-accent);
-    border-radius: var(--cg-radius-sm);
+    width: 2.25rem;
+    height: 2.25rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 12px var(--cg-focus-ring);
+}
+
+.cyber-logo-icon svg {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cyber-logo-icon:hover svg {
+    transform: scale(1.1) rotate(4deg);
+    filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.6));
 }
 
 .cyber-divider {
