@@ -653,3 +653,83 @@
 .navbar-profile-trigger-btn {
     position: relative;
 }
+
+/* ===== Settings Panel Responsive Overrides ===== */
+
+@media (max-width: 1024px) {
+    .settings-modal-container {
+        width: 95vw;
+        height: 85vh;
+        max-height: 85vh;
+    }
+}
+
+@media (max-width: 768px) {
+    .settings-modal-container {
+        flex-direction: column;
+        height: 95vh;
+        max-height: 95vh;
+        width: 98vw;
+        max-width: 98vw;
+        border-radius: var(--cg-radius-lg);
+    }
+
+    .settings-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--cg-border);
+        padding: var(--cg-space-3) 0 var(--cg-space-1);
+    }
+
+    .settings-sidebar-header {
+        display: none; /* Hide header text to save space on mobile */
+    }
+
+    .settings-nav-list {
+        flex-direction: row;
+        margin-top: 0;
+        padding: 0 var(--cg-space-4);
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        /* Hide scrollbar for cleaner UI */
+        scrollbar-width: none; /* Firefox */
+    }
+    .settings-nav-list::-webkit-scrollbar {
+        display: none; /* Safari and Chrome */
+    }
+
+    .settings-nav-item {
+        padding: var(--cg-space-2.5) var(--cg-space-4);
+        border-left: none;
+        border-bottom: 3px solid transparent;
+        flex-shrink: 0;
+    }
+
+    .settings-nav-item.active {
+        border-left: none;
+        border-bottom: 3px solid var(--cg-accent);
+    }
+
+    .settings-content-body {
+        padding: var(--cg-space-4) var(--cg-space-5) var(--cg-space-6);
+    }
+
+    .settings-dirty-bar {
+        left: 0;
+        padding: var(--cg-space-3) var(--cg-space-5);
+    }
+}
+
+@media (max-width: 640px) {
+    .settings-form-row {
+        grid-template-columns: 1fr;
+        gap: var(--cg-space-3);
+    }
+    
+    .settings-avatar-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--cg-space-4);
+    }
+}

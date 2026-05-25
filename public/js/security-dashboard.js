@@ -21,6 +21,10 @@
     refreshInterval: null
   };
 
+  // Third-party chart and animation states
+  let severityDonutChart = null;
+  let lastOverallScore = null;
+
   // Theme-compliant colors matching HSL vars
   const SEVERITY_CONFIG = {
     critical: { color: "#ef4444", label: "Critical" },
@@ -259,32 +263,107 @@
     const totalCountEl = document.getElementById("donut-total-findings-count");
     if (totalCountEl) totalCountEl.textContent = total;
 
-    // Render dynamic conic-gradient donut chart
+    // Render dynamic ApexCharts donut chart
     const donutEl = document.getElementById("severity-donut-chart");
     if (donutEl) {
-      if (total === 0) {
-        donutEl.style.background = "rgba(255, 255, 255, 0.05)";
+      donutEl.style.background = "none";
+      donutEl.style.boxShadow = "none";
+      
+      const series = total === 0 
+        ? [1] 
+        : [counts.critical, counts.high, counts.medium, counts.low, counts.info];
+      const colors = total === 0 
+        ? ["rgba(255, 255, 255, 0.05)"] 
+        : ["#ef4444", "#f97316", "#eab308", "#22c55e", "#38bdf8"];
+      const labels = total === 0 
+        ? ["No findings"] 
+        : ["Critical", "High", "Medium", "Low", "Info"];
+
+      if (typeof ApexCharts !== "undefined") {
+        if (!severityDonutChart) {
+          // Initialize ApexCharts
+          const options = {
+            chart: {
+              type: "donut",
+              width: 140,
+              height: 140,
+              sparkline: { enabled: true },
+              animations: {
+                enabled: true,
+                easing: "easeinout",
+                speed: 800
+              }
+            },
+            series: series,
+            labels: labels,
+            colors: colors,
+            stroke: {
+              show: true,
+              width: 2,
+              colors: ["#111827"] // Match --cg-bg-surface
+            },
+            plotOptions: {
+              pie: {
+                donut: {
+                  size: "72%"
+                }
+              }
+            },
+            tooltip: {
+              enabled: true,
+              theme: "dark",
+              y: {
+                formatter: function (val) {
+                  return total === 0 ? "0 findings" : val + " findings";
+                }
+              }
+            },
+            legend: { show: false },
+            dataLabels: { enabled: false }
+          };
+          severityDonutChart = new ApexCharts(donutEl, options);
+          severityDonutChart.render();
+        } else {
+          // Update existing chart
+          severityDonutChart.updateOptions({
+            series: series,
+            labels: labels,
+            colors: colors,
+            tooltip: {
+              y: {
+                formatter: function (val) {
+                  return total === 0 ? "0 findings" : val + " findings";
+                }
+              }
+            }
+          });
+        }
       } else {
-        const critPct = (counts.critical / total) * 100;
-        const highPct = (counts.high / total) * 100;
-        const medPct = (counts.medium / total) * 100;
-        const lowPct = (counts.low / total) * 100;
-        const infoPct = (counts.info / total) * 100;
+        // Fallback to static gradient if ApexCharts not loaded
+        if (total === 0) {
+          donutEl.style.background = "rgba(255, 255, 255, 0.05)";
+        } else {
+          const critPct = (counts.critical / total) * 100;
+          const highPct = (counts.high / total) * 100;
+          const medPct = (counts.medium / total) * 100;
+          const lowPct = (counts.low / total) * 100;
+          const infoPct = (counts.info / total) * 100;
 
-        let cur = 0;
-        const cS = cur; const cE = cur + critPct; cur = cE;
-        const hS = cur; const hE = cur + highPct; cur = hE;
-        const mS = cur; const mE = cur + medPct; cur = mE;
-        const lS = cur; const lE = cur + lowPct; cur = lE;
-        const iS = cur; const iE = 100;
+          let cur = 0;
+          const cS = cur; const cE = cur + critPct; cur = cE;
+          const hS = cur; const hE = cur + highPct; cur = hE;
+          const mS = cur; const mE = cur + medPct; cur = mE;
+          const lS = cur; const lE = cur + lowPct; cur = lE;
+          const iS = 100;
 
-        donutEl.style.background = `conic-gradient(
-          #ef4444 ${cS}% ${cE}%,
-          #f97316 ${hS}% ${hE}%,
-          #eab308 ${mS}% ${mE}%,
-          #22c55e ${lS}% ${lE}%,
-          #38bdf8 ${iS}% ${iE}%
-        )`;
+          donutEl.style.background = `conic-gradient(
+            #ef4444 ${cS}% ${cE}%,
+            #f97316 ${hS}% ${hE}%,
+            #eab308 ${mS}% ${mE}%,
+            #22c55e ${lS}% ${lE}%,
+            #38bdf8 ${iS}% ${iE}%
+          )`;
+        }
       }
     }
 
@@ -372,23 +451,103 @@
     const CIRCUMFERENCE = 2 * Math.PI * RADIUS; // ≈ 314.16
     const offset = CIRCUMFERENCE - (overallScore / 10) * CIRCUMFERENCE;
 
-    // Render circular gauge SVG
-    displayContainer.innerHTML = `
-      <div class="relative flex items-center justify-center w-[130px] height-[130px]">
-        <svg class="risk-circle-svg-container" width="120" height="120" viewBox="0 0 120 120">
-          <circle class="risk-circle-bg" cx="60" cy="60" r="50"></circle>
-          <circle class="risk-circle-value" cx="60" cy="60" r="50" 
-            stroke="${overallColor}" 
-            stroke-dasharray="${CIRCUMFERENCE.toFixed(2)}" 
-            stroke-dashoffset="${offset.toFixed(2)}">
-          </circle>
-        </svg>
-        <div class="risk-score-inner-text-container absolute">
-          <span class="text-3xl font-extrabold text-white font-mono" id="overall-risk-score">${overallScore}</span>
-          <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">/ 10</span>
+    // Check if the SVG gauge structure is already in place
+    const existingCircleValue = document.querySelector("#risk-score-display-container .risk-circle-value");
+    const existingScoreText = document.getElementById("overall-risk-score");
+
+    if (existingCircleValue && existingScoreText) {
+      // SVG is already built, run smooth GSAP transitions on the existing elements
+      if (typeof gsap !== "undefined") {
+        // Animate the circle properties
+        gsap.to(existingCircleValue, {
+          attr: { "stroke-dashoffset": offset.toFixed(2) },
+          stroke: overallColor,
+          duration: 1.2,
+          ease: "power2.out"
+        });
+
+        // Animate the text score count-up
+        const startVal = parseFloat(existingScoreText.textContent) || 0.0;
+        const scoreObj = { val: startVal };
+        gsap.to(scoreObj, {
+          val: overallScore,
+          duration: 1.2,
+          ease: "power2.out",
+          onUpdate: function () {
+            existingScoreText.textContent = scoreObj.val.toFixed(1);
+          }
+        });
+      } else {
+        // Fallback if GSAP is not present
+        existingCircleValue.setAttribute("stroke-dashoffset", offset.toFixed(2));
+        existingCircleValue.setAttribute("stroke", overallColor);
+        existingScoreText.textContent = overallScore.toFixed(1);
+      }
+    } else {
+      // SVG not found (first load, empty state, or skeleton override), render it
+      displayContainer.innerHTML = `
+        <div class="relative flex items-center justify-center w-[130px] height-[130px]">
+          <svg class="risk-circle-svg-container" width="120" height="120" viewBox="0 0 120 120">
+            <circle class="risk-circle-bg" cx="60" cy="60" r="50"></circle>
+            <circle class="risk-circle-value" cx="60" cy="60" r="50" 
+              stroke="${overallColor}" 
+              stroke-dasharray="${CIRCUMFERENCE.toFixed(2)}" 
+              stroke-dashoffset="${CIRCUMFERENCE.toFixed(2)}">
+            </circle>
+          </svg>
+          <div class="risk-score-inner-text-container absolute">
+            <span class="text-3xl font-extrabold text-white font-mono" id="overall-risk-score">0.0</span>
+            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">/ 10</span>
+          </div>
         </div>
-      </div>
-    `;
+      `;
+
+      // Animate it immediately from empty to current value
+      const newCircleValue = document.querySelector("#risk-score-display-container .risk-circle-value");
+      const newScoreText = document.getElementById("overall-risk-score");
+
+      if (newCircleValue && newScoreText && typeof gsap !== "undefined") {
+        gsap.to(newCircleValue, {
+          attr: { "stroke-dashoffset": offset.toFixed(2) },
+          duration: 1.2,
+          ease: "power2.out"
+        });
+
+        const scoreObj = { val: 0.0 };
+        gsap.to(scoreObj, {
+          val: overallScore,
+          duration: 1.2,
+          ease: "power2.out",
+          onUpdate: function () {
+            newScoreText.textContent = scoreObj.val.toFixed(1);
+          }
+        });
+      } else if (newCircleValue && newScoreText) {
+        newCircleValue.setAttribute("stroke-dashoffset", offset.toFixed(2));
+        newScoreText.textContent = overallScore.toFixed(1);
+      }
+    }
+
+    // Celebration: Confetti burst on a perfect 10.0 score (LOW RISK / healthy)
+    if (overallScore === 10.0 && lastOverallScore !== 10.0 && targets.length > 0) {
+      if (typeof confetti === "function") {
+        confetti({
+          particleCount: 50,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0, y: 0.9 },
+          colors: ["#a78bfa", "#34d399", "#38bdf8"]
+        });
+        confetti({
+          particleCount: 50,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1, y: 0.9 },
+          colors: ["#a78bfa", "#34d399", "#38bdf8"]
+        });
+      }
+    }
+    lastOverallScore = overallScore;
 
     // Render per-target list (top 4 for aesthetic elegance)
     const displayList = targetsWithScores.slice(0, 4);
@@ -490,12 +649,19 @@
 
       return `
         <div class="recent-finding-row flex justify-between items-center py-2.5">
-          <span class="finding-severity-badge text-[10px] py-0.5" 
-                style="background: ${cfg.color}15; color: ${cfg.color}; border: 1px solid ${cfg.color}30;">
+          <span class="finding-severity-badge severity-tooltip text-[10px] py-0.5" 
+                data-severity="${sev}"
+                data-title="${escapeHtml(f.title || f.name || 'Vulnerability Alert')}"
+                data-target="${escapeHtml(f.target_name)}"
+                style="background: ${cfg.color}15; color: ${cfg.color}; border: 1px solid ${cfg.color}30; cursor: help;">
             ${cfg.label}
           </span>
           <div class="finding-info">
-            <div class="finding-title" title="${f.title || f.name || "Vulnerability Alert"}">
+            <div class="finding-title severity-tooltip" 
+                 data-severity="${sev}"
+                 data-title="${escapeHtml(f.title || f.name || 'Vulnerability Alert')}"
+                 data-target="${escapeHtml(f.target_name)}"
+                 style="cursor: help;">
               ${f.title || f.name || "Vulnerability Alert"}
             </div>
             <div class="finding-meta font-mono text-[10px]">
@@ -508,6 +674,54 @@
         </div>
       `;
     }).join("");
+
+    // Initialize Tippy tooltips for the rendered findings
+    if (typeof tippy !== "undefined") {
+      tippy(".severity-tooltip", {
+        theme: "translucent",
+        allowHTML: true,
+        placement: "top",
+        animation: "shift-away",
+        content(reference) {
+          const sev = reference.getAttribute("data-severity");
+          const title = reference.getAttribute("data-title");
+          const target = reference.getAttribute("data-target");
+          
+          let desc = "";
+          if (sev === "critical") {
+            desc = "Allows immediate system compromise, remote code execution (RCE), or complete database takeover. Immediate remediation required.";
+          } else if (sev === "high") {
+            desc = "High risk of privilege escalation, data exfiltration, or unauthorized action execution. Needs urgent mitigation.";
+          } else if (sev === "medium" || sev === "moderate") {
+            desc = "Exposes security settings, intermediate keys, or application configurations (e.g. CSRF, SSRF, session hijacking). Schedule mitigation.";
+          } else if (sev === "low") {
+            desc = "Exposes metadata details, version numbers, or non-critical headers. Low exploitability but should be resolved.";
+          } else {
+            desc = "Informational check. Posture inspection with no active security threat detected.";
+          }
+          
+          return `
+            <div class="p-2 max-w-[260px] text-xs leading-relaxed font-sans text-left">
+              <div class="font-extrabold uppercase tracking-wide mb-1" style="color: ${SEVERITY_CONFIG[sev]?.color || '#ffffff'}">${sev} Severity</div>
+              <div class="font-semibold text-slate-100 mb-1.5">${title}</div>
+              <div class="text-slate-300 mb-1">${desc}</div>
+              <div class="text-[10px] text-slate-400 font-mono mt-1 pt-1 border-t border-white/10">Target: ${target}</div>
+            </div>
+          `;
+        }
+      });
+    }
+
+    // Helper helper to escape HTML inside data attributes safely
+    function escapeHtml(str) {
+      if (!str) return "";
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
   }
 
   /* ── Auto-refresh / polling logic ────────────────────────────────────── */

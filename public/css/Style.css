@@ -565,10 +565,15 @@ body {
         transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
         opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
         width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    width: 16rem; /* 256px */
-    min-width: 16rem;
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
     transform: translateX(0);
     opacity: 1;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
 
 #sidebar.hidden,
@@ -654,8 +659,8 @@ main {
 /* --- Responsive Layout --- */
 @media (min-width: 768px) {
     #sidebar {
-        width: 16rem;
-        min-width: 16rem;
+        width: var(--sidebar-width);
+        min-width: var(--sidebar-width);
         transform: translateX(0);
         opacity: 1;
     }
