@@ -1795,416 +1795,76 @@
                                     <div
                                         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
                                     >
-                                        <!-- Port Scanner -->
-                                        <div
-                                            class="cyber-tool-card p-5 rounded-xl relative"
-                                            data-selected="false"
-                                            data-tool-id="port-scan-btn"
-                                        >
-                                            <!-- Selection indicator -->
-                                            <div
-                                                class="selection-indicator hidden"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-white"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke-width="2.5"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M4.5 12.75l6 6 9-13.5"
-                                                    />
-                                                </svg>
+                                        <!-- Integrated Automations Migration Banner -->
+                                        <div class="sm:col-span-1 lg:col-span-2 xl:col-span-3 p-6 rounded-xl border border-[rgba(167,139,250,0.18)] bg-[linear-gradient(135deg,rgba(16,12,32,0.85)_0%,rgba(24,18,48,0.7)_100%)] backdrop-blur-md relative overflow-hidden flex flex-col justify-between shadow-[0_0_25px_rgba(139,92,246,0.05)]">
+                                            <!-- Dynamic Background Glows -->
+                                            <div class="absolute -top-12 -right-12 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                                            <div class="absolute -bottom-16 -left-16 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                                            
+                                            <div>
+                                                <div class="flex items-start justify-between mb-4">
+                                                    <div>
+                                                        <span class="text-[9px] font-mono font-bold tracking-widest text-purple-400 bg-purple-950/40 border border-purple-800/30 px-2 py-0.5 rounded uppercase">Migration Complete</span>
+                                                        <h4 class="text-lg font-bold text-white mt-2">Target-Integrated Scanners</h4>
+                                                    </div>
+                                                    <div class="w-8 h-8 rounded-lg bg-[rgba(167,139,250,0.1)] border border-[rgba(167,139,250,0.2)] flex items-center justify-center">
+                                                        <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                                
+                                                <p class="text-xs text-slate-300 leading-relaxed mb-5">
+                                                    To provide a more unified security pipeline, the 6 core reconnaissance tools have been fully migrated into our automated scan scheduler. They run asynchronously alongside backend scanning engines, providing instant findings and terminal logs.
+                                                </p>
+                                                
+                                                <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
+                                                    <div class="flex items-center gap-2 bg-[rgba(255,255,255,0.02)] border border-slate-800 p-2.5 rounded-lg">
+                                                        <div class="w-2 h-2 rounded-full bg-purple-500"></div>
+                                                        <span class="text-xs text-slate-200">Port Scanner</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 bg-[rgba(255,255,255,0.02)] border border-slate-800 p-2.5 rounded-lg">
+                                                        <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                                                        <span class="text-xs text-slate-200">TCP Connectivity</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 bg-[rgba(255,255,255,0.02)] border border-slate-800 p-2.5 rounded-lg">
+                                                        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                                                        <span class="text-xs text-slate-200">UDP Services</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 bg-[rgba(255,255,255,0.02)] border border-slate-800 p-2.5 rounded-lg">
+                                                        <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                                        <span class="text-xs text-slate-200">IP Geolocation</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 bg-[rgba(255,255,255,0.02)] border border-slate-800 p-2.5 rounded-lg">
+                                                        <div class="w-2 h-2 rounded-full bg-teal-500"></div>
+                                                        <span class="text-xs text-slate-200">Reverse DNS</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 bg-[rgba(255,255,255,0.02)] border border-slate-800 p-2.5 rounded-lg">
+                                                        <div class="w-2 h-2 rounded-full bg-pink-500"></div>
+                                                        <span class="text-xs text-slate-200">WHOIS Lookup</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <span class="cyber-tool-badge"
-                                                >SHODAN</span
-                                            >
-                                            <div
-                                                class="cyber-tool-icon-box mb-3"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-purple-300"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke-width="1.5"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788 3.807-3.808 9.98-3.808 13.788 0 3.808 3.807 3.808 9.98 0 13.788-3.807 3.808-9.98 3.808-13.788 0Z"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <h4
-                                                class="text-sm font-bold text-white mb-1"
-                                            >
-                                                Port Scanner
-                                            </h4>
-                                            <p
-                                                class="text-xs text-slate-400 leading-relaxed mb-4"
-                                            >
-                                                Deep Shodan-powered analysis of
-                                                open ports, running services,
-                                                banners, and CVE exposure.
-                                            </p>
-                                            <button
-                                                id="port-scan-btn"
-                                                data-auth-required
-                                                class="cyber-tool-link text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                Initialize Engine →
-                                            </button>
-                                        </div>
 
-                                        <!-- TCP Connectivity -->
-                                        <div
-                                            class="cyber-tool-card p-5 rounded-xl relative"
-                                            data-selected="false"
-                                            data-tool-id="tcp-scan-btn"
-                                        >
-                                            <!-- Selection indicator -->
-                                            <div
-                                                class="selection-indicator hidden"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-white"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke-width="2.5"
-                                                    stroke="currentColor"
+                                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-4 border-t border-slate-800/60 mt-auto">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="flex h-2 w-2 relative">
+                                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                                    </span>
+                                                    <span class="text-[11px] text-slate-400">Available now in Project Scan Configuration</span>
+                                                </div>
+                                                <button
+                                                    onclick="switchToTab('projects')"
+                                                    class="cyber-btn-primary px-4 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5"
                                                 >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M4.5 12.75l6 6 9-13.5"
-                                                    />
-                                                </svg>
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                                                    </svg>
+                                                    Configure Scans inside Projects
+                                                </button>
                                             </div>
-                                            <span class="cyber-tool-badge"
-                                                >TCP</span
-                                            >
-                                            <div
-                                                class="cyber-tool-icon-box mb-3"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-purple-300"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke-width="1.5"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <h4
-                                                class="text-sm font-bold text-white mb-1"
-                                            >
-                                                TCP Connectivity
-                                            </h4>
-                                            <p
-                                                class="text-xs text-slate-400 leading-relaxed mb-4"
-                                            >
-                                                Real-time TCP handshake
-                                                verification and response time
-                                                measurement via WebSocket
-                                                probing.
-                                            </p>
-                                            <button
-                                                id="tcp-scan-btn"
-                                                data-auth-required
-                                                class="cyber-tool-link text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                Initialize Engine →
-                                            </button>
                                         </div>
-
-                                        <!-- UDP Services -->
-                                        <div
-                                            class="cyber-tool-card p-5 rounded-xl relative"
-                                            data-selected="false"
-                                            data-tool-id="udp-scan-btn"
-                                        >
-                                            <!-- Selection indicator -->
-                                            <div
-                                                class="selection-indicator hidden"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-white"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke-width="2.5"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M4.5 12.75l6 6 9-13.5"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <span class="cyber-tool-badge"
-                                                >UDP</span
-                                            >
-                                            <div
-                                                class="cyber-tool-icon-box mb-3"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-purple-300"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke-width="1.5"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <h4
-                                                class="text-sm font-bold text-white mb-1"
-                                            >
-                                                UDP Services
-                                            </h4>
-                                            <p
-                                                class="text-xs text-slate-400 leading-relaxed mb-4"
-                                            >
-                                                Probe UDP-based services
-                                                including DNS, NTP, mDNS, and
-                                                DHCP indicators via browser
-                                                APIs.
-                                            </p>
-                                            <button
-                                                id="udp-scan-btn"
-                                                data-auth-required
-                                                class="cyber-tool-link text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                Initialize Engine →
-                                            </button>
-                                        </div>
-
-                                        <!-- IP Geolocation -->
-                                        <div
-                                            class="cyber-tool-card p-5 rounded-xl relative"
-                                            data-selected="false"
-                                            data-tool-id="ip-geo-btn"
-                                        >
-                                            <!-- Selection indicator -->
-                                            <div
-                                                class="selection-indicator hidden"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-white"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke-width="2.5"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M4.5 12.75l6 6 9-13.5"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <span class="cyber-tool-badge"
-                                                >GEO</span
-                                            >
-                                            <div
-                                                class="cyber-tool-icon-box mb-3"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-purple-300"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke-width="1.5"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3s-4.5 4.03-4.5 9 2.015 9 4.5 9Z"
-                                                    />
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M2.25 12c0 5.385 4.365 9.75 9.75 9.75s9.75-4.365 9.75-9.75S17.385 2.25 12 2.25 2.25 6.615 2.25 12Z"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <h4
-                                                class="text-sm font-bold text-white mb-1"
-                                            >
-                                                IP Geolocation
-                                            </h4>
-                                            <p
-                                                class="text-xs text-slate-400 leading-relaxed mb-4"
-                                            >
-                                                Geolocate any IP: country, ISP,
-                                                ASN, coordinates, timezone, and
-                                                threat classification.
-                                            </p>
-                                            <button
-                                                id="ip-geo-btn"
-                                                data-auth-required
-                                                class="cyber-tool-link text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                Initialize Engine →
-                                            </button>
-                                        </div>
-
-                                        <!-- Reverse DNS -->
-                                        <div
-                                            class="cyber-tool-card p-5 rounded-xl relative"
-                                            data-selected="false"
-                                            data-tool-id="reverse-dns-btn"
-                                        >
-                                            <!-- Selection indicator -->
-                                            <div
-                                                class="selection-indicator hidden"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-white"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke-width="2.5"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M4.5 12.75l6 6 9-13.5"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <span class="cyber-tool-badge"
-                                                >RECURSIVE</span
-                                            >
-                                            <div
-                                                class="cyber-tool-icon-box mb-3"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-purple-300"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke-width="1.5"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m-4.991 4.992"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <h4
-                                                class="text-sm font-bold text-white mb-1"
-                                            >
-                                                Reverse DNS
-                                            </h4>
-                                            <p
-                                                class="text-xs text-slate-400 leading-relaxed mb-4"
-                                            >
-                                                PTR record resolution with CDN
-                                                fingerprinting, cloud provider
-                                                detection, and hostname mapping.
-                                            </p>
-                                            <button
-                                                id="reverse-dns-btn"
-                                                data-auth-required
-                                                class="cyber-tool-link text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                Initialize Engine →
-                                            </button>
-                                        </div>
-
-                                        <!-- WHOIS Lookup -->
-                                        <div
-                                            class="cyber-tool-card p-5 rounded-xl relative"
-                                            data-selected="false"
-                                            data-tool-id="whois-btn"
-                                        >
-                                            <!-- Selection indicator -->
-                                            <div
-                                                class="selection-indicator hidden"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-white"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke-width="2.5"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M4.5 12.75l6 6 9-13.5"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <span class="cyber-tool-badge"
-                                                >WHOISXML</span
-                                            >
-                                            <div
-                                                class="cyber-tool-icon-box mb-3"
-                                            >
-                                                <svg
-                                                    class="w-5 h-5 text-purple-300"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke-width="1.5"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
-                                                    />
-                                                </svg>
-                                            </div>
-                                            <h4
-                                                class="text-sm font-bold text-white mb-1"
-                                            >
-                                                WHOIS Lookup
-                                            </h4>
-                                            <p
-                                                class="text-xs text-slate-400 leading-relaxed mb-4"
-                                            >
-                                                Full domain registration
-                                                intelligence: registrar,
-                                                creation dates, nameservers,
-                                                contacts.
-                                            </p>
-                                            <button
-                                                id="whois-btn"
-                                                data-auth-required
-                                                class="cyber-tool-link text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                Initialize Engine →
-                                            </button>
-                                        </div>
-
                                         <!-- Threat Intelligence -->
                                         <div
                                             class="cyber-tool-card p-5 rounded-xl relative"
@@ -3510,11 +3170,11 @@
                                                         stroke="currentColor"
                                                     >
                                                         <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z"
-                                                        />
-                                                    </svg>
+                                                             stroke-linecap="round"
+                                                             stroke-linejoin="round"
+                                                             d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z"
+                                                         />
+                                                     </svg>
                                                 </div>
                                             </div>
                                             <div>
@@ -3523,7 +3183,7 @@
                                                 </h3>
                                                 <p class="ai-chat-subtitle">
                                                     <span class="ai-status-dot"></span>
-                                                    <span id="ai-chat-engine-label">Gemini • Active</span>
+                                                    <span id="ai-chat-engine-label">OPENROUTER (gpt-oss-120b:free) • Active</span>
                                                 </p>
                                             </div>
                                         </div>
@@ -3587,7 +3247,6 @@
                                             <div class="flex flex-col gap-1.5">
                                                 <label for="ai-provider-select" class="ai-settings-label">AI Engine Provider</label>
                                                 <select id="ai-provider-select" class="ai-select">
-                                                    <option value="gemini">Google Gemini (Built-in)</option>
                                                     <option value="openrouter">OpenRouter API</option>
                                                     <option value="groq">Groq API</option>
                                                     <option value="offline">Offline Fallback Agent</option>
@@ -5450,6 +5109,8 @@
         <script src="js/project-manager.js?v=1.0.2"></script>
         <!-- Authentication System -->
         <script src="js/auth.js?v=1.0.1"></script>
+        <!-- Reusable Network Analysis Tools Script -->
+        <script src="js/network-analysis-tools.js?v=1.0.1"></script>
         <!-- Main JavaScript File - Must load first to attach event listeners -->
         <script src="js/main.js?v=1.0.1"></script>
         <!-- Threat Intel Hub Module -->

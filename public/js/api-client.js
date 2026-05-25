@@ -513,6 +513,10 @@ function withLoading(asyncFn, options = {}) {
 (function () {
   "use strict";
 
+  // Local cache/store for mock frontend scans and findings
+  const mockFrontendScans = {};
+  const mockFrontendFindings = {};
+
   /**
    * Internal helper — performs an authenticated fetch using the same
    * base URL and headers as APIClient.
@@ -600,6 +604,50 @@ function withLoading(asyncFn, options = {}) {
    */
   async function getScanStatus(scanJobId) {
     if (!scanJobId) throw new Error("scanJobId is required");
+    if (typeof scanJobId === "string" && scanJobId.startsWith("frontend_")) {
+      if (!mockFrontendScans[scanJobId]) {
+        // Try to load from localStorage first!
+        let storedScan = null;
+        try {
+          const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+          if (storedScansRaw) {
+            const storedScans = JSON.parse(storedScansRaw);
+            storedScan = storedScans.find(s => s.id === scanJobId);
+          }
+        } catch (_) {}
+
+        if (storedScan) {
+          mockFrontendScans[scanJobId] = storedScan;
+        } else {
+          // Fallback to generating a new running one if not found in history
+          let targetValue = "Local Target";
+          let targetId = "mock-target-id";
+          try {
+            const pendingRaw = sessionStorage.getItem("cg_pending_scan");
+            if (pendingRaw) {
+              const pending = JSON.parse(pendingRaw);
+              if (pending.sessionId === scanJobId) {
+                targetValue = pending.targetValue || targetValue;
+                targetId = pending.targetId || targetId;
+              }
+            }
+          } catch (_) {}
+
+          mockFrontendScans[scanJobId] = {
+            id: scanJobId,
+            status: "running",
+            target: {
+              id: targetId,
+              value: targetValue
+            },
+            driver_id: ["FRONTEND_ANALYSIS"],
+            created_at: new Date().toISOString(),
+            finished_at: null
+          };
+        }
+      }
+      return mockFrontendScans[scanJobId];
+    }
     const data = await _apiFetch("GET", `scan/${scanJobId}/status`);
     if (data.status !== "success") {
       throw new APIError(data.message || "Failed to get scan status", 0, data);
@@ -613,6 +661,24 @@ function withLoading(asyncFn, options = {}) {
    */
   async function getScanFindings(scanJobId) {
     if (!scanJobId) throw new Error("scanJobId is required");
+    if (typeof scanJobId === "string" && scanJobId.startsWith("frontend_")) {
+      if (!mockFrontendFindings[scanJobId]) {
+        // Try to load from localStorage scan record
+        let localFindings = [];
+        try {
+          const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+          if (storedScansRaw) {
+            const storedScans = JSON.parse(storedScansRaw);
+            const scan = storedScans.find(s => s.id === scanJobId);
+            if (scan && Array.isArray(scan.findings)) {
+              localFindings = scan.findings;
+            }
+          }
+        } catch (_) {}
+        mockFrontendFindings[scanJobId] = localFindings;
+      }
+      return mockFrontendFindings[scanJobId];
+    }
     const data = await _apiFetch("GET", `scan/${scanJobId}/findings`);
     if (data.status !== "success") {
       throw new APIError(data.message || "Failed to get scan findings", 0, data);
@@ -630,7 +696,18 @@ function withLoading(asyncFn, options = {}) {
     if (data.status !== "success") {
       throw new APIError(data.message || "Failed to get project scans", 0, data);
     }
-    return Array.isArray(data.scans) ? data.scans : [];
+    const apiScans = Array.isArray(data.scans) ? data.scans : [];
+
+    // Fetch and merge local frontend scans for this project
+    let localScans = [];
+    try {
+      const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+      if (storedScansRaw) {
+        localScans = JSON.parse(storedScansRaw).filter(s => s.project_id === projectId);
+      }
+    } catch (_) {}
+
+    return [...localScans, ...apiScans];
   }
 
   /**
@@ -643,7 +720,38 @@ function withLoading(asyncFn, options = {}) {
     if (data.status !== "success") {
       throw new APIError(data.message || "Failed to get target scans", 0, data);
     }
-    return Array.isArray(data.scans) ? data.scans : [];
+    const apiScans = Array.isArray(data.scans) ? data.scans : [];
+
+    // Fetch and merge local frontend scans for this target
+    let localScans = [];
+    try {
+      const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+      if (storedScansRaw) {
+        localScans = JSON.parse(storedScansRaw).filter(s => s.target_id === targetId);
+      }
+    } catch (_) {}
+
+    return [...localScans, ...apiScans];
+  }
+
+  // Local helper to update status and timestamps in localStorage persistence
+  function updateFrontendScanInLocalStorage(scanJobId, status, finishedAt = null) {
+    try {
+      const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+      if (storedScansRaw) {
+        const storedScans = JSON.parse(storedScansRaw);
+        const scan = storedScans.find(s => s.id === scanJobId);
+        if (scan) {
+          scan.status = status;
+          if (finishedAt) {
+            scan.finished_at = finishedAt;
+          }
+          localStorage.setItem("cg_frontend_scans", JSON.stringify(storedScans));
+        }
+      }
+    } catch (e) {
+      console.error("[APIClient] Failed to update frontend scan in localStorage:", e);
+    }
   }
 
   /**
@@ -652,6 +760,13 @@ function withLoading(asyncFn, options = {}) {
    */
   async function pauseScan(scanJobId) {
     if (!scanJobId) throw new Error("scanJobId is required");
+    if (typeof scanJobId === "string" && scanJobId.startsWith("frontend_")) {
+      if (mockFrontendScans[scanJobId]) {
+        mockFrontendScans[scanJobId].status = "pending";
+        updateFrontendScanInLocalStorage(scanJobId, "pending");
+      }
+      return mockFrontendScans[scanJobId];
+    }
     const data = await _apiFetch("POST", `scan/${scanJobId}/pause`);
     if (data.status !== "success") {
       throw new APIError(data.message || "Failed to pause scan", 0, data);
@@ -665,6 +780,13 @@ function withLoading(asyncFn, options = {}) {
    */
   async function continueScan(scanJobId) {
     if (!scanJobId) throw new Error("scanJobId is required");
+    if (typeof scanJobId === "string" && scanJobId.startsWith("frontend_")) {
+      if (mockFrontendScans[scanJobId]) {
+        mockFrontendScans[scanJobId].status = "running";
+        updateFrontendScanInLocalStorage(scanJobId, "running");
+      }
+      return mockFrontendScans[scanJobId];
+    }
     const data = await _apiFetch("POST", `scan/${scanJobId}/continue`);
     if (data.status !== "success") {
       throw new APIError(data.message || "Failed to resume scan", 0, data);
@@ -678,11 +800,103 @@ function withLoading(asyncFn, options = {}) {
    */
   async function cancelScan(scanJobId) {
     if (!scanJobId) throw new Error("scanJobId is required");
+    if (typeof scanJobId === "string" && scanJobId.startsWith("frontend_")) {
+      if (mockFrontendScans[scanJobId]) {
+        mockFrontendScans[scanJobId].status = "cancelled";
+        mockFrontendScans[scanJobId].finished_at = new Date().toISOString();
+        updateFrontendScanInLocalStorage(scanJobId, "cancelled", mockFrontendScans[scanJobId].finished_at);
+      }
+      return mockFrontendScans[scanJobId];
+    }
     const data = await _apiFetch("POST", `scan/${scanJobId}/cancel`);
     if (data.status !== "success") {
       throw new APIError(data.message || "Failed to cancel scan", 0, data);
     }
     return data.scan_job;
+  }
+
+  function completeFrontendScan(scanJobId) {
+    if (!mockFrontendScans[scanJobId]) {
+      // Try to load it first
+      let storedScan = null;
+      try {
+        const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+        if (storedScansRaw) {
+          const storedScans = JSON.parse(storedScansRaw);
+          storedScan = storedScans.find(s => s.id === scanJobId);
+        }
+      } catch (_) {}
+
+      mockFrontendScans[scanJobId] = storedScan || {
+        id: scanJobId,
+        status: "completed",
+        driver_id: ["FRONTEND_ANALYSIS"],
+        created_at: new Date().toISOString(),
+      };
+    }
+    mockFrontendScans[scanJobId].status = "completed";
+    mockFrontendScans[scanJobId].finished_at = new Date().toISOString();
+    updateFrontendScanInLocalStorage(scanJobId, "completed", mockFrontendScans[scanJobId].finished_at);
+  }
+
+  function addFrontendFinding(scanJobId, finding) {
+    if (!mockFrontendFindings[scanJobId]) {
+      // Try to load from localStorage first
+      let localFindings = [];
+      try {
+        const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+        if (storedScansRaw) {
+          const storedScans = JSON.parse(storedScansRaw);
+          const scan = storedScans.find(s => s.id === scanJobId);
+          if (scan && Array.isArray(scan.findings)) {
+            localFindings = scan.findings;
+          }
+        }
+      } catch (_) {}
+      mockFrontendFindings[scanJobId] = localFindings;
+    }
+
+    if (!mockFrontendFindings[scanJobId].some(f => f.id === finding.id)) {
+      mockFrontendFindings[scanJobId].push(finding);
+    }
+
+    try {
+      const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+      if (storedScansRaw) {
+        const storedScans = JSON.parse(storedScansRaw);
+        const scan = storedScans.find(s => s.id === scanJobId);
+        if (scan) {
+          if (!scan.findings) scan.findings = [];
+          if (!scan.findings.some(f => f.id === finding.id)) {
+            scan.findings.push(finding);
+          }
+          localStorage.setItem("cg_frontend_scans", JSON.stringify(storedScans));
+        }
+      }
+    } catch (e) {
+      console.error("[APIClient] Failed to save frontend finding to localStorage:", e);
+    }
+  }
+
+  function addFrontendLog(scanJobId, line) {
+    if (mockFrontendScans[scanJobId]) {
+      if (!mockFrontendScans[scanJobId].logs) mockFrontendScans[scanJobId].logs = [];
+      mockFrontendScans[scanJobId].logs.push(line);
+    }
+    try {
+      const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+      if (storedScansRaw) {
+        const storedScans = JSON.parse(storedScansRaw);
+        const scan = storedScans.find(s => s.id === scanJobId);
+        if (scan) {
+          if (!scan.logs) scan.logs = [];
+          scan.logs.push(line);
+          localStorage.setItem("cg_frontend_scans", JSON.stringify(storedScans));
+        }
+      }
+    } catch (e) {
+      console.error("[APIClient] Failed to save frontend log to localStorage:", e);
+    }
   }
 
   /* ── Expose on window ─────────────────────────────────────────────────── */
@@ -696,6 +910,9 @@ function withLoading(asyncFn, options = {}) {
     pauseScan,
     continueScan,
     cancelScan,
+    completeFrontendScan,
+    addFrontendFinding,
+    addFrontendLog,
   };
 })();
 

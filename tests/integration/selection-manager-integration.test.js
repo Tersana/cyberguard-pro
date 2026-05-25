@@ -59,8 +59,8 @@ describe('SelectionManager Integration - Task 2.1', () => {
       
       const networkToolCards = networkTab.querySelectorAll('.cyber-tool-card[data-tool-id]');
       
-      // Should have 7 network tools: port-scan, tcp-scan, udp-scan, ip-geo, reverse-dns, whois, threat-intel
-      expect(networkToolCards.length).toBeGreaterThanOrEqual(7);
+      // Should have 1 network tool remaining: threat-intel
+      expect(networkToolCards.length).toBe(1);
     });
 
     it('should find all web security tool cards', () => {
@@ -140,14 +140,14 @@ describe('SelectionManager Integration - Task 2.1', () => {
     it('should correctly identify buttons with -btn suffix', () => {
       SelectionManager.init();
       
-      const portScanCard = document.querySelector('.cyber-tool-card[data-tool-id="port-scan-btn"]');
-      expect(portScanCard).toBeTruthy();
+      const threatIntelCard = document.querySelector('.cyber-tool-card[data-tool-id="threat-intel-btn"]');
+      expect(threatIntelCard).toBeTruthy();
       
-      const portScanButton = document.getElementById('port-scan-btn');
-      expect(portScanButton).toBeTruthy();
+      const threatIntelButton = document.getElementById('threat-intel-btn');
+      expect(threatIntelButton).toBeTruthy();
       
       // Verify the button is inside the card
-      expect(portScanCard.contains(portScanButton)).toBe(true);
+      expect(threatIntelCard.contains(threatIntelButton)).toBe(true);
     });
 
     it('should find buttons using closest() selector', () => {

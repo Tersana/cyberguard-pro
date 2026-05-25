@@ -22,6 +22,83 @@
 
   let _scanners = [];
   let _selected = new Set();
+  const selectedFrontendTools = new Set();
+
+  const NETWORK_ANALYSIS_TOOLS = [
+    {
+      id: 'frontend-port-scanner',
+      name: 'Port Scanner',
+      description: 'Deep Shodan-powered analysis of open ports, running services, banners, and CVE exposure.',
+      badge: 'SHODAN',
+      badgeColor: 'shodan',
+      icon: `<svg class="w-5 h-5 text-[#A78BFA]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788 3.807-3.808 9.98-3.808 13.788 0 3.808 3.807 3.808 9.98 0 13.788-3.807 3.808-9.98 3.808-13.788 0Z" />
+             </svg>`,
+      category: 'NETWORK ANALYSIS',
+      isFrontend: true
+    },
+    {
+      id: 'frontend-tcp-connectivity',
+      name: 'TCP Connectivity',
+      description: 'Real-time TCP handshake verification and response time measurement via WebSocket probing.',
+      badge: 'TCP',
+      badgeColor: 'tcp',
+      icon: `<svg class="w-5 h-5 text-[#A78BFA]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+             </svg>`,
+      category: 'NETWORK ANALYSIS',
+      isFrontend: true
+    },
+    {
+      id: 'frontend-udp-services',
+      name: 'UDP Services',
+      description: 'Probe UDP-based services including DNS, NTP, mDNS, and DHCP indicators via browser APIs.',
+      badge: 'UDP',
+      badgeColor: 'udp',
+      icon: `<svg class="w-5 h-5 text-[#A78BFA]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" />
+             </svg>`,
+      category: 'NETWORK ANALYSIS',
+      isFrontend: true
+    },
+    {
+      id: 'frontend-ip-geolocation',
+      name: 'IP Geolocation',
+      description: 'Geolocate any IP: country, ISP, ASN, coordinates, timezone, and threat classification.',
+      badge: 'GEO',
+      badgeColor: 'geo',
+      icon: `<svg class="w-5 h-5 text-[#A78BFA]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3s-4.5 4.03-4.5 9 2.015 9 4.5 9Z" />
+               <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12c0 5.385 4.365 9.75 9.75 9.75s9.75-4.365 9.75-9.75S17.385 2.25 12 2.25 2.25 6.615 2.25 12Z" />
+             </svg>`,
+      category: 'NETWORK ANALYSIS',
+      isFrontend: true
+    },
+    {
+      id: 'frontend-reverse-dns',
+      name: 'Reverse DNS',
+      description: 'PTR record resolution with CDN fingerprinting, cloud provider detection, and hostname mapping.',
+      badge: 'RECURSIVE',
+      badgeColor: 'recursive',
+      icon: `<svg class="w-5 h-5 text-[#A78BFA]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m-4.991 4.992" />
+             </svg>`,
+      category: 'NETWORK ANALYSIS',
+      isFrontend: true
+    },
+    {
+      id: 'frontend-whois-lookup',
+      name: 'WHOIS Lookup',
+      description: 'Full domain registration intelligence: registrar, creation dates, nameservers, contacts.',
+      badge: 'WHOISXML',
+      badgeColor: 'whoisxml',
+      icon: `<svg class="w-5 h-5 text-[#A78BFA]" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+             </svg>`,
+      category: 'NETWORK ANALYSIS',
+      isFrontend: true
+    }
+  ];
 
   // ── Echo state ────────────────────────────────────────────────────────────
   let activeScanChannel = null;
@@ -74,6 +151,7 @@
     scanState.targetValue = buttonEl.dataset.val || "";
     scanState.targetType  = buttonEl.dataset.typ || "domain";
     _selected.clear();
+    selectedFrontendTools.clear();
 
     const countEl = document.getElementById("selected-scanners-count-bar");
     if (countEl) countEl.textContent = "0 scanners selected";
@@ -189,6 +267,25 @@
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">${list.map(renderScannerCard).join("")}</div>
         </div>`;
     }
+
+    // Render Network Analysis section
+    html += `
+      <div class="mb-8" data-scan-group="network-analysis">
+        <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
+          <span class="text-xs font-bold uppercase tracking-widest text-[var(--cg-accent)]">
+            NETWORK ANALYSIS
+          </span>
+          <button type="button"
+            class="text-xs text-[var(--cg-info)] hover:underline focus:outline-none font-semibold"
+            onclick="window.ScanManager._toggleNetworkGroup()">
+            Select All
+          </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          ${NETWORK_ANALYSIS_TOOLS.map(renderFrontendToolCard).join("")}
+        </div>
+      </div>`;
+
     bodyEl.innerHTML = html;
   }
 
@@ -245,8 +342,29 @@
     _refreshCardStyles(group);
   }
 
+  function _toggleNetworkGroup() {
+    const group = document.querySelector('[data-scan-group="network-analysis"]');
+    if (!group) return;
+    const cbs = [...group.querySelectorAll(".scan-cb")];
+    const allOn = cbs.every((cb) => cb.checked);
+    cbs.forEach((cb) => {
+      cb.checked = !allOn;
+      if (cb.checked) selectedFrontendTools.add(cb.value);
+      else selectedFrontendTools.delete(cb.value);
+    });
+    _refreshCardStyles(group);
+  }
+
   function _onCheckbox(cb) {
     _syncSelection(cb);
+    const group = cb.closest("[data-scan-group]");
+    if (group) _refreshCardStyles(group);
+  }
+
+  function _onFrontendCheckbox(cb) {
+    if (cb.checked) selectedFrontendTools.add(cb.value);
+    else selectedFrontendTools.delete(cb.value);
+
     const group = cb.closest("[data-scan-group]");
     if (group) _refreshCardStyles(group);
   }
@@ -256,6 +374,14 @@
     else _selected.delete(cb.value);
   }
 
+  function _updateSelectedCount() {
+    const total = _selected.size + selectedFrontendTools.size;
+    const countEl = document.getElementById("selected-scanners-count-bar");
+    if (countEl) {
+      countEl.textContent = `${total} scanner${total !== 1 ? 's' : ''} selected`;
+    }
+  }
+
   function _refreshCardStyles(group) {
     const selector = group ? group.querySelectorAll(".scanner-interactive-card") : document.querySelectorAll(".scanner-interactive-card");
     selector.forEach((card) => {
@@ -263,10 +389,45 @@
       card.classList.toggle("selected", !!cb?.checked);
     });
 
-    const countEl = document.getElementById("selected-scanners-count-bar");
-    if (countEl) {
-      countEl.textContent = `${_selected.size} scanner${_selected.size !== 1 ? 's' : ''} selected`;
-    }
+    _updateSelectedCount();
+  }
+
+  function renderFrontendToolCard(tool) {
+    const id = escAttr(tool.id);
+    const name = escHtml(tool.name);
+    const desc = escHtml(tool.description);
+    const badge = escHtml(tool.badge);
+    const catBadgeCls = "text-[#A78BFA] bg-[rgba(167,139,250,0.1)] border-[rgba(167,139,250,0.25)]";
+    const iconSvg = tool.icon;
+
+    return `
+      <label class="scanner-interactive-card relative flex flex-col justify-between p-5 rounded-2xl border border-[var(--cg-border)] bg-slate-900/20 hover:border-[#A78BFA]/50 hover:bg-slate-900/40 cursor-pointer transition-all duration-200 select-none min-h-[160px]" data-scanner-id="${id}" data-frontend="true">
+        <!-- Top row: Icon & Switch Toggle -->
+        <div class="flex items-start justify-between w-full">
+          <div class="p-2 bg-[rgba(167,139,250,0.1)] rounded-xl border border-[rgba(167,139,250,0.2)]">
+            ${iconSvg}
+          </div>
+          <!-- Custom styled switch -->
+          <div class="flex items-center">
+            <input type="checkbox" class="scan-cb sr-only" value="${id}"
+                   onchange="window.ScanManager._onFrontendCheckbox(this)" />
+            <div class="w-10 h-6 bg-slate-800 rounded-full p-1 transition-colors duration-200 ease-in-out switch-bg">
+              <div class="w-4 h-4 bg-slate-500 rounded-full shadow-md transform duration-200 ease-in-out switch-dot"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description Content -->
+        <div class="mt-4 flex-1">
+          <h4 class="text-sm font-bold text-white mb-1">${name}</h4>
+          <p class="text-xs text-slate-400 leading-relaxed font-sans">${desc}</p>
+        </div>
+
+        <!-- Bottom details -->
+        <div class="mt-4 pt-2 border-t border-white/5 flex items-center justify-between">
+          <span class="text-[9px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider ${catBadgeCls}">${badge}</span>
+        </div>
+      </label>`;
   }
 
   function closeScanModal() {
@@ -277,7 +438,7 @@
      START SCAN — KEY FIX: driver_ids vs driver_id
   ═══════════════════════════════════════════════════════════════════════ */
   async function startScan() {
-    if (_selected.size === 0) {
+    if (_selected.size === 0 && selectedFrontendTools.size === 0) {
       notify("Please select at least one scanner.", "warning");
       return;
     }
@@ -288,6 +449,82 @@
 
     const btn = document.getElementById("scan-start-btn");
     _btnLoading(btn, "Starting…");
+
+    // Frontend-only scan bypass logic
+    if (_selected.size === 0 && selectedFrontendTools.size > 0) {
+      try {
+        const sessionId = "frontend_" + Math.random().toString(36).substring(2, 11);
+        closeScanModal();
+
+        scanState.sessionId      = sessionId;
+        scanState.status         = "running";
+        scanState.findings       = [];
+        scanState.seenFindingIds = new Set();
+        scanState.startedAt      = new Date().toISOString();
+        scanState.finishedAt     = null;
+        scanCompleted            = false;
+
+        const activeProjectId = (typeof _projectId !== "undefined") ? _projectId : "";
+        const triggerUser = localStorage.getItem("cyberguard_user_name") || "Mohamed Gamal";
+
+        const newScanRecord = {
+          id: sessionId,
+          status: "running",
+          target_id: scanState.targetId,
+          project_id: activeProjectId,
+          started_at: scanState.startedAt,
+          created_at: scanState.startedAt,
+          finished_at: null,
+          driver_id: ["FRONTEND_ANALYSIS"],
+          target: {
+            id: scanState.targetId,
+            value: scanState.targetValue
+          },
+          triggered_by: triggerUser,
+          user: {
+            name: triggerUser
+          },
+          metadata: {
+            target_name: scanState.targetValue,
+            triggered_by: triggerUser
+          }
+        };
+
+        // Save to localStorage persistence
+        try {
+          const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+          const storedScans = storedScansRaw ? JSON.parse(storedScansRaw) : [];
+          storedScans.unshift(newScanRecord);
+          localStorage.setItem("cg_frontend_scans", JSON.stringify(storedScans));
+        } catch (e) {
+          console.error("[ScanManager] Failed to save frontend scan to history:", e);
+        }
+
+        // Store session info so scan-progress.js can read it
+        try {
+          sessionStorage.setItem("cg_pending_scan", JSON.stringify({
+            sessionId,
+            targetValue : scanState.targetValue,
+            targetId    : scanState.targetId,
+            startedAt   : scanState.startedAt,
+            projectId   : activeProjectId,
+            selectedFrontendTools: Array.from(selectedFrontendTools)
+          }));
+        } catch (_) {}
+
+        notify("Scan started — opening progress view…", "success");
+
+        setTimeout(() => {
+          window.location.href = `/scan/${sessionId}`;
+        }, 600);
+      } catch (err) {
+        console.error("[ScanManager] startScan frontend-only error:", err);
+        notify(err.message || "Failed to start scan.", "error");
+      } finally {
+        _btnRestore(btn);
+      }
+      return;
+    }
 
     try {
       // ── Build payload ────────────────────────────────────────────────────
@@ -350,6 +587,7 @@
           targetValue : scanState.targetValue,
           targetId    : scanState.targetId,
           startedAt   : scanState.startedAt,
+          selectedFrontendTools: Array.from(selectedFrontendTools)
         }));
       } catch (_) {}
 
@@ -1311,9 +1549,6 @@
     return data.scan_job || data;
   }
 
-  /* ═══════════════════════════════════════════════════════════════════════
-     PUBLIC API
-  ═══════════════════════════════════════════════════════════════════════ */
   window.ScanManager = {
     openScanModal,
     closeScanModal,
@@ -1324,7 +1559,9 @@
     cancelScan,
     clearTerminal,
     _toggleGroup,
+    _toggleNetworkGroup,
     _onCheckbox,
+    _onFrontendCheckbox,
     get state() { return scanState; },
   };
 })();

@@ -66,7 +66,7 @@ describe('Clear Results Button - Task 6.3: New Scan After Clear', () => {
       
       resultsData = [];
       
-      const activityLogContainer = document.getElementById('activity-log-container');
+      const activityLogContainer = document.getElementById('live-activity-feed');
       if (activityLogContainer) {
         activityLogContainer.innerHTML = '';
       }
@@ -246,7 +246,7 @@ describe('Clear Results Button - Task 6.3: New Scan After Clear', () => {
       global.confirm.mockReturnValue(true);
       clearResults();
       
-      const activityLogContainer = document.getElementById('activity-log-container');
+      const activityLogContainer = document.getElementById('live-activity-feed');
       expect(activityLogContainer.innerHTML).toBe('');
 
       // Act: Add new activity log entry

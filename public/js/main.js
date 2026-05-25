@@ -4816,9 +4816,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Tool Implementations (Web-safe versions) ---
 
   // WHOIS Lookup button
-  document
-    .getElementById("whois-btn")
-    .addEventListener("click", () =>
+  const whoisBtn = document.getElementById("whois-btn");
+  if (whoisBtn) {
+    whoisBtn.addEventListener("click", () =>
       runTool(
         "WHOIS Lookup",
         whoisLookup,
@@ -4827,6 +4827,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "whois-btn",
       ),
     );
+  }
 
   async function whoisLookup(target) {
     addActivityLog(`Starting WHOIS lookup for ${target}`, "WHOIS Lookup");
@@ -5008,9 +5009,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  document
-    .getElementById("reverse-dns-btn")
-    .addEventListener("click", () =>
+  const reverseDnsBtn = document.getElementById("reverse-dns-btn");
+  if (reverseDnsBtn) {
+    reverseDnsBtn.addEventListener("click", () =>
       runTool(
         "Reverse DNS",
         reverseDns,
@@ -5019,6 +5020,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "reverse-dns-btn",
       ),
     );
+  }
   async function reverseDns(target) {
     logResult(
       new Date(),
@@ -5399,9 +5401,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  document
-    .getElementById("port-scan-btn")
-    .addEventListener("click", () =>
+  const portScanBtn = document.getElementById("port-scan-btn");
+  if (portScanBtn) {
+    portScanBtn.addEventListener("click", () =>
       runTool(
         "Port Scanner",
         portScan,
@@ -5410,6 +5412,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "port-scan-btn",
       ),
     );
+  }
 
   // ===== SHODAN-BASED PORT SCANNER =====
   // Professional port scanning using Shodan API for comprehensive network intelligence
@@ -5848,9 +5851,9 @@ document.addEventListener("DOMContentLoaded", () => {
       updateStatus("Shodan scan completed");
     }
   }
-  document
-    .getElementById("ip-geo-btn")
-    .addEventListener("click", () =>
+  const ipGeoBtn = document.getElementById("ip-geo-btn");
+  if (ipGeoBtn) {
+    ipGeoBtn.addEventListener("click", () =>
       runTool(
         "IP Geolocation",
         ipGeolocation,
@@ -5859,6 +5862,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "ip-geo-btn",
       ),
     );
+  }
   async function ipGeolocation(target) {
     addActivityLog(
       `Starting geolocation lookup for ${target}`,
@@ -9507,9 +9511,9 @@ document.addEventListener("DOMContentLoaded", () => {
     injectShodanPanel(panel);
   }
 
-  document
-    .getElementById("tcp-scan-btn")
-    .addEventListener("click", () =>
+  const tcpScanBtn = document.getElementById("tcp-scan-btn");
+  if (tcpScanBtn) {
+    tcpScanBtn.addEventListener("click", () =>
       runTool(
         "TCP Port Scan",
         realTcpPortScan,
@@ -9518,6 +9522,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "tcp-scan-btn",
       ),
     );
+  }
 
   /**
    * TCP Port Scan entry point — called by runTool.
@@ -9613,9 +9618,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // REAL UDP Connectivity Test - Using Browser APIs
-  document
-    .getElementById("udp-scan-btn")
-    .addEventListener("click", () =>
+  const udpScanBtn = document.getElementById("udp-scan-btn");
+  if (udpScanBtn) {
+    udpScanBtn.addEventListener("click", () =>
       runTool(
         "UDP Port Scan",
         realUdpConnectivityTest,
@@ -9624,6 +9629,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "udp-scan-btn",
       ),
     );
+  }
   async function realUdpConnectivityTest(target) {
     logResult(
       new Date(),
@@ -10922,18 +10928,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (window.AIAssistantInitialized) return;
   window.AIAssistantInitialized = true;
 
-  // Pre-saved official Gemini API key for instant out-of-the-box operation
-  const DEFAULT_GEMINI_KEY = "AIzaSyBoNolMHWKMkmuoQmk8ajNLguv4k-3qcIs";
+  // Pre-saved official OpenRouter API key for instant out-of-the-box operation
+  const DEFAULT_OPENROUTER_KEY = "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";
   
   // Initialize default localStorage settings on first load
   if (!localStorage.getItem("cg_ai_provider")) {
-    localStorage.setItem("cg_ai_provider", "gemini");
+    localStorage.setItem("cg_ai_provider", "openrouter");
   }
-  if (!localStorage.getItem("cg_ai_gemini_key")) {
-    localStorage.setItem("cg_ai_gemini_key", DEFAULT_GEMINI_KEY);
+  if (!localStorage.getItem("cg_ai_openrouter_key")) {
+    localStorage.setItem("cg_ai_openrouter_key", DEFAULT_OPENROUTER_KEY);
   }
-  if (!localStorage.getItem("cg_ai_gemini_model")) {
-    localStorage.setItem("cg_ai_gemini_model", "gemini-1.5-flash");
+  if (!localStorage.getItem("cg_ai_openrouter_model")) {
+    localStorage.setItem("cg_ai_openrouter_model", "openai/gpt-oss-120b:free");
   }
   if (!localStorage.getItem("cg_ai_temp")) {
     localStorage.setItem("cg_ai_temp", "0.7");
@@ -10945,6 +10951,15 @@ Your primary role is to help security engineers, developers, and administrators 
 - Web Security: Phishing URL Analyser, XSS Tester, SSL/TLS Checker, DNS Spoofing Detector
 - Hash & Crypto: MD5/SHA-1/SHA-256 Hashing, File Integrity verification, Password Strength analysis
 - JWT Debugger: Decodes & verifies JSON Web Tokens (algorithms HS256, RS256, ES256, etc.) and signs new custom tokens.
+
+[HOW TO ANSWER "What tools are available on this dashboard?"]
+When asked about available tools, tabs, or capabilities of the dashboard, you MUST present a highly structured and comprehensive summary of each tab/module of the application. Do NOT simply list the individual tools; instead, mention each tab of the application and describe in detail what the user can do in it:
+1. **Network Analysis**: Provides real-time network scanning and reconnaissance tools. Users can perform Reverse DNS mapping, pinpoint precise IP Geolocation, lookup detailed WHOIS registration logs, execute TCP/UDP port scanning, and fetch Threat Intelligence feeds from AbuseIPDB and VirusTotal to check if a host has been reported for malicious activity.
+2. **Web Security**: Focuses on modern web application auditing and threat detection. Users can analyze suspicious links with a machine-learning-based Phishing URL Analyzer, test input fields for Cross-Site Scripting (XSS) injections, inspect SSL/TLS certificates for configuration weaknesses, and detect potential DNS Spoofing and hijacking attempts.
+3. **Hash & Crypto**: Offers essential cryptographic and security utilities. Users can generate MD5, SHA-1, and SHA-256 hashes, verify file integrity, perform password strength analysis using mathematical entropy checks, and utilize interactive wizards to harden their security credentials.
+4. **JWT Debugger**: A full-featured JSON Web Token (JWT) auditing terminal. Users can paste a token to decode its header and payload instantly, verify signatures against HS256, RS256, or ES256 algorithms with custom keys, edit token payloads, and sign new custom-signed tokens.
+5. **Threat Intel Hub**: A comprehensive security intelligence aggregator. It compiles global security feeds, allows users to check suspicious IPs/domains across active blacklist databases, and stores historical threat research logs.
+6. **Security Projects**: An elite dashboard project manager allowing users to organize their security assessments. Users can create distinct projects, assign specific target hosts, aggregate findings under target directories, calculate global dynamic risk ratings based on open vulnerability severities, and invite collaborators.
 
 You answer general cybersecurity questions with precision, conciseness, and depth. Use markdown bullet points, tables, and code blocks as appropriate. Keep answers practical and actionable. CRITICAL: Do NOT use any emojis, symbols, or emoticon characters (e.g. 🔍, 🌐, 🔒, 🛡️, etc.) in your response text under any circumstances. Always use pure markdown, plain text, or inline SVGs.
 
@@ -11014,15 +11029,10 @@ Always align dashboard actions with what the user requests! Explain briefly what
 
   // Preset model configurations
   const MODEL_PRESETS = {
-    gemini: [
-      { value: "gemini-1.5-flash", text: "gemini-1.5-flash (Recommended)" },
-      { value: "gemini-1.5-pro", text: "gemini-1.5-pro (High intelligence)" },
-      { value: "gemini-2.0-flash-exp", text: "gemini-2.0-flash-exp" }
-    ],
     openrouter: [
+      { value: "openai/gpt-oss-120b:free", text: "GPT-OSS 120B (Free Recommended)" },
       { value: "meta-llama/llama-3-8b-instruct:free", text: "Llama 3 8B (Free Presets)" },
       { value: "mistralai/mistral-7b-instruct:free", text: "Mistral 7B (Free Presets)" },
-      { value: "google/gemini-2.0-flash-exp:free", text: "Gemini 2.0 Flash (Free)" },
       { value: "custom", text: "Custom Model..." }
     ],
     groq: [
@@ -11329,7 +11339,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
 
   // ─── CONFIGURATION STORAGE ──────────────────────────────────────
   function loadConfigurations() {
-    const provider = localStorage.getItem("cg_ai_provider") || "gemini";
+    const provider = localStorage.getItem("cg_ai_provider") || "openrouter";
     providerSelect.value = provider;
     
     // Repopulate presets select
@@ -11375,7 +11385,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
 
   function updateEngineLabel() {
     if (engineLabel) {
-      const p = localStorage.getItem("cg_ai_provider") || "gemini";
+      const p = localStorage.getItem("cg_ai_provider") || "openrouter";
       const model = localStorage.getItem("cg_ai_" + p + "_model") || "default";
       engineLabel.textContent = `${p.toUpperCase()} (${model.split("/").pop()}) • Active`;
     }
@@ -11517,8 +11527,6 @@ Always align dashboard actions with what the user requests! Explain briefly what
     if (resetSettingsBtn) {
       resetSettingsBtn.addEventListener("click", () => {
         localStorage.removeItem("cg_ai_provider");
-        localStorage.removeItem("cg_ai_gemini_key");
-        localStorage.removeItem("cg_ai_gemini_model");
         localStorage.removeItem("cg_ai_openrouter_key");
         localStorage.removeItem("cg_ai_openrouter_model");
         localStorage.removeItem("cg_ai_groq_key");
@@ -11526,9 +11534,9 @@ Always align dashboard actions with what the user requests! Explain briefly what
         localStorage.removeItem("cg_ai_system_prompt");
         localStorage.removeItem("cg_ai_temp");
 
-        localStorage.setItem("cg_ai_provider", "gemini");
-        localStorage.setItem("cg_ai_gemini_key", DEFAULT_GEMINI_KEY);
-        localStorage.setItem("cg_ai_gemini_model", "gemini-1.5-flash");
+        localStorage.setItem("cg_ai_provider", "openrouter");
+        localStorage.setItem("cg_ai_openrouter_key", DEFAULT_OPENROUTER_KEY);
+        localStorage.setItem("cg_ai_openrouter_model", "openai/gpt-oss-120b:free");
 
         loadConfigurations();
         updateEngineLabel();
@@ -11591,7 +11599,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
 
     try {
       let reply;
-      const prov = localStorage.getItem("cg_ai_provider") || "gemini";
+      const prov = localStorage.getItem("cg_ai_provider") || "openrouter";
       const key = localStorage.getItem("cg_ai_" + prov + "_key") || "";
       const model = localStorage.getItem("cg_ai_" + prov + "_model") || "";
       const promptOverride = localStorage.getItem("cg_ai_system_prompt") || "";
@@ -11599,26 +11607,26 @@ Always align dashboard actions with what the user requests! Explain briefly what
 
       const fullSystemPrompt = promptOverride ? promptOverride : SYSTEM_PROMPT;
 
+      // Use pre-configured system fallback key for OpenRouter if none configured by user
+      const activeKey = key || (prov === "openrouter" ? DEFAULT_OPENROUTER_KEY : "");
+      const activeModel = model || (prov === "openrouter" ? "openai/gpt-oss-120b:free" : "");
+
       // Check if dynamic context queries or offline wizards triggered
-      const isOfflineMode = prov === "offline" || !key && prov !== "offline" && prov !== "gemini";
+      const isOfflineMode = prov === "offline" || (!activeKey && prov !== "offline");
 
       if (isOfflineMode) {
         // Run interactive offline fallback
         reply = await processOfflineMessage(text);
       } else {
         // Query official REST integrations
-        if (prov === "gemini") {
+        if (prov === "openrouter") {
           const sysContext = gatherSystemContext();
           const targetSystemPrompt = `${fullSystemPrompt}\n\n${sysContext}`;
-          reply = await callGeminiAPI(text, targetSystemPrompt, key || DEFAULT_GEMINI_KEY, model || "gemini-1.5-flash", temp);
-        } else if (prov === "openrouter") {
-          const sysContext = gatherSystemContext();
-          const targetSystemPrompt = `${fullSystemPrompt}\n\n${sysContext}`;
-          reply = await callOpenRouterAPI(text, targetSystemPrompt, key, model, temp);
+          reply = await callOpenRouterAPI(text, targetSystemPrompt, activeKey, activeModel, temp);
         } else if (prov === "groq") {
           const sysContext = gatherSystemContext();
           const targetSystemPrompt = `${fullSystemPrompt}\n\n${sysContext}`;
-          reply = await callGroqAPI(text, targetSystemPrompt, key, model, temp);
+          reply = await callGroqAPI(text, targetSystemPrompt, activeKey, activeModel, temp);
         }
       }
 
@@ -11676,47 +11684,6 @@ Always align dashboard actions with what the user requests! Explain briefly what
   }
 
   // ─── DYNAMIC REST API CALLS ──────────────────────────────────────
-  async function callGeminiAPI(message, systemPrompt, apiKey, model, temp) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-    
-    // Convert history format to Gemini schema
-    const contents = [];
-    conversationHistory.slice(-10).forEach(h => {
-      contents.push({
-        role: h.role === "assistant" ? "model" : "user",
-        parts: [{ text: h.content }]
-      });
-    });
-
-    const body = JSON.stringify({
-      contents,
-      systemInstruction: {
-        parts: [{ text: systemPrompt }]
-      },
-      generationConfig: {
-        temperature: temp,
-        maxOutputTokens: 1024
-      }
-    });
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `HTTP ${res.status}`);
-    }
-
-    const data = await res.json();
-    return (
-      data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
-      "Google Gemini failed to generate a response candidate."
-    );
-  }
-
   async function callOpenRouterAPI(message, systemPrompt, apiKey, model, temp) {
     const url = "https://openrouter.ai/api/v1/chat/completions";
     
@@ -11726,7 +11693,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
     ];
 
     const body = JSON.stringify({
-      model: model || "meta-llama/llama-3-8b-instruct:free",
+      model: model || "openai/gpt-oss-120b:free",
       messages,
       temperature: temp,
       max_tokens: 1024
@@ -12097,9 +12064,25 @@ Always align dashboard actions with what the user requests! Explain briefly what
       return renderPortWizardStep();
     }
 
+    // Available Tools / Tabs
+    if (/\b(what tools|available tools|tools available|list tools|all tools|tabs)\b/.test(q)) {
+      return `### Available Dashboard Modules & Capabilities
+
+The **CyberGuard Pro Security Dashboard** organizes its elite security suites into 6 dedicated, highly integrated modules/tabs:
+
+1. **Network Analysis**: Provides real-time network scanning and reconnaissance tools. Users can perform Reverse DNS mapping, pinpoint precise IP Geolocation, lookup detailed WHOIS registration logs, execute TCP/UDP port scanning, and fetch Threat Intelligence feeds from AbuseIPDB and VirusTotal to check if a host has been reported for malicious activity.
+2. **Web Security**: Focuses on modern web application auditing and threat detection. Users can analyze suspicious links with a machine-learning-based Phishing URL Analyzer, test input fields for Cross-Site Scripting (XSS) injections, inspect SSL/TLS certificates for configuration weaknesses, and detect potential DNS Spoofing and hijacking attempts.
+3. **Hash & Crypto**: Offers essential cryptographic and security utilities. Users can generate MD5, SHA-1, and SHA-256 hashes, verify file integrity, perform password strength analysis using mathematical entropy checks, and utilize interactive wizards to harden their security credentials.
+4. **JWT Debugger**: A full-featured JSON Web Token (JWT) auditing terminal. Users can paste a token to decode its header and payload instantly, verify signatures against HS256, RS256, or ES256 algorithms with custom keys, edit token payloads, and sign new custom-signed tokens.
+5. **Threat Intel Hub**: A comprehensive security intelligence aggregator. It compiles global security feeds, allows users to check suspicious IPs/domains across active blacklist databases, and stores historical threat research logs.
+6. **Security Projects**: An elite dashboard project manager allowing users to organize their security assessments. Users can create distinct projects, assign specific target hosts, aggregate findings under target directories, calculate global dynamic risk ratings based on open vulnerability severities, and invite collaborators.
+
+You can switch to any of these tabs directly or tell me what scan you'd like to perform, and I will configure and run it for you instantly!`;
+    }
+
     // Who are you / identity
     if (/\b(who are you|your name|what are you|who's this|identity)\b/.test(q)) {
-      return `I am the **CyberGuard Pro AI Copilot**, your elite cybersecurity assistant and dashboard co-pilot. In offline mode, I operate locally using interactive security wizards (Phishing URL audits, Password strength ratings, and Port hardening guidelines) and autopilot controls to help you navigate your dashboard. Enter a Google Gemini or OpenRouter key in the settings drawer (top-right gear icon) to unlock my full AI-powered reasoning capabilities!`;
+      return `I am the **CyberGuard Pro AI Copilot**, your elite cybersecurity assistant and dashboard co-pilot. In offline mode, I operate locally using interactive security wizards (Phishing URL audits, Password strength ratings, and Port hardening guidelines) and autopilot controls to help you navigate your dashboard. Enter an OpenRouter key in the settings drawer (top-right gear icon) to unlock my full AI-powered reasoning capabilities!`;
     }
 
     // OWASP Top 10
@@ -12198,7 +12181,7 @@ Launch our interactive local **Password Strength Solver Wizard** by asking for i
 - *"Launch the password entropy solver wizard"*
 - *"Launch the port explorer wizard"*
 
-Or save your Google Gemini/OpenRouter keys in my settings configurations at the top right!`;
+Or save your OpenRouter key in my settings configurations at the top right!`;
     }
 
     return `I'm not sure how to resolve your query in offline mode. Let's do an interactive security analysis instead! Click one of the wizards below to begin:
@@ -12648,15 +12631,66 @@ Or save your Google Gemini/OpenRouter keys in my settings configurations at the 
 
   // safe message formatter
   function formatMessage(text) {
-    let formatted = text;
+    // 1. Escape all raw HTML tokens from user to prevent injection/XSS first
+    let escaped = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+      
+    let formatted = escaped;
     
-    // Process markdown code blocks
+    // 2. Process markdown tables
+    const tableRegex = /((?:^\s*\|[^\n]*\|\s*(?:\n|$))+)/gm;
+    formatted = formatted.replace(tableRegex, (match) => {
+      const lines = match.trim().split("\n");
+      if (lines.length < 2) return match; // Not a valid table
+
+      const parseRow = (rowStr) => {
+        const clean = rowStr.trim().replace(/^\||\|$/g, "");
+        return clean.split("|").map(s => s.trim());
+      };
+
+      const headers = parseRow(lines[0]);
+      
+      // Check if second line is a separator line
+      const hasSeparator = /^[\s|:-]+$/.test(lines[1].trim());
+      const startIndex = hasSeparator ? 2 : 1;
+      
+      let html = '<div class="cyber-table-container"><table class="cyber-markdown-table">';
+      
+      // Header
+      html += '<thead><tr>';
+      headers.forEach(h => {
+        html += `<th>${h}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+      
+      // Body
+      for (let i = startIndex; i < lines.length; i++) {
+        const cells = parseRow(lines[i]);
+        html += '<tr>';
+        for (let j = 0; j < headers.length; j++) {
+          const val = cells[j] || "";
+          html += `<td>${val}</td>`;
+        }
+        html += '</tr>';
+      }
+      
+      html += '</tbody></table></div>';
+      return `\n${html}\n`;
+    });
+
+    // 3. Process markdown code blocks
     const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g;
     formatted = formatted.replace(codeBlockRegex, (match, lang, code) => {
-      const codeId = "code-" + Math.floor(Math.random() * 100000);
       const displayLang = lang || "CODE";
-      const highlighted = highlightCode(code.trim(), lang);
-      const escapedRawCode = btoa(unescape(encodeURIComponent(code.trim())));
+      // Unescape HTML tokens inside the code block for highlighting
+      const unescapedCode = code
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&amp;/g, "&");
+      const highlighted = highlightCode(unescapedCode.trim(), lang);
+      const escapedRawCode = btoa(unescape(encodeURIComponent(unescapedCode.trim())));
       
       return `
         <div class="ai-code-block">
@@ -12672,13 +12706,8 @@ Or save your Google Gemini/OpenRouter keys in my settings configurations at the 
       `;
     });
     
-    // Escape standard tags outside the code blocks
-    let safe = formatted
-      .replace(/&(?!amp|lt|gt|quot|#x27|nbsp|span|code|div|button|ul|li|p|h4|strong|em|br|svg|path|rect|circle|line|polyline|g)/g, "&amp;")
-      .replace(/<(?!\/?div|\/?pre|\/?code|\/?span|\/?button|\/?ul|\/?li|\/?ol|\/?p|\/?h4|\/?strong|\/?em|\/?br|\/?svg|\/?path|\/?rect|\/?circle|\/?line|\/?polyline|\/?g)/g, "&lt;")
-      .replace(/(?<!div|pre|code|span|button|ul|li|ol|p|h4|strong|em|br|svg|path|rect|circle|line|polyline|g)>/g, "&gt;");
-      
-    // Casing bold and italics
+    // 4. Casing bold and italics
+    let safe = formatted;
     safe = safe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
     safe = safe.replace(/\*(.+?)\*/g, "<em>$1</em>");
     safe = safe.replace(/`([^`\n]+)`/g, "<code>$1</code>");
@@ -12702,7 +12731,8 @@ Or save your Google Gemini/OpenRouter keys in my settings configurations at the 
           out.push("<br>");
         } else {
           // Keep HTML elements intact
-          if (line.trim().startsWith("<div") || line.trim().startsWith("</div") || line.trim().startsWith("<button") || line.trim().startsWith("</button") || line.trim().startsWith("<h4") || line.trim().startsWith("<pre") || line.trim().startsWith("<svg") || line.trim().startsWith("</svg") || line.trim().startsWith("<span") || line.trim().startsWith("</span")) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith("<div") || trimmed.startsWith("</div") || trimmed.startsWith("<table") || trimmed.startsWith("</table") || trimmed.startsWith("<button") || trimmed.startsWith("</button") || trimmed.startsWith("<h4") || trimmed.startsWith("<pre") || trimmed.startsWith("<svg") || trimmed.startsWith("</svg") || trimmed.startsWith("<span") || trimmed.startsWith("</span")) {
             out.push(line);
           } else {
             out.push(`<p class="mb-1.5">${line}</p>`);
