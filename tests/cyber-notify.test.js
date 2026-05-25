@@ -19,7 +19,7 @@ const CyberNotify = {
     modal.classList.add('hidden');
     this._currentCallback = null;
   },
-  _show(message, mode, callback, type, defaultValue = "") {
+  _show(message, mode, callback, type, defaultValue = "", options = {}) {
     const modal = document.getElementById('cyber-notify-modal');
     const iconEl = document.getElementById('cyber-notify-icon');
     const msgEl = document.getElementById('cyber-notify-message');
@@ -54,13 +54,16 @@ const CyberNotify = {
     iconEl.style.color = color;
     msgEl.textContent = String(message ?? '');
 
-    if (mode === 'alert') {
-      confirmBtn.textContent = 'OK';
+    if (mode === 'alert' || options.singleButton) {
+      confirmBtn.textContent = options.confirmText || 'OK';
       confirmBtn.style.display = '';
       cancelBtn.style.display = 'none';
       const okHandler = () => {
         confirmBtn.removeEventListener('click', okHandler);
         this._hide();
+        if (typeof callback === 'function') {
+          callback(mode === 'prompt' ? inputEl.value : true);
+        }
       };
       confirmBtn.addEventListener('click', okHandler);
     } else {
@@ -78,7 +81,7 @@ const CyberNotify = {
       };
       const cancelHandler = () => {
         confirmBtn.removeEventListener('click', confirmHandler);
-        cancelBtn.removeEventListener('click', cancelHandler);
+        cancelBtn.removeEventListener("click", cancelHandler);
         this._hide();
         if (typeof callback === 'function') {
           callback(mode === 'prompt' ? null : false);
@@ -90,8 +93,12 @@ const CyberNotify = {
     modal.classList.remove('hidden');
     modal.classList.add('cyber-notify-open');
   },
-  alert(message, options = {}) {
-    this._show(message, 'alert', null, options.type);
+  alert(message, callback, options = {}) {
+    if (typeof callback === "object" && callback !== null) {
+      options = callback;
+      callback = null;
+    }
+    this._show(message, 'alert', callback, options.type, "", options);
   },
   confirm(message, callback, options = {}) {
     if (typeof callback !== 'function') {
@@ -99,7 +106,7 @@ const CyberNotify = {
       this._hide();
       return;
     }
-    this._show(message, 'confirm', callback, options.type);
+    this._show(message, 'confirm', callback, options.type, "", options);
   },
   prompt(message, defaultValue, callback, options = {}) {
     if (typeof callback !== 'function') {
@@ -107,7 +114,7 @@ const CyberNotify = {
       this._hide();
       return;
     }
-    this._show(message, 'prompt', callback, options.type, defaultValue);
+    this._show(message, 'prompt', callback, options.type, defaultValue, options);
   },
 };
 
@@ -183,7 +190,7 @@ describe('CyberNotify — Alert mode', () => {
 // ─── Unit tests: Confirm mode ─────────────────────────────────────────────────
 
 describe('CyberNotify — Confirm mode', () => {
-  it('both Confirm and Cancel buttons are shown', () => {
+  it('both Confirm and Cancel buttons are shown by default', () => {
     CyberNotify.confirm('Are you sure?', () => {});
     const confirmBtn = document.getElementById('cyber-notify-confirm-btn');
     const cancelBtn = document.getElementById('cyber-notify-cancel-btn');
@@ -196,6 +203,20 @@ describe('CyberNotify — Confirm mode', () => {
   it('message is displayed correctly', () => {
     CyberNotify.confirm('Delete this item?', () => {});
     expect(document.getElementById('cyber-notify-message').textContent).toBe('Delete this item?');
+  });
+
+  it('shows only one button with custom text when singleButton is true', () => {
+    let received = false;
+    CyberNotify.confirm('Log in first', () => { received = true; }, { singleButton: true, confirmText: 'OK' });
+    const confirmBtn = document.getElementById('cyber-notify-confirm-btn');
+    const cancelBtn = document.getElementById('cyber-notify-cancel-btn');
+    expect(confirmBtn.style.display).not.toBe('none');
+    expect(cancelBtn.style.display).toBe('none');
+    expect(confirmBtn.textContent).toBe('OK');
+
+    confirmBtn.click();
+    expect(received).toBe(true);
+    expect(document.getElementById('cyber-notify-modal').classList.contains('hidden')).toBe(true);
   });
 });
 

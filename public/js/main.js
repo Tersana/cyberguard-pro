@@ -1009,7 +1009,7 @@ const CyberNotify = {
     this._currentCallback = null;
   },
 
-  _show(message, mode, callback, type, defaultValue = "") {
+  _show(message, mode, callback, type, defaultValue = "", options = {}) {
     const modal = document.getElementById("cyber-notify-modal");
     const iconEl = document.getElementById("cyber-notify-icon");
     const msgEl = document.getElementById("cyber-notify-message");
@@ -1051,16 +1051,32 @@ const CyberNotify = {
 
     msgEl.textContent = String(message ?? "");
 
-    if (mode === "alert") {
-      confirmBtn.textContent = "OK";
+    if (mode === "alert" || options.singleButton) {
+      confirmBtn.textContent = options.confirmText || "OK";
       confirmBtn.style.display = "";
       cancelBtn.style.display = "none";
 
       const okHandler = () => {
         confirmBtn.removeEventListener("click", okHandler);
+        if (options.singleButton && mode === "prompt") {
+          inputEl.removeEventListener("keydown", inputKeydownHandler);
+        }
         this._hide();
+        if (typeof callback === "function") {
+          callback(mode === "prompt" ? inputEl.value : true);
+        }
       };
+      const inputKeydownHandler = (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          okHandler();
+        }
+      };
+
       confirmBtn.addEventListener("click", okHandler);
+      if (options.singleButton && mode === "prompt") {
+        inputEl.addEventListener("keydown", inputKeydownHandler);
+      }
     } else {
       confirmBtn.textContent = "Confirm";
       cancelBtn.textContent = "Cancel";
@@ -1112,8 +1128,12 @@ const CyberNotify = {
     });
   },
 
-  alert(message, options = {}) {
-    this._show(message, "alert", null, options.type);
+  alert(message, callback, options = {}) {
+    if (typeof callback === "object" && callback !== null) {
+      options = callback;
+      callback = null;
+    }
+    this._show(message, "alert", callback, options.type, "", options);
   },
 
   confirm(message, callback, options = {}) {
@@ -1122,7 +1142,7 @@ const CyberNotify = {
       this._hide();
       return;
     }
-    this._show(message, "confirm", callback, options.type);
+    this._show(message, "confirm", callback, options.type, "", options);
   },
 
   prompt(message, defaultValue, callback, options = {}) {
@@ -1131,7 +1151,7 @@ const CyberNotify = {
       this._hide();
       return;
     }
-    this._show(message, "prompt", callback, options.type, defaultValue);
+    this._show(message, "prompt", callback, options.type, defaultValue, options);
   },
 };
 

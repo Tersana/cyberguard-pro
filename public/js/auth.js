@@ -1719,7 +1719,7 @@ window.showLoginRequiredModal = function() {
   if (typeof CyberNotify !== 'undefined' && CyberNotify.confirm) {
     CyberNotify.confirm("You must log in first before using CyberGuard tools.", () => {
       window.location.href = '/login';
-    });
+    }, { singleButton: true, confirmText: "OK" });
   } else {
     alert("You must log in first before using CyberGuard tools.");
     window.location.href = '/login';
