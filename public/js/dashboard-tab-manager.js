@@ -7,6 +7,7 @@
 const DashboardTabManager = {
   // Track initialization state for each tab
   tabInitialized: {
+    'security-dashboard': false,
     'network-tools': false,
     'web-security': false,
     'hash-tools': false,
@@ -18,7 +19,7 @@ const DashboardTabManager = {
   },
   
   // Current active tab
-  currentTab: 'network-tools',
+  currentTab: 'security-dashboard',
   
   /**
    * Initialize the tab manager
@@ -67,6 +68,13 @@ const DashboardTabManager = {
       return;
     }
     
+    // Stop active scans polling if leaving Security Dashboard
+    if (this.currentTab === 'security-dashboard') {
+      if (typeof window.stopActiveScansPolling === 'function') {
+        window.stopActiveScansPolling();
+      }
+    }
+    
     // Update button states
     this.updateTabButtons(tabId);
     
@@ -75,6 +83,13 @@ const DashboardTabManager = {
     
     // Initialize tab-specific functionality if needed
     this.initializeTab(tabId);
+    
+    // Trigger telemetry load if entering Security Dashboard (even if already initialized)
+    if (tabId === 'security-dashboard') {
+      if (typeof window.loadSecurityDashboard === 'function') {
+        window.loadSecurityDashboard();
+      }
+    }
     
     // Update current tab
     this.currentTab = tabId;
@@ -138,7 +153,7 @@ const DashboardTabManager = {
     });
 
     // Toggle results section visibility
-    const TABS_WITHOUT_RESULTS = ['projects', 'threat-intel', 'billing-history', 'ai-assistant', 'hash-tools', 'jwt-debugger'];
+    const TABS_WITHOUT_RESULTS = ['security-dashboard', 'projects', 'threat-intel', 'billing-history', 'ai-assistant', 'hash-tools', 'jwt-debugger'];
     const resultsSection = document.getElementById('professional-results-section');
     if (resultsSection) {
       if (TABS_WITHOUT_RESULTS.includes(activeTabId)) {
@@ -164,6 +179,9 @@ const DashboardTabManager = {
     console.log(`DashboardTabManager: Initializing tab "${tabId}"`);
     
     switch (tabId) {
+      case 'security-dashboard':
+        this.initializeSecurityDashboard();
+        break;
       case 'hash-tools':
         this.initializeHashTools();
         break;
@@ -192,6 +210,16 @@ const DashboardTabManager = {
     
     // Mark as initialized
     this.tabInitialized[tabId] = true;
+  },
+  
+  /**
+   * Initialize Security Dashboard tab
+   */
+  initializeSecurityDashboard() {
+    console.log('DashboardTabManager: Initializing Security Dashboard tab');
+    if (typeof window.loadSecurityDashboard === 'function') {
+      window.loadSecurityDashboard();
+    }
   },
   
   /**

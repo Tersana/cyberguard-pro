@@ -20,6 +20,7 @@
         <link rel="stylesheet" href="css/cyber-theme.css" />
         <link rel="stylesheet" href="css/Style.css" />
         <link rel="stylesheet" href="css/settings-panel.css" />
+        <link rel="stylesheet" href="css/security-dashboard.css" />
     </head>
     <body class="cyber-body">
         <div id="app" class="flex h-screen overflow-hidden">
@@ -97,6 +98,10 @@
                         <a
                             href="#"
                             class="cyber-nav-item cyber-nav-active flex items-center gap-3 px-3 py-2 rounded-lg"
+                            onclick="
+                                switchToTab('security-dashboard');
+                                return false;
+                            "
                         >
                             <svg
                                 class="w-4 h-4"
@@ -1669,11 +1674,177 @@
                     <div class="px-4 sm:px-6 pb-6">
                         <div id="tab-content" class="space-y-6">
                             <!-- ============================================================ -->
+                            <!-- SECURITY DASHBOARD TAB -->
+                            <!-- ============================================================ -->
+                            <div
+                                id="security-dashboard"
+                                class="tab-pane active space-y-6"
+                            >
+                                <!-- Dashboard Header -->
+                                <div class="security-dashboard-header">
+                                    <div>
+                                        <h2 class="text-2xl font-bold text-white dashboard-title" id="dashboard-title-heading">
+                                            Security Dashboard
+                                        </h2>
+                                        <p class="text-sm text-slate-400 mt-1 dashboard-subtitle" id="dashboard-subtitle-text">
+                                            Loading system metrics...
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="dashboard-date-range text-xs text-slate-400 font-mono bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg" id="dashboard-date-range-display">
+                                            Jan 15 - Mar 30, 2025
+                                        </div>
+                                        <button class="cyber-btn-primary text-xs px-3 py-1.5 rounded-lg flex items-center gap-2" onclick="switchToTab('projects'); return false;">
+                                            Launch Scan
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Streaming Alert Banner -->
+                                <div class="streaming-alert-banner flex items-center gap-3 px-4 py-3 rounded-xl border border-emerald-500/15" id="streaming-alert-banner">
+                                    <span class="flex h-2 w-2 relative">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                    </span>
+                                    <span class="text-xs text-slate-300 font-medium" id="streaming-alert-text">
+                                        WebSocket Connected — Real-time scan results are being streamed.
+                                    </span>
+                                </div>
+
+                                <!-- Stat Cards Grid -->
+                                <div class="stat-cards-grid">
+                                    <!-- Card 1: Critical Findings -->
+                                    <div class="stat-card critical" id="critical-findings-card">
+                                        <div class="stat-card-icon-container bg-rose-500/10 border border-rose-500/20 text-rose-500">
+                                            <span class="material-symbols-outlined !text-xl">gpp_maybe</span>
+                                        </div>
+                                        <div class="stat-card-content">
+                                            <div class="stat-card-label">Critical Findings</div>
+                                            <div class="stat-card-value font-mono" id="critical-findings-value">0</div>
+                                            <div class="stat-card-subtext text-rose-400" id="critical-findings-subtext">+0 this week</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 2: Total Findings -->
+                                    <div class="stat-card total" id="total-findings-card">
+                                        <div class="stat-card-icon-container bg-blue-500/10 border border-blue-500/20 text-blue-500">
+                                            <span class="material-symbols-outlined !text-xl">bar_chart</span>
+                                        </div>
+                                        <div class="stat-card-content">
+                                            <div class="stat-card-label">Total Findings</div>
+                                            <div class="stat-card-value font-mono" id="total-findings-value">0</div>
+                                            <div class="stat-card-subtext text-blue-400" id="total-findings-subtext">+0 new</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 3: Resolved -->
+                                    <div class="stat-card resolved" id="resolved-card">
+                                        <div class="stat-card-icon-container bg-emerald-500/10 border border-emerald-500/20 text-emerald-500">
+                                            <span class="material-symbols-outlined !text-xl">verified</span>
+                                        </div>
+                                        <div class="stat-card-content">
+                                            <div class="stat-card-label">Resolved</div>
+                                            <div class="stat-card-value font-mono" id="resolved-value">0</div>
+                                            <div class="stat-card-subtext text-emerald-400" id="resolved-subtext">0% resolved</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 4: Targets / Scans -->
+                                    <div class="stat-card targets" id="targets-scans-card">
+                                        <div class="stat-card-icon-container bg-purple-500/10 border border-purple-500/20 text-purple-500">
+                                            <span class="material-symbols-outlined !text-xl">ads_click</span>
+                                        </div>
+                                        <div class="stat-card-content">
+                                            <div class="stat-card-label">Targets / Scans</div>
+                                            <div class="stat-card-value font-mono" id="targets-scans-value">0 / 0</div>
+                                            <div class="stat-card-subtext text-slate-400" id="targets-scans-subtext">0 active</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Visualizations Row -->
+                                <div class="dashboard-charts-row">
+                                    <!-- Card 1: Risk Score (circular gauge + per-target list) -->
+                                    <div class="dashboard-panel" id="risk-score-panel">
+                                        <div class="dashboard-panel-header">
+                                            <div>
+                                                <div class="dashboard-panel-title">Risk Score</div>
+                                                <div class="dashboard-panel-subtitle">Global security assessment by target</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="risk-score-layout flex flex-col md:flex-row items-center gap-6 mt-4">
+                                            <div class="risk-score-display-container flex-shrink-0" id="risk-score-display-container">
+                                                <!-- Circular gauge will go here -->
+                                            </div>
+                                            <div class="risk-targets-list flex-1 w-full space-y-3" id="risk-targets-list-container">
+                                                <!-- Per-target list will go here -->
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Card 2: Findings by Severity (donut + bar list) -->
+                                    <div class="dashboard-panel" id="severity-chart-panel">
+                                        <div class="dashboard-panel-header">
+                                            <div>
+                                                <div class="dashboard-panel-title">Findings by Severity</div>
+                                                <div class="dashboard-panel-subtitle">Distribution across total findings</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="severity-chart-layout flex flex-col sm:flex-row items-center gap-6 mt-4">
+                                            <div class="severity-donut-wrapper flex-shrink-0">
+                                                <!-- Dynamic conic-gradient donut chart -->
+                                                <div id="severity-donut-chart" class="severity-donut-chart-container">
+                                                    <div class="donut-center-overlay bg-[var(--cg-bg-surface)]">
+                                                        <div class="donut-total-count text-white font-extrabold text-2xl font-mono" id="donut-total-findings-count">0</div>
+                                                        <div class="donut-total-label text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Total</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="severity-bar-list-container flex-1 w-full space-y-3" id="severity-bar-list">
+                                                <!-- Dynamic bar list will go here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Bottom Row -->
+                                <div class="dashboard-bottom-row">
+                                    <!-- Panel 1: Active Scans -->
+                                    <div class="dashboard-panel">
+                                        <div class="dashboard-panel-header">
+                                            <div>
+                                                <div class="dashboard-panel-title">Active Scans</div>
+                                                <div class="dashboard-panel-subtitle">Live monitored scan processes</div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-4 min-h-[220px] max-h-[300px] overflow-y-auto pr-1" id="active-scans-container">
+                                            <!-- Active scans list -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Panel 2: Recent Findings -->
+                                    <div class="dashboard-panel">
+                                        <div class="dashboard-panel-header">
+                                            <div>
+                                                <div class="dashboard-panel-title">Recent Findings</div>
+                                                <div class="dashboard-panel-subtitle">Latest vulnerability alerts</div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-4 min-h-[220px] max-h-[300px] overflow-y-auto pr-1" id="recent-findings-container">
+                                            <!-- Recent findings table/list -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ============================================================ -->
                             <!-- NETWORK TAB -->
                             <!-- ============================================================ -->
                             <div
                                 id="network-tools"
-                                class="tab-pane active space-y-6"
+                                class="tab-pane hidden space-y-6"
                             >
                                 <!-- Section Title -->
                                 <div>
@@ -5115,6 +5286,8 @@
         <script src="js/main.js?v=1.0.1"></script>
         <!-- Threat Intel Hub Module -->
         <script src="js/threat-intel.js"></script>
+        <!-- Security Dashboard Controller -->
+        <script src="js/security-dashboard.js"></script>
         <!-- Dashboard Tab Manager - Loads after main.js to avoid conflicts -->
         <script src="js/dashboard-tab-manager.js"></script>
         <!-- JWT Debugger Module -->
