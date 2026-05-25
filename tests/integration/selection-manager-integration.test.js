@@ -53,16 +53,6 @@ describe('SelectionManager Integration - Task 2.1', () => {
   });
 
   describe('Dashboard HTML structure compatibility', () => {
-    it('should find all network tool cards', () => {
-      const networkTab = document.getElementById('network-tools');
-      expect(networkTab).toBeTruthy();
-      
-      const networkToolCards = networkTab.querySelectorAll('.cyber-tool-card[data-tool-id]');
-      
-      // Should have 1 network tool remaining: threat-intel
-      expect(networkToolCards.length).toBe(1);
-    });
-
     it('should find all web security tool cards', () => {
       const webSecurityTab = document.getElementById('web-security');
       expect(webSecurityTab).toBeTruthy();
@@ -122,16 +112,14 @@ describe('SelectionManager Integration - Task 2.1', () => {
       expect(true).toBe(true);
     });
 
-    it('should handle tool cards in both network and web security tabs', () => {
-      const networkCards = document.querySelectorAll('#network-tools .cyber-tool-card[data-tool-id]');
+    it('should handle tool cards in web security tab', () => {
       const webCards = document.querySelectorAll('#web-security .cyber-tool-card[data-tool-id]');
       
-      expect(networkCards.length).toBeGreaterThan(0);
       expect(webCards.length).toBeGreaterThan(0);
       
       SelectionManager.init();
       
-      // Both tabs should have listeners attached
+      // Tab should have listeners attached
       expect(true).toBe(true);
     });
   });
@@ -140,14 +128,14 @@ describe('SelectionManager Integration - Task 2.1', () => {
     it('should correctly identify buttons with -btn suffix', () => {
       SelectionManager.init();
       
-      const threatIntelCard = document.querySelector('.cyber-tool-card[data-tool-id="threat-intel-btn"]');
-      expect(threatIntelCard).toBeTruthy();
+      const xssCard = document.querySelector('.cyber-tool-card[data-tool-id="xss-btn"]');
+      expect(xssCard).toBeTruthy();
       
-      const threatIntelButton = document.getElementById('threat-intel-btn');
-      expect(threatIntelButton).toBeTruthy();
+      const xssButton = document.getElementById('xss-btn');
+      expect(xssButton).toBeTruthy();
       
       // Verify the button is inside the card
-      expect(threatIntelCard.contains(threatIntelButton)).toBe(true);
+      expect(xssCard.contains(xssButton)).toBe(true);
     });
 
     it('should find buttons using closest() selector', () => {

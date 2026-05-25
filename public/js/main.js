@@ -5289,9 +5289,9 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     }
   }
-  document
-    .getElementById("threat-intel-btn")
-    .addEventListener("click", () =>
+  const threatIntelBtn = document.getElementById("threat-intel-btn");
+  if (threatIntelBtn) {
+    threatIntelBtn.addEventListener("click", () =>
       runTool(
         "Threat Intelligence",
         threatIntelCheck,
@@ -5300,6 +5300,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "threat-intel-btn",
       ),
     );
+  }
   async function threatIntelCheck(target) {
     logResult(
       new Date(),
@@ -10450,12 +10451,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ).length;
 
       // Determine which count display to update based on active tab
-      const isNetworkTab = activeTab.id === "network-tools";
-      const countDisplay = document.getElementById(
-        isNetworkTab
-          ? "selection-count-display"
-          : "selection-count-display-web",
-      );
+      const countDisplay = document.getElementById("selection-count-display-web");
 
       if (countDisplay) {
         if (selectedCount === 0) {
@@ -10530,14 +10526,7 @@ document.addEventListener("DOMContentLoaded", () => {
      * Initializes the toggle buttons for both tabs
      */
     init() {
-      const toggleBtnNetwork = document.getElementById("select-all-toggle-btn");
       const toggleBtnWeb = document.getElementById("select-all-toggle-btn-web");
-
-      if (toggleBtnNetwork) {
-        toggleBtnNetwork.addEventListener("click", () => {
-          this.toggleAll();
-        });
-      }
 
       if (toggleBtnWeb) {
         toggleBtnWeb.addEventListener("click", () => {
@@ -10589,10 +10578,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!activeTab) return;
 
       // Determine which button to update based on active tab
-      const isNetworkTab = activeTab.id === "network-tools";
-      const toggleBtn = document.getElementById(
-        isNetworkTab ? "select-all-toggle-btn" : "select-all-toggle-btn-web",
-      );
+      const toggleBtn = document.getElementById("select-all-toggle-btn-web");
 
       if (!toggleBtn) return;
 
@@ -10672,57 +10658,6 @@ document.addEventListener("DOMContentLoaded", () => {
     },
 
     /**
-     * Executes selected network tools
-     * @param {string} target - The target IP or domain
-     * @returns {Promise<void>}
-     */
-    async executeNetworkScan(target) {
-      // Validate target
-      const validation = validateTargetInput(target, "Network Scan");
-      if (!validation.valid) {
-        this.showToast(validation.message);
-        return;
-      }
-
-      // Get selected tools
-      const selectedTools = SelectionManager.getSelectedTools("network-tools");
-
-      // Validate selection
-      if (selectedTools.length === 0) {
-        this.showToast("Please select at least one tool");
-        this.focusFirstToolCard("network-tools");
-        return;
-      }
-
-      // Dispatch scan start event
-      document.dispatchEvent(
-        new CustomEvent("cyberguard:scanStart", {
-          detail: { target, toolCount: selectedTools.length },
-        }),
-      );
-
-      // Execute selected tools sequentially
-      for (const toolId of selectedTools) {
-        if (shouldStopScan) break;
-
-        const toolFunction = ToolRegistry.getToolFunction(toolId);
-        if (toolFunction) {
-          try {
-            await toolFunction();
-          } catch (error) {
-            console.error(`Error executing ${toolId}:`, error);
-          }
-
-          // 200ms delay between tools
-          await this.delay(200);
-        }
-      }
-
-      // Dispatch scan result event with calculated risk metrics
-      _dispatchRiskGaugeUpdate();
-    },
-
-    /**
      * Executes selected web security tools
      * @param {string} url - The target URL
      * @returns {Promise<void>}
@@ -10784,73 +10719,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ---- Wire new UI buttons ----
 
-  // Execute Scan button (Network tab) — runs all network tools on the target
-  const executeScanBtn = document.getElementById("execute-scan-btn");
-  console.log("Execute Scan Button:", executeScanBtn); // Debug log
-  if (executeScanBtn) {
-    executeScanBtn.addEventListener("click", async () => {
-      console.log("Execute Scan button clicked!"); // Debug log
-      const target = document.getElementById("target-ip")?.value?.trim();
-      console.log("Target value:", target); // Debug log
-
-      // Disable button during scan
-      executeScanBtn.disabled = true;
-      executeScanBtn.classList.add("button-disabled");
-
-      // Reset stop flag
-      shouldStopScan = false;
-
-      // Track scan start time and target for Summary Bar
-      scanStartTime = Date.now();
-      currentScanTarget = target;
-
-      // Update Summary Bar when scan starts (show target, reset time)
-      updateSummaryBar(resultsData.length, "--", currentScanTarget);
-
-      // Execute selective network scan via ExecutionController
-      await ExecutionController.executeNetworkScan(target);
-
-      // Track scan end time and update Summary Bar with duration
-      scanEndTime = Date.now();
-      const metrics = calculateSummaryMetrics(
-        resultsData,
-        scanStartTime,
-        scanEndTime,
-      );
-      updateSummaryBar(
-        metrics.totalIssues,
-        metrics.timeTaken,
-        currentScanTarget,
-      );
-
-      // Re-enable button after scan
-      executeScanBtn.disabled = false;
-      executeScanBtn.classList.remove("button-disabled");
-    });
-  } else {
-    console.error("Execute Scan button not found!"); // Debug log
-  }
-
-  // Stop Scan button - allows user to cancel ongoing scans
-  const stopScanBtn = document.getElementById("stop-scan-btn");
-  if (stopScanBtn) {
-    stopScanBtn.addEventListener("click", () => {
-      if (isRunning) {
-        shouldStopScan = true;
-        logResult(
-          new Date(),
-          "System",
-          "🛑 Stopping scan... Please wait for current operation to complete.",
-          "warning",
-        );
-        updateStatus("Stopping scan...");
-
-        // Dispatch scan error event to reset dashboard
-        document.dispatchEvent(new CustomEvent("cyberguard:scanError"));
-      }
-    });
-  }
-
   // Run Analysis button (Web tab) — runs all web security tools
   const runAnalysisBtn = document.getElementById("run-analysis-btn");
   if (runAnalysisBtn) {
@@ -10903,10 +10771,10 @@ document.addEventListener("DOMContentLoaded", () => {
       updateResultsStats();
       // Reset gauge to idle
       document.dispatchEvent(new CustomEvent("cyberguard:scanReset"));
-      // Switch to network tab and focus target input
-      switchToTab("network-tools");
+      // Switch to web-security tab and focus target input
+      switchToTab("web-security");
       setTimeout(() => {
-        const targetInput = document.getElementById("target-ip");
+        const targetInput = document.getElementById("target-url");
         if (targetInput) {
           targetInput.value = "";
           targetInput.focus();
@@ -10947,35 +10815,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const SYSTEM_PROMPT = `You are CyberGuard Pro AI, a premium, elite cybersecurity copilot built directly into the CyberGuard Security Dashboard.
 Your primary role is to help security engineers, developers, and administrators understand and operate the dashboard's tools:
-- Network Scanner: Reverse DNS, IP Geolocation, WHOIS, Port Scanner (TCP/UDP), Threat Intelligence (VirusTotal/AbuseIPDB)
 - Web Security: Phishing URL Analyser, XSS Tester, SSL/TLS Checker, DNS Spoofing Detector
 - Hash & Crypto: MD5/SHA-1/SHA-256 Hashing, File Integrity verification, Password Strength analysis
 - JWT Debugger: Decodes & verifies JSON Web Tokens (algorithms HS256, RS256, ES256, etc.) and signs new custom tokens.
 
 [HOW TO ANSWER "What tools are available on this dashboard?"]
 When asked about available tools, tabs, or capabilities of the dashboard, you MUST present a highly structured and comprehensive summary of each tab/module of the application. Do NOT simply list the individual tools; instead, mention each tab of the application and describe in detail what the user can do in it:
-1. **Network Analysis**: Provides real-time network scanning and reconnaissance tools. Users can perform Reverse DNS mapping, pinpoint precise IP Geolocation, lookup detailed WHOIS registration logs, execute TCP/UDP port scanning, and fetch Threat Intelligence feeds from AbuseIPDB and VirusTotal to check if a host has been reported for malicious activity.
-2. **Web Security**: Focuses on modern web application auditing and threat detection. Users can analyze suspicious links with a machine-learning-based Phishing URL Analyzer, test input fields for Cross-Site Scripting (XSS) injections, inspect SSL/TLS certificates for configuration weaknesses, and detect potential DNS Spoofing and hijacking attempts.
-3. **Hash & Crypto**: Offers essential cryptographic and security utilities. Users can generate MD5, SHA-1, and SHA-256 hashes, verify file integrity, perform password strength analysis using mathematical entropy checks, and utilize interactive wizards to harden their security credentials.
-4. **JWT Debugger**: A full-featured JSON Web Token (JWT) auditing terminal. Users can paste a token to decode its header and payload instantly, verify signatures against HS256, RS256, or ES256 algorithms with custom keys, edit token payloads, and sign new custom-signed tokens.
-5. **Threat Intel Hub**: A comprehensive security intelligence aggregator. It compiles global security feeds, allows users to check suspicious IPs/domains across active blacklist databases, and stores historical threat research logs.
-6. **Security Projects**: An elite dashboard project manager allowing users to organize their security assessments. Users can create distinct projects, assign specific target hosts, aggregate findings under target directories, calculate global dynamic risk ratings based on open vulnerability severities, and invite collaborators.
+1. **Web Security**: Focuses on modern web application auditing and threat detection. Users can analyze suspicious links with a machine-learning-based Phishing URL Analyzer, test input fields for Cross-Site Scripting (XSS) injections, inspect SSL/TLS certificates for configuration weaknesses, and detect potential DNS Spoofing and hijacking attempts.
+2. **Hash & Crypto**: Offers essential cryptographic and security utilities. Users can generate MD5, SHA-1, and SHA-256 hashes, verify file integrity, perform password strength analysis using mathematical entropy checks, and utilize interactive wizards to harden their security credentials.
+3. **JWT Debugger**: A full-featured JSON Web Token (JWT) auditing terminal. Users can paste a token to decode its header and payload instantly, verify signatures against HS256, RS256, or ES256 algorithms with custom keys, edit token payloads, and sign new custom-signed tokens.
+4. **Threat Intel Hub**: A comprehensive security intelligence aggregator. It compiles global security feeds, allows users to check suspicious IPs/domains across active blacklist databases, and stores historical threat research logs.
+5. **Security Projects**: An elite dashboard project manager allowing users to organize their security assessments. Users can create distinct projects, assign specific target hosts, aggregate findings under target directories, calculate global dynamic risk ratings based on open vulnerability severities, and invite collaborators. Note: Automated network scans (including Port Scanner, TCP/UDP services, IP Geolocation, Reverse DNS, and WHOIS lookup) are integrated here and run as part of project scanning.
 
 You answer general cybersecurity questions with precision, conciseness, and depth. Use markdown bullet points, tables, and code blocks as appropriate. Keep answers practical and actionable. CRITICAL: Do NOT use any emojis, symbols, or emoticon characters (e.g. 🔍, 🌐, 🔒, 🛡️, etc.) in your response text under any circumstances. Always use pure markdown, plain text, or inline SVGs.
 
 [DASHBOARD AUTOPILOT CAPABILITY]
 You can operate the dashboard for the user! To perform dashboard operations, append action command tags at the very end of your response. You can output multiple actions if needed. Supported tags:
 1. Switch to a tab: [[ACTION: switch_tab(tabId)]]
-   - Valid tabIds: "network-tools", "web-security", "hash-tools", "jwt-debugger", "threat-intel", "projects"
+   - Valid tabIds: "web-security", "hash-tools", "jwt-debugger", "threat-intel", "projects"
 2. Fill a target scan input: [[ACTION: fill_input(elementId, value)]]
-   - Valid elementIds: "target-ip" (for Network tab), "target-url" (for Web tab)
+   - Valid elementIds: "target-url" (for Web tab)
 3. Launch a scan immediately: [[ACTION: run_scan(type, target)]]
-   - type is either "network" or "web". target is the domain or IP address.
+   - type is "web". target is the domain or URL.
 4. Clear all results: [[ACTION: clear_results()]]
 5. Open Credentials Modal: [[ACTION: open_api_keys()]]
 6. Select or deselect a tool card: [[ACTION: select_tool(toolId, isSelected)]]
    - toolId is one of the following:
-     - For Network tab: "port-scan-btn", "tcp-scan-btn", "udp-scan-btn", "ip-geo-btn", "reverse-dns-btn", "whois-btn", "threat-intel-btn"
      - For Web Security tab: "xss-btn", "ssl-btn", "phishing-btn", "dns-spoof-btn"
    - isSelected is "true" to select it, or "false" to deselect it.
 7. Select ONLY one tool in its tab (deselecting all other tools in that tab): [[ACTION: select_only_tool(toolId)]]
@@ -10984,7 +10849,7 @@ You can operate the dashboard for the user! To perform dashboard operations, app
 Examples:
 - "Sure! I will switch you to the JWT tab now. [[ACTION: switch_tab(\"jwt-debugger\")]]"
 - "Let me load up example.com and run a web scan for you. [[ACTION: run_scan(\"web\", \"example.com\")]]"
-- "I'll run a WHOIS lookup for 8.8.8.8. I'm switching to the Network tools tab, selecting only WHOIS, and starting the scan. [[ACTION: switch_tab(\"network-tools\")]] [[ACTION: select_only_tool(\"whois-btn\")]] [[ACTION: run_scan(\"network\", \"8.8.8.8\")]]"
+- "I'll run a phishing analysis for example.com. I'm switching to the Web Security tab, selecting only Phishing, and starting the scan. [[ACTION: switch_tab(\"web-security\")]] [[ACTION: select_only_tool(\"phishing-btn\")]] [[ACTION: run_scan(\"web\", \"example.com\")]]"
 
 Always align dashboard actions with what the user requests! Explain briefly what action you are taking. Use the dashboard state context provided in the prompt to make intelligent context-aware replies.`;
 
@@ -11934,7 +11799,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
     // Context commands trigger offline too
     if (/\b(switch|go to|open|show)\b/.test(q)) {
       if (/\b(network|port|scanner)\b/.test(q)) {
-        return `I've switched your dashboard to the Network Security Scanner. [[ACTION: switch_tab("network-tools")]]`;
+        return `The standalone Network Analysis tab has been removed, but network scans (Port Scanner, TCP/UDP services, IP Geolocation, Reverse DNS, WHOIS lookup) are now fully integrated into Projects! I've switched you to the Projects workspace. [[ACTION: switch_tab("projects")]]`;
       }
       if (/\b(web|phish|xss|ssl|url)\b/.test(q)) {
         return `I've opened the Web Security Suite. [[ACTION: switch_tab("web-security")]]`;
@@ -11977,8 +11842,8 @@ Always align dashboard actions with what the user requests! Explain briefly what
 
     if (target && /\b(scan|run|analyze|test|trigger)\b/.test(q)) {
       let targetTool = null;
-      let tabId = "network-tools";
-      let scanType = "network";
+      let tabId = "web-security";
+      let scanType = "web";
 
       if (q.includes("xss")) {
         targetTool = "xss-btn";
@@ -11996,49 +11861,24 @@ Always align dashboard actions with what the user requests! Explain briefly what
         targetTool = "dns-spoof-btn";
         tabId = "web-security";
         scanType = "web";
-      } else if (q.includes("whois")) {
-        targetTool = "whois-btn";
-        tabId = "network-tools";
-        scanType = "network";
-      } else if (q.includes("geo") || q.includes("location")) {
-        targetTool = "ip-geo-btn";
-        tabId = "network-tools";
-        scanType = "network";
-      } else if (q.includes("dns") || q.includes("reverse")) {
-        targetTool = "reverse-dns-btn";
-        tabId = "network-tools";
-        scanType = "network";
-      } else if (q.includes("tcp")) {
-        targetTool = "tcp-scan-btn";
-        tabId = "network-tools";
-        scanType = "network";
-      } else if (q.includes("udp")) {
-        targetTool = "udp-scan-btn";
-        tabId = "network-tools";
-        scanType = "network";
+      } else if (q.includes("whois") || q.includes("geo") || q.includes("location") || q.includes("dns") || q.includes("reverse") || q.includes("tcp") || q.includes("udp") || q.includes("port")) {
+        return `Standalone network scans have been removed, but network security scans are fully integrated into Projects! I've switched you to the Projects workspace. [[ACTION: switch_tab("projects")]]`;
       } else if (q.includes("threat") || q.includes("intel") || q.includes("virus") || q.includes("vt") || q.includes("abuse")) {
-        targetTool = "threat-intel-btn";
-        tabId = "network-tools";
-        scanType = "network";
-      } else if (q.includes("port")) {
-        targetTool = "port-scan-btn";
-        tabId = "network-tools";
-        scanType = "network";
+        return `Opening the Threat Intelligence Hub for global threat analysis. [[ACTION: switch_tab("threat-intel")]]`;
       } else {
         // Default fallback based on target type
         if (target.includes("://") || target.includes("www.") || (isNaN(target.split(".")[0]) && target.includes("."))) {
           tabId = "web-security";
           scanType = "web";
         } else {
-          tabId = "network-tools";
-          scanType = "network";
+          return `Standalone network scans have been removed, but network security scans are fully integrated into Projects! I've switched you to the Projects workspace. [[ACTION: switch_tab("projects")]]`;
         }
       }
 
       if (targetTool) {
-        return `I will switch to the ${scanType === "web" ? "Web Security" : "Network Scanner"} tab, select only the requested tool, and analyze ${target} for you. [[ACTION: switch_tab("${tabId}")]] [[ACTION: select_only_tool("${targetTool}")]] [[ACTION: run_scan("${scanType}", "${target}")]]`;
+        return `I will switch to the Web Security tab, select only the requested tool, and analyze ${target} for you. [[ACTION: switch_tab("${tabId}")]] [[ACTION: select_only_tool("${targetTool}")]] [[ACTION: run_scan("${scanType}", "${target}")]]`;
       } else {
-        return `I will execute a ${scanType === "web" ? "Web Security" : "Network Port"} scan on the target ${target} now. [[ACTION: switch_tab("${tabId}")]] [[ACTION: run_scan("${scanType}", "${target}")]]`;
+        return `I will execute a Web Security scan on the target ${target} now. [[ACTION: switch_tab("${tabId}")]] [[ACTION: run_scan("${scanType}", "${target}")]]`;
       }
     }
 
@@ -12068,14 +11908,13 @@ Always align dashboard actions with what the user requests! Explain briefly what
     if (/\b(what tools|available tools|tools available|list tools|all tools|tabs)\b/.test(q)) {
       return `### Available Dashboard Modules & Capabilities
 
-The **CyberGuard Pro Security Dashboard** organizes its elite security suites into 6 dedicated, highly integrated modules/tabs:
+The **CyberGuard Pro Security Dashboard** organizes its elite security suites into 5 dedicated, highly integrated modules/tabs:
 
-1. **Network Analysis**: Provides real-time network scanning and reconnaissance tools. Users can perform Reverse DNS mapping, pinpoint precise IP Geolocation, lookup detailed WHOIS registration logs, execute TCP/UDP port scanning, and fetch Threat Intelligence feeds from AbuseIPDB and VirusTotal to check if a host has been reported for malicious activity.
-2. **Web Security**: Focuses on modern web application auditing and threat detection. Users can analyze suspicious links with a machine-learning-based Phishing URL Analyzer, test input fields for Cross-Site Scripting (XSS) injections, inspect SSL/TLS certificates for configuration weaknesses, and detect potential DNS Spoofing and hijacking attempts.
-3. **Hash & Crypto**: Offers essential cryptographic and security utilities. Users can generate MD5, SHA-1, and SHA-256 hashes, verify file integrity, perform password strength analysis using mathematical entropy checks, and utilize interactive wizards to harden their security credentials.
-4. **JWT Debugger**: A full-featured JSON Web Token (JWT) auditing terminal. Users can paste a token to decode its header and payload instantly, verify signatures against HS256, RS256, or ES256 algorithms with custom keys, edit token payloads, and sign new custom-signed tokens.
-5. **Threat Intel Hub**: A comprehensive security intelligence aggregator. It compiles global security feeds, allows users to check suspicious IPs/domains across active blacklist databases, and stores historical threat research logs.
-6. **Security Projects**: An elite dashboard project manager allowing users to organize their security assessments. Users can create distinct projects, assign specific target hosts, aggregate findings under target directories, calculate global dynamic risk ratings based on open vulnerability severities, and invite collaborators.
+1. **Web Security**: Focuses on modern web application auditing and threat detection. Users can analyze suspicious links with a machine-learning-based Phishing URL Analyzer, test input fields for Cross-Site Scripting (XSS) injections, inspect SSL/TLS certificates for configuration weaknesses, and detect potential DNS Spoofing and hijacking attempts.
+2. **Hash & Crypto**: Offers essential cryptographic and security utilities. Users can generate MD5, SHA-1, and SHA-256 hashes, verify file integrity, perform password strength analysis using mathematical entropy checks, and utilize interactive wizards to harden their security credentials.
+3. **JWT Debugger**: A full-featured JSON Web Token (JWT) auditing terminal. Users can paste a token to decode its header and payload instantly, verify signatures against HS256, RS256, or ES256 algorithms with custom keys, edit token payloads, and sign new custom-signed tokens.
+4. **Threat Intel Hub**: A comprehensive security intelligence aggregator. It compiles global security feeds, allows users to check suspicious IPs/domains across active blacklist databases, and stores historical threat research logs.
+5. **Security Projects**: An elite dashboard project manager allowing users to organize their security assessments. Users can create distinct projects, assign specific target hosts, aggregate findings under target directories, calculate global dynamic risk ratings based on open vulnerability severities, and invite collaborators. Note: Automated network scans (including Port Scanner, TCP/UDP services, IP Geolocation, Reverse DNS, and WHOIS lookup) are integrated here and run as part of project scanning.
 
 You can switch to any of these tabs directly or tell me what scan you'd like to perform, and I will configure and run it for you instantly!`;
     }
@@ -12140,7 +11979,7 @@ Switch to our **JWT Debugger** tab using this autopilot link: [[ACTION: switch_t
 - **Port 80 (HTTP)** – Plaintext web traffic. Should redirect to Port 443.
 - **Port 3306 (MySQL)** – Exposed databases invite brute force or SQL Injection.
 
-Use our local **Port Security Catalog Wizard** to hardening these configurations or run a network scan: [[ACTION: switch_tab("network-tools")]]`;
+Use our local **Port Security Catalog Wizard** to hardening these configurations or configure a scan inside Projects: [[ACTION: switch_tab("projects")]]`;
     }
 
     // Phishing
