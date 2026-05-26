@@ -362,7 +362,7 @@ main {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.25rem 1rem 1rem 1.25rem;
+    padding: 1.25rem 0.75rem 1rem 1rem;
     position: relative;
 }
 
@@ -4690,7 +4690,7 @@ code,
   
   /* Reduce logo area height */
   .cyber-sidebar-header {
-    padding: 10px 12px !important;
+    padding: 10px 8px !important;
   }
   
   /* Reduce separators and section margins */

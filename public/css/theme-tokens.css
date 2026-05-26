@@ -174,3 +174,22 @@
     --sidebar-width: 240px; /* Sidebar drawer width when open on mobile/tablet */
   }
 }
+
+/* ===== Global Responsive Resets ===== */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Centralized responsive container structure */
+.container, .wrapper, .page-wrapper {
+  min-width: unset;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
