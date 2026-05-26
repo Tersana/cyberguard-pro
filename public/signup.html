@@ -354,10 +354,115 @@
             .animate-slide-in {
                 animation: slideIn 0.6s ease-out forwards;
             }
+
+            /* Login/Signup page two-column layout */
+            .login-page-container {
+                display: flex;
+                flex-direction: row;
+                align-items: stretch;
+                width: 100%;
+                min-height: 100vh;
+                box-sizing: border-box;
+            }
+
+            /* Marketing section (left column) */
+            .login-marketing-section {
+                flex: 1;
+                min-width: 0;
+                width: 50%;
+                padding: 40px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            /* Form section (right column) */
+            .login-form-section {
+                flex: 1;
+                min-width: 0;
+                width: 50%;
+                padding: 40px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            /* Stack vertically on small laptops / tablets */
+            @media screen and (max-width: 1366px) {
+                .login-page-container {
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    padding: 40px 20px 80px;
+                    min-height: 100vh;
+                }
+                
+                .login-marketing-section {
+                    width: 100%;
+                    max-width: 500px;
+                    padding: 20px 0;
+                    text-align: center;
+                    align-items: center;
+                }
+
+                .login-marketing-section .flex.items-start {
+                    text-align: left;
+                }
+                
+                .login-form-section {
+                    width: 100%;
+                    max-width: 580px;
+                    padding: 20px 0;
+                }
+
+                .back-to-home-wrapper {
+                    position: relative !important;
+                    bottom: unset !important;
+                    left: unset !important;
+                    right: unset !important;
+                    margin-top: 24px !important;
+                    padding-bottom: 24px !important;
+                }
+            }
+
+            /* Desktop side-by-side mode (screens >= 1367px and <= 1720px) */
+            @media screen and (min-width: 1367px) and (max-width: 1720px) {
+                .login-marketing-section {
+                    padding-bottom: 110px !important;
+                }
+                
+                .back-to-home-wrapper {
+                    position: absolute !important;
+                    bottom: 28px !important;
+                    left: 40px !important;
+                    right: unset !important;
+                    width: auto !important;
+                    text-align: left !important;
+                }
+            }
+
+            /* Bigger screens (screens >= 1721px) */
+            @media screen and (min-width: 1721px) {
+                .back-to-home-wrapper {
+                    position: absolute !important;
+                    bottom: 24px !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    width: 100% !important;
+                    text-align: center !important;
+                }
+            }
+
+            /* Hide marketing on mobile */
+            @media screen and (max-width: 768px) {
+                .login-marketing-section {
+                    display: none !important;
+                }
+            }
         </style>
     </head>
     <body
-        class="min-h-screen lg:h-screen text-white overflow-x-hidden lg:overflow-hidden flex flex-col relative"
+        class="min-h-screen text-white overflow-x-hidden flex flex-col relative"
         style="background-color: var(--cg-bg-base);"
     >
         <!-- Ambient Background Grid, Particles, and Glows -->
@@ -368,10 +473,10 @@
         <div class="glow-orb glow-orb-3"></div>
 
         <!-- Main Layout Container (Full Viewport Split 50/50) -->
-        <div class="flex-1 flex flex-col lg:flex-row items-stretch relative z-10 w-full">
+        <div class="login-page-container flex-1 relative z-10 w-full">
             
              <!-- LEFT PANEL (50% width, full height) -->
-             <div class="hidden lg:flex lg:w-1/2 flex flex-col justify-center p-8 lg:p-12 xl:p-16 relative z-10 lg:overflow-y-auto" style="backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+             <div class="login-marketing-section relative z-10" style="backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
                  <div class="max-w-md mx-auto w-full flex flex-col justify-between h-full lg:py-8">
                       <!-- Brand / Top Header -->
                       <div class="flex items-center gap-4 mb-8 lg:mb-0">
@@ -540,7 +645,7 @@
             </div>
  
             <!-- RIGHT PANEL (50% width, full height) -->
-            <div class="w-full lg:w-1/2 flex flex-col justify-center p-4 sm:p-8 lg:p-12 xl:p-16 relative z-10 lg:overflow-y-auto" style="backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+            <div class="login-form-section relative z-10" style="backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
                 <div class="max-w-xl mx-auto w-full my-auto animate-slide-in glass-card rounded-3xl p-8 sm:p-10 border border-purple-500/10 shadow-2xl relative z-10">
                         <!-- Header -->
                         <div class="text-center mb-3">
@@ -1275,7 +1380,7 @@
         </div>
 
         <!-- Back to CyberGuard Link -->
-        <div class="w-full text-center py-4 mt-auto lg:absolute lg:bottom-6 lg:left-0 lg:right-0 z-20 lg:bg-transparent relative pointer-events-none">
+        <div class="back-to-home-wrapper w-full text-center py-4 mt-auto lg:absolute lg:bottom-6 lg:left-0 lg:right-0 z-20 lg:bg-transparent relative pointer-events-none">
             <a
                 href="/"
                 class="group inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/[0.02] border border-white/[0.08] text-gray-400 hover:text-white hover:border-purple-500/30 hover:bg-purple-500/10 hover:shadow-[0_0_20px_rgba(167,139,250,0.15)] transition-all duration-300 text-sm pointer-events-auto backdrop-blur-md"
