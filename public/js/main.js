@@ -3415,11 +3415,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Welcome Popup Functions ---
   function showWelcomePopup() {
-    // Check if popup has already been shown in this session
-    const hasShownWelcome = sessionStorage.getItem("cyberguard_welcome_shown");
+    // Check if popup has already been shown since last login
+    // Uses localStorage so the flag persists across tabs but is cleared on logout
+    const hasShownWelcome = localStorage.getItem("cyberguard_welcome_shown");
 
     if (hasShownWelcome === "true") {
-      console.log("Welcome popup already shown in this session, skipping...");
+      console.log("Welcome popup already shown since last login, skipping...");
       return;
     }
 
@@ -3435,8 +3436,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Start typewriter after card slides in
     setTimeout(() => startTypewriter(), 500);
 
-    // Mark as shown in this session
-    sessionStorage.setItem("cyberguard_welcome_shown", "true");
+    // Mark as shown — cleared on logout so it reappears after each login
+    localStorage.setItem("cyberguard_welcome_shown", "true");
 
     // Add event listener for close button
     closeBtn.addEventListener("click", () => {

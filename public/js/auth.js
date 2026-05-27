@@ -749,6 +749,9 @@ class AuthManager {
       sessionStorage.removeItem("2fa_session_token");
       sessionStorage.removeItem("cyberguard_2fa_pending");
 
+      // Clear welcome popup flag so it reappears on next login
+      localStorage.removeItem("cyberguard_welcome_shown");
+
       this.currentUser = null;
 
       // Track logout (using captured email)
@@ -878,6 +881,9 @@ class AuthManager {
       sessionStorage.removeItem("pending_2fa_verification");
       sessionStorage.removeItem("2fa_session_token");
       sessionStorage.removeItem("cyberguard_2fa_pending");
+
+      // Clear welcome popup flag so it reappears on next login
+      localStorage.removeItem("cyberguard_welcome_shown");
 
       this.currentUser = null;
 

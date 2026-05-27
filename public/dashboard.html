@@ -4657,13 +4657,44 @@
 
                     <!-- Header -->
                     <div class="welcome-header">
-                        <!-- Shield Icon -->
+                        <!-- New CyberGuard Logo -->
                         <div class="welcome-shield-wrap">
                             <div class="welcome-shield-ring"></div>
                             <div class="welcome-shield-ring welcome-shield-ring-2"></div>
                             <div class="welcome-shield-icon">
-                                <svg class="w-9 h-9 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.623 0-1.31-.21-2.571-.598-3.751h-.152c-3.396 0-6.648-1.355-9.06-3.70z" />
+                                <svg class="w-10 h-10" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="none">
+                                    <defs>
+                                        <linearGradient id="wm-cyber-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#6d28d9" />
+                                            <stop offset="50%" stop-color="#a855f7" />
+                                            <stop offset="100%" stop-color="#22d3ee" />
+                                        </linearGradient>
+                                        <filter id="wm-neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+                                            <feGaussianBlur stdDeviation="1.2" result="blur" />
+                                            <feMerge>
+                                                <feMergeNode in="blur" />
+                                                <feMergeNode in="SourceGraphic" />
+                                            </feMerge>
+                                        </filter>
+                                    </defs>
+                                    <!-- Left Tech Arc -->
+                                    <path d="M15 3.5 L6.5 6.5 V14.5 C6.5 20 10 24.5 15 26.5" stroke="url(#wm-cyber-grad)" stroke-width="2.2" stroke-linecap="round" filter="url(#wm-neon-glow)" />
+                                    <!-- Right Tech Arc -->
+                                    <path d="M17 3.5 L25.5 6.5 V14.5 C25.5 20 22 24.5 17 26.5" stroke="url(#wm-cyber-grad)" stroke-width="2.2" stroke-linecap="round" filter="url(#wm-neon-glow)" />
+                                    <!-- Shield Cap Lines -->
+                                    <path d="M13 2.5 H19" stroke="url(#wm-cyber-grad)" stroke-width="1.8" stroke-linecap="round" opacity="0.8" />
+                                    <path d="M13 28.5 H19" stroke="url(#wm-cyber-grad)" stroke-width="1.8" stroke-linecap="round" opacity="0.8" />
+                                    <!-- Hexagonal Lock Body -->
+                                    <polygon points="16,8.5 21,11.5 21,17.5 16,20.5 11,17.5 11,11.5" fill="rgba(17,24,39,0.75)" stroke="url(#wm-cyber-grad)" stroke-width="1.5" stroke-linejoin="round" />
+                                    <!-- Keyhole/Lock Symbol -->
+                                    <path d="M16 11.5 A2 2 0 0 0 14 13.5 C14 14.3 14.5 15.0 15.2 15.3 L14.5 18.5 H17.5 L16.8 15.3 C17.5 15.0 18 14.3 18 13.5 A2 2 0 0 0 16 11.5 Z" fill="url(#wm-cyber-grad)" filter="url(#wm-neon-glow)" />
+                                    <!-- Circuit Traces -->
+                                    <path d="M7.5 10 L11 11.5 M24.5 10 L21 11.5 M7.5 18 L11 16.5 M24.5 18 L21 16.5" stroke="url(#wm-cyber-grad)" stroke-width="1.2" opacity="0.8" />
+                                    <!-- Node Dots -->
+                                    <circle cx="7.5" cy="10" r="1.2" fill="#22d3ee" />
+                                    <circle cx="24.5" cy="10" r="1.2" fill="#6d28d9" />
+                                    <circle cx="7.5" cy="18" r="1.2" fill="#6d28d9" />
+                                    <circle cx="24.5" cy="18" r="1.2" fill="#22d3ee" />
                                 </svg>
                             </div>
                         </div>
@@ -4671,9 +4702,8 @@
                         <!-- Brand -->
                         <div class="welcome-brand">
                             <h2 class="welcome-title">
-                                <span class="brand-cyber">Cyber</span><span class="brand-guard">Guard</span>
+                                <span class="brand-name"><span class="brand-cyber">Cyber</span><span class="brand-guard">Guard</span></span>
                             </h2>
-
                         </div>
                     </div>
 
