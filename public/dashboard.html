@@ -3235,9 +3235,9 @@
                                         <!-- Left Column: Encoded Token -->
                                         <div class="cyber-card p-6 flex flex-col gap-4 border-l-2 border-l-purple-500/30">
                                             <div class="flex justify-between items-center">
-                                                <label class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                                                <label class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                                                     <!-- Terminal/code icon for Encoded Token -->
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
                                                         <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/>
                                                         <path d="M8 9l-3 3 3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                                         <path d="M16 9l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -3249,9 +3249,9 @@
                                                     <button id="jwt-decoder-clear" class="text-[10px] text-slate-400 hover:text-red-400 transition-colors font-bold uppercase tracking-wider" onclick="CyberGuardJWTDebugger.clearDecoder()">
                                                         Clear
                                                     </button>
-                                                    <button id="jwt-decoder-copy" class="hover:text-purple-400 transition-colors flex items-center gap-1 text-[10px] text-slate-400 uppercase font-bold" onclick="CyberGuardJWTDebugger.copyDecoderToken()" aria-label="Copy JWT token">
+                                                    <button id="jwt-decoder-copy" class="hover:text-purple-400 transition-colors flex items-center gap-1.5 text-[10px] text-slate-400 uppercase font-bold" onclick="CyberGuardJWTDebugger.copyDecoderToken()" aria-label="Copy JWT token">
                                                         <!-- Clipboard copy icon -->
-                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                                             <rect x="9" y="2" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
                                                             <path d="M7 6H5a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                                         </svg>
@@ -3265,7 +3265,7 @@
                                             <div class="flex flex-col gap-2 mt-2">
                                                 <div id="jwt-decoder-format-status" class="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
                                                     <!-- Info circle icon -->
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
                                                         <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
                                                         <path d="M12 8v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                                                         <path d="M12 12v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -3274,7 +3274,7 @@
                                                 </div>
                                                 <div id="jwt-decoder-sig-status" class="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
                                                     <!-- Signature/shield check icon -->
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
                                                         <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
                                                         <path d="M12 8v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                                                         <path d="M12 12v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -3289,9 +3289,9 @@
                                             <!-- Decoded Header -->
                                             <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-orange-500/30">
                                                 <div class="flex justify-between items-center">
-                                                    <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                                                    <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                                                         <!-- Header/chip icon for JWT header -->
-                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-orange-400 shrink-0" aria-hidden="true">
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-orange-400 shrink-0" aria-hidden="true">
                                                             <rect x="7" y="7" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
                                                             <path d="M7 9H4M7 12H3M7 15H4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
                                                             <path d="M17 9h3M17 12h4M17 15h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
@@ -3317,12 +3317,12 @@
                                             <!-- Decoded Payload -->
                                             <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-purple-500/30">
                                                 <div class="flex justify-between items-center">
-                                                    <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                                                        <!-- Document/payload icon -->
-                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
-                                                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8L14 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-                                                            <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                                                            <path d="M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                    <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                                                        <!-- Stacked layers / payload icon -->
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
+                                                            <path d="M2 8.5L12 3l10 5.5-10 5.5L2 8.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                                            <path d="M2 13l10 5.5L22 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                                            <path d="M2 17.5l10 5.5 10-5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                                         </svg>
                                                         Decoded Payload
                                                     </span>
@@ -3343,9 +3343,9 @@
                                             <!-- Verification Setup -->
                                             <div class="cyber-card p-6 flex flex-col gap-4 border-l-2 border-l-cyan-500/30">
                                                 <div class="flex justify-between items-center">
-                                                    <label for="jwt-decoder-secret" class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                                                    <label for="jwt-decoder-secret" class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                                                         <!-- Signature key icon -->
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-cyan-400 shrink-0" aria-hidden="true">
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-cyan-400 shrink-0" aria-hidden="true">
                                                             <circle cx="8" cy="14" r="4" stroke="currentColor" stroke-width="1.8"/>
                                                             <path d="M12 10l8-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                                             <path d="M17 5l2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -3363,9 +3363,9 @@
                                                 </div>
                                                 <p class="text-[11px] text-slate-400 -mt-1">Enter the secret used to sign the JWT below:</p>
                                                 <input type="text" id="jwt-decoder-secret" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-sm text-white/90 focus:border-purple-500/50 focus:ring-0 font-mono" style="color: #4fc3f7;" placeholder="Enter secret key..." value="" oninput="CyberGuardJWTDebugger.verifyDecoderSignature()" />
-                                                <div id="jwt-decoder-secret-status" class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
+                                                <div id="jwt-decoder-secret-status" class="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
                                                     <!-- Status info icon -->
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
                                                         <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
                                                         <path d="M12 8v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                                                         <path d="M12 12v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -3382,9 +3382,9 @@
                                         <div class="flex flex-col gap-6">
                                             <!-- Header Input -->
                                             <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-orange-500/30">
-                                                <label for="jwt-encoder-header" class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                                                <label for="jwt-encoder-header" class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                                                     <!-- Header/chip icon -->
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-orange-400 shrink-0" aria-hidden="true">
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-orange-400 shrink-0" aria-hidden="true">
                                                         <rect x="7" y="7" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
                                                         <path d="M7 9H4M7 12H3M7 15H4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
                                                         <path d="M17 9h3M17 12h4M17 15h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
@@ -3394,9 +3394,9 @@
                                                     <span>Header</span>
                                                 </label>
                                                 <textarea id="jwt-encoder-header" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3.5 text-xs text-orange-300/90 focus:border-purple-500/50 focus:ring-0 h-[100px] font-mono leading-relaxed" spellcheck="false" oninput="CyberGuardJWTDebugger.encodeToken()"></textarea>
-                                                <div id="jwt-encoder-header-status" class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-green-400">
+                                                <div id="jwt-encoder-header-status" class="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-green-400">
                                                     <!-- Check circle icon -->
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
                                                         <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
                                                         <path d="M8 12l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                                     </svg>
@@ -3406,19 +3406,19 @@
                                             
                                             <!-- Payload Input -->
                                             <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-purple-500/30">
-                                                <label for="jwt-encoder-payload" class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
-                                                    <!-- Document icon for payload -->
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
-                                                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8L14 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-                                                        <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                                                        <path d="M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                <label for="jwt-encoder-payload" class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                                                    <!-- Stacked layers / payload icon -->
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
+                                                        <path d="M2 8.5L12 3l10 5.5-10 5.5L2 8.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                                        <path d="M2 13l10 5.5L22 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                                        <path d="M2 17.5l10 5.5 10-5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                                     </svg>
                                                     <span>Payload</span>
                                                 </label>
                                                 <textarea id="jwt-encoder-payload" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3.5 text-xs text-purple-300/90 focus:border-purple-500/50 focus:ring-0 h-[180px] font-mono leading-relaxed" spellcheck="false" oninput="CyberGuardJWTDebugger.encodeToken()"></textarea>
-                                                <div id="jwt-encoder-payload-status" class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-green-400">
+                                                <div id="jwt-encoder-payload-status" class="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-green-400">
                                                     <!-- Check circle icon -->
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
                                                         <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
                                                         <path d="M8 12l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                                     </svg>
@@ -3429,9 +3429,9 @@
                                             <!-- Secret Key Input -->
                                             <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-cyan-500/30">
                                                 <div class="flex justify-between items-center">
-                                                    <label for="jwt-encoder-secret" class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                                                    <label for="jwt-encoder-secret" class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                                                         <!-- Key icon for signing -->
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-cyan-400 shrink-0" aria-hidden="true">
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-cyan-400 shrink-0" aria-hidden="true">
                                                             <circle cx="8" cy="14" r="4" stroke="currentColor" stroke-width="1.8"/>
                                                             <path d="M12 10l8-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                                             <path d="M17 5l2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -3448,9 +3448,9 @@
                                                     </div>
                                                 </div>
                                                 <input type="text" id="jwt-encoder-secret" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-sm text-white/90 focus:border-purple-500/50 focus:ring-0 font-mono" style="color: #4fc3f7;" placeholder="Enter secret key..." value="" oninput="CyberGuardJWTDebugger.encodeToken()" />
-                                                <div id="jwt-encoder-secret-status" class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
+                                                <div id="jwt-encoder-secret-status" class="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
                                                     <!-- Status info icon -->
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
                                                         <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
                                                         <path d="M12 8v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                                                         <path d="M12 12v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -3463,9 +3463,9 @@
                                         <!-- Right Column: Encoded Output -->
                                         <div class="cyber-card p-6 flex flex-col gap-4 border-l-2 border-l-purple-500/30">
                                             <div class="flex justify-between items-center">
-                                                <label class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                                                <label class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                                                     <!-- Code/terminal icon for encoded JWT output -->
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
                                                         <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/>
                                                         <path d="M8 9l-3 3 3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                                         <path d="M16 9l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -3473,9 +3473,9 @@
                                                     </svg>
                                                     <span>Encoded JWT</span>
                                                 </label>
-                                                <button id="jwt-encoder-copy" class="hover:text-purple-400 transition-colors flex items-center gap-1 text-[10px] text-slate-400 uppercase font-bold" onclick="CyberGuardJWTDebugger.copyEncoderToken()" aria-label="Copy encoded JWT token">
+                                                <button id="jwt-encoder-copy" class="hover:text-purple-400 transition-colors flex items-center gap-1.5 text-[10px] text-slate-400 uppercase font-bold" onclick="CyberGuardJWTDebugger.copyEncoderToken()" aria-label="Copy encoded JWT token">
                                                     <!-- Clipboard copy icon -->
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                                         <rect x="9" y="2" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
                                                         <path d="M7 6H5a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                                                     </svg>
