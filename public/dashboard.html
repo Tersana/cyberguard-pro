@@ -21,8 +21,71 @@
         <link rel="stylesheet" href="css/Style.css" />
         <link rel="stylesheet" href="css/settings-panel.css" />
         <link rel="stylesheet" href="css/security-dashboard.css" />
+        <link rel="stylesheet" href="css/osint.css" />
         <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />
         <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/translucent.css" />
+        <style>
+          /* Layout fixes for Recon Modules and buttons */
+          .recon-module-row {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            width: 100% !important;
+            padding: 8px 10px !important;
+            box-sizing: border-box !important;
+            overflow: visible !important;
+            gap: 0px !important;
+          }
+          .recon-module-label {
+            flex: 1 !important;
+            min-width: 0 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+          }
+          .recon-module-run-btn {
+            flex-shrink: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-width: fit-content !important;
+            white-space: nowrap !important;
+            overflow: visible !important;
+          }
+          .recon-modules-list,
+          .module-list-container,
+          .control-panel-body,
+          .osint-control-body {
+            overflow: visible !important;
+            overflow-x: visible !important;
+          }
+          .control-panel,
+          .sidebar,
+          [class*="control-panel"],
+          .osint-control-panel {
+            overflow: visible !important;
+          }
+          .module-input-row {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            width: 100% !important;
+            gap: 6px !important;
+            overflow: visible !important;
+            box-sizing: border-box !important;
+          }
+          .module-target-input {
+            flex: 1 !important;
+            min-width: 0 !important;
+          }
+          .module-run-button {
+            flex-shrink: 0 !important;
+            min-width: fit-content !important;
+            padding: 6px 12px !important;
+            white-space: nowrap !important;
+            overflow: visible !important;
+          }
+        </style>
     </head>
     <body class="cyber-body">
         <div id="app" class="flex h-screen overflow-hidden">
@@ -197,6 +260,25 @@
                                 >Tools</span
                             >
                         </div>
+
+                        <a
+                            href="#"
+                            class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                            onclick="
+                                switchToTab('osint');
+                                return false;
+                            "
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" 
+                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" 
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4">
+                              <circle cx="11" cy="11" r="8"/>
+                              <path d="m21 21-4.35-4.35"/>
+                              <path d="M11 8v6M8 11h6"/>
+                            </svg>
+                            <span class="text-sm font-medium">OSINT</span>
+                            <span class="cyber-active-dot"></span>
+                        </a>
 
                         <a
                             href="#"
@@ -1233,6 +1315,7 @@
                                         Save Key
                                     </button>
                                 </div>
+
                             </div>
                             <div class="mt-6 flex justify-between items-center">
                                 <button
@@ -1299,6 +1382,7 @@
                                         class="api-provider-tag"
                                         >URLScan.io</a
                                     >
+
                                 </div>
                             </div>
                         </div>
@@ -1879,6 +1963,237 @@
                             </div>
 
 
+
+                            <!-- ============================================================ -->
+                            <!-- OSINT TAB — Cyber Terminal Console -->
+                            <!-- ============================================================ -->
+                            <div
+                                id="osint"
+                                class="tab-pane hidden"
+                            >
+                                <div class="osint-console-grid">
+                                    <!-- LEFT PANEL: Control Sidebar -->
+                                    <div class="osint-panel osint-control-panel">
+                                        <div class="osint-panel-header">
+                                            <span class="font-semibold text-xs text-slate-300 uppercase tracking-wider">Control Panel</span>
+                                        </div>
+                                        <div class="osint-control-body">
+                                            <!-- Global Target Section -->
+                                            <div class="osint-control-section">
+                                                <label class="osint-control-label text-slate-400">Target Configuration</label>
+                                                <input type="text"
+                                                       id="osint-global-target"
+                                                       class="cyber-input w-full px-3 py-2 text-xs rounded-lg mt-1"
+                                                       placeholder="domain, IP, email, or username..."
+                                                       autocomplete="off"
+                                                       spellcheck="false">
+                                                <div class="flex gap-2 mt-2">
+                                                    <button id="osint-run-all-btn" class="cyber-btn-primary flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                                        Run Enabled
+                                                    </button>
+                                                    <button id="osint-clear-all-btn" class="cyber-btn-ghost py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                                        Clear
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <!-- Scan Modules list -->
+                                            <div class="osint-control-section" style="border-top: 1px solid var(--cg-border); padding-top: var(--cg-space-3); flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
+                                                <label class="osint-control-label text-slate-400 mb-2 block">Recon Modules</label>
+                                                <div class="osint-console-tool-list">
+                                                    
+                                                    <!-- Module 1: Subdomain Finder -->
+                                                    <div class="osint-console-tool-item recon-module-row" data-tool="subdomain" onclick="OSINT.selectTool('subdomain')">
+                                                        <div class="osint-tool-meta flex items-center justify-between w-full">
+                                                            <div class="flex items-center">
+                                                                <input type="checkbox" class="osint-tool-toggle-checkbox mr-2.5" id="osint-toggle-subdomain" onclick="event.stopPropagation()">
+                                                                <span class="osint-tool-label recon-module-label">Subdomain Finder</span>
+                                                            </div>
+                                                            <span class="osint-tool-status-dot idle" id="osint-status-dot-subdomain"></span>
+                                                        </div>
+                                                        <div class="osint-tool-config-inline" onclick="event.stopPropagation()">
+                                                            <div class="flex gap-1.5 mt-2 module-input-row">
+                                                                <input type="text" id="osint-subdomain-input" class="cyber-input rounded flex-1 module-target-input" placeholder="example.com">
+                                                                <button id="osint-subdomain-btn" class="cyber-btn-primary rounded font-semibold recon-module-run-btn module-run-button" onclick="OSINT.runSubdomainFinder()">Run</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Module 2: DNS Lookup -->
+                                                    <div class="osint-console-tool-item recon-module-row" data-tool="dns" onclick="OSINT.selectTool('dns')">
+                                                        <div class="osint-tool-meta flex items-center justify-between w-full">
+                                                            <div class="flex items-center">
+                                                                <input type="checkbox" class="osint-tool-toggle-checkbox mr-2.5" id="osint-toggle-dns" onclick="event.stopPropagation()">
+                                                                <span class="osint-tool-label recon-module-label">DNS Record Lookup</span>
+                                                            </div>
+                                                            <span class="osint-tool-status-dot idle" id="osint-status-dot-dns"></span>
+                                                        </div>
+                                                        <div class="osint-tool-config-inline" onclick="event.stopPropagation()">
+                                                            <div class="flex gap-1.5 mt-2 module-input-row">
+                                                                <input type="text" id="osint-dns-input" class="cyber-input rounded flex-1 module-target-input" placeholder="example.com">
+                                                                <button id="osint-dns-btn" class="cyber-btn-primary rounded font-semibold recon-module-run-btn module-run-button" onclick="OSINT.runDNSLookup()">Run</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Module 3: Wayback Machine -->
+                                                    <div class="osint-console-tool-item recon-module-row" data-tool="wayback" onclick="OSINT.selectTool('wayback')">
+                                                        <div class="osint-tool-meta flex items-center justify-between w-full">
+                                                            <div class="flex items-center">
+                                                                <input type="checkbox" class="osint-tool-toggle-checkbox mr-2.5" id="osint-toggle-wayback" onclick="event.stopPropagation()">
+                                                                <span class="osint-tool-label recon-module-label">Wayback Machine</span>
+                                                            </div>
+                                                            <span class="osint-tool-status-dot idle" id="osint-status-dot-wayback"></span>
+                                                        </div>
+                                                        <div class="osint-tool-config-inline" onclick="event.stopPropagation()">
+                                                            <div class="flex gap-1.5 mt-2 module-input-row">
+                                                                <input type="text" id="osint-wayback-input" class="cyber-input rounded flex-1 module-target-input" placeholder="example.com">
+                                                                <button id="osint-wayback-btn" class="cyber-btn-primary rounded font-semibold recon-module-run-btn module-run-button" onclick="OSINT.runWaybackMachine()">Run</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Module 4: Username OSINT -->
+                                                    <div class="osint-console-tool-item recon-module-row" data-tool="username" onclick="OSINT.selectTool('username')">
+                                                        <div class="osint-tool-meta flex items-center justify-between w-full">
+                                                            <div class="flex items-center">
+                                                                <input type="checkbox" class="osint-tool-toggle-checkbox mr-2.5" id="osint-toggle-username" onclick="event.stopPropagation()">
+                                                                <span class="osint-tool-label recon-module-label">Username OSINT</span>
+                                                            </div>
+                                                            <span class="osint-tool-status-dot idle" id="osint-status-dot-username"></span>
+                                                        </div>
+                                                        <div class="osint-tool-config-inline" onclick="event.stopPropagation()">
+                                                            <div class="flex gap-1.5 mt-2 module-input-row">
+                                                                <input type="text" id="osint-username-input" class="cyber-input rounded flex-1 module-target-input" placeholder="username">
+                                                                <button id="osint-username-btn" class="cyber-btn-primary rounded font-semibold recon-module-run-btn module-run-button" onclick="OSINT.runUsernameOSINT()">Run</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Module 5: Email Format Guesser -->
+                                                    <div class="osint-console-tool-item recon-module-row" data-tool="emailformat" onclick="OSINT.selectTool('emailformat')">
+                                                        <div class="osint-tool-meta flex items-center justify-between w-full">
+                                                            <div class="flex items-center">
+                                                                <input type="checkbox" class="osint-tool-toggle-checkbox mr-2.5" id="osint-toggle-emailformat" onclick="event.stopPropagation()">
+                                                                <span class="osint-tool-label recon-module-label">Email Format Guesser</span>
+                                                            </div>
+                                                            <span class="osint-tool-status-dot idle" id="osint-status-dot-emailformat"></span>
+                                                        </div>
+                                                        <div class="osint-tool-config-inline" onclick="event.stopPropagation()">
+                                                            <div class="grid grid-cols-2 gap-1.5 mt-2">
+                                                                <input type="text" id="osint-emailformat-firstname" class="cyber-input rounded module-target-input" placeholder="First Name">
+                                                                <input type="text" id="osint-emailformat-lastname" class="cyber-input rounded module-target-input" placeholder="Last Name">
+                                                            </div>
+                                                            <div class="flex gap-1.5 mt-1.5 module-input-row">
+                                                                <input type="text" id="osint-emailformat-domain" class="cyber-input rounded flex-1 module-target-input" placeholder="domain.com">
+                                                                <button id="osint-emailformat-btn" class="cyber-btn-primary rounded font-semibold recon-module-run-btn module-run-button" onclick="OSINT.runEmailFormatGuesser()">Run</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+
+                                                    <!-- Module 7: IP Intelligence (Premium) -->
+                                                    <div class="osint-console-tool-item recon-module-row premium-item" data-tool="ip" onclick="OSINT.selectTool('ip')">
+                                                        <div class="osint-tool-meta flex items-center justify-between w-full">
+                                                            <div class="flex items-center">
+                                                                <input type="checkbox" class="osint-tool-toggle-checkbox mr-2.5" id="osint-toggle-ip" onclick="event.stopPropagation()">
+                                                                <span class="osint-tool-label recon-module-label">IP Intelligence</span>
+                                                            </div>
+                                                            <span class="osint-tool-status-dot idle" id="osint-status-dot-ip"></span>
+                                                        </div>
+                                                        <div class="osint-tool-config-inline" onclick="event.stopPropagation()">
+                                                            <div class="flex gap-1.5 mt-2 module-input-row">
+                                                                <input type="text" id="osint-ip-input" class="cyber-input rounded flex-1 module-target-input" placeholder="8.8.8.8">
+                                                                <button id="osint-ip-btn" class="cyber-btn-primary rounded font-semibold recon-module-run-btn module-run-button" onclick="OSINT.runIPIntelligence()">Run</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- CENTER PANEL: Terminal Console -->
+                                    <div class="osint-panel osint-terminal-panel">
+                                        <div class="osint-panel-header terminal-header">
+                                            <span class="terminal-title">osint_operator@cyberguard:~</span>
+                                            <div class="terminal-controls flex gap-1">
+                                                <span class="terminal-control-dot red"></span>
+                                                <span class="terminal-control-dot yellow"></span>
+                                                <span class="terminal-control-dot green"></span>
+                                            </div>
+                                        </div>
+                                        <div class="osint-terminal-body" id="osint-terminal-log">
+                                            <div class="terminal-line system-welcome">[SYSTEM] CyberGuard Passive Reconnaissance Console v1.0.0</div>
+                                            <div class="terminal-line system-ready">[SYSTEM] All modules loaded. Ready for target input.</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- RIGHT PANEL: Visualizer Panel -->
+                                    <div class="osint-panel osint-visualizer-panel">
+                                        <div class="osint-panel-header">
+                                            <span class="font-semibold text-xs text-slate-300" id="osint-active-tool-title">Active Module: Subdomain Finder</span>
+                                            <button id="osint-generate-report-btn"
+                                                    class="cyber-btn-primary px-3 py-1 text-2xs font-semibold rounded-lg flex items-center gap-1"
+                                                    disabled>
+                                                <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:0.875rem;height:0.875rem;">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                                <span>Report</span>
+                                            </button>
+                                        </div>
+                                        <div class="osint-visualizer-body">
+                                            
+                                            <!-- Subdomain Finder wrapper -->
+                                            <div id="osint-subdomain-wrapper" class="osint-results-wrapper active">
+                                                <div id="osint-subdomain-results" class="osint-results-container">
+                                                    <div class="osint-empty-state"><span>Enter a domain and click Run</span></div>
+                                                </div>
+                                            </div>
+
+                                            <!-- DNS Lookup wrapper -->
+                                            <div id="osint-dns-wrapper" class="osint-results-wrapper">
+                                                <div id="osint-dns-results" class="osint-results-container">
+                                                    <div class="osint-empty-state"><span>Enter a domain and click Run</span></div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Wayback Machine wrapper -->
+                                            <div id="osint-wayback-wrapper" class="osint-results-wrapper">
+                                                <div id="osint-wayback-results" class="osint-results-container">
+                                                    <div class="osint-empty-state"><span>Enter a URL and click Run</span></div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Username OSINT wrapper -->
+                                            <div id="osint-username-wrapper" class="osint-results-wrapper">
+                                                <div id="osint-username-results" class="osint-results-container">
+                                                    <div class="osint-empty-state"><span>Enter a username and click Run</span></div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Email Format Guesser wrapper -->
+                                            <div id="osint-emailformat-wrapper" class="osint-results-wrapper">
+                                                <div id="osint-emailformat-results" class="osint-results-container">
+                                                    <div class="osint-empty-state"><span>Enter details and click Run</span></div>
+                                                </div>
+                                            </div>
+
+
+                                            <!-- IP Intelligence wrapper -->
+                                            <div id="osint-ip-wrapper" class="osint-results-wrapper">
+                                                <div id="osint-ip-results" class="osint-results-container">
+                                                    <div class="osint-empty-state"><span>Enter an IP address and click Run</span></div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             <!-- ============================================================ -->
                             <!-- WEB SECURITY TAB -->
@@ -2859,7 +3174,13 @@
                                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-slate-900/40 p-5 rounded-xl border border-white/5">
                                         <div>
                                             <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                                                <span class="material-symbols-outlined text-purple-400">key_visualizer</span>
+                                                <!-- JWT Debugger title icon: token/key shield -->
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
+                                                    <path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.35C16.5 22.15 20 17.25 20 12V6L12 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+                                                    <circle cx="12" cy="11" r="2.5" stroke="currentColor" stroke-width="1.6"/>
+                                                    <path d="M12 13.5v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                    <path d="M10.5 16h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                </svg>
                                                 JWT Debugger
                                             </h2>
                                             <p class="text-xs text-slate-400 mt-1">Real-time JSON Web Token decoder and encoder suite.</p>
@@ -2883,7 +3204,10 @@
                                             <div id="jwt-custom-dropdown-container" class="relative">
                                                 <button id="jwt-dropdown-trigger" class="flex items-center justify-between gap-3 bg-slate-900/80 border border-white/10 hover:border-purple-500/40 rounded-lg py-1.5 px-4 text-xs text-white/90 font-mono transition-all duration-200 cursor-pointer min-w-[190px] text-left select-none focus:outline-none focus:border-purple-500/50" aria-haspopup="listbox" aria-expanded="false" aria-label="Select signing algorithm">
                                                     <span id="jwt-dropdown-selected-label" class="truncate">Select signing algorithm</span>
-                                                    <span class="material-symbols-outlined text-[16px] text-slate-400 transition-transform duration-200 pointer-events-none shrink-0" id="jwt-dropdown-caret" aria-hidden="true">expand_more</span>
+                                                    <!-- Chevron caret for dropdown -->
+                                                    <svg id="jwt-dropdown-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-slate-400 transition-transform duration-200 pointer-events-none shrink-0" aria-hidden="true">
+                                                        <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    </svg>
                                                 </button>
                                                 <div id="jwt-dropdown-options" class="absolute right-0 mt-1.5 w-48 bg-slate-950/95 backdrop-blur-md border border-white/10 rounded-lg shadow-xl overflow-hidden hidden z-50 flex flex-col transition-all duration-200 origin-top transform scale-y-95 opacity-0">
                                                     <div class="max-h-[250px] overflow-y-auto py-1 scrollbar-thin select-none">
@@ -2912,7 +3236,13 @@
                                         <div class="cyber-card p-6 flex flex-col gap-4 border-l-2 border-l-purple-500/30">
                                             <div class="flex justify-between items-center">
                                                 <label class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
-                                                    <span class="material-symbols-outlined text-purple-400 text-sm" aria-hidden="true">terminal</span>
+                                                    <!-- Terminal/code icon for Encoded Token -->
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
+                                                        <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                                                        <path d="M8 9l-3 3 3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                                        <path d="M16 9l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                                        <path d="M13 8l-2 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                    </svg>
                                                     <span>Encoded Token</span>
                                                 </label>
                                                 <div class="flex items-center gap-3">
@@ -2920,7 +3250,11 @@
                                                         Clear
                                                     </button>
                                                     <button id="jwt-decoder-copy" class="hover:text-purple-400 transition-colors flex items-center gap-1 text-[10px] text-slate-400 uppercase font-bold" onclick="CyberGuardJWTDebugger.copyDecoderToken()" aria-label="Copy JWT token">
-                                                        <span class="material-symbols-outlined text-[14px]" aria-hidden="true">content_copy</span>
+                                                        <!-- Clipboard copy icon -->
+                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                                            <rect x="9" y="2" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                                            <path d="M7 6H5a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                        </svg>
                                                         Copy
                                                     </button>
                                                 </div>
@@ -2930,11 +3264,21 @@
                                             <!-- Status indicators -->
                                             <div class="flex flex-col gap-2 mt-2">
                                                 <div id="jwt-decoder-format-status" class="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
-                                                    <span class="material-symbols-outlined text-sm" aria-hidden="true">info</span>
+                                                    <!-- Info circle icon -->
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
+                                                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                                                        <path d="M12 8v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                        <path d="M12 12v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                    </svg>
                                                     <span>Awaiting Token</span>
                                                 </div>
                                                 <div id="jwt-decoder-sig-status" class="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
-                                                    <span class="material-symbols-outlined text-sm" aria-hidden="true">info</span>
+                                                    <!-- Signature/shield check icon -->
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
+                                                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                                                        <path d="M12 8v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                        <path d="M12 12v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                    </svg>
                                                     <span>Awaiting Secret</span>
                                                 </div>
                                             </div>
@@ -2946,7 +3290,14 @@
                                             <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-orange-500/30">
                                                 <div class="flex justify-between items-center">
                                                     <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                                                        <span class="material-symbols-outlined text-orange-400 text-sm" aria-hidden="true">settings_input_component</span>
+                                                        <!-- Header/chip icon for JWT header -->
+                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-orange-400 shrink-0" aria-hidden="true">
+                                                            <rect x="7" y="7" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
+                                                            <path d="M7 9H4M7 12H3M7 15H4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                            <path d="M17 9h3M17 12h4M17 15h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                            <path d="M9 7V4M12 7V3M15 7V4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                            <path d="M9 17v3M12 17v4M15 17v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                        </svg>
                                                         Decoded Header
                                                     </span>
                                                     <div class="flex p-0.5 bg-slate-950/80 rounded-md border border-white/5">
@@ -2967,7 +3318,12 @@
                                             <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-purple-500/30">
                                                 <div class="flex justify-between items-center">
                                                     <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                                                        <span class="material-symbols-outlined text-purple-400 text-sm" aria-hidden="true">article</span>
+                                                        <!-- Document/payload icon -->
+                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
+                                                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8L14 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                                            <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                                            <path d="M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                        </svg>
                                                         Decoded Payload
                                                     </span>
                                                     <div class="flex p-0.5 bg-slate-950/80 rounded-md border border-white/5">
@@ -2988,7 +3344,13 @@
                                             <div class="cyber-card p-6 flex flex-col gap-4 border-l-2 border-l-cyan-500/30">
                                                 <div class="flex justify-between items-center">
                                                     <label for="jwt-decoder-secret" class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
-                                                        <span class="material-symbols-outlined text-cyan-400 text-sm" aria-hidden="true">vpn_key</span>
+                                                        <!-- Signature key icon -->
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-cyan-400 shrink-0" aria-hidden="true">
+                                                            <circle cx="8" cy="14" r="4" stroke="currentColor" stroke-width="1.8"/>
+                                                            <path d="M12 10l8-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                            <path d="M17 5l2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                            <path d="M19 9l2-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                        </svg>
                                                         <span>JWT Signature Verification (Optional)</span>
                                                     </label>
                                                     <div class="flex items-center gap-2 text-[10px] text-slate-400 uppercase font-bold">
@@ -3002,7 +3364,12 @@
                                                 <p class="text-[11px] text-slate-400 -mt-1">Enter the secret used to sign the JWT below:</p>
                                                 <input type="text" id="jwt-decoder-secret" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-sm text-white/90 focus:border-purple-500/50 focus:ring-0 font-mono" style="color: #4fc3f7;" placeholder="Enter secret key..." value="" oninput="CyberGuardJWTDebugger.verifyDecoderSignature()" />
                                                 <div id="jwt-decoder-secret-status" class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
-                                                    <span class="material-symbols-outlined text-sm" aria-hidden="true">info</span>
+                                                    <!-- Status info icon -->
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
+                                                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                                                        <path d="M12 8v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                        <path d="M12 12v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                    </svg>
                                                     <span>Awaiting Secret</span>
                                                 </div>
                                             </div>
@@ -3016,12 +3383,23 @@
                                             <!-- Header Input -->
                                             <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-orange-500/30">
                                                 <label for="jwt-encoder-header" class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
-                                                    <span class="material-symbols-outlined text-orange-400 text-sm" aria-hidden="true">settings_input_component</span>
+                                                    <!-- Header/chip icon -->
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-orange-400 shrink-0" aria-hidden="true">
+                                                        <rect x="7" y="7" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
+                                                        <path d="M7 9H4M7 12H3M7 15H4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                        <path d="M17 9h3M17 12h4M17 15h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                        <path d="M9 7V4M12 7V3M15 7V4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                        <path d="M9 17v3M12 17v4M15 17v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                    </svg>
                                                     <span>Header</span>
                                                 </label>
                                                 <textarea id="jwt-encoder-header" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3.5 text-xs text-orange-300/90 focus:border-purple-500/50 focus:ring-0 h-[100px] font-mono leading-relaxed" spellcheck="false" oninput="CyberGuardJWTDebugger.encodeToken()"></textarea>
                                                 <div id="jwt-encoder-header-status" class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-green-400">
-                                                    <span class="material-symbols-outlined text-sm" aria-hidden="true">check_circle</span>
+                                                    <!-- Check circle icon -->
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
+                                                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                                                        <path d="M8 12l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    </svg>
                                                     <span>Valid header</span>
                                                 </div>
                                             </div>
@@ -3029,12 +3407,21 @@
                                             <!-- Payload Input -->
                                             <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-purple-500/30">
                                                 <label for="jwt-encoder-payload" class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
-                                                    <span class="material-symbols-outlined text-purple-400 text-sm" aria-hidden="true">article</span>
+                                                    <!-- Document icon for payload -->
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
+                                                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8L14 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                                                        <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                                        <path d="M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                    </svg>
                                                     <span>Payload</span>
                                                 </label>
                                                 <textarea id="jwt-encoder-payload" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3.5 text-xs text-purple-300/90 focus:border-purple-500/50 focus:ring-0 h-[180px] font-mono leading-relaxed" spellcheck="false" oninput="CyberGuardJWTDebugger.encodeToken()"></textarea>
                                                 <div id="jwt-encoder-payload-status" class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-green-400">
-                                                    <span class="material-symbols-outlined text-sm" aria-hidden="true">check_circle</span>
+                                                    <!-- Check circle icon -->
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
+                                                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                                                        <path d="M8 12l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                                    </svg>
                                                     <span>Valid payload</span>
                                                 </div>
                                             </div>
@@ -3043,7 +3430,13 @@
                                             <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-cyan-500/30">
                                                 <div class="flex justify-between items-center">
                                                     <label for="jwt-encoder-secret" class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
-                                                        <span class="material-symbols-outlined text-cyan-400 text-sm" aria-hidden="true">vpn_key</span>
+                                                        <!-- Key icon for signing -->
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-cyan-400 shrink-0" aria-hidden="true">
+                                                            <circle cx="8" cy="14" r="4" stroke="currentColor" stroke-width="1.8"/>
+                                                            <path d="M12 10l8-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                            <path d="M17 5l2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                            <path d="M19 9l2-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                        </svg>
                                                         <span>Sign JWT</span>
                                                     </label>
                                                     <div class="flex items-center gap-2 text-[10px] text-slate-400 uppercase font-bold">
@@ -3056,7 +3449,12 @@
                                                 </div>
                                                 <input type="text" id="jwt-encoder-secret" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-sm text-white/90 focus:border-purple-500/50 focus:ring-0 font-mono" style="color: #4fc3f7;" placeholder="Enter secret key..." value="" oninput="CyberGuardJWTDebugger.encodeToken()" />
                                                 <div id="jwt-encoder-secret-status" class="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
-                                                    <span class="material-symbols-outlined text-sm" aria-hidden="true">info</span>
+                                                    <!-- Status info icon -->
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
+                                                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+                                                        <path d="M12 8v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                        <path d="M12 12v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                    </svg>
                                                     <span>Awaiting Secret</span>
                                                 </div>
                                             </div>
@@ -3066,11 +3464,21 @@
                                         <div class="cyber-card p-6 flex flex-col gap-4 border-l-2 border-l-purple-500/30">
                                             <div class="flex justify-between items-center">
                                                 <label class="text-[10px] text-slate-400 uppercase tracking-widest font-bold flex items-center gap-1.5">
-                                                    <span class="material-symbols-outlined text-purple-400 text-sm" aria-hidden="true">terminal</span>
+                                                    <!-- Code/terminal icon for encoded JWT output -->
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
+                                                        <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                                                        <path d="M8 9l-3 3 3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                                        <path d="M16 9l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                                        <path d="M13 8l-2 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                    </svg>
                                                     <span>Encoded JWT</span>
                                                 </label>
                                                 <button id="jwt-encoder-copy" class="hover:text-purple-400 transition-colors flex items-center gap-1 text-[10px] text-slate-400 uppercase font-bold" onclick="CyberGuardJWTDebugger.copyEncoderToken()" aria-label="Copy encoded JWT token">
-                                                    <span class="material-symbols-outlined text-[14px]" aria-hidden="true">content_copy</span>
+                                                    <!-- Clipboard copy icon -->
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                                        <rect x="9" y="2" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+                                                        <path d="M7 6H5a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                    </svg>
                                                     Copy
                                                 </button>
                                             </div>
@@ -5067,6 +5475,8 @@
         <script src="js/threat-intel.js"></script>
         <!-- Security Dashboard Controller -->
         <script src="js/security-dashboard.js"></script>
+        <!-- OSINT Passive Reconnaissance Tab -->
+        <script src="js/osint.js"></script>
         <!-- Dashboard Tab Manager - Loads after main.js to avoid conflicts -->
         <script src="js/dashboard-tab-manager.js"></script>
         <!-- JWT Debugger Module -->

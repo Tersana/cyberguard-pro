@@ -14,7 +14,8 @@ const DashboardTabManager = {
     'projects': false,
     'threat-intel': false,
     'billing-history': false,
-    'jwt-debugger': false
+    'jwt-debugger': false,
+    'osint': false
   },
   
   // Current active tab
@@ -160,7 +161,7 @@ const DashboardTabManager = {
     });
 
     // Toggle results section visibility
-    const TABS_WITHOUT_RESULTS = ['security-dashboard', 'projects', 'threat-intel', 'billing-history', 'ai-assistant', 'hash-tools', 'jwt-debugger'];
+    const TABS_WITHOUT_RESULTS = ['security-dashboard', 'projects', 'threat-intel', 'billing-history', 'ai-assistant', 'hash-tools', 'jwt-debugger', 'osint'];
     const resultsSection = document.getElementById('professional-results-section');
     if (resultsSection) {
       if (TABS_WITHOUT_RESULTS.includes(activeTabId)) {
@@ -188,6 +189,9 @@ const DashboardTabManager = {
     switch (tabId) {
       case 'security-dashboard':
         this.initializeSecurityDashboard();
+        break;
+      case 'osint':
+        this.initializeOSINT();
         break;
       case 'hash-tools':
         this.initializeHashTools();
@@ -226,6 +230,22 @@ const DashboardTabManager = {
     }
   },
   
+  /**
+   * Initialize OSINT tab
+   */
+  initializeOSINT() {
+    if (typeof OSINT !== 'undefined') {
+      try {
+        OSINT.init();
+        console.log('DashboardTabManager: OSINT initialized');
+      } catch (error) {
+        console.error('DashboardTabManager: Error initializing OSINT:', error);
+      }
+    } else {
+      console.warn('DashboardTabManager: OSINT not found');
+    }
+  },
+
   /**
    * Initialize Hash Tools tab
    */

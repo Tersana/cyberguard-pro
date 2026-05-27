@@ -407,7 +407,7 @@ const CyberGuardJWTDebugger = {
       await navigator.clipboard.writeText(token);
       if (btn) {
         const originalHTML = btn.innerHTML;
-        btn.innerHTML = `<span class="material-symbols-outlined text-[14px] text-green-400" aria-hidden="true">check</span> <span class="text-green-400">Copied</span>`;
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-green-400 shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M8 12l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> <span class="text-green-400">Copied</span>`;
         btn.style.pointerEvents = 'none';
         setTimeout(() => {
           btn.innerHTML = originalHTML;
@@ -417,7 +417,7 @@ const CyberGuardJWTDebugger = {
     } catch (e) {
       if (btn) {
         const originalHTML = btn.innerHTML;
-        btn.innerHTML = `<span class="material-symbols-outlined text-[14px] text-red-400" aria-hidden="true">close</span> <span class="text-red-400">Failed!</span>`;
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-red-400 shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> <span class="text-red-400">Failed!</span>`;
         btn.style.pointerEvents = 'none';
         setTimeout(() => {
           btn.innerHTML = originalHTML;
@@ -440,7 +440,7 @@ const CyberGuardJWTDebugger = {
       await navigator.clipboard.writeText(token);
       if (btn) {
         const originalHTML = btn.innerHTML;
-        btn.innerHTML = `<span class="material-symbols-outlined text-[14px] text-green-400" aria-hidden="true">check</span> <span class="text-green-400">Copied</span>`;
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-green-400 shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M8 12l3 3 5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> <span class="text-green-400">Copied</span>`;
         btn.style.pointerEvents = 'none';
         setTimeout(() => {
           btn.innerHTML = originalHTML;
@@ -450,7 +450,7 @@ const CyberGuardJWTDebugger = {
     } catch (e) {
       if (btn) {
         const originalHTML = btn.innerHTML;
-        btn.innerHTML = `<span class="material-symbols-outlined text-[14px] text-red-400" aria-hidden="true">close</span> <span class="text-red-400">Failed!</span>`;
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-red-400 shrink-0" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> <span class="text-red-400">Failed!</span>`;
         btn.style.pointerEvents = 'none';
         setTimeout(() => {
           btn.innerHTML = originalHTML;
