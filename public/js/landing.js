@@ -42,13 +42,20 @@ document.addEventListener('DOMContentLoaded', () => {
 // ===========================
 const navbar = document.querySelector(".navbar");
 
-window.addEventListener("scroll", () => {
-  if (window.scrollY > 50) {
-    navbar.classList.add("scrolled");
-  } else {
-    navbar.classList.remove("scrolled");
-  }
-});
+if (navbar) {
+  let isScrolled = false;
+  window.addEventListener("scroll", () => {
+    const scrolled = window.scrollY > 50;
+    if (scrolled !== isScrolled) {
+      isScrolled = scrolled;
+      if (scrolled) {
+        navbar.classList.add("scrolled");
+      } else {
+        navbar.classList.remove("scrolled");
+      }
+    }
+  }, { passive: true });
+}
 
 // ===========================
 // Smooth Scroll for Anchor Links
@@ -116,30 +123,50 @@ document.addEventListener("DOMContentLoaded", () => {
       quickY.push(gsap.quickTo(orb, "y", { duration: 0.8, ease: "power2.out" }));
     });
 
-    window.addEventListener("mousemove", (e) => {
-      const mouseX = e.clientX / window.innerWidth;
-      const mouseY = e.clientY / window.innerHeight;
+    let mouseX = 0.5;
+    let mouseY = 0.5;
+    let ticking = false;
 
-      orbs.forEach((orb, index) => {
-        const speed = (index + 1) * 20;
-        const targetX = (mouseX - 0.5) * speed;
-        const targetY = (mouseY - 0.5) * speed;
-        quickX[index](targetX);
-        quickY[index](targetY);
-      });
+    window.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX / window.innerWidth;
+      mouseY = e.clientY / window.innerHeight;
+
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          orbs.forEach((orb, index) => {
+            const speed = (index + 1) * 20;
+            const targetX = (mouseX - 0.5) * speed;
+            const targetY = (mouseY - 0.5) * speed;
+            quickX[index](targetX);
+            quickY[index](targetY);
+          });
+          ticking = false;
+        });
+        ticking = true;
+      }
     });
   } else {
     // Fallback if GSAP is not loaded
-    window.addEventListener("mousemove", (e) => {
-      const mouseX = e.clientX / window.innerWidth;
-      const mouseY = e.clientY / window.innerHeight;
+    let mouseX = 0.5;
+    let mouseY = 0.5;
+    let ticking = false;
 
-      orbs.forEach((orb, index) => {
-        const speed = (index + 1) * 20;
-        const x = (mouseX - 0.5) * speed;
-        const y = (mouseY - 0.5) * speed;
-        orb.style.transform = `translate(${x}px, ${y}px)`;
-      });
+    window.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX / window.innerWidth;
+      mouseY = e.clientY / window.innerHeight;
+
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          orbs.forEach((orb, index) => {
+            const speed = (index + 1) * 20;
+            const x = (mouseX - 0.5) * speed;
+            const y = (mouseY - 0.5) * speed;
+            orb.style.transform = `translate(${x}px, ${y}px)`;
+          });
+          ticking = false;
+        });
+        ticking = true;
+      }
     });
   }
 });
@@ -148,8 +175,14 @@ document.addEventListener("DOMContentLoaded", () => {
 // Feature Card Tilt Effect
 // ===========================
 document.querySelectorAll(".feature-card").forEach((card) => {
+  let rect = null;
+
+  card.addEventListener("mouseenter", () => {
+    rect = card.getBoundingClientRect();
+  });
+
   card.addEventListener("mousemove", (e) => {
-    const rect = card.getBoundingClientRect();
+    if (!rect) rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
@@ -163,6 +196,7 @@ document.querySelectorAll(".feature-card").forEach((card) => {
   });
 
   card.addEventListener("mouseleave", () => {
+    rect = null;
     card.style.transform =
       "perspective(1000px) rotateX(0) rotateY(0) translateY(0)";
   });
@@ -171,26 +205,8 @@ document.querySelectorAll(".feature-card").forEach((card) => {
 // ===========================
 // Gradient Animation
 // ===========================
-const gradientOrbs = document.querySelectorAll(".gradient-orb");
-let orbAnimationFrame;
-
-function animateOrbs() {
-  const time = Date.now() * 0.001;
-
-  gradientOrbs.forEach((orb, index) => {
-    const speed = 0.5 + index * 0.2;
-    const x = Math.sin(time * speed) * 50;
-    const y = Math.cos(time * speed) * 50;
-    const scale = 1 + Math.sin(time * speed * 2) * 0.1;
-
-    orb.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
-  });
-
-  orbAnimationFrame = requestAnimationFrame(animateOrbs);
-}
-
-// Start orb animation
-animateOrbs();
+// NOTE: Orb animation has been moved entirely to hardware-accelerated CSS keyframes in landing.css
+// to prevent thread blocking and layout thrashing, resulting in smoother scrolling.
 
 // ===========================
 // Tool Item Stagger Animation
@@ -241,9 +257,9 @@ document
   let width = (canvas.width = window.innerWidth);
   let height = (canvas.height = window.innerHeight);
 
-  // Responsive particle density
+  // Optimized particle density to reduce connection calculations
   const getParticleCount = () => {
-    return window.innerWidth < 768 ? 45 : 115;
+    return window.innerWidth < 768 ? 30 : 65;
   };
 
   let particleCount = getParticleCount();
@@ -257,7 +273,8 @@ document
   let mouse = {
     x: null,
     y: null,
-    radius: 130
+    radius: 130,
+    radiusSq: 16900 // Pre-calculated radius squared (130 * 130)
   };
 
   window.addEventListener("mousemove", (e) => {
@@ -295,15 +312,18 @@ document
       if (this.y < -10) this.y = height + 10;
       if (this.y > height + 10) this.y = -10;
 
-      // Mouse attraction
+      // Mouse attraction - Optimized distance check (avoids Math.sqrt if out of range)
       if (mouse.x !== null && mouse.y !== null) {
         const dx = mouse.x - this.x;
         const dy = mouse.y - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < mouse.radius) {
-          const force = (mouse.radius - dist) / mouse.radius;
-          this.x += (dx / dist) * force * 0.25;
-          this.y += (dy / dist) * force * 0.25;
+        const distSq = dx * dx + dy * dy;
+        if (distSq < mouse.radiusSq) {
+          const dist = Math.sqrt(distSq);
+          if (dist > 0) {
+            const force = (mouse.radius - dist) / mouse.radius;
+            this.x += (dx / dist) * force * 0.25;
+            this.y += (dy / dist) * force * 0.25;
+          }
         }
       }
     }
@@ -327,17 +347,19 @@ document
 
   function drawConnections() {
     const maxDistance = 115;
+    const maxDistanceSq = 13225; // Pre-calculated maxDistance squared (115 * 115)
     ctx.lineWidth = 0.75;
 
     for (let i = 0; i < particles.length; i++) {
       const a = particles[i];
 
-      // Connection to mouse
+      // Connection to mouse - Optimized check
       if (mouse.x !== null && mouse.y !== null) {
         const dx = a.x - mouse.x;
         const dy = a.y - mouse.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < mouse.radius) {
+        const distSq = dx * dx + dy * dy;
+        if (distSq < mouse.radiusSq) {
+          const dist = Math.sqrt(distSq);
           const opacity = (1 - dist / mouse.radius) * 0.15;
           ctx.strokeStyle = `rgba(167, 139, 250, ${opacity})`;
           ctx.beginPath();
@@ -347,14 +369,15 @@ document
         }
       }
 
-      // Connection to other particles
+      // Connection to other particles - Optimized check (avoids Math.sqrt if out of range)
       for (let j = i + 1; j < particles.length; j++) {
         const b = particles[j];
         const dx = a.x - b.x;
         const dy = a.y - b.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        const distSq = dx * dx + dy * dy;
 
-        if (dist < maxDistance) {
+        if (distSq < maxDistanceSq) {
+          const dist = Math.sqrt(distSq);
           const opacity = (1 - dist / maxDistance) * 0.18;
           ctx.strokeStyle = `rgba(167, 139, 250, ${opacity})`;
           ctx.beginPath();
@@ -514,10 +537,7 @@ if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     element.classList.add("aos-animate");
   });
 
-  // Stop orb animation
-  if (orbAnimationFrame) {
-    cancelAnimationFrame(orbAnimationFrame);
-  }
+  // Orb animation has been moved to hardware-accelerated CSS
 }
 
 // ===========================

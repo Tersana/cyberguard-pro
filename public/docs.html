@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation — CyberGuard Pro</title>
+    <meta name="description" content="Comprehensive documentation, quick start guides, and security testing guides for the CyberGuard Pro security analysis platform.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/theme-tokens.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--cg-font-sans);
+            background-color: var(--cg-bg-base);
+            color: var(--cg-text-1);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Ambient Background Orbs */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background:
+                radial-gradient(circle at 10% 10%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(34, 211, 238, 0.06) 0%, transparent 40%);
+        }
+
+        /* Header Navigation */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--cg-border);
+            padding: 14px 0;
+        }
+
+        .header-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--cg-text-1);
+            font-weight: 800;
+            font-size: 19px;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            color: var(--cg-accent);
+            filter: drop-shadow(0 0 10px var(--cg-accent));
+        }
+
+        .logo-text span {
+            background: linear-gradient(135deg, var(--cg-text-1) 0%, var(--cg-accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: var(--cg-radius-md);
+            background: var(--cg-accent-muted);
+            border: 1px solid var(--cg-focus-ring);
+            color: var(--cg-accent);
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all var(--cg-transition-fast);
+        }
+
+        .back-btn svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .back-btn:hover {
+            background: var(--cg-accent-hover);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 0 15px var(--cg-focus-ring);
+        }
+
+        /* Documentation Layout */
+        .docs-layout {
+            max-width: 1280px;
+            width: 100%;
+            margin: 40px auto;
+            padding: 0 24px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 40px;
+            position: relative;
+            z-index: 1;
+            flex-grow: 1;
+        }
+
+        /* Sidebar Navigation */
+        .docs-sidebar {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+            background: var(--cg-bg-surface);
+            border: 1px solid var(--cg-border);
+            border-radius: var(--cg-radius-lg);
+            padding: 24px;
+            box-shadow: var(--cg-shadow-md);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .sidebar-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--cg-text-3);
+            margin-bottom: 16px;
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-item-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--cg-radius-md);
+            color: var(--cg-text-2);
+            font-size: 14.5px;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            transition: all var(--cg-transition-fast);
+        }
+
+        .nav-item-btn:hover {
+            color: var(--cg-text-1);
+            background: var(--cg-bg-elevated);
+            border-color: var(--cg-border-subtle);
+        }
+
+        .nav-item-btn.active {
+            color: var(--cg-text-1);
+            background: var(--cg-accent-muted);
+            border-color: var(--cg-focus-ring);
+            box-shadow: 0 0 10px rgba(167, 139, 250, 0.05);
+        }
+
+        .nav-item-btn svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            color: currentColor;
+        }
+
+        /* Main Content Panel */
+        .docs-content {
+            background: var(--cg-bg-surface);
+            border: 1px solid var(--cg-border);
+            border-radius: var(--cg-radius-lg);
+            padding: 48px;
+            box-shadow: var(--cg-shadow-lg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            min-height: 600px;
+        }
+
+        /* Tab Content Display */
+        .tab-pane {
+            display: none;
+            animation: fadeIn 0.4s ease-out both;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Formatted Content Styling */
+        .doc-section h1 {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            color: var(--cg-text-1);
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, var(--cg-text-1) 0%, var(--cg-accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .doc-section h2 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.015em;
+            color: var(--cg-text-1);
+            margin-top: 36px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--cg-border);
+        }
+
+        .doc-section h3 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--cg-text-1);
+            margin-top: 24px;
+            margin-bottom: 10px;
+        }
+
+        .doc-section p {
+            font-size: 15px;
+            color: var(--cg-text-2);
+            margin-bottom: 16px;
+            line-height: 1.7;
+        }
+
+        .doc-section strong {
+            color: var(--cg-text-1);
+        }
+
+        .doc-section ul, .doc-section ol {
+            margin-bottom: 20px;
+            padding-left: 24px;
+        }
+
+        .doc-section li {
+            font-size: 15px;
+            color: var(--cg-text-2);
+            margin-bottom: 8px;
+            line-height: 1.7;
+        }
+
+        /* Code Block Styling */
+        .doc-section pre {
+            background: #090d16;
+            border: 1px solid var(--cg-border-subtle);
+            border-radius: var(--cg-radius-md);
+            padding: 16px 20px;
+            overflow-x: auto;
+            margin-bottom: 24px;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+        }
+
+        .doc-section code {
+            font-family: var(--cg-font-mono);
+            font-size: 13.5px;
+            color: var(--cg-info);
+        }
+
+        .doc-section p code, .doc-section li code {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 13px;
+        }
+
+        /* Alert/Callout Panel */
+        .callout-box {
+            background: var(--cg-accent-muted);
+            border-left: 4px solid var(--cg-accent);
+            border-radius: 0 var(--cg-radius-md) var(--cg-radius-md) 0;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .callout-box p {
+            margin-bottom: 0;
+            color: var(--cg-text-1);
+            font-size: 14.5px;
+        }
+
+        /* Table Styling */
+        .doc-table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-bottom: 28px;
+            border: 1px solid var(--cg-border);
+            border-radius: var(--cg-radius-md);
+        }
+
+        .doc-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .doc-table th {
+            background: var(--cg-bg-elevated);
+            color: var(--cg-text-1);
+            font-weight: 700;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--cg-border-subtle);
+        }
+
+        .doc-table td {
+            color: var(--cg-text-2);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--cg-border);
+        }
+
+        .doc-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(11, 15, 25, 0.9);
+            border-top: 1px solid var(--cg-border);
+            padding: 32px 0;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        footer p {
+            font-size: 14px;
+            color: var(--cg-text-3);
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 992px) {
+            .docs-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .docs-sidebar {
+                position: static;
+                width: 100%;
+            }
+
+            .docs-content {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="header-container">
+            <a href="/" class="brand-logo">
+                <svg class="logo-icon" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="none">
+                    <defs>
+                        <linearGradient id="cyber-grad-docs" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#6d28d9" />
+                            <stop offset="50%" stop-color="#a855f7" />
+                            <stop offset="100%" stop-color="#22d3ee" />
+                        </linearGradient>
+                        <filter id="neon-glow-docs" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="1.2" result="blur" />
+                            <feMerge>
+                                <feMergeNode in="blur" />
+                                <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    <path d="M15 3.5 L6.5 6.5 V14.5 C6.5 20 10 24.5 15 26.5" stroke="url(#cyber-grad-docs)" stroke-width="2.2" stroke-linecap="round" filter="url(#neon-glow-docs)" />
+                    <path d="M17 3.5 L25.5 6.5 V14.5 C25.5 20 22 24.5 17 26.5" stroke="url(#cyber-grad-docs)" stroke-width="2.2" stroke-linecap="round" filter="url(#neon-glow-docs)" />
+                    <polygon points="16,8.5 21,11.5 21,17.5 16,20.5 11,17.5 11,11.5" fill="rgba(17, 24, 39, 0.75)" stroke="url(#cyber-grad-docs)" stroke-width="1.5" stroke-linejoin="round" />
+                </svg>
+                <span class="logo-text"><span>CyberGuard Pro</span></span>
+            </a>
+            <a href="/" class="back-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                </svg>
+                Back to Home
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Docs Grid -->
+    <div class="docs-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="docs-sidebar">
+            <h3 class="sidebar-title">Doc Categories</h3>
+            <ul class="nav-list">
+                <li>
+                    <button class="nav-item-btn active" data-tab="general">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                        </svg>
+                        Documentation
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-item-btn" data-tab="quickstart">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                        </svg>
+                        Quick Start
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-item-btn" data-tab="testing">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v16.792m0-16.792a9.003 9.003 0 0 1 8.5 8.396M9.75 3.104a9.003 9.003 0 0 0-8.5 8.396m17 0a9.003 9.003 0 0 1-8.5 8.396m8.5-8.396H2.5m1.125 0H18m-8.25 8.396a9.003 9.003 0 0 1-8.5-8.396" />
+                        </svg>
+                        Testing Guide
+                    </button>
+                </li>
+
+            </ul>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="docs-content">
+            
+            <!-- GENERAL DOCUMENTATION TAB -->
+            <div class="tab-pane active" id="pane-general">
+                <section class="doc-section">
+                    <h1>Comprehensive Documentation</h1>
+                    <p>Welcome to the official <strong>CyberGuard Pro</strong> documentation. This guide details the modules, architecture, and secure features integrated within the platform.</p>
+                    
+                    <div class="callout-box">
+                        <p><strong>System Overview:</strong> CyberGuard Pro is a next-generation security operations center (SOC) client dashboard. It aggregates multiple auditing and analysis tools to help administrators, security engineers, and developers monitor network exposure, analyze web vulnerabilities, decode tokens, perform cryptographic analysis, and search multi-engine threat intelligence feeds.</p>
+                    </div>
+
+                    <h2>1. Security Dashboard &amp; Analytics</h2>
+                    <p>The primary analytics interface aggregates scan states and compiles findings metrics to present real-time security postures:</p>
+                    <ul>
+                        <li><strong>Live Stat Indicators:</strong>
+                            <ul>
+                                <li><strong>Critical Findings:</strong> Enumerates high-risk items requiring immediate patching.</li>
+                                <li><strong>Total Findings:</strong> Sum of all vulnerabilities discovered during target audits.</li>
+                                <li><strong>Resolved Items:</strong> Logs resolved issues and measures resolution rate dynamically.</li>
+                                <li><strong>Targets / Scans Status:</strong> Tracks active projects scope targets and active scanning executions.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Global Risk Gauge:</strong> Calculates global severity across all scoped targets, mapping scores to dynamic color-gradient levels (Green: Safe, Yellow: Moderate Risk, Red: High Threat).</li>
+                        <li><strong>Vulnerability Donut Chart:</strong> Renders visual distribution of findings categorized by severity categories (Critical, Warning, Info).</li>
+                        <li><strong>Active Scans Monitor:</strong> Displays queue status and real-time execution progress of running containerized audits.</li>
+                        <li><strong>Recent Findings Feed:</strong> Displays a real-time list of discovered vulnerability details.</li>
+                        <li><strong>Export Controls:</strong> Allows operators to export data to professional audit PDF reports (using JS-PDF auto-table formatting) or structured CSV files.</li>
+                    </ul>
+
+                    <h2>2. Web Security Suite</h2>
+                    <p>Active auditing modules testing endpoints against core web vulnerabilities and certification defects:</p>
+                    <ul>
+                        <li><strong>OWASP ZAP XSS Vulnerability Scanner:</strong> Audits query arguments, forms, and headers against malicious scripting vectors (Reflected, Stored, and DOM-based Cross-Site Scripting).</li>
+                        <li><strong>SSL / TLS Certificate Auditor:</strong> Validates certificate path trust, checks expiry limits, audits cipher negotiation configurations (supporting SSLv3 up to TLS 1.3), and issues a graded security report (Grades A+ through F).</li>
+                        <li><strong>URL Phishing ML Classifier:</strong> Analyzes domain structure, string entropy, typosquatting heuristics, and Levenshtein distance metrics to predict brand impersonation risks.</li>
+                        <li><strong>DNS Spoofing Detector:</strong> Compares target DNS resolver lookups across global authoritative servers to detect poisoning or hijacking, and checks active DNSSEC signatures.</li>
+                        <li><strong>VirusTotal Reputation Check:</strong> Allows quick scanning of target file hashes, domain names, or direct URL requests against 70+ security engines.</li>
+                    </ul>
+
+                    <h2>3. Cipher Suite (Cryptography tools)</h2>
+                    <p>Cryptographic tool utility suite optimized for hash generation, key verification, and integrity checks:</p>
+                    <ul>
+                        <li><strong>Multi-Hash Generator:</strong> Calculates cryptographic message digests in parallel for raw string inputs using MD5, SHA-1, SHA-256, and SHA-512 algorithms.</li>
+                        <li><strong>Password Strength Analyzer:</strong> Calculates character-set complexity and entropy bits. Evaluates complexity checks (Numbers, Special Symbols, Mixed Case, Common Dictionary Phrases) and estimates offline brute-force crack time.</li>
+                        <li><strong>Smart Hash Identifier:</strong> Analyzes length, character sets, and formats of unknown hex strings to predict likely digest algorithms (MD5, SHA-1, SHA-256, SHA-512) and outlines structural reasons.</li>
+                        <li><strong>File Integrity Checker:</strong> Computes the SHA-256 checksum of local file uploads client-side, allowing operators to compare it against expected integrity hashes to detect file modification or corruption.</li>
+                    </ul>
+
+                    <h2>4. JWT Debugger &amp; Editor</h2>
+                    <p>A full token inspection, editing, and signature generation workbench:</p>
+                    <ul>
+                        <li><strong>Token Decoding Engine:</strong> Auto-separates JWT structures into header, payload, and signature blocks. Formats output JSON with syntax highlights and displays claims breakdown (iss, sub, exp, iat, roles) in readable formats.</li>
+                        <li><strong>Key-Signing Verification Panel:</strong> Supports verification and symmetric signing using HMAC algorithms (HS256, HS384, HS512) with custom keys (raw or Base64Url-encoded), as well as asymmetric keys (RS256, ES256).</li>
+                        <li><strong>Payload claim modifications:</strong> Allows operators to modify JSON keys (such as elevating privileges by editing <code>"role": "user"</code> to <code>"role": "admin"</code>) and re-sign tokens to generate matching output strings for authorization testing.</li>
+                    </ul>
+
+                    <h2>5. AI Assistant &amp; Autopilot</h2>
+                    <p>The interactive intelligence panel combining cybersecurity help with dashboard automation controls:</p>
+                    <ul>
+                        <li><strong>Contextual AI Chats:</strong> Answer complex developer security questions, recommend mitigations, and explain vulnerabilities in detail.</li>
+                        <li><strong>Autopilot Operations:</strong> Autopilot scripting parses user text to execute dashboard navigation tasks automatically (e.g. typing <code>"Open Cipher tab"</code> redirects page view instantly).</li>
+                        <li><strong>Provider Configuration Drawer:</strong> Supports settings integration for OpenRouter and Groq providers. Operators can select model presets, configure API keys, customize system prompts, and adjust temperature creativity settings.</li>
+                    </ul>
+
+                    <h2>6. Threat Intelligence Hub</h2>
+                    <p>Unified search console querying multiple threat intelligence databases:</p>
+                    <ul>
+                        <li><strong>IP Reputation Search:</strong> Scans IP addresses against AbuseIPDB databases to retrieve abuse confidence scores, report histories, and country origins.</li>
+                        <li><strong>Domain Reputation Search:</strong> Queries VirusTotal scanner APIs to discover malicious indicators, threat grades, and registrar information.</li>
+                        <li><strong>Visual Crawl Analysis:</strong> Queries URLScan.io APIs to check target domains for malicious redirects and script references.</li>
+                    </ul>
+
+                    <h2>7. Projects &amp; Target Scoping</h2>
+                    <p>Enterprise organization system designed to structure target assets under designated assessment projects:</p>
+                    <ul>
+                        <li><strong>Scope Containers:</strong> Organize projects into owned systems and shared collaborative environments.</li>
+                        <li><strong>Target Management:</strong> Supports adding, editing labels, and deleting scoped target values (IPs, ranges, URLs).</li>
+                        <li><strong>Invitation Tokens:</strong> Generates unique collaboration invite links allowing external security engineers to join assessment scopes.</li>
+                    </ul>
+                </section>
+            </div>
+
+            <!-- QUICK START GUIDE TAB -->
+            <div class="tab-pane" id="pane-quickstart">
+                <section class="doc-section">
+                    <h1>Quick Start Guide</h1>
+                    <p>Follow these instructions to run the CyberGuard Pro development server on your local environment and configure all active modules.</p>
+
+                    <h2>1. Prerequisites</h2>
+                    <p>Before launching, install and verify the following system versions on your local machine:</p>
+                    <ul>
+                        <li><strong>Node.js:</strong> v18.0 or higher (Required for Express server operations and test execution).</li>
+                        <li><strong>NPM:</strong> v9.0 or higher (Required for handling package dependencies).</li>
+                        <li><strong>Docker Desktop:</strong> Required to run isolated security scanner containers (Nmap, ZAP, etc.).</li>
+                        <li><strong>MySQL:</strong> v8.0 or higher (Required for persistent target records and projects caching).</li>
+                        <li><strong>Redis:</strong> v6.2 or higher (Required for tracking background scanning tasks).</li>
+                    </ul>
+
+                    <h2>2. Environment Configuration</h2>
+                    <p>Create a local environment file by copying the template file:</p>
+                    <pre><code># Copy environment template
+cp .env.example .env</code></pre>
+                    <p>Open <code>.env</code> in your editor and configure the variables:</p>
+                    <pre><code># Database Connection Setup
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=cyberguard_pro
+DB_USERNAME=root
+DB_PASSWORD=your_secure_db_password
+
+# Redis Cache and Queue Setup
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+REDIS_PASSWORD=null
+
+# Threat Intelligence APIs (Retrieve from respective provider portals)
+VIRUSTOTAL_API_KEY=vt_token_here
+ABUSEIPDB_API_KEY=abuseipdb_token_here
+URLSCAN_API_KEY=urlscan_token_here
+WHOISXML_API_KEY=whoisxml_token_here
+
+# AI Assistant LLM Provider Keys
+OPENROUTER_API_KEY=openrouter_token_here
+GROQ_API_KEY=groq_token_here
+JWT_SECRET=your_jwt_signing_key_here</code></pre>
+
+                    <h2>3. Dependency Installation &amp; Database Migrations</h2>
+                    <p>Install the required packages and seed the default schemas:</p>
+                    <pre><code># Install node modules
+npm install
+
+# Run database migrations and seed default tiers
+php artisan migrate --seed</code></pre>
+
+                    <h2>4. Start the Application</h2>
+                    <p>Start the local Express development server to clean-route production URLs:</p>
+                    <pre><code># Start development server
+npm run dev</code></pre>
+                    <p>The console will log the local address mappings:</p>
+                    <pre><code>🛡️ CyberGuard Pro — Local Dev Server
+   http://127.0.0.1:5513
+
+   Clean URLs active (mirrors Vercel production):
+   http://127.0.0.1:5513/dashboard
+   http://127.0.0.1:5513/pricing
+   http://127.0.0.1:5513/docs
+   http://127.0.0.1:5513/project-detail</code></pre>
+
+                    <h2>5. Running the Testing Suite</h2>
+                    <p>CyberGuard Pro includes a suite of unit and integration tests driven by Vitest to verify core frontend behaviors and calculators. To execute the tests, run:</p>
+                    <pre><code># Run all tests in the workspace
+npm test
+
+# Run a specific unit test file (e.g. Password Entropy checks)
+npx vitest run tests/unit/password-entropy-calculation.test.js
+
+# Run integration tests to check state preservation
+npx vitest run tests/unit/cyberguard-hashtools-preservation.test.js</code></pre>
+                </section>
+            </div>
+
+            <!-- SECURITY TESTING GUIDE TAB -->
+            <div class="tab-pane" id="pane-testing">
+                <section class="doc-section">
+                    <h1>Security Functions Testing Guide</h1>
+                    <p>Follow these step-by-step verification plans to test every security tool in the CyberGuard Pro dashboard.</p>
+
+                    <h2>1. Dashboard Visuals &amp; Reporting Tests</h2>
+                    
+                    <h3>Scenario: Metrics Calculation &amp; Gauge Updates</h3>
+                    <ul>
+                        <li><strong>Setup:</strong> Log in with a standard workspace containing target findings.</li>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Navigate to the **Security Dashboard**.</li>
+                                <li>Observe the Global Risk Score gauge and findings count cards.</li>
+                                <li>Add a target in projects and launch a mock scan that discovers critical issues.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> The "Critical Findings" card increments. The Global Risk Score gauge updates its circular path and transitions its color state to red.</li>
+                    </ul>
+
+                    <h3>Scenario: Audit Report Exporting (PDF &amp; CSV)</h3>
+                    <ul>
+                        <li><strong>Setup:</strong> Ensure the dashboard displays findings under the recent findings table.</li>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Scroll to the recent findings section.</li>
+                                <li>Click the **Export PDF** button. Save the file.</li>
+                                <li>Click the **Export CSV** button. Save the file.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> The PDF generates using <code>jspdf-autotable</code> layout, displaying project metadata and structured tables. The CSV download initiates containing raw columns of target addresses, issue names, severities, and timestamps.</li>
+                    </ul>
+
+                    <h2>2. Web Security Auditor Tests</h2>
+                    
+                    <h3>Scenario: XSS Vulnerability Auditing</h3>
+                    <ul>
+                        <li><strong>Input Target:</strong> <code>https://xss-game.appspot.com</code></li>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Navigate to the **Web Security** tab.</li>
+                                <li>Enter the input URL in the Web Target field.</li>
+                                <li>Select the **XSS Vulnerability Test** card (OWASP ZAP) and click **Run Analysis**.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> The scanner engine initializes, crawler scans form endpoints, and returns reflected scripting payload vulnerabilities.</li>
+                    </ul>
+
+                    <h3>Scenario: SSL/TLS Certificate Check</h3>
+                    <ul>
+                        <li><strong>Input Target:</strong> <code>https://badssl.com</code> (Expired, invalid cert test target)</li>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Input the URL into the target config.</li>
+                                <li>Select the **SSL / TLS Certificate** card and click **Run Analysis**.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> Engine flags certificate expiration warning, identifies cipher suite vulnerabilities, and reports Grade F.</li>
+                    </ul>
+
+                    <h3>Scenario: URL Phishing ML Classifier</h3>
+                    <ul>
+                        <li><strong>Input URL:</strong> <code>https://g00gle.com/login</code> (Spoofed domain)</li>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Input the domain in the target input field.</li>
+                                <li>Select the **URL Phishing Analyzer** card and click **Run Analysis**.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> The machine-learning module calculates high string entropy, flags typosquatting mismatch indicators, and raises the threat score to High Risk (>90%).</li>
+                    </ul>
+
+                    <h3>Scenario: DNS Spoofing Integrity Check</h3>
+                    <ul>
+                        <li><strong>Input Target:</strong> <code>https://google.com</code></li>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Select the **DNS Spoofing Detection** card.</li>
+                                <li>Click **Run Analysis**.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> Queries global authoritative NS records, verifies resolver consistency, confirms DNSSEC signatures match, and returns Safe status.</li>
+                    </ul>
+
+                    <h3>Scenario: VirusTotal Multi-Engine Scan</h3>
+                    <ul>
+                        <li><strong>Input Hash:</strong> <code>e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</code> (Empty SHA-256 hash)</li>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Scroll down to the VirusTotal Intelligence card.</li>
+                                <li>Paste the hash into the input field and click **Check Hash**.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> The integration query returns details from VT engines, flagging 0 malicious reports.</li>
+                    </ul>
+
+                    <h2>3. Cryptography &amp; Cipher Suite Tests</h2>
+                    
+                    <h3>Scenario: Multi-Hash Parallel Generator</h3>
+                    <ul>
+                        <li><strong>Input Text:</strong> <code>"CyberGuard"</code></li>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Navigate to the **Cipher Suite** tab.</li>
+                                <li>Type the string into the input area.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> MD5, SHA-1, SHA-256 (<code>4b7b252bb88cf7...</code>), and SHA-512 values display in parallel. Copying hashes copies the plain text digest strings to the clipboard.</li>
+                    </ul>
+
+                    <h3>Scenario: Password Entropy Analyzer</h3>
+                    <ul>
+                        <li><strong>Weak Input:</strong> <code>"password123"</code></li>
+                        <li><strong>Strong Input:</strong> <code>"CGuard_2026_Secure!"</code></li>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Type both inputs into the analyzer field. Check composition checkboxes.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> The weak input fails composition checks, reports Low Strength, and shows a red progress bar. The strong input activates all checks (Numbers, Special Symbols, Case mix), calculates high entropy (>80 bits), and transitions the bar to green.</li>
+                    </ul>
+
+                    <h3>Scenario: Smart Hash Identifier</h3>
+                    <ul>
+                        <li><strong>Input Hash:</strong> <code>8743b52063cd84097a65d1633f5c74f5</code> (MD5 hash)</li>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Paste the hash into the Unknown Hash field.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> Algorithm automatically detects signature as MD5. Result states reasoning (Length: 32 hex characters, representation format).</li>
+                    </ul>
+
+                    <h3>Scenario: File Integrity Checks</h3>
+                    <ul>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Drag and drop a local file into the integrity check dropzone.</li>
+                                <li>Observe the calculated SHA-256 hash output.</li>
+                                <li>Paste the matching hash into the expected field. Change a character in the expected field.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> Matching inputs display a green success status ("Hashes Match"). Modified expected inputs flag a red warning alert ("Hash Mismatch").</li>
+                    </ul>
+
+                    <h2>4. JWT Debugger &amp; Editor Tests</h2>
+                    
+                    <h3>Scenario: Decode and Validate Token</h3>
+                    <ul>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Navigate to the **JWT Debugger** tab.</li>
+                                <li>Paste an encoded token into the Encoded Token area.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> Separates header (orange) and payload (purple). The JSON view displays formatted keys, and the claims tab parses expiration dates and issuer names.</li>
+                    </ul>
+
+                    <h3>Scenario: Modifying Claims and Re-Signing</h3>
+                    <ul>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Switch mode to **JWT Encoder** or edit the JSON payload inside the decoder box.</li>
+                                <li>Change <code>"role": "user"</code> to <code>"role": "admin"</code>.</li>
+                                <li>Enter <code>secret_key</code> in the sign panel and check the Base64 toggle.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> The Encoded JWT output update is triggered, generating a new signed token string containing the escalated admin role claim.</li>
+                    </ul>
+
+                    <h2>5. AI Assistant &amp; Autopilot Tests</h2>
+                    
+                    <h3>Scenario: Autopilot Command Routing</h3>
+                    <ul>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Navigate to the **AI Assistant** tab.</li>
+                                <li>Enter command: <code>"Switch to JWT Debugger tab"</code> and send it.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> The assistant detects navigation intent, triggers autopilot routing, and changes active dashboard view to the JWT Debugger.</li>
+                    </ul>
+
+                    <h3>Scenario: Custom API Configuration Save</h3>
+                    <ul>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Click the gear icon to open AI settings.</li>
+                                <li>Select **Groq API** and input a mock api key. Change temperature to 0.9. Click **Save Settings**.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> Settings panel collapses, values are saved locally, and subsequent requests route through the saved configuration parameters.</li>
+                    </ul>
+
+                    <h2>6. Threat Intelligence Search Tests</h2>
+                    
+                    <h3>Scenario: IP Address Reputation Lookup</h3>
+                    <ul>
+                        <li><strong>Input Target:</strong> <code>185.220.101.5</code> (Known Tor exit node)</li>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Navigate to the **Threat Intel** tab.</li>
+                                <li>Enter the IP address in the search box and click **Search**.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> Verdict card displays "MALICIOUS". AbuseIPDB card displays a high abuse confidence score (>90%), logs reporting occurrences, and VT lists malicious node categories.</li>
+                    </ul>
+
+                    <h2>7. Projects &amp; Scoping Tests</h2>
+                    
+                    <h3>Scenario: Scope Target Configuration</h3>
+                    <ul>
+                        <li><strong>Steps:</strong>
+                            <ol>
+                                <li>Navigate to the **Projects** tab.</li>
+                                <li>Click **New Project** and input details. Click on the project card.</li>
+                                <li>Click **Add Target**. Select type IP and enter <code>192.168.1.1</code>. Click **Submit**.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Expected Result:</strong> Target card renders under scoping. Historical table logs record insertion events.</li>
+                    </ul>
+                </section>
+            </div>
+
+
+
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="header-container">
+            <p>&copy; 2026 CyberGuard Pro. All rights reserved. Built with advanced next-gen design standards.</p>
+        </div>
+    </footer>
+
+    <!-- Tab Switching Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.nav-item-btn');
+            const panes = document.querySelectorAll('.tab-pane');
+
+            function switchTab(tabId) {
+                // Remove active classes
+                tabs.forEach(t => t.classList.remove('active'));
+                panes.forEach(p => p.classList.remove('active'));
+
+                // Find elements to activate
+                const activeTab = document.querySelector(`.nav-item-btn[data-tab="${tabId}"]`);
+                const activePane = document.getElementById(`pane-${tabId}`);
+
+                if (activeTab && activePane) {
+                    activeTab.classList.add('active');
+                    activePane.classList.add('active');
+                }
+            }
+
+            // Bind click handlers to buttons
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    switchTab(tabId);
+                    
+                    // Update URL query parameter without reloading
+                    const url = new URL(window.location);
+                    url.searchParams.set('tab', tabId);
+                    window.history.pushState({}, '', url);
+                });
+            });
+
+            // Parse URL parameters to set initial tab on page load
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialTab = urlParams.get('tab');
+            
+            if (initialTab && ['general', 'quickstart', 'testing'].includes(initialTab)) {
+                switchTab(initialTab);
+            }
+        });
+    </script>
+</body>
+</html>
