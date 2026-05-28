@@ -278,7 +278,7 @@
       const proxyOptions = [
         "https://api.allorigins.win/raw?url=",
         "https://cors.lol/?url=",
-        "https://corsproxy.io/?",
+        "https://corsproxy.io/?url=",
       ];
       const proxyUrl = proxyOptions[0];
       const encodedUrl = encodeURIComponent(targetUrl.toString());
@@ -315,7 +315,7 @@
       const proxyOptions = [
         "https://api.allorigins.win/raw?url=",
         "https://cors.lol/?url=",
-        "https://corsproxy.io/?",
+        "https://corsproxy.io/?url=",
       ];
 
       for (let i = 0; i < proxyOptions.length; i++) {
