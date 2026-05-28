@@ -146,7 +146,6 @@
 /* 22-inch monitors (1281px - 1536px) */
 @media (max-width: 1536px) and (min-width: 1281px) {
   :root {
-    --sidebar-width: 185px;
     --content-padding: 24px;
     --card-gap: 16px;
   }
@@ -155,16 +154,8 @@
 /* 16-inch laptops (1025px - 1280px) */
 @media (max-width: 1280px) and (min-width: 1025px) {
   :root {
-    --sidebar-width: 170px;
     --content-padding: 16px;
     --card-gap: 12px;
-  }
-}
-
-/* lg and below (laptops) */
-@media (max-width: 1024px) {
-  :root {
-    --sidebar-width: 160px;
   }
 }
 
