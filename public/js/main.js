@@ -2342,7 +2342,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const CORS_PROXIES = [
     { url: "https://api.allorigins.win/raw?url=", encode: true },
     { url: "https://cors.lol/?url=",              encode: true },
-    { url: "https://corsproxy.io/?",              encode: true },
+    { url: "https://corsproxy.io/?url=",          encode: true },
   ];
 
   /**
@@ -2359,7 +2359,34 @@ document.addEventListener("DOMContentLoaded", () => {
           ? `${proxy.url}${encodeURIComponent(targetUrl)}`
           : `${proxy.url}${targetUrl}`;
         const response = await fetch(proxiedUrl, fetchOptions);
-        return response;
+        if (response.ok) {
+          return response;
+        }
+
+        if (response.status === 404) {
+          return response;
+        }
+
+        if (response.status === 401 || response.status === 403) {
+          const hasAuthHeader = fetchOptions.headers && Object.keys(fetchOptions.headers).some(h => {
+            const lower = h.toLowerCase();
+            return lower === 'x-apikey' || lower === 'key' || lower === 'api-key' || lower === 'authorization';
+          });
+
+          if (hasAuthHeader) {
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('json')) {
+              return response;
+            }
+          }
+
+          console.warn(`Proxy ${proxy.url} returned status ${response.status} (likely proxy block). Trying next proxy...`);
+          lastError = new Error(`Proxy blocked request (status ${response.status})`);
+          continue;
+        }
+
+        console.warn(`Proxy ${proxy.url} failed with status ${response.status}. Trying next proxy...`);
+        lastError = new Error(`Proxy status: ${response.status}`);
       } catch (err) {
         console.warn(`CORS proxy failed (${proxy.url}):`, err.message);
         lastError = err;
@@ -5477,7 +5504,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const proxyOptions = [
         "https://api.allorigins.win/raw?url=",
         "https://cors.lol/?url=",
-        "https://corsproxy.io/?",
+        "https://corsproxy.io/?url=",
       ];
 
       const proxyUrl = proxyOptions[0]; // Start with the most reliable
@@ -5525,7 +5552,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const proxyOptions = [
         "https://api.allorigins.win/raw?url=",
         "https://cors.lol/?url=",
-        "https://corsproxy.io/?",
+        "https://corsproxy.io/?url=",
       ];
 
       for (let i = 0; i < proxyOptions.length; i++) {

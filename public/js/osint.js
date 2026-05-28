@@ -17,7 +17,7 @@ const ENCRYPTION_KEY = 'CyberGuard2024!@#';
 
 // CORS Proxy Fallback Chain
 const CORS_PROXIES = [
-  { url: 'https://corsproxy.io/?',              encode: true },
+  { url: 'https://corsproxy.io/?url=',          encode: true },
   { url: 'https://api.allorigins.win/raw?url=', encode: true },
   { url: 'https://cors.lol/?url=',              encode: true },
 ];
@@ -61,9 +61,33 @@ async function fetchWithProxy(targetUrl, fetchOptions = {}) {
         : `${proxy.url}${targetUrl}`;
 
       const response = await fetch(proxiedUrl, fetchOptions);
-      if (response.ok || response.status === 404 || response.status === 401 || response.status === 403) {
+      if (response.ok) {
         return response;
       }
+
+      if (response.status === 404) {
+        return response;
+      }
+
+      if (response.status === 401 || response.status === 403) {
+        const hasAuthHeader = fetchOptions.headers && Object.keys(fetchOptions.headers).some(h => {
+          const lower = h.toLowerCase();
+          return lower === 'x-apikey' || lower === 'key' || lower === 'api-key' || lower === 'authorization';
+        });
+
+        if (hasAuthHeader) {
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('json')) {
+            return response;
+          }
+        }
+
+        console.warn(`Proxy ${proxy.url} returned status ${response.status} (likely proxy block). Trying next proxy...`);
+        lastError = new Error(`Proxy blocked request (status ${response.status})`);
+        continue;
+      }
+
+      console.warn(`Proxy ${proxy.url} failed with status ${response.status}. Trying next proxy...`);
       lastError = new Error(`Proxy status: ${response.status}`);
     } catch (err) {
       console.warn(`CORS proxy failed (${proxy.url}):`, err.message);

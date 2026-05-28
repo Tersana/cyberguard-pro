@@ -13,7 +13,7 @@ const URLSCAN_BASE_URL = 'https://urlscan.io/api/v1';
 // (API-Key, x-apikey etc.); allorigins and cors.lol do NOT forward custom
 // headers so they only work for unauthenticated / public GET requests.
 const CORS_PROXIES = [
-  { url: 'https://corsproxy.io/?',              encode: true },
+  { url: 'https://corsproxy.io/?url=',          encode: true },
   { url: 'https://api.allorigins.win/raw?url=', encode: true },
   { url: 'https://cors.lol/?url=',              encode: true },
 ];
@@ -35,12 +35,34 @@ async function fetchWithProxy(targetUrl, fetchOptions = {}) {
         : `${proxy.url}${targetUrl}`;
 
       const response = await fetch(proxiedUrl, fetchOptions);
+      if (response.ok) {
+        return response;
+      }
 
-      // If the proxy itself is down / blocked, the status will often be 0 or a
-      // CORS error will throw before we reach here.  A non-network error (e.g.
-      // 401 from the upstream API) is still useful — return it so the caller
-      // can surface a proper message.
-      return response;
+      if (response.status === 404) {
+        return response;
+      }
+
+      if (response.status === 401 || response.status === 403) {
+        const hasAuthHeader = fetchOptions.headers && Object.keys(fetchOptions.headers).some(h => {
+          const lower = h.toLowerCase();
+          return lower === 'x-apikey' || lower === 'key' || lower === 'api-key' || lower === 'authorization';
+        });
+
+        if (hasAuthHeader) {
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('json')) {
+            return response;
+          }
+        }
+
+        console.warn(`Proxy ${proxy.url} returned status ${response.status} (likely proxy block). Trying next proxy...`);
+        lastError = new Error(`Proxy blocked request (status ${response.status})`);
+        continue;
+      }
+
+      console.warn(`Proxy ${proxy.url} failed with status ${response.status}. Trying next proxy...`);
+      lastError = new Error(`Proxy status: ${response.status}`);
     } catch (err) {
       console.warn(`CORS proxy failed (${proxy.url}):`, err.message);
       lastError = err;
