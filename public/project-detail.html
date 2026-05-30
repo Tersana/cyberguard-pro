@@ -1210,6 +1210,7 @@
                                     class="flex-1 text-xs font-mono text-[var(--cg-info)] break-all bg-[var(--cg-bg-elevated)] p-2 rounded border border-[var(--cg-border)]"
                                 ></code>
                                 <button
+                                    id="ip-copy-btn"
                                     onclick="copyInviteLink()"
                                     class="cyber-btn-ghost text-xs px-2 py-2 rounded flex-shrink-0 flex items-center gap-1"
                                 >
@@ -3466,19 +3467,12 @@
 
                 setBtnLoading(btn, "Generating…");
                 try {
-                    // Deliver role via query param, JSON body, AND form-urlencoded to bypass any backend parsing bugs
-                    const token = localStorage.getItem(JWT_KEY);
+                    // Send role as JSON body (backend expects application/json)
                     const res = await apiFetch(
-                        `/projects/${_projectId}/invite?role=${role}`,
+                        `/projects/${_projectId}/invite`,
                         {
                             method: "POST",
-                            headers: {
-                                Accept: "application/json",
-                                "Content-Type": "application/x-www-form-urlencoded",
-                                "ngrok-skip-browser-warning": "true",
-                                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                            },
-                            body: `role=${encodeURIComponent(role)}`,
+                            body: JSON.stringify({ role }),
                         },
                     );
 
@@ -3527,13 +3521,32 @@
             }
 
             function copyInviteLink() {
+                const btn = document.getElementById("ip-copy-btn");
                 const text =
                     document.getElementById("ip-link-display")?.textContent ||
                     "";
                 if (!text) return;
                 navigator.clipboard
                     .writeText(text)
-                    .then(() => notify("Invite link copied!", "success"))
+                    .then(() => {
+                        notify("Invite link copied!", "success");
+                        if (btn) {
+                            const origHTML = btn.innerHTML;
+                            btn.innerHTML = `
+                                <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                                <span class="text-emerald-400 font-semibold">Copied!</span>
+                            `;
+                            btn.style.borderColor = "rgba(52, 211, 153, 0.4)";
+                            btn.style.background = "rgba(52, 211, 153, 0.08)";
+                            setTimeout(() => {
+                                btn.innerHTML = origHTML;
+                                btn.style.borderColor = "";
+                                btn.style.background = "";
+                            }, 2500);
+                        }
+                    })
                     .catch(() =>
                         notify(
                             "Copy failed — please copy manually.",
@@ -3567,6 +3580,12 @@
                         containerEl.classList.add("hidden");
                         return;
                     }
+                    if (res.status === 404) {
+                        // Endpoint not supported or registered on backend yet — hide container gracefully
+                        console.warn("[ProjectDetail] GET /projects/.../invitations returned 404. Backend route might not be implemented/deployed yet.");
+                        containerEl.classList.add("hidden");
+                        return;
+                    }
                     if (!res.ok) {
                         listEl.innerHTML = errMsg("Failed to load pending invitations.");
                         containerEl.classList.remove("hidden");
@@ -3574,11 +3593,13 @@
                     }
 
                     const data = await res.json();
-                    const invitations = Array.isArray(data.invitations)
-                        ? data.invitations
-                        : Array.isArray(data)
-                          ? data
-                          : [];
+                    const invitations = Array.isArray(data.pending_invitations)
+                        ? data.pending_invitations
+                        : Array.isArray(data.invitations)
+                          ? data.invitations
+                          : Array.isArray(data)
+                            ? data
+                            : [];
 
                     const countEl = document.getElementById("pending-invitations-count");
                     if (countEl) countEl.textContent = String(invitations.length);
