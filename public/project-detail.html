@@ -3468,7 +3468,7 @@
                 try {
                     // Body contains only role — email is omitted per spec Flow 1
                     const res = await apiFetch(
-                        `/projects/${_projectId}/invite`,
+                        `/projects/${_projectId}/invite?role=${role}`,
                         { method: "POST", body: JSON.stringify({ role }) },
                     );
 
