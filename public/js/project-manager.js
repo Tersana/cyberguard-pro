@@ -327,11 +327,17 @@ class ProjectManager {
     try {
       if (typeof showLoading !== "undefined")
         showLoading("Generating invite link…");
-      // API ref §5: only 'role' is required — email is optional and removed from UI
-      const payload = { role };
-      return await this.apiClient.post(
+      // Deliver role via query param, JSON body, AND form-urlencoded to bypass any backend parsing bugs
+      return await this.apiClient._request(
+        "POST",
         `/projects/${projectId}/invite?role=${role}`,
-        payload,
+        null,
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: `role=${encodeURIComponent(role)}`,
+        }
       );
     } catch (error) {
       console.error("[ProjectManager] inviteCollaborator error:", error);
