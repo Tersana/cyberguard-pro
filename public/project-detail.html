@@ -3587,6 +3587,12 @@
                         containerEl.classList.add("hidden");
                         return;
                     }
+                    if (res.status === 404) {
+                        // Endpoint not supported or registered on backend yet — hide container gracefully
+                        console.warn("[ProjectDetail] GET /projects/.../invitations returned 404. Backend route might not be implemented/deployed yet.");
+                        containerEl.classList.add("hidden");
+                        return;
+                    }
                     if (!res.ok) {
                         listEl.innerHTML = errMsg("Failed to load pending invitations.");
                         containerEl.classList.remove("hidden");
@@ -3594,11 +3600,13 @@
                     }
 
                     const data = await res.json();
-                    const invitations = Array.isArray(data.invitations)
-                        ? data.invitations
-                        : Array.isArray(data)
-                          ? data
-                          : [];
+                    const invitations = Array.isArray(data.pending_invitations)
+                        ? data.pending_invitations
+                        : Array.isArray(data.invitations)
+                          ? data.invitations
+                          : Array.isArray(data)
+                            ? data
+                            : [];
 
                     const countEl = document.getElementById("pending-invitations-count");
                     if (countEl) countEl.textContent = String(invitations.length);
