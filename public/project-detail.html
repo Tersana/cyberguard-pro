@@ -1267,6 +1267,17 @@
                     <div class="shimmer h-14 rounded-xl"></div>
                 </div>
 
+                <!-- Pending Invitations section -->
+                <div id="pending-invitations-container" class="hidden mt-6 space-y-3">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <span>Pending Invitations</span>
+                        <span id="pending-invitations-count" class="tab-badge !bg-[var(--cg-accent)] !ml-1">0</span>
+                    </h3>
+                    <div id="pending-invitations-list" class="space-y-2">
+                        <!-- Pending invitations will be injected here -->
+                    </div>
+                </div>
+
                 <!-- === SECTION: ROLES & PERMISSIONS TABLE === -->
                 <div class="cyber-card overflow-hidden">
                     <div class="px-5 py-4 border-b border-[var(--cg-border)] flex items-center gap-2">
@@ -1608,67 +1619,108 @@
             <div id="tab-findings" class="hidden">
                 <div class="cyber-card overflow-hidden">
 
-                    <!-- Findings Header -->
-                    <div class="findings-header">
-                        <div>
-                            <h3 class="findings-title flex items-center gap-2 cursor-pointer select-none" onclick="toggleFindingsListVisibility()">
-                                Security Findings
-                                <svg id="toggle-all-findings-chevron" class="w-5 h-5 text-slate-400 hover:text-white transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                    <polyline points="6 9 12 15 18 9"/>
-                                </svg>
-                            </h3>
-                            <p class="findings-subtitle">Vulnerability scan results for this target</p>
-                        </div>
-                        <div class="findings-header-right">
-                            <div class="findings-filter-group">
-                                <button class="filter-btn active" data-filter="all" onclick="filterFindings('all')">All</button>
-                                <button class="filter-btn" data-filter="critical" onclick="filterFindings('critical')">Critical</button>
-                                <button class="filter-btn" data-filter="high" onclick="filterFindings('high')">High</button>
-                                <button class="filter-btn" data-filter="medium" onclick="filterFindings('medium')">Medium</button>
-                                <button class="filter-btn" data-filter="low" onclick="filterFindings('low')">Low</button>
-                                <button class="filter-btn" data-filter="info" onclick="filterFindings('info')">Info</button>
+                    <!-- Findings Sub-tabs -->
+                    <div id="findings-subtabs-bar" class="flex border-b border-[var(--cg-border)] bg-[var(--cg-bg-surface)] px-4 py-2 gap-4">
+                        <button id="subtab-vulns-btn" class="text-xs font-bold uppercase tracking-wider py-1.5 px-3 rounded-lg text-[var(--cg-accent)] bg-[var(--cg-accent-muted)] border border-[var(--cg-accent)]/20" onclick="switchFindingsSubtab('vulns')">
+                            Vulnerabilities
+                        </button>
+                        <button id="subtab-endpoints-btn" class="text-xs font-bold uppercase tracking-wider py-1.5 px-3 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 hidden" onclick="switchFindingsSubtab('endpoints')">
+                            Discovered Endpoints
+                        </button>
+                    </div>
+
+                    <!-- Vulnerabilities View -->
+                    <div id="subtab-vulns-view" class="space-y-0">
+                        <!-- Findings Header -->
+                        <div class="findings-header">
+                            <div>
+                                <h3 class="findings-title flex items-center gap-2 cursor-pointer select-none" onclick="toggleFindingsListVisibility()">
+                                    Security Findings
+                                    <svg id="toggle-all-findings-chevron" class="w-5 h-5 text-slate-400 hover:text-white transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="6 9 12 15 18 9"/>
+                                    </svg>
+                                </h3>
+                                <p class="findings-subtitle">Vulnerability scan results for this target</p>
                             </div>
-                            <button class="btn-refresh-findings" onclick="loadFindings()">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="23 4 23 10 17 10"/>
-                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                                </svg>
-                                Refresh
-                            </button>
+                            <div class="findings-header-right">
+                                <div class="findings-filter-group">
+                                    <button class="filter-btn active" data-filter="all" onclick="filterFindings('all')">All</button>
+                                    <button class="filter-btn" data-filter="critical" onclick="filterFindings('critical')">Critical</button>
+                                    <button class="filter-btn" data-filter="high" onclick="filterFindings('high')">High</button>
+                                    <button class="filter-btn" data-filter="medium" onclick="filterFindings('medium')">Medium</button>
+                                    <button class="filter-btn" data-filter="low" onclick="filterFindings('low')">Low</button>
+                                    <button class="filter-btn" data-filter="info" onclick="filterFindings('info')">Info</button>
+                                </div>
+                                <button id="btn-add-finding" class="cyber-btn-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 hidden" onclick="showAddFindingModal()">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                    </svg>
+                                    Add Finding
+                                </button>
+                                <button class="btn-refresh-findings" onclick="loadFindings()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="23 4 23 10 17 10"/>
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                                    </svg>
+                                    Refresh
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Stats Bar -->
+                        <div class="findings-stats-bar">
+                            <div class="finding-stat">
+                                <span class="stat-num" id="stat-total">0</span>
+                                <span class="stat-lbl">Total</span>
+                            </div>
+                            <div class="finding-stat critical">
+                                <span class="stat-num" id="stat-critical">0</span>
+                                <span class="stat-lbl">Critical</span>
+                            </div>
+                            <div class="finding-stat high">
+                                <span class="stat-num" id="stat-high">0</span>
+                                <span class="stat-lbl">High</span>
+                            </div>
+                            <div class="finding-stat medium">
+                                <span class="stat-num" id="stat-medium">0</span>
+                                <span class="stat-lbl">Medium</span>
+                            </div>
+                            <div class="finding-stat low">
+                                <span class="stat-num" id="stat-low">0</span>
+                                <span class="stat-lbl">Low</span>
+                            </div>
+                            <div class="finding-stat info">
+                                <span class="stat-num" id="stat-info">0</span>
+                                <span class="stat-lbl">Info</span>
+                            </div>
+                        </div>
+
+                        <!-- Findings List (populated by JS) -->
+                        <div id="findings-collapsible-section" class="collapsible-findings">
+                            <div id="findings-list-container"></div>
                         </div>
                     </div>
 
-                    <!-- Stats Bar -->
-                    <div class="findings-stats-bar">
-                        <div class="finding-stat">
-                            <span class="stat-num" id="stat-total">0</span>
-                            <span class="stat-lbl">Total</span>
+                    <!-- Endpoints View (hidden by default) -->
+                    <div id="subtab-endpoints-view" class="hidden">
+                        <div class="findings-header border-b border-[var(--cg-border)]">
+                            <div>
+                                <h3 class="findings-title">Discovered Endpoints</h3>
+                                <p class="findings-subtitle">Discovered subdomains, URLs, or API endpoints for domain targets</p>
+                            </div>
+                            <div class="findings-header-right">
+                                <button class="btn-refresh-findings" onclick="loadEndpoints()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="23 4 23 10 17 10"/>
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                                    </svg>
+                                    Refresh Endpoints
+                                </button>
+                            </div>
                         </div>
-                        <div class="finding-stat critical">
-                            <span class="stat-num" id="stat-critical">0</span>
-                            <span class="stat-lbl">Critical</span>
+                        <div id="endpoints-list-container" class="p-5 space-y-2">
+                            <!-- Endpoints list will be injected here -->
                         </div>
-                        <div class="finding-stat high">
-                            <span class="stat-num" id="stat-high">0</span>
-                            <span class="stat-lbl">High</span>
-                        </div>
-                        <div class="finding-stat medium">
-                            <span class="stat-num" id="stat-medium">0</span>
-                            <span class="stat-lbl">Medium</span>
-                        </div>
-                        <div class="finding-stat low">
-                            <span class="stat-num" id="stat-low">0</span>
-                            <span class="stat-lbl">Low</span>
-                        </div>
-                        <div class="finding-stat info">
-                            <span class="stat-num" id="stat-info">0</span>
-                            <span class="stat-lbl">Info</span>
-                        </div>
-                    </div>
-
-                    <!-- Findings List (populated by JS) -->
-                    <div id="findings-collapsible-section" class="collapsible-findings">
-                        <div id="findings-list-container"></div>
                     </div>
 
                 </div>
@@ -1713,6 +1765,120 @@
 
         </main>
 
+
+        <!-- ─── Add Finding Modal ───────────────────────────────────────────────── -->
+        <div
+            id="add-finding-modal"
+            class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-finding-modal-title"
+        >
+            <div class="cyber-card w-full max-w-lg p-6 rounded-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+                <h3 id="add-finding-modal-title" class="text-base font-bold text-white">
+                    Add Manual Finding
+                </h3>
+                <form id="add-finding-form" onsubmit="handleAddFindingSubmit(event)" class="space-y-4" novalidate>
+                    <!-- Title (Required) -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Title <span class="text-red-400">*</span></label>
+                        <input id="af-title" type="text" maxlength="255" class="cyber-input w-full p-2.5 rounded-lg text-sm" placeholder="e.g. SQL Injection in Search Field" required />
+                        <p id="af-title-error" class="text-xs text-red-400 mt-1 hidden"></p>
+                    </div>
+
+                    <!-- Description (Required) -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Description <span class="text-red-400">*</span></label>
+                        <textarea id="af-description" rows="3" class="cyber-input w-full p-2.5 rounded-lg text-sm" placeholder="Provide details about this vulnerability..." required></textarea>
+                        <p id="af-description-error" class="text-xs text-red-400 mt-1 hidden"></p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Severity (Required) -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Severity <span class="text-red-400">*</span></label>
+                            <select id="af-severity" class="cyber-input w-full p-2.5 rounded-lg text-sm" required>
+                                <option value="critical">Critical</option>
+                                <option value="high" selected>High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                                <option value="info">Info</option>
+                            </select>
+                            <p id="af-severity-error" class="text-xs text-red-400 mt-1 hidden"></p>
+                        </div>
+
+                        <!-- Status (Optional) -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Status</label>
+                            <select id="af-status" class="cyber-input w-full p-2.5 rounded-lg text-sm">
+                                <option value="open" selected>Open</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="resolved">Resolved</option>
+                                <option value="false_positive">False Positive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <!-- CVSS Score (Optional) -->
+                        <div class="col-span-1">
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">CVSS Score</label>
+                            <input id="af-cvss-score" type="number" min="0" max="10" step="0.1" class="cyber-input w-full p-2.5 rounded-lg text-sm" placeholder="e.g. 8.8" />
+                            <p id="af-cvss-score-error" class="text-xs text-red-400 mt-1 hidden"></p>
+                        </div>
+
+                        <!-- CVSS Vector (Optional) -->
+                        <div class="col-span-2">
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">CVSS Vector</label>
+                            <input id="af-cvss-vector" type="text" class="cyber-input w-full p-2.5 rounded-lg text-sm" placeholder="CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H" />
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- CVE ID (Optional) -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">CVE ID</label>
+                            <input id="af-cve-id" type="text" class="cyber-input w-full p-2.5 rounded-lg text-sm" placeholder="e.g. CVE-2023-12345" />
+                            <p id="af-cve-id-error" class="text-xs text-red-400 mt-1 hidden"></p>
+                        </div>
+
+                        <!-- Affected URL (Optional) -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Affected URL</label>
+                            <input id="af-affected-url" type="url" class="cyber-input w-full p-2.5 rounded-lg text-sm" placeholder="https://example.com/search" />
+                            <p id="af-affected-url-error" class="text-xs text-red-400 mt-1 hidden"></p>
+                        </div>
+                    </div>
+
+                    <!-- Proof of Concept (Optional) -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Proof of Concept</label>
+                        <textarea id="af-proof" rows="2" class="cyber-input w-full p-2.5 rounded-lg text-sm font-mono" placeholder="Payload or request proof..."></textarea>
+                    </div>
+
+                    <!-- Remediation (Optional) -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Remediation</label>
+                        <textarea id="af-remediation" rows="2" class="cyber-input w-full p-2.5 rounded-lg text-sm" placeholder="Steps to patch or remediate this issue..."></textarea>
+                    </div>
+
+                    <!-- Tags (Optional) -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Tags (comma-separated)</label>
+                        <input id="af-tags" type="text" class="cyber-input w-full p-2.5 rounded-lg text-sm" placeholder="e.g. owasp-a1, sql-injection, critical" />
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button id="af-submit-btn" type="submit" class="cyber-btn-primary flex-1 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center">
+                            Save Finding
+                        </button>
+                        <button type="button" onclick="hideAddFindingModal()" class="btn-cancel px-4 py-2.5 rounded-lg text-sm">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         <!-- ─── Add Target Modal ───────────────────────────────────────────────── -->
         <div
@@ -2003,8 +2169,30 @@
                     <div class="space-y-1.5 flex-1 min-w-0 pr-4">
                         <div class="flex flex-wrap items-center gap-2">
                             <span id="fd-severity-badge" class="severity-badge">HIGH</span>
-                            <span id="fd-cvss-badge" class="cvss-badge hidden"></span>
                             <span id="fd-status-badge" class="finding-status"></span>
+                            
+                            <!-- Editable Dropdowns (hidden by default) -->
+                            <div id="fd-severity-select-container" class="hidden flex items-center gap-1">
+                                <label class="text-[10px] text-slate-500 font-bold uppercase select-none">Severity:</label>
+                                <select id="fd-severity-select" class="cyber-input text-xs px-2 py-0.5 rounded bg-black/40 border border-white/10 text-white font-semibold">
+                                    <option value="critical">CRITICAL</option>
+                                    <option value="high">HIGH</option>
+                                    <option value="medium">MEDIUM</option>
+                                    <option value="low">LOW</option>
+                                    <option value="info">INFO</option>
+                                </select>
+                            </div>
+                            <div id="fd-status-select-container" class="hidden flex items-center gap-1">
+                                <label class="text-[10px] text-slate-500 font-bold uppercase select-none">Status:</label>
+                                <select id="fd-status-select" class="cyber-input text-xs px-2 py-0.5 rounded bg-black/40 border border-white/10 text-white font-semibold">
+                                    <option value="open">OPEN</option>
+                                    <option value="in_progress">IN PROGRESS</option>
+                                    <option value="resolved">RESOLVED</option>
+                                    <option value="false_positive">FALSE POSITIVE</option>
+                                </select>
+                            </div>
+
+                            <span id="fd-cvss-badge" class="cvss-badge hidden"></span>
                             <span id="fd-driver" class="text-xs font-mono text-slate-400 bg-slate-900/50 px-2 py-0.5 rounded border border-white/5"></span>
                         </div>
                         <h3 id="finding-detail-modal-title" class="text-lg font-bold text-white leading-snug break-words"></h3>
@@ -2247,6 +2435,21 @@
             let _projectFindings = []; // cache of all findings across targets
             let _riskScorePollInterval = null;
             let _latestScanIsRunning = false;
+
+            // ─── Role helpers ─────────────────────────────────────────────────────────
+            function getUserProjectRole(projectId) {
+                if (_isOwner) return "owner";
+                return _currentUserRole; // "editor" or "viewer" or "owner"
+            }
+
+            function canEdit(projectId) {
+                const role = getUserProjectRole(projectId);
+                return role === "owner" || role === "editor";
+            }
+
+            function isOwner(projectId) {
+                return getUserProjectRole(projectId) === "owner";
+            }
 
             // ─── Boot ─────────────────────────────────────────────────────────────────
             (function boot() {
@@ -2517,6 +2720,9 @@
                     listEl.innerHTML = members
                         .map((m) => renderMemberRow(m))
                         .join("");
+
+                    // Load pending invitations for the project
+                    loadPendingInvitations();
 
                     // === Update Team Stats Bar ===
                     _updateTeamStats(members);
@@ -3338,6 +3544,83 @@
                 if (roleEl) roleEl.value = "editor";
             }
 
+            // ─── Pending Invitations ──────────────────────────────────────────────────
+            async function loadPendingInvitations() {
+                const listEl = document.getElementById("pending-invitations-list");
+                const containerEl = document.getElementById("pending-invitations-container");
+                if (!listEl || !containerEl) return;
+
+                try {
+                    const res = await apiFetch(`/projects/${_projectId}/invitations`);
+                    if (res.status === 403) {
+                        // Not authorized
+                        containerEl.classList.add("hidden");
+                        return;
+                    }
+                    if (!res.ok) {
+                        listEl.innerHTML = errMsg("Failed to load pending invitations.");
+                        containerEl.classList.remove("hidden");
+                        return;
+                    }
+
+                    const data = await res.json();
+                    const invitations = Array.isArray(data.invitations)
+                        ? data.invitations
+                        : Array.isArray(data)
+                          ? data
+                          : [];
+
+                    const countEl = document.getElementById("pending-invitations-count");
+                    if (countEl) countEl.textContent = String(invitations.length);
+
+                    if (invitations.length === 0) {
+                        containerEl.classList.add("hidden");
+                        return;
+                    }
+
+                    containerEl.classList.remove("hidden");
+                    listEl.innerHTML = invitations.map(inv => renderInvitationRow(inv)).join("");
+                } catch (err) {
+                    listEl.innerHTML = errMsg("Error loading pending invitations.");
+                    containerEl.classList.remove("hidden");
+                }
+            }
+
+            function renderInvitationRow(inv) {
+                const role = inv.role || "viewer";
+                const expires = inv.expires_at || inv.expiresAt || "";
+                const created = inv.created_at || inv.createdAt || "";
+                const invitedBy = inv.invited_by_name || inv.invitedByName || (inv.inviter ? (inv.inviter.full_name || inv.inviter.name) : "") || "System";
+                
+                const ROLE_CLS = {
+                    owner: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border-[rgba(167,139,250,0.3)]",
+                    editor: "text-[#38BDF8] bg-[rgba(56,189,248,0.15)]  border-[rgba(56,189,248,0.3)]",
+                    viewer: "text-[#FBBF24] bg-[rgba(251,191,36,0.15)]  border-[rgba(251,191,36,0.3)]",
+                };
+                const roleCls = ROLE_CLS[role] || ROLE_CLS.viewer;
+                
+                const expDate = expires ? fmtDate(expires.split("T")[0]) : "Never";
+                const createdDate = created ? fmtDate(created.split("T")[0]) : "—";
+                
+                return `
+                    <div class="cyber-card p-3 flex items-center justify-between gap-3 border-[var(--cg-border-subtle)]">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-sm font-semibold text-slate-300">Pending Invite Link</span>
+                                <span class="text-xs px-1.5 py-0.5 rounded-full border font-semibold ${roleCls}">${cap(role)}</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mt-1">
+                                Generated: ${createdDate} &bull; Invited by: ${esc(invitedBy)}
+                            </p>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Expires</p>
+                            <p class="text-xs text-slate-500 font-mono mt-0.5">${expDate}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
             // ─── Role change ──────────────────────────────────────────────────────────
             async function changeRole(userId, newRole) {
                 try {
@@ -3553,15 +3836,25 @@
             /** Enable/disable the Add Target button based on the current role (task 13.3). */
             function updateTargetsBtnState() {
                 const addBtn = document.getElementById("add-target-btn");
-                if (!addBtn) return;
-                if (canModify()) {
-                    addBtn.disabled = false;
-                    addBtn.title = "";
-                    addBtn.classList.remove("opacity-40", "cursor-not-allowed");
-                } else {
-                    addBtn.disabled = true;
-                    addBtn.title = "Viewers cannot add targets.";
-                    addBtn.classList.add("opacity-40", "cursor-not-allowed");
+                if (addBtn) {
+                    if (canModify()) {
+                        addBtn.disabled = false;
+                        addBtn.title = "";
+                        addBtn.classList.remove("opacity-40", "cursor-not-allowed");
+                    } else {
+                        addBtn.disabled = true;
+                        addBtn.title = "Viewers cannot add targets.";
+                        addBtn.classList.add("opacity-40", "cursor-not-allowed");
+                    }
+                }
+
+                const addFindingBtn = document.getElementById("btn-add-finding");
+                if (addFindingBtn) {
+                    if (canModify()) {
+                        addFindingBtn.classList.remove("hidden");
+                    } else {
+                        addFindingBtn.classList.add("hidden");
+                    }
                 }
             }
 
@@ -3617,6 +3910,24 @@
                 const id = esc(String(target.id || ""));
                 const canEdit = canModify();
                 const valTypeLabel = type === "domain" ? "HOST" : type === "ip" ? "IP" : "CIDR";
+
+                const riskScore = target.risk_score != null ? Number(target.risk_score) : 0;
+                let riskScoreCls = "";
+                let riskScoreLabel = "";
+                if (riskScore <= 30) {
+                    riskScoreCls = "text-[#34D399] bg-[#34D399]/10 border-[#34D399]/20";
+                    riskScoreLabel = "Low";
+                } else if (riskScore <= 60) {
+                    riskScoreCls = "text-[#FBBF24] bg-[#FBBF24]/10 border-[#FBBF24]/20";
+                    riskScoreLabel = "Medium";
+                } else if (riskScore <= 80) {
+                    riskScoreCls = "text-[#F97316] bg-[#F97316]/10 border-[#F97316]/20";
+                    riskScoreLabel = "High";
+                } else {
+                    riskScoreCls = "text-[#F87171] bg-[#F87171]/10 border-[#F87171]/20";
+                    riskScoreLabel = "Critical";
+                }
+                const riskBadge = `<span class="text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider ${riskScoreCls}">Risk: ${riskScore} (${riskScoreLabel})</span>`;
 
                 const TYPE_BADGE = {
                     domain: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border-[rgba(167,139,250,0.3)]",
@@ -3708,6 +4019,7 @@
                                     <div class="flex items-center gap-2">
                                         ${iconSvg}
                                         <span class="text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider ${typeBadgeCls}">${cap(type)}</span>
+                                        ${riskBadge}
                                     </div>
                                     <!-- Status indicator -->
                                     <div class="flex items-center gap-1.5">
@@ -3844,7 +4156,15 @@
                 } else if (window.TargetValidator) {
                     const result = window.TargetValidator.validate(type, value);
                     if (!result.valid) {
-                        showTargetFieldError("at-value", result.error);
+                        let customMsg = result.error;
+                        if (type === "domain") {
+                            customMsg = "Enter hostname only (e.g. example.com), not a full URL";
+                        } else if (type === "ip") {
+                            customMsg = "Enter a valid IPv4 address (e.g. 203.0.113.10)";
+                        } else if (type === "network") {
+                            customMsg = "Enter CIDR notation (e.g. 192.0.2.0/24)";
+                        }
+                        showTargetFieldError("at-value", customMsg);
                         hasErrors = true;
                     }
                 }
@@ -3971,7 +4291,15 @@
                 } else if (window.TargetValidator) {
                     const result = window.TargetValidator.validate(type, value);
                     if (!result.valid) {
-                        showTargetFieldError("et-value", result.error);
+                        let customMsg = result.error;
+                        if (type === "domain") {
+                            customMsg = "Enter hostname only (e.g. example.com), not a full URL";
+                        } else if (type === "ip") {
+                            customMsg = "Enter a valid IPv4 address (e.g. 203.0.113.10)";
+                        } else if (type === "network") {
+                            customMsg = "Enter CIDR notation (e.g. 192.0.2.0/24)";
+                        }
+                        showTargetFieldError("et-value", customMsg);
                         hasErrors = true;
                     }
                 }
@@ -4504,10 +4832,41 @@
                     const res = await apiFetch(`/targets/${_currentFindingTargetId}/findings`);
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     const data = await res.json();
-                    _allFindings = Array.isArray(data) ? data : (data.findings || data.data || []);
+                    
+                    let findingsList = [];
+                    if (Array.isArray(data)) {
+                        findingsList = data;
+                    } else if (data && data.findings) {
+                        findingsList = Array.isArray(data.findings.data)
+                            ? data.findings.data
+                            : (Array.isArray(data.findings) ? data.findings : []);
+                    } else if (data && data.data) {
+                        findingsList = Array.isArray(data.data) ? data.data : [];
+                    }
+                    _allFindings = findingsList;
+
                     renderFindings(_allFindings);
                     updateFindingsStats(_allFindings);
                     updateFindingsTabBadge(_allFindings.length);
+
+                    // Toggle Endpoints sub-tab based on target type
+                    const endpointsBtn = document.getElementById('subtab-endpoints-btn');
+                    if (endpointsBtn) {
+                        apiFetch(`/targets/${_currentFindingTargetId}`).then(async res => {
+                            if (res.ok) {
+                                const target = await res.json();
+                                const type = target.type || (target.target && target.target.type);
+                                if (type === 'domain') {
+                                    endpointsBtn.classList.remove('hidden');
+                                } else {
+                                    endpointsBtn.classList.add('hidden');
+                                    switchFindingsSubtab('vulns');
+                                }
+                            }
+                        }).catch(() => {
+                            endpointsBtn.classList.add('hidden');
+                        });
+                    }
                 } catch (err) {
                     showFindingsError(err);
                 }
@@ -4623,6 +4982,80 @@
                 statusBadge.textContent = status.toUpperCase();
                 statusBadge.className = `finding-status status-${status}`;
 
+                // Role-based dropdowns setup
+                const canEditFinding = canModify();
+                const sevSelectContainer = document.getElementById('fd-severity-select-container');
+                const statusSelectContainer = document.getElementById('fd-status-select-container');
+                
+                if (canEditFinding) {
+                    // Hide view-only badges
+                    sevBadge.classList.add('hidden');
+                    statusBadge.classList.add('hidden');
+                    
+                    if (sevSelectContainer) {
+                        sevSelectContainer.classList.remove('hidden');
+                        const selectEl = document.getElementById('fd-severity-select');
+                        if (selectEl) {
+                            selectEl.value = sev;
+                            selectEl.onchange = async () => {
+                                try {
+                                    const res = await apiFetch(`/findings/${findingId}/severity`, {
+                                        method: 'PATCH',
+                                        body: JSON.stringify({ severity: selectEl.value })
+                                    });
+                                    if (res.status === 403) {
+                                        notify("You do not have permission to change severity.", "error");
+                                        selectEl.value = sev;
+                                        return;
+                                    }
+                                    if (!res.ok) throw new Error();
+                                    notify("Severity updated successfully.", "success");
+                                    finding.severity = selectEl.value;
+                                    showFindingDetailModal(findingId);
+                                    loadFindings(); // Reload in list too
+                                } catch (_) {
+                                    notify("Failed to update severity.", "error");
+                                    selectEl.value = sev;
+                                }
+                            };
+                        }
+                    }
+                    if (statusSelectContainer) {
+                        statusSelectContainer.classList.remove('hidden');
+                        const selectEl = document.getElementById('fd-status-select');
+                        if (selectEl) {
+                            selectEl.value = status;
+                            selectEl.onchange = async () => {
+                                try {
+                                    const res = await apiFetch(`/findings/${findingId}/status`, {
+                                        method: 'PATCH',
+                                        body: JSON.stringify({ status: selectEl.value })
+                                    });
+                                    if (res.status === 403) {
+                                        notify("You do not have permission to change status.", "error");
+                                        selectEl.value = status;
+                                        return;
+                                    }
+                                    if (!res.ok) throw new Error();
+                                    notify("Status updated successfully.", "success");
+                                    finding.status = selectEl.value;
+                                    showFindingDetailModal(findingId);
+                                    loadFindings(); // Reload in list too
+                                } catch (_) {
+                                    notify("Failed to update status.", "error");
+                                    selectEl.value = status;
+                                }
+                            };
+                        }
+                    }
+                } else {
+                    // Viewers: Show badges, hide selects
+                    sevBadge.classList.remove('hidden');
+                    statusBadge.classList.remove('hidden');
+                    if (sevSelectContainer) sevSelectContainer.classList.add('hidden');
+                    if (statusSelectContainer) statusSelectContainer.classList.add('hidden');
+                }
+
                 // Description
                 const descSection = document.getElementById('fd-desc-section');
                 const descText = document.getElementById('fd-description');
@@ -4717,6 +5150,288 @@
                 setTimeout(() => {
                     modal.classList.add('hidden');
                 }, 150);
+            }
+
+            // ─── Manual Findings Add Modal ────────────────────────────────────────────
+            function showAddFindingModal() {
+                const modal = document.getElementById('add-finding-modal');
+                if (!modal) return;
+                document.getElementById('add-finding-form')?.reset();
+                clearFindingErrors();
+                modal.classList.remove('hidden');
+                document.getElementById('af-title')?.focus();
+            }
+
+            function hideAddFindingModal() {
+                document.getElementById('add-finding-modal')?.classList.add('hidden');
+            }
+
+            function showFindingFieldError(inputId, msg) {
+                const err = document.getElementById(`${inputId}-error`);
+                const inp = document.getElementById(inputId);
+                if (err) {
+                    err.textContent = msg;
+                    err.classList.remove('hidden');
+                }
+                if (inp) inp.classList.add('border-red-400');
+            }
+
+            function clearFindingField(inputId) {
+                const err = document.getElementById(`${inputId}-error`);
+                const inp = document.getElementById(inputId);
+                if (err) {
+                    err.textContent = "";
+                    err.classList.add('hidden');
+                }
+                if (inp) inp.classList.remove('border-red-400');
+            }
+
+            function clearFindingErrors() {
+                ['af-title', 'af-description', 'af-severity', 'af-cvss-score', 'af-cve-id', 'af-affected-url'].forEach(id => {
+                    clearFindingField(id);
+                });
+            }
+
+            async function handleAddFindingSubmit(e) {
+                e.preventDefault();
+                clearFindingErrors();
+
+                const title = document.getElementById('af-title')?.value.trim() || "";
+                const description = document.getElementById('af-description')?.value.trim() || "";
+                const severity = document.getElementById('af-severity')?.value || "";
+                const status = document.getElementById('af-status')?.value || "open";
+                const cvssScoreRaw = document.getElementById('af-cvss-score')?.value.trim();
+                const cvssVector = document.getElementById('af-cvss-vector')?.value.trim() || "";
+                const cveId = document.getElementById('af-cve-id')?.value.trim() || "";
+                const affectedUrl = document.getElementById('af-affected-url')?.value.trim() || "";
+                const proof = document.getElementById('af-proof')?.value.trim() || "";
+                const remediation = document.getElementById('af-remediation')?.value.trim() || "";
+                const tagsRaw = document.getElementById('af-tags')?.value.trim() || "";
+
+                let hasErrors = false;
+                if (!title) {
+                    showFindingFieldError('af-title', 'Title is required.');
+                    hasErrors = true;
+                }
+                if (!description) {
+                    showFindingFieldError('af-description', 'Description is required.');
+                    hasErrors = true;
+                }
+                if (!severity) {
+                    showFindingFieldError('af-severity', 'Severity is required.');
+                    hasErrors = true;
+                }
+
+                let cvssScore = null;
+                if (cvssScoreRaw) {
+                    cvssScore = parseFloat(cvssScoreRaw);
+                    if (isNaN(cvssScore) || cvssScore < 0 || cvssScore > 10) {
+                        showFindingFieldError('af-cvss-score', 'CVSS Score must be between 0 and 10.');
+                        hasErrors = true;
+                    }
+                }
+
+                if (cveId && !/^CVE-\d{4}-\d{4,}$/i.test(cveId)) {
+                    showFindingFieldError('af-cve-id', 'CVE ID must match CVE-YYYY-XXXXX format.');
+                    hasErrors = true;
+                }
+
+                if (affectedUrl) {
+                    try {
+                        new URL(affectedUrl);
+                    } catch (_) {
+                        showFindingFieldError('af-affected-url', 'Please enter a valid URL.');
+                        hasErrors = true;
+                    }
+                }
+
+                if (hasErrors) return;
+
+                if (!_currentFindingTargetId) {
+                    notify("No target selected to attach finding to.", "error");
+                    return;
+                }
+
+                const btn = document.getElementById('af-submit-btn');
+                setBtnLoading(btn, "Saving…");
+
+                const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+                const payload = {
+                    title,
+                    description,
+                    severity,
+                    status,
+                    cvss_score: cvssScore,
+                    cvss_vector: cvssVector || null,
+                    cve_id: cveId || null,
+                    affected_url: affectedUrl || null,
+                    proof: proof || null,
+                    remediation: remediation || null,
+                    tags
+                };
+
+                try {
+                    const res = await apiFetch(`/targets/${_currentFindingTargetId}/findings`, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.status === 403) {
+                        notify("You do not have permission to add findings.", "error");
+                        return;
+                    }
+                    if (res.status === 422) {
+                        const d = await res.json().catch(() => ({}));
+                        const errors = d.errors || {};
+                        let shown = false;
+                        Object.entries(errors).forEach(([field, msgs]) => {
+                            const msg = Array.isArray(msgs) ? msgs.join(". ") : String(msgs);
+                            showFindingFieldError(`af-${field}`, msg);
+                            shown = true;
+                        });
+                        if (!shown) notify(d.message || "Validation error.", "error");
+                        return;
+                    }
+                    if (!res.ok) {
+                        const d = await res.json().catch(() => ({}));
+                        notify(d.message || "Failed to add finding.", "error");
+                        return;
+                    }
+
+                    hideAddFindingModal();
+                    notify("Finding added successfully.", "success");
+                    loadFindings(); // Reload list
+                    loadProjectFindings(); // Reload project-wide metrics
+                } catch (err) {
+                    notify("Network error. Please try again.", "error");
+                } finally {
+                    restoreBtn(btn);
+                }
+            }
+
+            // ─── Endpoints Discovery ──────────────────────────────────────────────────
+            async function loadEndpoints() {
+                const container = document.getElementById('endpoints-list-container');
+                if (!container || !_currentFindingTargetId) return;
+
+                container.innerHTML = `<div class="findings-loading">${[1,2,3].map(()=>`<div class="finding-skeleton"><div class="skeleton-text long"></div></div>`).join('')}</div>`;
+
+                try {
+                    const res = await apiFetch(`/targets/${_currentFindingTargetId}/endpoints`);
+                    if (res.status === 400) {
+                        container.innerHTML = `
+                            <div class="text-center py-10 text-slate-500 space-y-2">
+                                <svg class="w-12 h-12 text-slate-600 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z"/>
+                                </svg>
+                                <p class="text-sm font-bold text-white">Feature Not Supported</p>
+                                <p class="text-xs">This target type does not support endpoint discovery.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    if (!res.ok) {
+                        throw new Error(`HTTP ${res.status}`);
+                    }
+
+                    const data = await res.json();
+                    const endpoints = Array.isArray(data.endpoints)
+                        ? data.endpoints
+                        : Array.isArray(data)
+                          ? data
+                          : [];
+
+                    if (endpoints.length === 0) {
+                        container.innerHTML = `
+                            <div class="text-center py-10 text-slate-500 space-y-2">
+                                <svg class="w-12 h-12 text-slate-600 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="8" y1="12" x2="16" y2="12"/>
+                                </svg>
+                                <p class="text-sm font-bold text-white">No Endpoints Discovered</p>
+                                <p class="text-xs">No endpoints discovered yet. Run a scan to discover endpoints.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    container.innerHTML = `
+                        <div class="cyber-card p-4 overflow-hidden border border-white/5 bg-black/20">
+                            <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-white/5 pb-2 mb-2">
+                                <span>Endpoint URL</span>
+                                <span>Details</span>
+                            </div>
+                            <div class="space-y-1 divide-y divide-white/5">
+                                ${endpoints.map(ep => renderEndpointRow(ep)).join('')}
+                            </div>
+                        </div>
+                    `;
+                } catch (err) {
+                    container.innerHTML = `
+                        <div class="text-center py-10 text-[var(--cg-danger)] space-y-2">
+                            <p class="text-sm font-bold">Failed to load endpoints</p>
+                            <span class="text-xs block text-slate-500">${escapeHtml(err.message)}</span>
+                            <button onclick="loadEndpoints()" class="cyber-btn-primary px-3 py-1.5 rounded-lg text-xs font-semibold mt-2">Retry</button>
+                        </div>
+                    `;
+                }
+            }
+
+            function renderEndpointRow(ep) {
+                const url = esc(ep.url || ep.path || ep.endpoint || "");
+                const method = esc((ep.method || "GET").toUpperCase());
+                const status = ep.status_code || ep.status || "—";
+                
+                const METHOD_CLS = {
+                    GET: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+                    POST: "text-blue-400 bg-blue-500/10 border-blue-500/20",
+                    PUT: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+                    DELETE: "text-red-400 bg-red-500/10 border-red-500/20",
+                };
+                const methodCls = METHOD_CLS[method] || "text-slate-400 bg-slate-500/10 border-slate-500/20";
+                
+                return `
+                    <div class="py-2.5 flex items-center justify-between gap-4 font-mono text-xs hover:bg-white/5 px-2 rounded-lg transition-colors">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border ${methodCls}">${method}</span>
+                            <span class="text-slate-300 truncate select-all" title="${url}">${url}</span>
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0 text-slate-500">
+                            <span>Status:</span>
+                            <span class="text-slate-300 font-semibold">${status}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function switchFindingsSubtab(subtab) {
+                const vulnsView = document.getElementById('subtab-vulns-view');
+                const endpointsView = document.getElementById('subtab-endpoints-view');
+                const vulnsBtn = document.getElementById('subtab-vulns-btn');
+                const endpointsBtn = document.getElementById('subtab-endpoints-btn');
+
+                if (subtab === 'vulns') {
+                    vulnsView?.classList.remove('hidden');
+                    endpointsView?.classList.add('hidden');
+
+                    vulnsBtn?.classList.add('text-[var(--cg-accent)]', 'bg-[var(--cg-accent-muted)]', 'border', 'border-[var(--cg-accent)]/20');
+                    vulnsBtn?.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-white/5');
+
+                    endpointsBtn?.classList.remove('text-[var(--cg-accent)]', 'bg-[var(--cg-accent-muted)]', 'border', 'border-[var(--cg-accent)]/20');
+                    endpointsBtn?.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-white/5');
+                } else if (subtab === 'endpoints') {
+                    vulnsView?.classList.add('hidden');
+                    endpointsView?.classList.remove('hidden');
+
+                    endpointsBtn?.classList.add('text-[var(--cg-accent)]', 'bg-[var(--cg-accent-muted)]', 'border', 'border-[var(--cg-accent)]/20');
+                    endpointsBtn?.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-white/5');
+
+                    vulnsBtn?.classList.remove('text-[var(--cg-accent)]', 'bg-[var(--cg-accent-muted)]', 'border', 'border-[var(--cg-accent)]/20');
+                    vulnsBtn?.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-white/5');
+
+                    loadEndpoints();
+                }
             }
 
             function copyToClipboard(elementId, btnElement) {
