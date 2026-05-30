@@ -330,7 +330,7 @@ class ProjectManager {
       // API ref §5: only 'role' is required — email is optional and removed from UI
       const payload = { role };
       return await this.apiClient.post(
-        `/projects/${projectId}/invite`,
+        `/projects/${projectId}/invite?role=${role}`,
         payload,
       );
     } catch (error) {
