@@ -3466,10 +3466,20 @@
 
                 setBtnLoading(btn, "Generating…");
                 try {
-                    // Body contains only role — email is omitted per spec Flow 1
+                    // Deliver role via query param, JSON body, AND form-urlencoded to bypass any backend parsing bugs
+                    const token = localStorage.getItem(JWT_KEY);
                     const res = await apiFetch(
                         `/projects/${_projectId}/invite?role=${role}`,
-                        { method: "POST", body: JSON.stringify({ role }) },
+                        {
+                            method: "POST",
+                            headers: {
+                                Accept: "application/json",
+                                "Content-Type": "application/x-www-form-urlencoded",
+                                "ngrok-skip-browser-warning": "true",
+                                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                            },
+                            body: `role=${encodeURIComponent(role)}`,
+                        },
                     );
 
                     // 403 → caller is not the project owner
