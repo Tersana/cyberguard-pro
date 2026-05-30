@@ -1210,6 +1210,7 @@
                                     class="flex-1 text-xs font-mono text-[var(--cg-info)] break-all bg-[var(--cg-bg-elevated)] p-2 rounded border border-[var(--cg-border)]"
                                 ></code>
                                 <button
+                                    id="ip-copy-btn"
                                     onclick="copyInviteLink()"
                                     class="cyber-btn-ghost text-xs px-2 py-2 rounded flex-shrink-0 flex items-center gap-1"
                                 >
@@ -3527,13 +3528,32 @@
             }
 
             function copyInviteLink() {
+                const btn = document.getElementById("ip-copy-btn");
                 const text =
                     document.getElementById("ip-link-display")?.textContent ||
                     "";
                 if (!text) return;
                 navigator.clipboard
                     .writeText(text)
-                    .then(() => notify("Invite link copied!", "success"))
+                    .then(() => {
+                        notify("Invite link copied!", "success");
+                        if (btn) {
+                            const origHTML = btn.innerHTML;
+                            btn.innerHTML = `
+                                <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                </svg>
+                                <span class="text-emerald-400 font-semibold">Copied!</span>
+                            `;
+                            btn.style.borderColor = "rgba(52, 211, 153, 0.4)";
+                            btn.style.background = "rgba(52, 211, 153, 0.08)";
+                            setTimeout(() => {
+                                btn.innerHTML = origHTML;
+                                btn.style.borderColor = "";
+                                btn.style.background = "";
+                            }, 2500);
+                        }
+                    })
                     .catch(() =>
                         notify(
                             "Copy failed — please copy manually.",

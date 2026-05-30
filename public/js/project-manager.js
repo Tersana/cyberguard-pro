@@ -1512,15 +1512,35 @@ class ProjectManager {
     const text = linkEl.textContent || "";
     if (!text) return;
 
+    const btn = document.getElementById("copy-invite-link-btn");
+
+    const onSuccess = () => {
+      if (window.CyberNotify)
+        window.CyberNotify.alert("Invite link copied to clipboard!", {
+          type: "success",
+        });
+      if (btn) {
+        const origHTML = btn.innerHTML;
+        btn.innerHTML = `
+            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            <span class="text-emerald-400 font-semibold">Copied!</span>
+        `;
+        btn.style.borderColor = "rgba(52, 211, 153, 0.4)";
+        btn.style.background = "rgba(52, 211, 153, 0.08)";
+        setTimeout(() => {
+          btn.innerHTML = origHTML;
+          btn.style.borderColor = "";
+          btn.style.background = "";
+        }, 2500);
+      }
+    };
+
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard
         .writeText(text)
-        .then(() => {
-          if (window.CyberNotify)
-            window.CyberNotify.alert("Invite link copied to clipboard!", {
-              type: "success",
-            });
-        })
+        .then(onSuccess)
         .catch(() => this._fallbackCopy(text));
     } else {
       this._fallbackCopy(text);
@@ -1537,6 +1557,23 @@ class ProjectManager {
       document.execCommand("copy");
       if (window.CyberNotify)
         window.CyberNotify.alert("Invite link copied!", { type: "success" });
+      const btn = document.getElementById("copy-invite-link-btn");
+      if (btn) {
+        const origHTML = btn.innerHTML;
+        btn.innerHTML = `
+            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            <span class="text-emerald-400 font-semibold">Copied!</span>
+        `;
+        btn.style.borderColor = "rgba(52, 211, 153, 0.4)";
+        btn.style.background = "rgba(52, 211, 153, 0.08)";
+        setTimeout(() => {
+          btn.innerHTML = origHTML;
+          btn.style.borderColor = "";
+          btn.style.background = "";
+        }, 2500);
+      }
     } catch (_) {
       if (window.CyberNotify)
         window.CyberNotify.alert(
