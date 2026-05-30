@@ -484,10 +484,12 @@
                         <li><strong>Export Controls:</strong> Allows operators to export data to professional audit PDF reports (using JS-PDF auto-table formatting) or structured CSV files.</li>
                     </ul>
 
-                    <h2>2. Web Security Suite</h2>
-                    <p>Active auditing modules testing endpoints against core web vulnerabilities and certification defects:</p>
+                    <h2>2. Web Auditing Suite</h2>
+                    <p>Active auditing modules testing endpoints against core web vulnerabilities, certification defects, security headers, resources, and tech stack fingerprints:</p>
                     <ul>
-                        <li><strong>OWASP ZAP XSS Vulnerability Scanner:</strong> Audits query arguments, forms, and headers against malicious scripting vectors (Reflected, Stored, and DOM-based Cross-Site Scripting).</li>
+                        <li><strong>HTTP Security Headers Analyzer:</strong> Fetches target URLs and audits response headers for Content-Security-Policy (CSP), Strict-Transport-Security (HSTS), X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, and X-XSS-Protection. Grades targets on an A+ through F scale with explanations and fix recommendations.</li>
+                        <li><strong>Link Scanner &amp; Mixed Content Auditor:</strong> Scans webpage DOM structure in real-time, checking up to 40 target assets (links, images, scripts, stylesheets, and iframes) to detect broken resource links (404/Error codes) and mixed content warnings (HTTP resources loaded on HTTPS pages).</li>
+                        <li><strong>Technology Fingerprinter:</strong> Runs signature-matching heuristics against response headers and page markup, identifying frameworks, libraries, content management systems (CMS), CDN overlays, and web server configurations, complete with confidence levels and CVE security risk indicators.</li>
                         <li><strong>SSL / TLS Certificate Auditor:</strong> Validates certificate path trust, checks expiry limits, audits cipher negotiation configurations (supporting SSLv3 up to TLS 1.3), and issues a graded security report (Grades A+ through F).</li>
                         <li><strong>URL Phishing ML Classifier:</strong> Analyzes domain structure, string entropy, typosquatting heuristics, and Levenshtein distance metrics to predict brand impersonation risks.</li>
                         <li><strong>DNS Spoofing Detector:</strong> Compares target DNS resolver lookups across global authoritative servers to detect poisoning or hijacking, and checks active DNSSEC signatures.</li>
@@ -651,20 +653,7 @@ npx vitest run tests/unit/cyberguard-hashtools-preservation.test.js</code></pre>
                         <li><strong>Expected Result:</strong> The PDF generates using <code>jspdf-autotable</code> layout, displaying project metadata and structured tables. The CSV download initiates containing raw columns of target addresses, issue names, severities, and timestamps.</li>
                     </ul>
 
-                    <h2>2. Web Security Auditor Tests</h2>
-                    
-                    <h3>Scenario: XSS Vulnerability Auditing</h3>
-                    <ul>
-                        <li><strong>Input Target:</strong> <code>https://xss-game.appspot.com</code></li>
-                        <li><strong>Steps:</strong>
-                            <ol>
-                                <li>Navigate to the **Web Security** tab.</li>
-                                <li>Enter the input URL in the Web Target field.</li>
-                                <li>Select the **XSS Vulnerability Test** card (OWASP ZAP) and click **Run Analysis**.</li>
-                            </ol>
-                        </li>
-                        <li><strong>Expected Result:</strong> The scanner engine initializes, crawler scans form endpoints, and returns reflected scripting payload vulnerabilities.</li>
-                    </ul>
+                    <h2>2. Web Auditing Tests</h2>
 
                     <h3>Scenario: SSL/TLS Certificate Check</h3>
                     <ul>

@@ -18,7 +18,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
         <link rel="stylesheet" href="css/theme-tokens.css" />
         <link rel="stylesheet" href="css/cyber-theme.css" />
-        <link rel="stylesheet" href="css/Style.css" />
+        <link rel="stylesheet" href="css/Style.css?v=1.0.5" />
         <link rel="stylesheet" href="css/settings-panel.css" />
         <link rel="stylesheet" href="css/security-dashboard.css" />
         <link rel="stylesheet" href="css/osint.css" />
@@ -302,7 +302,7 @@
                                     d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z"
                                 />
                             </svg>
-                            <span class="text-sm font-medium">Web Security</span>
+                            <span class="text-sm font-medium">Web Auditing</span>
                             <span class="cyber-active-dot"></span>
                         </a>
                         <a
@@ -2200,414 +2200,274 @@
                             <!-- ============================================================ -->
                             <div
                                 id="web-security"
-                                class="tab-pane hidden space-y-6"
+                                class="tab-pane hidden"
                             >
-                                <!-- Web Target Config -->
-                                <div class="cyber-card p-5">
-                                    <h3
-                                        class="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2"
-                                    >
-                                        <svg
-                                            class="w-4 h-4 text-purple-400"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke-width="1.5"
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3s-4.5 4.03-4.5 9 2.015 9 4.5 9Z"
-                                            />
-                                        </svg>
-                                        Web Target Configuration
-                                    </h3>
-                                    <div class="flex gap-3">
-                                        <input
-                                            type="url"
-                                            id="target-url"
-                                            class="cyber-input flex-1 text-sm p-3 rounded-lg font-mono"
-                                            placeholder="https://example.com"
-                                        />
-                                        <button
-                                            id="run-analysis-btn"
-                                            class="cyber-btn-primary px-5 py-3 rounded-lg text-sm font-semibold flex items-center gap-2"
-                                        >
-                                            <svg
-                                                class="w-4 h-4"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke-width="1.5"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
-                                                />
-                                            </svg>
-                                            Run Analysis
-                                        </button>
-                                    </div>
-                                </div>
+                                <!-- Two-panel layout — fills the tab directly, no external cards -->
+                                <div class="wa-container">
+                                    <!-- LEFT PANEL: Control Panel (OSINT-style) -->
+                                    <div class="wa-tool-panel">
 
-                                <!-- Section Title -->
-                                <div>
-                                    <h2 class="text-2xl font-bold text-white">
-                                        Web Security Testing
-                                    </h2>
-                                    <p class="text-sm text-slate-400 mt-1">
-                                        Active vulnerability scanning, SSL
-                                        analysis, and phishing intelligence
-                                    </p>
-                                </div>
+                                        <!-- Panel Header -->
+                                        <div class="wa-cp-header">
+                                            <span class="font-semibold text-xs text-slate-300 uppercase tracking-wider">Control Panel</span>
+                                        </div>
 
-                                <!-- Web Tool Cards -->
-                                <!-- Selection Controls -->
-                                <div
-                                    class="flex items-center justify-between mb-4"
-                                >
-                                    <button
-                                        id="select-all-toggle-btn-web"
-                                        class="cyber-btn-ghost text-xs px-3 py-2 rounded-lg"
-                                    >
-                                        Select All
-                                    </button>
-                                    <span
-                                        id="selection-count-display-web"
-                                        class="text-xs text-slate-500"
-                                        >No tools selected</span
-                                    >
-                                </div>
+                                        <!-- Body (scrollable) -->
+                                        <div class="wa-cp-body">
 
-                                <div
-                                    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-                                >
-                                    <div
-                                        class="cyber-tool-card p-5 rounded-xl relative"
-                                        data-selected="false"
-                                        data-tool-id="xss-btn"
-                                    >
-                                        <!-- Selection indicator -->
-                                        <div class="selection-indicator hidden">
-                                            <svg
-                                                class="w-5 h-5 text-white"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke-width="2.5"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    d="M4.5 12.75l6 6 9-13.5"
-                                                />
-                                            </svg>
-                                        </div>
-                                        <span class="cyber-tool-badge"
-                                            >OWASP ZAP</span
-                                        >
-                                        <div class="cyber-tool-icon-box mb-3">
-                                            <svg
-                                                class="w-5 h-5 text-purple-300"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke-width="1.5"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z"
-                                                />
-                                            </svg>
-                                        </div>
-                                        <h4
-                                            class="text-sm font-bold text-white mb-1"
-                                        >
-                                            XSS Vulnerability Test
-                                        </h4>
-                                        <p
-                                            class="text-xs text-slate-400 leading-relaxed mb-4"
-                                        >
-                                            Active OWASP ZAP scanning for
-                                            reflected, stored, and DOM-based
-                                            Cross-Site Scripting vectors.
-                                        </p>
-                                        <button
-                                            id="xss-btn"
-                                            data-auth-required
-                                            class="cyber-tool-link text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            Initialize Engine →
-                                        </button>
-                                    </div>
-
-                                    <div
-                                        class="cyber-tool-card p-5 rounded-xl relative"
-                                        data-selected="false"
-                                        data-tool-id="ssl-btn"
-                                    >
-                                        <!-- Selection indicator -->
-                                        <div class="selection-indicator hidden">
-                                            <svg
-                                                class="w-5 h-5 text-white"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke-width="2.5"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    d="M4.5 12.75l6 6 9-13.5"
-                                                />
-                                            </svg>
-                                        </div>
-                                        <span class="cyber-tool-badge"
-                                            >TLS 1.3</span
-                                        >
-                                        <div class="cyber-tool-icon-box mb-3">
-                                            <svg
-                                                class="w-5 h-5 text-purple-300"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke-width="1.5"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
-                                                />
-                                            </svg>
-                                        </div>
-                                        <h4
-                                            class="text-sm font-bold text-white mb-1"
-                                        >
-                                            SSL / TLS Certificate
-                                        </h4>
-                                        <p
-                                            class="text-xs text-slate-400 leading-relaxed mb-4"
-                                        >
-                                            Validate certificate chain, check
-                                            expiry, audit cipher suites, and
-                                            detect weak configurations.
-                                        </p>
-                                        <button
-                                            id="ssl-btn"
-                                            data-auth-required
-                                            class="cyber-tool-link text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            Initialize Engine →
-                                        </button>
-                                    </div>
-
-                                    <div
-                                        class="cyber-tool-card p-5 rounded-xl relative"
-                                        data-selected="false"
-                                        data-tool-id="phishing-btn"
-                                    >
-                                        <!-- Selection indicator -->
-                                        <div class="selection-indicator hidden">
-                                            <svg
-                                                class="w-5 h-5 text-white"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke-width="2.5"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    d="M4.5 12.75l6 6 9-13.5"
-                                                />
-                                            </svg>
-                                        </div>
-                                        <span class="cyber-tool-badge"
-                                            >ML MODEL</span
-                                        >
-                                        <div class="cyber-tool-icon-box mb-3">
-                                            <svg
-                                                class="w-5 h-5 text-purple-300"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke-width="1.5"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-                                                />
-                                            </svg>
-                                        </div>
-                                        <h4
-                                            class="text-sm font-bold text-white mb-1"
-                                        >
-                                            URL Phishing Analyzer
-                                        </h4>
-                                        <p
-                                            class="text-xs text-slate-400 leading-relaxed mb-4"
-                                        >
-                                            Machine-learning model scoring URLs
-                                            for phishing risk, typosquatting,
-                                            and brand impersonation.
-                                        </p>
-                                        <button
-                                            id="phishing-btn"
-                                            data-auth-required
-                                            class="cyber-tool-link text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            Initialize Engine →
-                                        </button>
-                                    </div>
-
-                                    <div
-                                        class="cyber-tool-card p-5 rounded-xl relative"
-                                        data-selected="false"
-                                        data-tool-id="dns-spoof-btn"
-                                    >
-                                        <!-- Selection indicator -->
-                                        <div class="selection-indicator hidden">
-                                            <svg
-                                                class="w-5 h-5 text-white"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke-width="2.5"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    d="M4.5 12.75l6 6 9-13.5"
-                                                />
-                                            </svg>
-                                        </div>
-                                        <span class="cyber-tool-badge"
-                                            >AI ENHANCED</span
-                                        >
-                                        <div class="cyber-tool-icon-box mb-3">
-                                            <svg
-                                                class="w-5 h-5 text-purple-300"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke-width="1.5"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z"
-                                                />
-                                            </svg>
-                                        </div>
-                                        <h4
-                                            class="text-sm font-bold text-white mb-1"
-                                        >
-                                            DNS Spoofing Detection
-                                        </h4>
-                                        <p
-                                            class="text-xs text-slate-400 leading-relaxed mb-4"
-                                        >
-                                            AI-powered multi-resolver DNS
-                                            consistency analysis with DNSSEC
-                                            validation and CDN fingerprinting.
-                                        </p>
-                                        <button
-                                            id="dns-spoof-btn"
-                                            data-auth-required
-                                            class="cyber-tool-link text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            Initialize Engine →
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- VirusTotal Intelligence -->
-                                <div class="cyber-card p-5">
-                                    <h3
-                                        class="text-base font-bold text-white mb-1 flex items-center gap-2"
-                                    >
-                                        <svg
-                                            class="w-4 h-4 text-red-400"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke-width="1.5"
-                                            stroke="currentColor"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
-                                            />
-                                        </svg>
-                                        VirusTotal Intelligence
-                                    </h3>
-                                    <p class="text-xs text-slate-400 mb-4">
-                                        Multi-engine malware scanning and hash
-                                        verification
-                                    </p>
-                                    <div class="space-y-3">
-                                        <div>
-                                            <label
-                                                for="vt-hash-input"
-                                                class="block text-xs font-medium mb-1.5 text-slate-400"
-                                                >File Hash / URL / File
-                                                Upload</label
-                                            >
-                                            <div class="flex gap-3">
+                                            <!-- Target Configuration Section -->
+                                            <div class="wa-cp-section">
+                                                <label class="wa-cp-label">Target Configuration</label>
                                                 <input
-                                                    type="text"
-                                                    id="vt-hash-input"
-                                                    class="cyber-input flex-1 text-sm p-3 rounded-lg font-mono"
-                                                    placeholder="Enter SHA256/MD5 hash or URL..."
+                                                    type="url"
+                                                    id="target-url"
+                                                    class="cyber-input w-full px-3 py-2 text-xs rounded-lg mt-1 font-mono"
+                                                    placeholder="https://example.com"
+                                                    autocomplete="off"
+                                                    spellcheck="false"
+                                                    onkeydown="if(event.key==='Enter') window.WebAuditing.runAll()"
                                                 />
-                                                <button
-                                                    id="vt-hash-btn"
-                                                    data-auth-required
-                                                    class="cyber-btn-glow px-4 py-3 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
-                                                    Check Hash
-                                                </button>
+                                                <div class="flex gap-2 mt-2">
+                                                    <button
+                                                        id="run-analysis-btn"
+                                                        class="cyber-btn-primary flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                                        Run Enabled
+                                                    </button>
+                                                    <button
+                                                        id="wa-clear-all-btn"
+                                                        class="cyber-btn-ghost py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1"
+                                                        onclick="window.WebAuditing && window.WebAuditing.clearResults && window.WebAuditing.clearResults()"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                                        Clear
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <!-- Auditors Module List -->
+                                            <div class="wa-cp-section wa-cp-modules-section">
+                                                <div class="wa-cp-modules-header">
+                                                    <label class="wa-cp-label">Auditors</label>
+                                                    <div class="flex items-center gap-2">
+                                                        <button id="select-all-toggle-btn-web" class="wa-cp-select-all-btn">Select All</button>
+                                                        <span id="selection-count-display-web" class="wa-cp-count-badge hidden">0 selected</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Tool List -->
+                                                <div class="wa-cp-tool-list">
+
+                                                    <!-- 1. HTTP Headers -->
+                                                    <div class="wa-cp-tool-item active"
+                                                         onclick="window.WebAuditing.switchTool('headers')"
+                                                         data-tool-id="headers-btn"
+                                                         data-selected="true"
+                                                         id="wa-tool-tab-headers">
+                                                        <div class="wa-cp-tool-meta">
+                                                            <div class="flex items-center gap-2">
+                                                                <input type="checkbox" class="wa-cp-checkbox" id="wa-check-headers" checked onclick="event.stopPropagation()">
+                                                                <div>
+                                                                    <span class="wa-cp-tool-name" id="wa-tool-label-headers">HTTP Headers</span>
+                                                                    <div class="wa-cp-tool-desc">Security header analysis &amp; grading</div>
+                                                                </div>
+                                                            </div>
+                                                            <span class="wa-cp-status-dot idle" id="wa-tool-status-headers"></span>
+                                                        </div>
+                                                        <button id="headers-btn" class="hidden" aria-hidden="true"></button>
+                                                    </div>
+
+                                                    <!-- 2. Link Scanner -->
+                                                    <div class="wa-cp-tool-item"
+                                                         onclick="window.WebAuditing.switchTool('links')"
+                                                         data-tool-id="links-btn"
+                                                         data-selected="true"
+                                                         id="wa-tool-tab-links">
+                                                        <div class="wa-cp-tool-meta">
+                                                            <div class="flex items-center gap-2">
+                                                                <input type="checkbox" class="wa-cp-checkbox" id="wa-check-links" checked onclick="event.stopPropagation()">
+                                                                <div>
+                                                                    <span class="wa-cp-tool-name" id="wa-tool-label-links">Link Scanner</span>
+                                                                    <div class="wa-cp-tool-desc">Broken links &amp; mixed content</div>
+                                                                </div>
+                                                            </div>
+                                                            <span class="wa-cp-status-dot idle" id="wa-tool-status-links"></span>
+                                                        </div>
+                                                        <button id="links-btn" class="hidden" aria-hidden="true"></button>
+                                                    </div>
+
+                                                    <!-- 3. Tech Fingerprint -->
+                                                    <div class="wa-cp-tool-item"
+                                                         onclick="window.WebAuditing.switchTool('tech')"
+                                                         data-tool-id="tech-btn"
+                                                         data-selected="true"
+                                                         id="wa-tool-tab-tech">
+                                                        <div class="wa-cp-tool-meta">
+                                                            <div class="flex items-center gap-2">
+                                                                <input type="checkbox" class="wa-cp-checkbox" id="wa-check-tech" checked onclick="event.stopPropagation()">
+                                                                <div>
+                                                                    <span class="wa-cp-tool-name" id="wa-tool-label-tech">Tech Fingerprint</span>
+                                                                    <div class="wa-cp-tool-desc">Technology stack detection</div>
+                                                                </div>
+                                                            </div>
+                                                            <span class="wa-cp-status-dot idle" id="wa-tool-status-tech"></span>
+                                                        </div>
+                                                        <button id="tech-btn" class="hidden" aria-hidden="true"></button>
+                                                    </div>
+
+                                                    <!-- 4. SSL / TLS Certificate -->
+                                                    <div class="wa-cp-tool-item"
+                                                         onclick="window.WebAuditing.switchTool('ssl')"
+                                                         data-tool-id="ssl-btn"
+                                                         data-selected="false"
+                                                         id="wa-tool-tab-ssl">
+                                                        <div class="wa-cp-tool-meta">
+                                                            <div class="flex items-center gap-2">
+                                                                <input type="checkbox" class="wa-cp-checkbox" id="wa-check-ssl" onclick="event.stopPropagation()">
+                                                                <div>
+                                                                    <span class="wa-cp-tool-name" id="wa-tool-label-ssl">SSL / TLS Certificate</span>
+                                                                    <div class="wa-cp-tool-desc">Validate cert chain &amp; ciphers</div>
+                                                                </div>
+                                                            </div>
+                                                            <span class="wa-cp-status-dot idle" id="wa-tool-status-ssl"></span>
+                                                        </div>
+                                                        <button id="ssl-btn" class="hidden" aria-hidden="true" data-auth-required></button>
+                                                    </div>
+
+                                                    <!-- 5. URL Phishing Analyzer -->
+                                                    <div class="wa-cp-tool-item"
+                                                         onclick="window.WebAuditing.switchTool('phishing')"
+                                                         data-tool-id="phishing-btn"
+                                                         data-selected="false"
+                                                         id="wa-tool-tab-phishing">
+                                                        <div class="wa-cp-tool-meta">
+                                                            <div class="flex items-center gap-2">
+                                                                <input type="checkbox" class="wa-cp-checkbox" id="wa-check-phishing" onclick="event.stopPropagation()">
+                                                                <div>
+                                                                    <span class="wa-cp-tool-name" id="wa-tool-label-phishing">URL Phishing Analyzer</span>
+                                                                    <div class="wa-cp-tool-desc">ML model phishing score</div>
+                                                                </div>
+                                                            </div>
+                                                            <span class="wa-cp-status-dot idle" id="wa-tool-status-phishing"></span>
+                                                        </div>
+                                                        <button id="phishing-btn" class="hidden" aria-hidden="true" data-auth-required></button>
+                                                    </div>
+
+                                                    <!-- 6. DNS Spoofing Detection -->
+                                                    <div class="wa-cp-tool-item"
+                                                         onclick="window.WebAuditing.switchTool('dns-spoof')"
+                                                         data-tool-id="dns-spoof-btn"
+                                                         data-selected="false"
+                                                         id="wa-tool-tab-dns-spoof">
+                                                        <div class="wa-cp-tool-meta">
+                                                            <div class="flex items-center gap-2">
+                                                                <input type="checkbox" class="wa-cp-checkbox" id="wa-check-dns-spoof" onclick="event.stopPropagation()">
+                                                                <div>
+                                                                    <span class="wa-cp-tool-name" id="wa-tool-label-dns-spoof">DNS Spoofing Detection</span>
+                                                                    <div class="wa-cp-tool-desc">AI multi-resolver checks</div>
+                                                                </div>
+                                                            </div>
+                                                            <span class="wa-cp-status-dot idle" id="wa-tool-status-dns-spoof"></span>
+                                                        </div>
+                                                        <button id="dns-spoof-btn" class="hidden" aria-hidden="true" data-auth-required></button>
+                                                    </div>
+
+                                                </div><!-- END wa-cp-tool-list -->
+                                            </div><!-- END wa-cp-modules-section -->
+
+                                        </div><!-- END wa-cp-body -->
+                                    </div><!-- END wa-tool-panel -->
+
+                                    <!-- RIGHT PANEL: Results Section -->
+                                    <div id="professional-results-section" class="wa-results-panel">
+                                        <!-- Header for Active Tool Selection -->
+                                        <div class="wa-results-header">
+                                            <div>
+                                                <div style="font-size:14px;font-weight:600;color:var(--cg-text-1)" 
+                                                     id="wa-active-tool-name">HTTP Headers Analysis</div>
+                                                <div style="font-size:12px;color:var(--cg-text-2);margin-top:2px" 
+                                                     id="wa-active-tool-desc">
+                                                    Analyze security headers and get an A-F grade
+                                                </div>
                                             </div>
                                         </div>
-                                        <div>
-                                            <input
-                                                type="file"
-                                                id="vt-file-input"
-                                                class="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-500/20 file:text-purple-300 hover:file:bg-purple-500/30 cursor-pointer transition"
-                                            />
-                                        </div>
-                                        <div class="flex gap-3 pt-1">
-                                            <button
-                                                id="vt-url-btn"
-                                                data-auth-required
-                                                class="cyber-btn-ghost flex-1 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                Scan URL
-                                            </button>
-                                            <button
-                                                id="vt-file-btn"
-                                                data-auth-required
-                                                class="cyber-btn-ghost flex-1 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                Scan File
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+
+                                        <!-- Side-by-side workspace container -->
+                                        <div class="wa-results-workspace">
+                                            
+                                            <!-- TOP AREA: Findings and Results display -->
+                                            <div class="wa-findings-column">
+                                                
+                                                <!-- Summary Bar -->
+                                                <div class="summary-bar flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-white/10 gap-4 sm:gap-0">
+                                                    <div class="flex flex-wrap items-center gap-4 sm:gap-6 w-full sm:w-auto">
+                                                        <div class="summary-metric">
+                                                            <span class="text-xs text-slate-400 block">Total Issues</span>
+                                                            <span id="total-issues-count" class="text-2xl font-bold text-white">0</span>
+                                                        </div>
+                                                        <div class="summary-metric">
+                                                            <span class="text-xs text-slate-400 block">Time Taken</span>
+                                                            <span id="scan-time-display" class="text-lg font-semibold text-purple-300">--</span>
+                                                        </div>
+                                                        <div class="summary-metric">
+                                                            <span class="text-xs text-slate-400 block">Scanned Target</span>
+                                                            <span id="scanned-target-display" class="text-sm font-mono text-cyan-300 break-all">--</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Filter Controls -->
+                                                <div class="filter-controls flex flex-wrap items-center gap-2 sm:gap-3 p-4 border-b border-white/10">
+                                                    <span class="text-sm text-slate-400 w-full sm:w-auto mb-1 sm:mb-0">Filter by severity:</span>
+                                                    <button data-severity="critical" class="filter-pill px-3 sm:px-4 py-2 rounded-full text-xs font-bold transition-all bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10">Critical</button>
+                                                    <button data-severity="warning" class="filter-pill px-3 sm:px-4 py-2 rounded-full text-xs font-bold transition-all bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10">Warning</button>
+                                                    <button data-severity="info" class="filter-pill px-3 sm:px-4 py-2 rounded-full text-xs font-bold transition-all bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10">Info</button>
+                                                    <button id="clear-filters-btn" class="sm:ml-auto text-xs text-slate-400 hover:text-white transition-colors">Clear Filters</button>
+                                                    <button id="clear-results-btn" class="btn-clear-history">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <polyline points="3 6 5 6 21 6" />
+                                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                                            <path d="M10 11v6M14 11v6" />
+                                                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                                                        </svg>
+                                                        Clear Results
+                                                    </button>
+                                                </div>
+
+                                                <!-- Results Display Area -->
+                                                <div class="results-display-area wa-results-body" id="wa-results-body">
+                                                    <div id="accordion-items-container" class="min-h-64">
+                                                        <!-- Empty State -->
+                                                        <div id="empty-results-state" class="flex flex-col items-center justify-center py-16 text-center">
+                                                            <div class="cyber-empty-icon mb-4">
+                                                                <svg class="w-12 h-12 text-slate-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                                                                </svg>
+                                                            </div>
+                                                            <h3 class="text-base font-semibold text-slate-400 mb-1">No Scans Performed</h3>
+                                                            <p class="text-xs text-slate-500">Run a security scan to see detailed results here</p>
+                                                        </div>
+                                                        <!-- Accordion items will be dynamically inserted here -->
+                                                    </div>
+                                                </div>
+
+                                            </div><!-- END wa-findings-column -->
+                                            
+                                            <!-- Hidden live activity feed container for test compatibility -->
+                                            <div class="hidden" style="display: none !important;" aria-hidden="true">
+                                                <span id="activity-count">0 events</span>
+                                                <button id="clear-activity-btn"></button>
+                                                <button id="wa-terminal-toggle-btn"></button>
+                                                <div id="live-activity-feed"></div>
+                                            </div>
+                                            
+                                        </div><!-- END wa-results-workspace -->
+                                    </div><!-- END wa-results-panel -->
+                                </div><!-- END wa-container -->
+
+
+                            </div>
                             </div>
                             <!-- END WEB SECURITY TAB -->
 
@@ -4258,208 +4118,7 @@
                         </div>
                         <!-- end #tab-content -->
 
-                        <!-- ============================================================ -->
-                        <!-- PROFESSIONAL SECURITY REPORTS VIEW -->
-                        <!-- ============================================================ -->
-                        <div
-                            id="professional-results-section"
-                            class="mt-6 cyber-card overflow-hidden backdrop-blur-xl bg-white/5"
-                        >
-                            <!-- Summary Bar -->
-                            <div
-                                class="summary-bar flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b border-white/10 gap-4 sm:gap-0"
-                            >
-                                <div
-                                    class="flex flex-wrap items-center gap-4 sm:gap-6 w-full sm:w-auto"
-                                >
-                                    <div class="summary-metric">
-                                        <span
-                                            class="text-xs text-slate-400 block"
-                                            >Total Issues</span
-                                        >
-                                        <span
-                                            id="total-issues-count"
-                                            class="text-2xl font-bold text-white"
-                                            >0</span
-                                        >
-                                    </div>
-                                    <div class="summary-metric">
-                                        <span
-                                            class="text-xs text-slate-400 block"
-                                            >Time Taken</span
-                                        >
-                                        <span
-                                            id="scan-time-display"
-                                            class="text-lg font-semibold text-purple-300"
-                                            >--</span
-                                        >
-                                    </div>
-                                    <div class="summary-metric">
-                                        <span
-                                            class="text-xs text-slate-400 block"
-                                            >Scanned Target</span
-                                        >
-                                        <span
-                                            id="scanned-target-display"
-                                            class="text-sm font-mono text-cyan-300 break-all"
-                                            >--</span
-                                        >
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Filter Controls -->
-                            <div
-                                class="filter-controls flex flex-wrap items-center gap-2 sm:gap-3 p-4 border-b border-white/10"
-                            >
-                                <span
-                                    class="text-sm text-slate-400 w-full sm:w-auto mb-1 sm:mb-0"
-                                    >Filter by severity:</span
-                                >
-                                <button
-                                    data-severity="critical"
-                                    class="filter-pill px-3 sm:px-4 py-2 rounded-full text-xs font-bold transition-all bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10"
-                                >
-                                    Critical
-                                </button>
-                                <button
-                                    data-severity="warning"
-                                    class="filter-pill px-3 sm:px-4 py-2 rounded-full text-xs font-bold transition-all bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10"
-                                >
-                                    Warning
-                                </button>
-                                <button
-                                    data-severity="info"
-                                    class="filter-pill px-3 sm:px-4 py-2 rounded-full text-xs font-bold transition-all bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10"
-                                >
-                                    Info
-                                </button>
-                                <button
-                                    id="clear-filters-btn"
-                                    class="sm:ml-auto text-xs text-slate-400 hover:text-white transition-colors"
-                                >
-                                    Clear Filters
-                                </button>
-                                <button
-                                    id="clear-results-btn"
-                                    class="btn-clear-history"
-                                >
-                                    <svg
-                                        width="14"
-                                        height="14"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                    >
-                                        <polyline points="3 6 5 6 21 6" />
-                                        <path
-                                            d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"
-                                        />
-                                        <path d="M10 11v6M14 11v6" />
-                                        <path
-                                            d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
-                                        />
-                                    </svg>
-                                    Clear Results
-                                </button>
-                            </div>
-
-                            <!-- Results Display Area -->
-                            <div class="results-display-area">
-                                <div
-                                    id="accordion-items-container"
-                                    class="min-h-64"
-                                >
-                                    <!-- Empty State -->
-                                    <div
-                                        id="empty-results-state"
-                                        class="flex flex-col items-center justify-center py-16 text-center"
-                                    >
-                                        <div class="cyber-empty-icon mb-4">
-                                            <svg
-                                                class="w-12 h-12 text-slate-600"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke-width="1.5"
-                                                stroke="currentColor"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z"
-                                                />
-                                            </svg>
-                                        </div>
-                                        <h3
-                                            class="text-base font-semibold text-slate-400 mb-1"
-                                        >
-                                            No Scans Performed
-                                        </h3>
-                                        <p class="text-xs text-slate-500">
-                                            Run a security scan to see detailed
-                                            results here
-                                        </p>
-                                    </div>
-                                    <!-- Accordion items will be dynamically inserted here -->
-                                </div>
-                            </div>
-
-                            <!-- Live Activity Feed -->
-                            <div class="live-activity-section">
-                                <div class="live-activity-header">
-                                    <div class="live-dot-wrapper">
-                                        <span class="live-dot"></span>
-                                        <span class="live-label"
-                                            >Live Activity</span
-                                        >
-                                    </div>
-                                    <div class="live-activity-controls">
-                                        <span id="activity-count"
-                                            >0 events</span
-                                        >
-                                        <button
-                                            class="btn-clear-activity"
-                                            id="clear-activity-btn"
-                                        >
-                                            Clear
-                                        </button>
-                                    </div>
-                                </div>
-                                <div
-                                    id="live-activity-feed"
-                                    class="live-activity-feed"
-                                >
-                                    <div
-                                        id="activity-empty-state"
-                                        class="activity-empty"
-                                    >
-                                        <svg
-                                            width="20"
-                                            height="20"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="1.5"
-                                        >
-                                            <circle cx="12" cy="12" r="10" />
-                                            <polyline
-                                                points="12 6 12 12 16 14"
-                                            />
-                                        </svg>
-                                        <span
-                                            >Activity will appear here when a
-                                            scan starts</span
-                                        >
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Export Controls -->
-
-                        </div>
-                        <!-- END PROFESSIONAL SECURITY REPORTS VIEW -->
+                        <!-- Relocated professional results section is now nested inside the web-security tab workspace above -->
                     </div>
                     <!-- end px-4 sm:px-6 -->
                 </div>
@@ -5457,7 +5116,7 @@
         <script src="js/auth.js?v=1.0.1"></script>
 
         <!-- Main JavaScript File - Must load first to attach event listeners -->
-        <script src="js/main.js?v=1.0.1"></script>
+        <script src="js/main.js?v=1.0.2"></script>
         <!-- Threat Intel Hub Module -->
         <script src="js/threat-intel.js"></script>
         <!-- Security Dashboard Controller -->
@@ -5465,7 +5124,7 @@
         <!-- OSINT Passive Reconnaissance Tab -->
         <script src="js/osint.js"></script>
         <!-- Dashboard Tab Manager - Loads after main.js to avoid conflicts -->
-        <script src="js/dashboard-tab-manager.js"></script>
+        <script src="js/dashboard-tab-manager.js?v=1.0.1"></script>
         <!-- JWT Debugger Module -->
         <script src="js/jwt-debugger.js"></script>
         <!-- State Manager Module -->
@@ -6229,5 +5888,24 @@
                 initSidebar();
             }
         </script>
+
+        <!-- Dedicated Pop-up Modal for Auditors -->
+        <div id="wa-auditor-modal" class="cyber-modal-overlay hidden">
+            <div class="cyber-modal-container">
+                <!-- Modal Header -->
+                <div class="cyber-modal-header">
+                    <div class="flex items-center gap-3">
+                        <span class="cyber-modal-status-light blinking idle" id="wa-modal-status-light"></span>
+                        <h3 class="cyber-modal-title" id="wa-modal-title">HTTP Headers Security Auditor</h3>
+                    </div>
+                    <button class="cyber-modal-close" id="wa-modal-close-btn">&times;</button>
+                </div>
+                <!-- Modal Body -->
+                <div class="cyber-modal-body" id="wa-modal-body-content">
+                    <!-- Custom tool content will be dynamically injected here -->
+                </div>
+            </div>
+        </div>
     </body>
 </html>
+

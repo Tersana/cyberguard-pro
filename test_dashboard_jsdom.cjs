@@ -76,7 +76,6 @@ const scriptsToLoad = [
   'public/js/billing-utils.js',
   'public/js/project-manager.js',
   'public/js/auth.js',
-  'public/js/network-analysis-tools.js',
   'public/js/main.js',
   'public/js/threat-intel.js',
   'public/js/security-dashboard.js',
@@ -157,6 +156,7 @@ doc.dispatchEvent(event);
 
 console.log('Done waiting. Checking active state...');
 console.log('window.AIAssistantInitialized:', dom.window.AIAssistantInitialized);
+console.log('window.WebAuditing:', typeof dom.window.WebAuditing, dom.window.WebAuditing ? 'exists' : 'does NOT exist');
 dom.window.close();
 
 if (hasErrors) {
