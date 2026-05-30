@@ -118,11 +118,10 @@ const SidebarSystemHealth = {
 
       if (projects.length > 0 && window.apiClient) {
         try {
-          // Fetch targets & scans for all projects in parallel
-          const targetsPromises = projects.map(p => 
-            window.projectManager.fetchTargets(p.id)
-              .catch(() => [])
-          );
+          // Fetch global targets and scans in parallel
+          const globalTargetsPromise = window.apiClient.get("/targets")
+            .then(res => Array.isArray(res) ? res : (res.targets || res.data || []))
+            .catch(() => []);
 
           const scansPromises = projects.map(p => 
             window.apiClient.get(`/projects/${p.id}/scans`)
@@ -130,14 +129,13 @@ const SidebarSystemHealth = {
               .catch(() => [])
           );
 
-          const [targetsResults, scansResults] = await Promise.all([
-            Promise.all(targetsPromises),
+          const [globalTargets, scansResults] = await Promise.all([
+            globalTargetsPromise,
             Promise.all(scansPromises)
           ]);
 
           // Calculate total target count
-          const allTargets = targetsResults.flat();
-          targetsUsed = allTargets.length;
+          targetsUsed = globalTargets.length;
 
           // Filter scans completed in current calendar month
           const allScans = scansResults.flat();

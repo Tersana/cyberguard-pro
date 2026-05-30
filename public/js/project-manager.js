@@ -52,6 +52,42 @@ class ProjectManager {
     }
   }
 
+  /**
+   * Determine user's role in a project.
+   * @param {string|number} projectId
+   * @returns {'owner'|'editor'|'viewer'}
+   */
+  getUserProjectRole(projectId) {
+    const project = this.projects.find((p) => String(p.id) === String(projectId));
+    if (!project) return "viewer";
+    const currentUser = this.getCurrentUser();
+    const isOwner =
+      currentUser &&
+      project.owner_id &&
+      String(project.owner_id) === String(currentUser.id);
+    if (isOwner) return "owner";
+    return project.role || "viewer";
+  }
+
+  /**
+   * Check if user has edit access (owner or editor).
+   * @param {string|number} projectId
+   * @returns {boolean}
+   */
+  canEdit(projectId) {
+    const role = this.getUserProjectRole(projectId);
+    return role === "owner" || role === "editor";
+  }
+
+  /**
+   * Check if user is the owner of the project.
+   * @param {string|number} projectId
+   * @returns {boolean}
+   */
+  isOwner(projectId) {
+    return this.getUserProjectRole(projectId) === "owner";
+  }
+
   /** XSS-safe HTML escape for text content. */
   escapeHtml(text) {
     if (text == null) return "";

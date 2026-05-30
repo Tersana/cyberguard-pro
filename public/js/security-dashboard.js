@@ -44,7 +44,7 @@
     showDashboardSkeleton();
 
     try {
-      // 1. Fetch all projects first
+      // 1. Fetch all projects first to populate projects state & header metadata
       if (!window.projectManager) {
         throw new Error("ProjectManager module not available");
       }
@@ -59,80 +59,23 @@
         return;
       }
 
-      // 2. Fetch targets & scans for all projects in parallel
-      const targetsPromises = projects.map(p => 
-        window.projectManager.fetchTargets(p.id).catch(() => [])
-      );
-
-      const scansPromises = projects.map(p => 
-        window.scannerAPI ? window.scannerAPI.getProjectScans(p.id).catch(() => []) : []
-      );
-
-      const [targetsResults, scansResults] = await Promise.all([
-        Promise.all(targetsPromises),
-        Promise.all(scansPromises)
+      // 2. Fetch single metrics endpoint and all targets in parallel
+      const [metricsRes, targetsRes] = await Promise.all([
+        window.apiClient.get("/dashboard/metrics"),
+        window.apiClient.get("/targets").catch(() => ({ targets: [] }))
       ]);
 
-      // Flatten and annotate targets
-      const allTargets = [];
-      projects.forEach((proj, idx) => {
-        const tList = targetsResults[idx] || [];
-        tList.forEach(t => {
-          allTargets.push({
-            ...t,
-            project_id: proj.id,
-            project_name: proj.name
-          });
-        });
-      });
-      dashboardState.targets = allTargets;
-
-      // Flatten scans
-      const allScans = [];
-      projects.forEach((proj, idx) => {
-        const sList = scansResults[idx] || [];
-        sList.forEach(s => {
-          allScans.push({
-            ...s,
-            project_id: proj.id,
-            project_name: proj.name
-          });
-        });
-      });
-      dashboardState.scans = allScans;
-
-      // 3. Fetch findings for all targets in parallel
-      if (allTargets.length === 0) {
-        dashboardState.findings = [];
-      } else {
-        const findingsPromises = allTargets.map(t =>
-          window.apiClient.get(`/targets/${t.id}/findings`)
-            .then(res => Array.isArray(res.findings) ? res.findings : (Array.isArray(res) ? res : []))
-            .catch(() => [])
-        );
-
-        const findingsResults = await Promise.all(findingsPromises);
-
-        const allFindings = [];
-        allTargets.forEach((target, idx) => {
-          const fList = findingsResults[idx] || [];
-          fList.forEach(f => {
-            allFindings.push({
-              ...f,
-              target_id: target.id,
-              target_name: target.name || target.url || "Unknown Target",
-              project_id: target.project_id,
-              project_name: target.project_name
-            });
-          });
-        });
-        dashboardState.findings = allFindings;
+      if (metricsRes.status !== "success" || !metricsRes.data) {
+        throw new Error(metricsRes.message || "Failed to retrieve dashboard metrics");
       }
 
-      // 4. Render all dashboard views
+      dashboardState.metrics = metricsRes.data;
+      dashboardState.targets = targetsRes?.targets || [];
+
+      // 3. Render all dashboard views
       renderDashboardViews();
 
-      // 5. Start active scans auto-refresh
+      // 4. Start active scans auto-refresh
       startActiveScansPolling();
 
     } catch (error) {
@@ -148,7 +91,8 @@
    * Render all dashboard sections using the loaded state
    */
   function renderDashboardViews() {
-    const { projects, targets, scans, findings } = dashboardState;
+    const { projects, metrics, targets } = dashboardState;
+    if (!metrics) return;
 
     // Subtitle & Header metadata
     const subtitleText = document.getElementById("dashboard-subtitle-text");
@@ -161,103 +105,88 @@
       dateRangeEl.textContent = formatDashboardDateRange(projects);
     }
 
-    // Process scans running count
-    const activeScans = scans.filter(s => 
-      ["running", "active", "in_progress"].includes((s.status || "").toLowerCase())
-    );
-
     // 1. Render Stat Cards
-    renderStatCards(findings, targets, scans, activeScans);
+    renderStatCards(metrics.findings_summary, metrics.infrastructure, metrics.active_scans, metrics.recent_findings);
 
     // 2. Render Findings by Severity Donut Chart & List
-    renderFindingsBySeverityChart(findings);
+    renderFindingsBySeverityChart(metrics.findings_by_severity, metrics.findings_summary.total);
 
     // 3. Render Risk Score Circle & Target List
-    renderRiskScoreSection(findings, targets);
+    renderRiskScoreSection(metrics.risk_score, targets);
 
     // 4. Render Active Scans List
-    renderActiveScans(activeScans);
+    renderActiveScans(metrics.active_scans);
 
     // 5. Render Recent Findings Table
-    renderRecentFindings(findings);
+    renderRecentFindings(metrics.recent_findings);
   }
 
   /**
    * Render Stat Counter Cards
    */
-  function renderStatCards(findings, targets, scans, activeScans) {
+  function renderStatCards(findings_summary, infrastructure, active_scans, recent_findings) {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    // Card 1: Critical Findings
-    const criticalFindings = findings.filter(f => 
-      (f.severity || "").toLowerCase() === "critical"
-    );
-    const criticalThisWeek = criticalFindings.filter(f => 
-      new Date(f.created_at || f.timestamp) >= oneWeekAgo
+    const recentList = recent_findings?.findings || [];
+    const criticalThisWeek = recentList.filter(f => 
+      (f.severity || "").toLowerCase() === "critical" && new Date(f.created_at || f.timestamp) >= oneWeekAgo
     ).length;
 
-    updateCounter("critical-findings-value", criticalFindings.length);
+    updateCounter("critical-findings-value", findings_summary.critical || 0);
     const critSubtext = document.getElementById("critical-findings-subtext");
     if (critSubtext) {
       critSubtext.textContent = `+${criticalThisWeek} this week`;
       critSubtext.className = `stat-card-subtext ${criticalThisWeek > 0 ? "text-rose-400" : "text-slate-400"}`;
     }
 
-    // Card 2: Total Findings
-    const newThisWeek = findings.filter(f => 
+    const newThisWeek = recentList.filter(f => 
       new Date(f.created_at || f.timestamp) >= oneWeekAgo
     ).length;
 
-    updateCounter("total-findings-value", findings.length);
+    updateCounter("total-findings-value", findings_summary.total || 0);
     const totalSubtext = document.getElementById("total-findings-subtext");
     if (totalSubtext) {
       totalSubtext.textContent = `+${newThisWeek} new`;
       totalSubtext.className = `stat-card-subtext ${newThisWeek > 0 ? "text-blue-400" : "text-slate-400"}`;
     }
 
-    // Card 3: Resolved
-    const resolved = findings.filter(f => 
-      ["resolved", "fixed"].includes((f.status || "").toLowerCase())
-    );
-    const resolvedPercent = findings.length > 0
-      ? Math.round((resolved.length / findings.length) * 100)
+    const resolvedCount = findings_summary.resolved || 0;
+    const totalCount = findings_summary.total || 0;
+    const resolvedPercent = totalCount > 0
+      ? Math.round((resolvedCount / totalCount) * 100)
       : 0;
 
-    updateCounter("resolved-value", resolved.length);
+    updateCounter("resolved-value", resolvedCount);
     const resolvedSubtext = document.getElementById("resolved-subtext");
     if (resolvedSubtext) {
       resolvedSubtext.textContent = `${resolvedPercent}% resolved`;
       resolvedSubtext.className = `stat-card-subtext ${resolvedPercent >= 75 ? "text-emerald-400" : resolvedPercent >= 40 ? "text-amber-400" : "text-rose-400"}`;
     }
 
-    // Card 4: Targets / Scans
     const targetValueEl = document.getElementById("targets-scans-value");
     if (targetValueEl) {
-      targetValueEl.textContent = `${targets.length} / ${scans.length}`;
+      targetValueEl.textContent = `${infrastructure.total_targets || 0} / ${infrastructure.total_scans || 0}`;
     }
     const scansSubtext = document.getElementById("targets-scans-subtext");
     if (scansSubtext) {
-      scansSubtext.textContent = `${activeScans.length} active process`;
-      scansSubtext.className = `stat-card-subtext ${activeScans.length > 0 ? "text-purple-400" : "text-slate-400"}`;
+      const activeCount = active_scans.count ?? (active_scans.scans?.length || 0);
+      scansSubtext.textContent = `${activeCount} active process`;
+      scansSubtext.className = `stat-card-subtext ${activeCount > 0 ? "text-purple-400" : "text-slate-400"}`;
     }
   }
 
   /**
    * Render Findings by Severity conic-gradient donut chart and bar rows
    */
-  function renderFindingsBySeverityChart(findings) {
-    const counts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
-    findings.forEach(f => {
-      const sev = (f.severity || "").toLowerCase();
-      if (sev === "critical") counts.critical++;
-      else if (sev === "high") counts.high++;
-      else if (sev === "medium" || sev === "moderate") counts.medium++;
-      else if (sev === "low") counts.low++;
-      else if (sev === "info" || sev === "informational") counts.info++;
-    });
-
-    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  function renderFindingsBySeverityChart(findings_by_severity, total) {
+    const counts = {
+      critical: findings_by_severity.critical?.count || 0,
+      high: findings_by_severity.high?.count || 0,
+      medium: findings_by_severity.medium?.count || 0,
+      low: findings_by_severity.low?.count || 0,
+      info: findings_by_severity.info?.count || 0
+    };
 
     // Update donut count
     const totalCountEl = document.getElementById("donut-total-findings-count");
@@ -391,60 +320,19 @@
   /**
    * Render circular SVG Risk Score and target score list
    */
-  function renderRiskScoreSection(findings, targets) {
+  function renderRiskScoreSection(risk_score, targets) {
     const displayContainer = document.getElementById("risk-score-display-container");
     const targetsContainer = document.getElementById("risk-targets-list-container");
     if (!displayContainer || !targetsContainer) return;
 
-    // Calculate synthetic target risk scores
-    // Start at a perfect score of 10.0 and reduce based on open findings severity
-    const targetsWithScores = targets.map(t => {
-      const targetFindings = findings.filter(f => 
-        String(f.target_id) === String(t.id) && (f.status || "").toLowerCase() === "open"
-      );
+    let overallScore = parseFloat(risk_score.global_score || 0.0);
+    let riskLevel = (risk_score.risk_level || "Low").toLowerCase();
 
-      let criticalCount = 0;
-      let highCount = 0;
-      let mediumCount = 0;
-      let lowCount = 0;
-
-      targetFindings.forEach(f => {
-        const sev = (f.severity || "").toLowerCase();
-        if (sev === "critical") criticalCount++;
-        else if (sev === "high") highCount++;
-        else if (sev === "medium" || sev === "moderate") mediumCount++;
-        else if (sev === "low") lowCount++;
-      });
-
-      // Standard weights to calculate penalty
-      const penalty = (criticalCount * 2.5) + (highCount * 1.5) + (mediumCount * 0.6) + (lowCount * 0.1);
-      const score = Math.max(0.0, Math.min(10.0, Math.round((10.0 - penalty) * 10) / 10));
-
-      // Map score to color
-      let color = "#22c55e"; // low risk green
-      if (score < 4.0) color = "#ef4444"; // critical risk red
-      else if (score < 6.0) color = "#f97316"; // high risk orange
-      else if (score < 8.0) color = "#eab308"; // moderate risk yellow
-
-      return {
-        ...t,
-        risk_score: score.toFixed(1),
-        risk_color: color
-      };
-    });
-
-    // Determine overall/average risk score
-    let overallScore = 10.0;
-    if (targetsWithScores.length > 0) {
-      const totalScore = targetsWithScores.reduce((sum, t) => sum + parseFloat(t.risk_score), 0);
-      overallScore = Math.round((totalScore / targetsWithScores.length) * 10) / 10;
-    }
-
-    // Overall color
-    let overallColor = "#22c55e";
-    if (overallScore < 4.0) overallColor = "#ef4444";
-    else if (overallScore < 6.0) overallColor = "#f97316";
-    else if (overallScore < 8.0) overallColor = "#eab308";
+    // Map overall risk level to color
+    let overallColor = "#22c55e"; // Green
+    if (riskLevel === "critical") overallColor = "#ef4444";
+    else if (riskLevel === "high") overallColor = "#f97316";
+    else if (riskLevel === "medium" || riskLevel === "moderate") overallColor = "#eab308";
 
     // Circular gauge geometry
     const RADIUS = 50;
@@ -549,7 +437,27 @@
     }
     lastOverallScore = overallScore;
 
-    // Render per-target list (top 4 for aesthetic elegance)
+    // Render per-target list (top 4 for aesthetic elegance) using real risk scores from /targets API
+    const targetsWithScores = targets.map(t => {
+      const score = parseFloat(t.risk_score || 0.0);
+      
+      // Color-coding:
+      // 0-30: Green, 31-60: Yellow, 61-80: Orange, 81-100: Red
+      let color = "#22c55e"; // Low (Green)
+      if (score > 80) color = "#ef4444"; // Critical (Red)
+      else if (score > 60) color = "#f97316"; // High (Orange)
+      else if (score > 30) color = "#eab308"; // Medium (Yellow)
+
+      return {
+        ...t,
+        risk_color: color,
+        risk_score_display: score.toFixed(0)
+      };
+    });
+
+    // Sort by risk score descending so most risky are at the top
+    targetsWithScores.sort((a, b) => parseFloat(b.risk_score || 0) - parseFloat(a.risk_score || 0));
+
     const displayList = targetsWithScores.slice(0, 4);
     if (displayList.length === 0) {
       targetsContainer.innerHTML = `
@@ -560,11 +468,11 @@
     } else {
       targetsContainer.innerHTML = displayList.map(t => `
         <div class="risk-target-row">
-          <span class="risk-target-name" title="${t.name || t.url}">${t.name || t.url}</span>
+          <span class="risk-target-name" title="${t.name || t.value}">${t.name || t.value}</span>
           <div class="risk-mini-bar bg-white/5">
-            <div class="risk-mini-fill" style="width: ${parseFloat(t.risk_score) * 10}%; background-color: ${t.risk_color}"></div>
+            <div class="risk-mini-fill" style="width: ${parseFloat(t.risk_score || 0)}%; background-color: ${t.risk_color}"></div>
           </div>
-          <span class="risk-score-value font-mono" style="color: ${t.risk_color}">${t.risk_score}</span>
+          <span class="risk-score-value font-mono" style="color: ${t.risk_color}">${t.risk_score_display}</span>
         </div>
       `).join("");
     }
@@ -573,9 +481,11 @@
   /**
    * Render Active/Running Scans List
    */
-  function renderActiveScans(activeScans) {
+  function renderActiveScans(activeScansPayload) {
     const container = document.getElementById("active-scans-container");
     if (!container) return;
+
+    const activeScans = activeScansPayload?.scans || [];
 
     if (activeScans.length === 0) {
       container.innerHTML = `
@@ -620,9 +530,11 @@
   /**
    * Render Recent Findings List
    */
-  function renderRecentFindings(findings) {
+  function renderRecentFindings(recentFindingsPayload) {
     const container = document.getElementById("recent-findings-container");
     if (!container) return;
+
+    const findings = recentFindingsPayload?.findings || [];
 
     // Filter open/active findings, sort newest first, limit to 5 rows
     const openFindings = findings
@@ -646,13 +558,14 @@
       const cfg = SEVERITY_CONFIG[sev] || SEVERITY_CONFIG.info;
       const timeStr = f.created_at || f.timestamp || new Date().toISOString();
       const status = (f.status || "open").toLowerCase();
+      const targetName = f.target_name || (f.target?.name || f.target?.url || "Unknown Target");
 
       return `
         <div class="recent-finding-row flex justify-between items-center py-2.5">
           <span class="finding-severity-badge severity-tooltip text-[10px] py-0.5" 
                 data-severity="${sev}"
                 data-title="${escapeHtml(f.title || f.name || 'Vulnerability Alert')}"
-                data-target="${escapeHtml(f.target_name)}"
+                data-target="${escapeHtml(targetName)}"
                 style="background: ${cfg.color}15; color: ${cfg.color}; border: 1px solid ${cfg.color}30; cursor: help;">
             ${cfg.label}
           </span>
@@ -660,12 +573,12 @@
             <div class="finding-title severity-tooltip" 
                  data-severity="${sev}"
                  data-title="${escapeHtml(f.title || f.name || 'Vulnerability Alert')}"
-                 data-target="${escapeHtml(f.target_name)}"
+                 data-target="${escapeHtml(targetName)}"
                  style="cursor: help;">
               ${f.title || f.name || "Vulnerability Alert"}
             </div>
             <div class="finding-meta font-mono text-[10px]">
-              <span>${f.target_name}</span>
+              <span>${targetName}</span>
               <span class="text-slate-600">•</span>
               <span>${formatRelativeTime(timeStr)}</span>
             </div>
@@ -734,32 +647,13 @@
       // Check if current tab is still Security Dashboard
       if (typeof switchToTab === "function" && document.querySelector(".cyber-nav-item.cyber-nav-active")?.textContent.includes("Security Dashboard")) {
         try {
-          const projects = dashboardState.projects;
-          const scansPromises = projects.map(p => 
-            window.scannerAPI ? window.scannerAPI.getProjectScans(p.id).catch(() => []) : []
-          );
-          const scansResults = await Promise.all(scansPromises);
-
-          const allScans = [];
-          projects.forEach((proj, idx) => {
-            const sList = scansResults[idx] || [];
-            sList.forEach(s => {
-              allScans.push({
-                ...s,
-                project_id: proj.id,
-                project_name: proj.name
-              });
-            });
-          });
-          dashboardState.scans = allScans;
-
-          const activeScans = allScans.filter(s => 
-            ["running", "active", "in_progress"].includes((s.status || "").toLowerCase())
-          );
-
-          renderActiveScans(activeScans);
+          const metricsRes = await window.apiClient.get("/dashboard/metrics");
+          if (metricsRes.status === "success" && metricsRes.data) {
+            dashboardState.metrics = metricsRes.data;
+            renderActiveScans(metricsRes.data.active_scans);
+          }
         } catch (e) {
-          console.warn("[SecurityDashboard] Auto-refresh scans query failed:", e);
+          console.warn("[SecurityDashboard] Auto-refresh metrics query failed:", e);
         }
       } else {
         stopActiveScansPolling();
