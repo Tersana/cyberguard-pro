@@ -34,7 +34,7 @@ describe('SelectionManager Integration - Task 2.1', () => {
       },
       
       attachEventListeners() {
-        const toolCards = document.querySelectorAll('.cyber-tool-card');
+        const toolCards = document.querySelectorAll('.cyber-tool-card, .wa-cp-tool-item');
         
         toolCards.forEach(card => {
           card.addEventListener('click', (e) => {
@@ -57,14 +57,14 @@ describe('SelectionManager Integration - Task 2.1', () => {
       const webSecurityTab = document.getElementById('web-security');
       expect(webSecurityTab).toBeTruthy();
       
-      const webToolCards = webSecurityTab.querySelectorAll('.cyber-tool-card[data-tool-id]');
+      const webToolCards = webSecurityTab.querySelectorAll('.cyber-tool-card[data-tool-id], .wa-cp-tool-item[data-tool-id]');
       
-      // Should have 4 web security tools: xss, ssl, phishing, dns-spoof
-      expect(webToolCards.length).toBeGreaterThanOrEqual(4);
+      // Should have 3 web security tools: ssl, phishing, dns-spoof
+      expect(webToolCards.length).toBeGreaterThanOrEqual(3);
     });
 
     it('should find tool cards with correct data attributes', () => {
-      const toolCards = document.querySelectorAll('.cyber-tool-card[data-tool-id]');
+      const toolCards = document.querySelectorAll('.cyber-tool-card[data-tool-id], .wa-cp-tool-item[data-tool-id]');
       
       toolCards.forEach(card => {
         // Each card should have data-selected attribute
@@ -80,7 +80,7 @@ describe('SelectionManager Integration - Task 2.1', () => {
     });
 
     it('should find tool buttons inside cards with matching IDs', () => {
-      const toolCards = document.querySelectorAll('.cyber-tool-card[data-tool-id]');
+      const toolCards = document.querySelectorAll('.cyber-tool-card[data-tool-id], .wa-cp-tool-item[data-tool-id]');
       
       toolCards.forEach(card => {
         const toolId = card.dataset.toolId;
@@ -101,7 +101,7 @@ describe('SelectionManager Integration - Task 2.1', () => {
     });
 
     it('should attach listeners to all tool cards', () => {
-      const toolCards = document.querySelectorAll('.cyber-tool-card[data-tool-id]');
+      const toolCards = document.querySelectorAll('.cyber-tool-card[data-tool-id], .wa-cp-tool-item[data-tool-id]');
       const initialCount = toolCards.length;
       
       expect(initialCount).toBeGreaterThan(0);
@@ -113,7 +113,7 @@ describe('SelectionManager Integration - Task 2.1', () => {
     });
 
     it('should handle tool cards in web security tab', () => {
-      const webCards = document.querySelectorAll('#web-security .cyber-tool-card[data-tool-id]');
+      const webCards = document.querySelectorAll('#web-security .cyber-tool-card[data-tool-id], #web-security .wa-cp-tool-item[data-tool-id]');
       
       expect(webCards.length).toBeGreaterThan(0);
       
@@ -128,19 +128,19 @@ describe('SelectionManager Integration - Task 2.1', () => {
     it('should correctly identify buttons with -btn suffix', () => {
       SelectionManager.init();
       
-      const xssCard = document.querySelector('.cyber-tool-card[data-tool-id="xss-btn"]');
-      expect(xssCard).toBeTruthy();
+      const sslCard = document.querySelector('.cyber-tool-card[data-tool-id="ssl-btn"], .wa-cp-tool-item[data-tool-id="ssl-btn"]');
+      expect(sslCard).toBeTruthy();
       
-      const xssButton = document.getElementById('xss-btn');
-      expect(xssButton).toBeTruthy();
+      const sslButton = document.getElementById('ssl-btn');
+      expect(sslButton).toBeTruthy();
       
       // Verify the button is inside the card
-      expect(xssCard.contains(xssButton)).toBe(true);
+      expect(sslCard.contains(sslButton)).toBe(true);
     });
 
     it('should find buttons using closest() selector', () => {
       // Only check buttons that are inside tool cards
-      const toolCards = document.querySelectorAll('.cyber-tool-card[data-tool-id]');
+      const toolCards = document.querySelectorAll('.cyber-tool-card[data-tool-id], .wa-cp-tool-item[data-tool-id]');
       const toolButtons = [];
       
       toolCards.forEach(card => {
@@ -158,7 +158,7 @@ describe('SelectionManager Integration - Task 2.1', () => {
         expect(button.id).toMatch(/-btn$/);
         
         // Each button should be inside a tool card
-        const parentCard = button.closest('.cyber-tool-card');
+        const parentCard = button.closest('.cyber-tool-card, .wa-cp-tool-item');
         expect(parentCard).toBeTruthy();
       });
     });
@@ -166,16 +166,22 @@ describe('SelectionManager Integration - Task 2.1', () => {
 
   describe('Selection indicator structure', () => {
     it('should find selection indicators in tool cards', () => {
-      const toolCards = document.querySelectorAll('.cyber-tool-card[data-tool-id]');
+      const toolCards = document.querySelectorAll('.cyber-tool-card[data-tool-id], .wa-cp-tool-item[data-tool-id]');
       
       toolCards.forEach(card => {
-        const indicator = card.querySelector('.selection-indicator');
-        
-        // Each card should have a selection indicator
-        expect(indicator).toBeTruthy();
-        
-        // Indicator should be hidden by default
-        expect(indicator.classList.contains('hidden')).toBe(true);
+        // Only old-style cyber-tool-card has selection-indicator. wa-cp-tool-item uses checkbox
+        if (card.classList.contains('cyber-tool-card')) {
+          const indicator = card.querySelector('.selection-indicator');
+          
+          // Each card should have a selection indicator
+          expect(indicator).toBeTruthy();
+          
+          // Indicator should be hidden by default
+          expect(indicator.classList.contains('hidden')).toBe(true);
+        } else {
+          const checkbox = card.querySelector('.wa-cp-checkbox');
+          expect(checkbox).toBeTruthy();
+        }
       });
     });
   });

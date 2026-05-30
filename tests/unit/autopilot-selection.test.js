@@ -147,9 +147,7 @@ describe('Autopilot Selection Actions & Offline Parsing', () => {
       let scanType = "network";
 
       if (q.includes("xss")) {
-        targetTool = "xss-btn";
-        tabId = "web-security";
-        scanType = "web";
+        return "XSS vulnerability scanning has been removed from Web Auditing. However, I can perform other web auditing scans like SSL, Phishing, or DNS Spoofing analysis for you.";
       } else if (q.includes("ssl") || q.includes("tls")) {
         targetTool = "ssl-btn";
         tabId = "web-security";
@@ -260,9 +258,9 @@ describe('Autopilot Selection Actions & Offline Parsing', () => {
     });
 
     it('should support web target and tool parsing', () => {
-      const result = processOfflineMessage('test xss on google.com');
+      const result = processOfflineMessage('test ssl on google.com');
       expect(result).toContain('[[ACTION: switch_tab("web-security")]]');
-      expect(result).toContain('[[ACTION: select_only_tool("xss-btn")]]');
+      expect(result).toContain('[[ACTION: select_only_tool("ssl-btn")]]');
       expect(result).toContain('[[ACTION: run_scan("web", "google.com")]]');
     });
 

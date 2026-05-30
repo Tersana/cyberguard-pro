@@ -158,7 +158,7 @@ describe('Bug Condition Exploration - Legacy Hash Tools Event Listener Registrat
     it('should verify that critical DOM elements exist for event listener registration', () => {
       // Verify that the elements that SHOULD have event listeners exist
       const runAnalysisBtn = document.getElementById('run-analysis-btn');
-      const toolCards = document.querySelectorAll('.cyber-tool-card');
+      const toolCards = document.querySelectorAll('.cyber-tool-card, .wa-cp-tool-item');
       const filterButtons = document.querySelectorAll('.filter-pill');
       const welcomeModal = document.getElementById('welcome-modal');
 
