@@ -3467,19 +3467,12 @@
 
                 setBtnLoading(btn, "Generating…");
                 try {
-                    // Deliver role via query param, JSON body, AND form-urlencoded to bypass any backend parsing bugs
-                    const token = localStorage.getItem(JWT_KEY);
+                    // Send role as JSON body (backend expects application/json)
                     const res = await apiFetch(
-                        `/projects/${_projectId}/invite?role=${role}`,
+                        `/projects/${_projectId}/invite`,
                         {
                             method: "POST",
-                            headers: {
-                                Accept: "application/json",
-                                "Content-Type": "application/x-www-form-urlencoded",
-                                "ngrok-skip-browser-warning": "true",
-                                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                            },
-                            body: `role=${encodeURIComponent(role)}`,
+                            body: JSON.stringify({ role }),
                         },
                     );
 
