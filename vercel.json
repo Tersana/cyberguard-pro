@@ -5,11 +5,11 @@
   "rewrites": [
     {
       "source": "/invitations/:token*",
-      "destination": "/invite"
+      "destination": "/invitation"
     },
     {
       "source": "/invite/:token*",
-      "destination": "/invite"
+      "destination": "/invitation"
     },
     {
       "source": "/billing/paymob/redirect",
