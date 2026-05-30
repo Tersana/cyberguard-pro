@@ -66,87 +66,143 @@
                 display: flex;
                 align-items: flex-start;
                 justify-content: space-between;
-                padding: 20px 24px 16px;
+                padding: 24px 28px 18px;
                 flex-wrap: wrap;
-                gap: 12px;
+                gap: 16px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+                background: rgba(255, 255, 255, 0.01);
             }
-            .findings-title { font-size: 18px; font-weight: 700; color: var(--cg-text-1); margin: 0 0 4px; }
-            .findings-subtitle { font-size: 13px; color: var(--cg-text-3); margin: 0; }
-            .findings-header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+            .findings-title { font-size: 19px; font-weight: 800; color: var(--cg-text-1); margin: 0 0 6px; letter-spacing: -0.2px; }
+            .findings-subtitle { font-size: 13px; color: var(--cg-text-3); margin: 0; font-weight: 500; }
+            .findings-header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
             /* ── Filter Buttons ──────────────────────────── */
             .findings-filter-group {
                 display: flex; gap: 4px;
-                background: var(--cg-bg-elevated);
-                border: 1px solid var(--cg-border);
-                border-radius: var(--cg-radius-md);
-                padding: 3px;
+                background: rgba(15, 23, 42, 0.6);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 12px;
+                padding: 4px;
+                box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
             }
             .filter-btn {
-                padding: 5px 12px; border-radius: 7px; border: none;
+                padding: 6px 14px; border-radius: 8px; border: none;
                 background: transparent; color: var(--cg-text-3);
-                font-size: 12px; font-weight: 500; cursor: pointer;
-                transition: all 0.2s ease;
+                font-size: 11.5px; font-weight: 600; cursor: pointer;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             }
-            .filter-btn:hover { color: var(--cg-text-1); }
-            .filter-btn.active { background: var(--cg-accent-muted); color: var(--cg-accent); font-weight: 600; }
+            .filter-btn:hover { color: var(--cg-text-1); background: rgba(255,255,255,0.02); }
+            .filter-btn.active { 
+                background: var(--cg-accent-muted); 
+                color: var(--cg-accent); 
+                font-weight: 700;
+                box-shadow: 0 2px 8px rgba(167, 139, 250, 0.12);
+            }
 
             /* ── Refresh Button ──────────────────────────── */
             .btn-refresh-findings {
                 display: inline-flex; align-items: center; gap: 6px;
-                padding: 7px 12px; background: transparent;
-                border: 1px solid var(--cg-border-subtle);
-                border-radius: var(--cg-radius-sm);
-                color: var(--cg-text-2); font-size: 12px; cursor: pointer;
+                padding: 8px 14px; background: rgba(255, 255, 255, 0.02);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 10px;
+                color: var(--cg-text-2); font-size: 12px; font-weight: 600; cursor: pointer;
                 transition: all 0.2s ease;
             }
-            .btn-refresh-findings:hover { border-color: var(--cg-accent); color: var(--cg-accent); }
+            .btn-refresh-findings:hover { 
+                border-color: var(--cg-accent); 
+                color: var(--cg-accent); 
+                background: var(--cg-accent-muted);
+                box-shadow: 0 0 12px rgba(167, 139, 250, 0.15);
+                transform: translateY(-0.5px);
+            }
 
             /* ── Stats Bar ───────────────────────────────── */
             .findings-stats-bar {
-                display: flex; gap: 0;
-                border-top: 1px solid var(--cg-border);
-                border-bottom: 1px solid var(--cg-border);
-                background: var(--cg-bg-surface);
+                display: flex; 
+                gap: 12px;
+                border: none;
+                background: transparent;
+                padding: 20px 24px;
+                flex-wrap: wrap;
             }
             .finding-stat {
-                flex: 1; display: flex; flex-direction: column;
-                align-items: center; padding: 12px 8px;
-                border-right: 1px solid var(--cg-border);
+                flex: 1; 
+                min-width: 100px;
+                display: flex; 
+                flex-direction: column;
+                align-items: center; 
+                padding: 16px 12px;
+                border-radius: 14px;
+                background: rgba(30, 41, 59, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.04);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.02);
+                cursor: default;
             }
-            .finding-stat:last-child { border-right: none; }
-            .stat-num { font-size: 22px; font-weight: 700; color: var(--cg-text-1); line-height: 1; }
-            .stat-lbl { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; color: var(--cg-text-3); text-transform: uppercase; margin-top: 4px; }
-            .finding-stat.critical .stat-num { color: var(--cg-danger); }
-            .finding-stat.high     .stat-num { color: #F97316; }
-            .finding-stat.medium   .stat-num { color: var(--cg-warning); }
-            .finding-stat.low      .stat-num { color: var(--cg-info); }
+            .finding-stat:hover {
+                background: rgba(30, 41, 59, 0.45);
+                border-color: rgba(255, 255, 255, 0.08);
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+            }
+            .stat-num { font-size: 24px; font-weight: 800; color: var(--cg-text-1); line-height: 1; letter-spacing: -0.5px; }
+            .stat-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: 0.8px; color: var(--cg-text-3); text-transform: uppercase; margin-top: 6px; }
+            
+            .finding-stat.critical { border-bottom: 2.5px solid var(--cg-danger); }
+            .finding-stat.high     { border-bottom: 2.5px solid #F97316; }
+            .finding-stat.medium   { border-bottom: 2.5px solid var(--cg-warning); }
+            .finding-stat.low      { border-bottom: 2.5px solid var(--cg-info); }
+            .finding-stat.info     { border-bottom: 2.5px solid var(--cg-text-3); }
+
+            .finding-stat.critical:hover { box-shadow: 0 8px 24px rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.2); }
+            .finding-stat.high:hover     { box-shadow: 0 8px 24px rgba(249, 115, 22, 0.12); border-color: rgba(249, 115, 22, 0.2); }
+            .finding-stat.medium:hover   { box-shadow: 0 8px 24px rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.2); }
+            .finding-stat.low:hover      { box-shadow: 0 8px 24px rgba(14, 165, 233, 0.12); border-color: rgba(14, 165, 233, 0.2); }
+            .finding-stat.info:hover     { box-shadow: 0 8px 24px rgba(148, 163, 184, 0.12); border-color: rgba(148, 163, 184, 0.2); }
+
+            .finding-stat.critical .stat-num { color: var(--cg-danger); text-shadow: 0 0 10px rgba(239, 68, 68, 0.15); }
+            .finding-stat.high     .stat-num { color: #F97316; text-shadow: 0 0 10px rgba(249, 115, 22, 0.15); }
+            .finding-stat.medium   .stat-num { color: var(--cg-warning); text-shadow: 0 0 10px rgba(245, 158, 11, 0.15); }
+            .finding-stat.low      .stat-num { color: var(--cg-info); text-shadow: 0 0 10px rgba(14, 165, 233, 0.15); }
             .finding-stat.info     .stat-num { color: var(--cg-text-2); }
 
             /* ── Finding Cards ───────────────────────────── */
-            #findings-list-container { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+            #findings-list-container { padding: 8px 24px 24px; display: flex; flex-direction: column; gap: 10px; }
             .finding-card {
-                background: var(--cg-bg-surface);
-                border: 1px solid var(--cg-border);
-                border-radius: var(--cg-radius-md);
+                background: rgba(30, 41, 59, 0.2);
+                border: 1px solid rgba(255, 255, 255, 0.04);
+                border-radius: 14px;
                 overflow: hidden;
-                border-left: 3px solid transparent;
-                transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                border-left: 4.5px solid transparent;
+                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255,255,255,0.01);
             }
-            .finding-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
-            .severity-border-critical { border-left-color: var(--cg-danger); }
-            .severity-border-high     { border-left-color: #F97316; }
-            .severity-border-medium   { border-left-color: var(--cg-warning); }
-            .severity-border-low      { border-left-color: var(--cg-info); }
-            .severity-border-info     { border-left-color: var(--cg-text-3); }
+            .finding-card:hover { 
+                box-shadow: 0 8px 24px rgba(0,0,0,0.3); 
+                background: rgba(30, 41, 59, 0.35);
+                transform: translateY(-2px);
+            }
+            
+            .finding-card.severity-border-critical { border-left-color: var(--cg-danger); }
+            .finding-card.severity-border-high     { border-left-color: #F97316; }
+            .finding-card.severity-border-medium   { border-left-color: var(--cg-warning); }
+            .finding-card.severity-border-low      { border-left-color: var(--cg-info); }
+            .finding-card.severity-border-info     { border-left-color: var(--cg-text-3); }
+
+            .finding-card.severity-border-critical:hover { border-color: rgba(239, 68, 68, 0.2) rgba(239, 68, 68, 0.2) rgba(239, 68, 68, 0.2) var(--cg-danger); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.08); }
+            .finding-card.severity-border-high:hover     { border-color: rgba(249, 115, 22, 0.2) rgba(249, 115, 22, 0.2) rgba(249, 115, 22, 0.2) #F97316; box-shadow: 0 6px 20px rgba(249, 115, 22, 0.08); }
+            .finding-card.severity-border-medium:hover   { border-color: rgba(245, 158, 11, 0.2) rgba(245, 158, 11, 0.2) rgba(245, 158, 11, 0.2) var(--cg-warning); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.08); }
+            .finding-card.severity-border-low:hover      { border-color: rgba(14, 165, 233, 0.2) rgba(14, 165, 233, 0.2) rgba(14, 165, 233, 0.2) var(--cg-info); box-shadow: 0 6px 20px rgba(14, 165, 233, 0.08); }
+            .finding-card.severity-border-info:hover     { border-color: rgba(148, 163, 184, 0.2) rgba(148, 163, 184, 0.2) rgba(148, 163, 184, 0.2) var(--cg-text-3); box-shadow: 0 6px 20px rgba(148, 163, 184, 0.08); }
 
             /* Card Header */
             .finding-card-header {
                 display: flex; align-items: center; justify-content: space-between;
-                padding: 14px 16px; cursor: pointer; user-select: none;
+                padding: 16px 20px; cursor: pointer; user-select: none;
                 gap: 12px; flex-wrap: wrap;
+                transition: background-color 0.2s ease;
             }
-            .finding-card-header:hover { background: var(--cg-bg-elevated); }
+            .finding-card-header:hover { background: rgba(255, 255, 255, 0.015); }
             .finding-card-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
             .finding-card-title-group { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
             .finding-card-title { font-size: 14px; font-weight: 600; color: var(--cg-text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -261,60 +317,34 @@
             }
             .target-history-panel.hidden { display:none; }
 
-            /* ── Option A: Tech-Glass Cyber Cards & 3D Card Flip ── */
-            .target-card-container {
-                perspective: 1000px;
-                height: 220px;
-            }
-            .target-card-inner {
-                position: relative;
-                width: 100%;
-                height: 100%;
-                transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-                transform-style: preserve-3d;
-            }
-            .target-card-container.flipped .target-card-inner {
-                transform: rotateY(180deg);
-            }
-            .target-card-front, .target-card-back {
-                position: absolute;
-                width: 100%;
-                height: 100%;
-                -webkit-backface-visibility: hidden;
-                backface-visibility: hidden;
-                border-radius: var(--cg-radius-lg);
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                padding: var(--cg-space-4);
-                border: 1px solid var(--cg-border);
-                box-sizing: border-box;
-            }
-            .target-card-front {
-                background: rgba(17, 24, 39, 0.45);
+            /* ── Premium High-Fidelity Target Row Card Styling ── */
+            .target-row-card {
+                background: rgba(30, 41, 59, 0.22);
+                border: 1px solid rgba(255, 255, 255, 0.04);
                 backdrop-filter: blur(12px);
                 -webkit-backdrop-filter: blur(12px);
-                transition: border-color var(--cg-transition-fast), box-shadow var(--cg-transition-fast), transform var(--cg-transition-fast);
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+                transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             }
-            .target-card-container:hover .target-card-front {
+            .target-row-card:hover {
+                background: rgba(30, 41, 59, 0.35);
+                border-color: rgba(167, 139, 250, 0.25);
+                box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(167, 139, 250, 0.06);
                 transform: translateY(-2px);
             }
-            .target-card-back {
-                background: rgba(17, 24, 39, 0.85);
-                backdrop-filter: blur(16px);
-                -webkit-backdrop-filter: blur(16px);
-                transform: rotateY(180deg);
-                box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            .target-history-drawer {
+                transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease-out, border-color 0.3s ease;
             }
-            /* Neon color highlighting by type (unified purple) */
-            .target-card-type-domain, .target-card-type-ip, .target-card-type-network {
-                border-top: 4px solid var(--cg-accent);
+            .target-card-type-domain  { border-left: 4px solid var(--cg-info) !important; }
+            .target-card-type-ip      { border-left: 4px solid var(--cg-accent) !important; }
+            .target-card-type-network { border-left: 4px solid var(--cg-warning) !important; }
+            
+            .scrollbar-none::-webkit-scrollbar {
+                display: none;
             }
-            .target-card-container:hover .target-card-type-domain,
-            .target-card-container:hover .target-card-type-ip,
-            .target-card-container:hover .target-card-type-network {
-                border-color: rgba(167, 139, 250, 0.4);
-                box-shadow: 0 0 20px rgba(167, 139, 250, 0.15);
+            .scrollbar-none {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
             }
 
             /* ── Full screen scanner dashboard overlay transition ── */
@@ -366,6 +396,101 @@
                 transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease-out;
             }
 
+            /* ── Finding Metadata Panel ─────────────────────────────────── */
+            .fd-meta-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px 16px;
+            }
+            @media (max-width: 540px) {
+                .fd-meta-grid { grid-template-columns: 1fr; }
+            }
+            .fd-meta-item {
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+                padding: 10px 12px;
+                background: rgba(255,255,255,0.025);
+                border: 1px solid rgba(255,255,255,0.06);
+                border-radius: 10px;
+                min-width: 0;
+                transition: background 0.2s;
+            }
+            .fd-meta-item:hover {
+                background: rgba(167,139,250,0.04);
+                border-color: rgba(167,139,250,0.15);
+            }
+            .fd-meta-item.fd-meta-full {
+                grid-column: 1 / -1;
+            }
+            .fd-meta-key {
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 0.6px;
+                text-transform: uppercase;
+                color: var(--cg-text-3);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .fd-meta-val {
+                font-size: 12px;
+                font-weight: 500;
+                color: var(--cg-text-1);
+                font-family: 'JetBrains Mono', monospace;
+                word-break: break-all;
+                line-height: 1.5;
+            }
+            .fd-meta-val.mono-dim {
+                color: var(--cg-text-2);
+                font-size: 11px;
+            }
+            .fd-meta-val.accent-val {
+                color: var(--cg-accent);
+            }
+            .fd-meta-section-divider {
+                margin: 2px 0 4px;
+                padding: 4px 0 6px;
+                border-bottom: 1px solid rgba(255,255,255,0.04);
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 0.8px;
+                text-transform: uppercase;
+                color: var(--cg-text-3);
+            }
+            .fd-meta-badge {
+                display: inline-flex;
+                align-items: center;
+                padding: 2px 8px;
+                border-radius: 6px;
+                font-size: 11px;
+                font-weight: 700;
+                background: rgba(167,139,250,0.1);
+                color: var(--cg-accent);
+                border: 1px solid rgba(167,139,250,0.2);
+                font-family: 'JetBrains Mono', monospace;
+                width: fit-content;
+            }
+            .fd-urls-list {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                margin-top: 2px;
+            }
+            .fd-url-chip {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                padding: 4px 8px;
+                background: rgba(56,189,248,0.05);
+                border: 1px solid rgba(56,189,248,0.15);
+                border-radius: 6px;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 10.5px;
+                color: var(--cg-info);
+                word-break: break-all;
+            }
+
             /* ── Collapsible Findings List ── */
             .collapsible-findings {
                 transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-out;
@@ -396,6 +521,125 @@
                 color: var(--cg-accent) !important;
                 border-color: rgba(167, 139, 250, 0.25) !important;
                 box-shadow: 0 0 12px rgba(167, 139, 250, 0.08);
+            }
+
+            /* Custom Select Pills for inline Findings card edits */
+            .severity-badge-select, .status-badge-select {
+                padding: 3px 22px 3px 10px;
+                border-radius: 20px;
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+                cursor: pointer;
+                border: 1px solid transparent;
+                background-position: right 7px center;
+                background-size: 8px;
+                background-repeat: no-repeat;
+                appearance: none;
+                -webkit-appearance: none;
+                background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23e2e8f0' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.8' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+            }
+
+            /* Explicit dark style popups for option elements to fix bright high-contrast browser native overrides */
+            .severity-badge-select option,
+            .status-badge-select option,
+            #findings-target-selector option,
+            #filter-target option,
+            #filter-status option,
+            #filter-tool option,
+            #fd-severity-select option,
+            #fd-status-select option {
+                background-color: #0f172a !important; /* Premium deep navy slate popup */
+                color: #f1f5f9 !important;            /* High-contrast off-white text */
+                font-family: var(--cg-font-sans), system-ui, sans-serif !important;
+                font-size: 12px !important;
+                font-weight: 600 !important;
+                padding: 8px 12px !important;
+            }
+
+            .severity-badge-select.sev-critical { background-color: rgba(248,113,113,0.12); color: var(--cg-danger); border-color: rgba(248,113,113,0.25); }
+            .severity-badge-select.sev-high     { background-color: rgba(249,115,22,0.12);  color: #F97316; border-color: rgba(249,115,22,0.25); }
+            .severity-badge-select.sev-medium   { background-color: rgba(251,191,36,0.12);  color: var(--cg-warning); border-color: rgba(251,191,36,0.25); }
+            .severity-badge-select.sev-low      { background-color: rgba(56,189,248,0.12);  color: var(--cg-info); border-color: rgba(56,189,248,0.25); }
+            .severity-badge-select.sev-info     { background-color: rgba(148,163,184,0.1); color: var(--cg-text-2); border-color: rgba(148,163,184,0.25); }
+
+            .severity-badge-select.sev-critical:hover, .severity-badge-select.sev-critical:focus { border-color: rgba(248,113,113,0.6); box-shadow: 0 0 8px rgba(248,113,113,0.3); outline: none; }
+            .severity-badge-select.sev-high:hover, .severity-badge-select.sev-high:focus     { border-color: rgba(249,115,22,0.6);  box-shadow: 0 0 8px rgba(249,115,22,0.3);  outline: none; }
+            .severity-badge-select.sev-medium:hover, .severity-badge-select.sev-medium:focus   { border-color: rgba(251,191,36,0.6);  box-shadow: 0 0 8px rgba(251,191,36,0.3);  outline: none; }
+            .severity-badge-select.sev-low:hover, .severity-badge-select.sev-low:focus      { border-color: rgba(56,189,248,0.6);  box-shadow: 0 0 8px rgba(56,189,248,0.3);  outline: none; }
+            .severity-badge-select.sev-info:hover, .severity-badge-select.sev-info:focus     { border-color: rgba(148,163,184,0.6); box-shadow: 0 0 8px rgba(148,163,184,0.3); outline: none; }
+
+            .status-badge-select.status-open           { background-color: rgba(251,191,36,0.1); color: var(--cg-warning); border-color: rgba(251,191,36,0.25); }
+            .status-badge-select.status-in_progress     { background-color: rgba(56,189,248,0.1);  color: var(--cg-info); border-color: rgba(56,189,248,0.25); }
+            .status-badge-select.status-resolved        { background-color: rgba(52,211,153,0.1);  color: var(--cg-success); border-color: rgba(52,211,153,0.25); }
+            .status-badge-select.status-false_positive  { background-color: rgba(148,163,184,0.1); color: var(--cg-text-2); border-color: rgba(148,163,184,0.25); }
+
+            .status-badge-select.status-open:hover, .status-badge-select.status-open:focus           { border-color: rgba(251,191,36,0.6); box-shadow: 0 0 8px rgba(251,191,36,0.3); outline: none; }
+            .status-badge-select.status-in_progress:hover, .status-badge-select.status-in_progress:focus     { border-color: rgba(56,189,248,0.6); box-shadow: 0 0 8px rgba(56,189,248,0.3); outline: none; }
+            .status-badge-select.status-resolved:hover, .status-badge-select.status-resolved:focus        { border-color: rgba(52,211,153,0.6); box-shadow: 0 0 8px rgba(52,211,153,0.3); outline: none; }
+            .status-badge-select.status-false_positive:hover, .status-badge-select.status-false_positive:focus  { border-color: rgba(148,163,184,0.6); box-shadow: 0 0 8px rgba(148,163,184,0.3); outline: none; }
+
+            /* Enhanced Premium Styling for findings header selectors and filters */
+            #findings-target-selector,
+            #filter-target,
+            #filter-status,
+            #filter-tool {
+                appearance: none;
+                -webkit-appearance: none;
+                background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.8' d='m6 8 4 4 4-4'/%3E%3C/svg%3E") !important;
+                background-position: right 8px center !important;
+                background-size: 10px !important;
+                background-repeat: no-repeat !important;
+                padding-right: 26px !important;
+                transition: all 0.2s ease-in-out;
+            }
+            
+            #findings-target-selector:hover {
+                border-color: var(--cg-accent) !important;
+                box-shadow: 0 0 10px rgba(167, 139, 250, 0.15);
+            }
+            #findings-target-selector:focus {
+                border-color: var(--cg-accent) !important;
+                box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.25);
+            }
+
+            #filter-target:hover,
+            #filter-status:hover,
+            #filter-tool:hover {
+                border-color: rgba(255, 255, 255, 0.25) !important;
+                background-color: rgba(255, 255, 255, 0.05) !important;
+            }
+            #filter-target:focus,
+            #filter-status:focus,
+            #filter-tool:focus {
+                border-color: var(--cg-accent) !important;
+                box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2) !important;
+                outline: none;
+            }
+
+            /* Detail Modal Dropdown Selects Caret & Outline overrides */
+            #fd-severity-select,
+            #fd-status-select {
+                appearance: none;
+                -webkit-appearance: none;
+                background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.8' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+                background-position: right 6px center;
+                background-size: 8px;
+                background-repeat: no-repeat;
+                padding-right: 18px !important;
+                transition: all 0.2s ease-in-out;
+            }
+            #fd-severity-select:hover,
+            #fd-status-select:hover {
+                border-color: rgba(255,255,255,0.2) !important;
+            }
+            #fd-severity-select:focus,
+            #fd-status-select:focus {
+                border-color: var(--cg-accent) !important;
+                box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2) !important;
+                outline: none;
             }
         </style>
     </head>
@@ -1600,11 +1844,11 @@
                 </div>
 
                 <!-- Targets list -->
-                <div id="targets-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div id="targets-list" class="flex flex-col gap-4">
                     <!-- Shimmer placeholders shown on first load -->
-                    <div class="shimmer h-48 rounded-2xl"></div>
-                    <div class="shimmer h-48 rounded-2xl"></div>
-                    <div class="shimmer h-48 rounded-2xl"></div>
+                    <div class="shimmer h-20 rounded-2xl"></div>
+                    <div class="shimmer h-20 rounded-2xl"></div>
+                    <div class="shimmer h-20 rounded-2xl"></div>
                 </div>
 
                 <!-- ── Scan Live Panel ─────────────────────────────────────── -->
@@ -1621,13 +1865,25 @@
                 <div class="cyber-card overflow-hidden">
 
                     <!-- Findings Sub-tabs -->
-                    <div id="findings-subtabs-bar" class="flex border-b border-[var(--cg-border)] bg-[var(--cg-bg-surface)] px-4 py-2 gap-4">
-                        <button id="subtab-vulns-btn" class="text-xs font-bold uppercase tracking-wider py-1.5 px-3 rounded-lg text-[var(--cg-accent)] bg-[var(--cg-accent-muted)] border border-[var(--cg-accent)]/20" onclick="switchFindingsSubtab('vulns')">
-                            Vulnerabilities
-                        </button>
-                        <button id="subtab-endpoints-btn" class="text-xs font-bold uppercase tracking-wider py-1.5 px-3 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 hidden" onclick="switchFindingsSubtab('endpoints')">
-                            Discovered Endpoints
-                        </button>
+                    <div id="findings-subtabs-bar" class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-white/5 bg-[rgba(13,17,23,0.5)] backdrop-blur-md px-6 py-4 gap-4">
+                        <div class="flex bg-slate-950/60 p-1.5 rounded-xl border border-white/5 gap-1.5 shadow-[inset_0_1px_3px_rgba(0,0,0,0.4)] max-w-fit">
+                            <button id="subtab-vulns-btn" class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider py-2 px-4 rounded-lg transition-all duration-300 text-white bg-gradient-to-r from-[rgba(139,92,246,0.12)] to-[rgba(59,130,246,0.12)] border border-[var(--cg-accent)]/30 shadow-[0_0_12px_rgba(167,139,250,0.1)]" onclick="switchFindingsSubtab('vulns')">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                Vulnerabilities
+                            </button>
+                            <button id="subtab-endpoints-btn" class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider py-2 px-4 rounded-lg transition-all duration-300 text-slate-400 hover:text-slate-200 border border-transparent hover:bg-white/[0.01] hidden" onclick="switchFindingsSubtab('endpoints')">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                                Discovered Endpoints
+                            </button>
+                        </div>
+                        
+                        <div class="text-[10px] uppercase font-bold tracking-wider text-slate-500 bg-white/5 border border-white/5 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 select-none shadow-sm max-w-fit sm:self-center">
+                            <span class="relative flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            Active Target Assessment
+                        </div>
                     </div>
 
                     <!-- Vulnerabilities View -->
@@ -1635,15 +1891,37 @@
                         <!-- Findings Header -->
                         <div class="findings-header">
                             <div>
-                                <h3 class="findings-title flex items-center gap-2 cursor-pointer select-none" onclick="toggleFindingsListVisibility()">
-                                    Security Findings
-                                    <svg id="toggle-all-findings-chevron" class="w-5 h-5 text-slate-400 hover:text-white transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                        <polyline points="6 9 12 15 18 9"/>
-                                    </svg>
+                                <h3 class="findings-title flex items-center gap-2 cursor-pointer select-none">
+                                    <span onclick="toggleFindingsListVisibility()" class="flex items-center gap-2">
+                                        Security Findings
+                                        <svg id="toggle-all-findings-chevron" class="w-5 h-5 text-slate-400 hover:text-white transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="6 9 12 15 18 9"/>
+                                        </svg>
+                                    </span>
+                                    <span class="text-slate-500 text-sm font-normal">for</span>
+                                    <select id="findings-target-selector" class="bg-slate-900 border border-slate-700/50 rounded-lg text-xs font-semibold text-[var(--cg-accent)] focus:ring-0 focus:outline-none cursor-pointer px-2.5 py-1.5 max-w-[240px]" onchange="handleFindingsTargetChange(this.value)">
+                                        <!-- populated dynamically -->
+                                    </select>
                                 </h3>
-                                <p class="findings-subtitle">Vulnerability scan results for this target</p>
+                                <p class="findings-subtitle" id="findings-subtitle-text">Vulnerability scan results for this target</p>
                             </div>
-                            <div class="findings-header-right">
+                            <div class="findings-header-right flex items-center gap-2 flex-wrap">
+                                <!-- Target Filter (shown only when Project-wide findings is selected) -->
+                                <select id="filter-target" class="cyber-input p-1.5 rounded-lg text-xs bg-slate-900 border border-slate-700/50 text-slate-300 font-semibold cursor-pointer hidden" onchange="handleFilterChange()">
+                                    <option value="all">All Targets</option>
+                                </select>
+                                <!-- Status Filter -->
+                                <select id="filter-status" class="cyber-input p-1.5 rounded-lg text-xs bg-slate-900 border border-slate-700/50 text-slate-300 font-semibold cursor-pointer" onchange="handleFilterChange()">
+                                    <option value="all">All Statuses</option>
+                                    <option value="open">Open</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="resolved">Resolved</option>
+                                    <option value="false_positive">False Positive</option>
+                                </select>
+                                <!-- Tool Filter -->
+                                <select id="filter-tool" class="cyber-input p-1.5 rounded-lg text-xs bg-slate-900 border border-slate-700/50 text-slate-300 font-semibold cursor-pointer" onchange="handleFilterChange()">
+                                    <option value="all">All Tools</option>
+                                </select>
                                 <div class="findings-filter-group">
                                     <button class="filter-btn active" data-filter="all" onclick="filterFindings('all')">All</button>
                                     <button class="filter-btn" data-filter="critical" onclick="filterFindings('critical')">Critical</button>
@@ -1699,6 +1977,8 @@
                         <!-- Findings List (populated by JS) -->
                         <div id="findings-collapsible-section" class="collapsible-findings">
                             <div id="findings-list-container"></div>
+                            <!-- Numbered Pagination Component -->
+                            <div id="findings-pagination-container" class="flex items-center justify-center gap-2 py-4 border-t border-[var(--cg-border)] bg-[var(--cg-bg-surface)]"></div>
                         </div>
                     </div>
 
@@ -1867,6 +2147,13 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1">Tags (comma-separated)</label>
                         <input id="af-tags" type="text" class="cyber-input w-full p-2.5 rounded-lg text-sm" placeholder="e.g. owasp-a1, sql-injection, critical" />
+                    </div>
+
+                    <!-- Metadata (Optional JSON) -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Metadata (JSON optional)</label>
+                        <textarea id="af-metadata" rows="2" class="cyber-input w-full p-2.5 rounded-lg text-sm font-mono" placeholder='e.g. {"endpoint": "/login", "parameter": "email"}'></textarea>
+                        <p id="af-metadata-error" class="text-xs text-red-400 mt-1 hidden"></p>
                     </div>
 
                     <div class="flex gap-2 pt-2">
@@ -2277,6 +2564,23 @@
                     <div id="fd-tags-section" class="space-y-2">
                         <div class="finding-section-label">Tags</div>
                         <div id="fd-tags" class="flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <!-- ── Metadata Block ─────────────────────────────── -->
+                    <div id="fd-metadata-section" class="space-y-3 hidden">
+                        <div class="finding-section-label flex items-center gap-2">
+                            <svg class="w-3.5 h-3.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            Metadata
+                        </div>
+                        <div class="bg-[var(--cg-bg-surface)] border border-[var(--cg-border)] rounded-xl p-4 space-y-3">
+                            <!-- Core fields grid -->
+                            <div id="fd-meta-core" class="fd-meta-grid"></div>
+                            <!-- Dynamic metadata object -->
+                            <div id="fd-meta-dynamic-wrapper" class="hidden">
+                                <div class="fd-meta-section-divider">Tool Metadata</div>
+                                <div id="fd-meta-dynamic" class="fd-meta-grid"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -2806,10 +3110,58 @@
 
                     const findingsResults = await Promise.all(findingsPromises);
 
+                    // Update dynamic risk score for each target in the DOM
+                    targets.forEach((target, index) => {
+                        const list = findingsResults[index];
+                        if (!list) return;
+
+                        let arr = [];
+                        if (Array.isArray(list)) {
+                            arr = list;
+                        } else if (list.findings) {
+                            if (Array.isArray(list.findings.data)) {
+                                arr = list.findings.data;
+                            } else if (Array.isArray(list.findings)) {
+                                arr = list.findings;
+                            }
+                        } else if (list.data) {
+                            arr = Array.isArray(list.data) ? list.data : [];
+                        }
+
+                        // Calculate target's dynamic risk score (0-100 scale: Critical - 15, High - 8, Medium - 4, Low - 1)
+                        let openCritical = 0, openHigh = 0, openMedium = 0, openLow = 0;
+                        arr.forEach(f => {
+                            if ((f.status || "open").toLowerCase() === "open") {
+                                const sev = (f.severity || "info").toLowerCase();
+                                if (sev === "critical") openCritical++;
+                                else if (sev === "high") openHigh++;
+                                else if (sev === "medium") openMedium++;
+                                else if (sev === "low") openLow++;
+                            }
+                        });
+
+                        let targetRisk = openCritical * 15 + openHigh * 8 + openMedium * 4 + openLow * 1;
+                        targetRisk = Math.min(100, Math.max(0, targetRisk));
+
+                        updateTargetRiskBadge(target.id, targetRisk);
+                    });
+
                     // 3. Aggregate all findings
                     let all = [];
                     findingsResults.forEach((list) => {
-                        const arr = Array.isArray(list) ? list : (list.findings || list.data || []);
+                        if (!list) return;
+                        let arr = [];
+                        if (Array.isArray(list)) {
+                            arr = list;
+                        } else if (list.findings) {
+                            if (Array.isArray(list.findings.data)) {
+                                arr = list.findings.data;
+                            } else if (Array.isArray(list.findings)) {
+                                arr = list.findings;
+                            }
+                        } else if (list.data) {
+                            arr = Array.isArray(list.data) ? list.data : [];
+                        }
                         all = all.concat(arr);
                     });
 
@@ -2842,9 +3194,10 @@
                 const labelEl = document.getElementById("health-score-label");
                 if (!ring || !numEl || !labelEl) return;
 
-                // Count severities
+                // Count severities (only for active/open findings)
                 const counts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
                 _projectFindings.forEach((f) => {
+                    if ((f.status || "open").toLowerCase() !== "open") return;
                     const sev = (f.severity || "info").toLowerCase();
                     if (counts[sev] !== undefined) {
                         counts[sev]++;
@@ -3881,7 +4234,7 @@
 
                 const addFindingBtn = document.getElementById("btn-add-finding");
                 if (addFindingBtn) {
-                    if (canModify()) {
+                    if (canModify() && _currentFindingTargetId !== 'all') {
                         addFindingBtn.classList.remove("hidden");
                     } else {
                         addFindingBtn.classList.add("hidden");
@@ -3915,6 +4268,11 @@
                           ? data
                           : [];
 
+                    // Populate target selection dropdowns in the findings tab
+                    if (typeof populateFindingsTargetSelector === 'function') {
+                        populateFindingsTargetSelector(targets);
+                    }
+
                     if (targets.length === 0) {
                         const canEdit = canModify();
                         listEl.innerHTML = `
@@ -3932,6 +4290,30 @@
                 } catch (_) {
                     listEl.innerHTML = errMsg("Network error loading targets.");
                 }
+            }
+
+            function updateTargetRiskBadge(targetId, riskScore) {
+                const badge = document.getElementById(`target-risk-badge-${targetId}`);
+                if (!badge) return;
+
+                let riskScoreCls = "";
+                let riskScoreLabel = "";
+                if (riskScore <= 30) {
+                    riskScoreCls = "text-[#34D399] bg-[#34D399]/10 border-[#34D399]/20";
+                    riskScoreLabel = "Low";
+                } else if (riskScore <= 60) {
+                    riskScoreCls = "text-[#FBBF24] bg-[#FBBF24]/10 border-[#FBBF24]/20";
+                    riskScoreLabel = "Medium";
+                } else if (riskScore <= 80) {
+                    riskScoreCls = "text-[#F97316] bg-[#F97316]/10 border-[#F97316]/20";
+                    riskScoreLabel = "High";
+                } else {
+                    riskScoreCls = "text-[#F87171] bg-[#F87171]/10 border-[#F87171]/20";
+                    riskScoreLabel = "Critical";
+                }
+
+                badge.className = `text-[8px] px-1.5 py-0.5 rounded border font-black uppercase tracking-wider ${riskScoreCls}`;
+                badge.textContent = `Risk: ${riskScore} (${riskScoreLabel})`;
             }
 
             function renderTargetRow(target) {
@@ -3958,24 +4340,24 @@
                     riskScoreCls = "text-[#F87171] bg-[#F87171]/10 border-[#F87171]/20";
                     riskScoreLabel = "Critical";
                 }
-                const riskBadge = `<span class="text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider ${riskScoreCls}">Risk: ${riskScore} (${riskScoreLabel})</span>`;
+                const riskBadge = `<span id="target-risk-badge-${id}" class="text-[8px] px-1.5 py-0.5 rounded border font-black uppercase tracking-wider ${riskScoreCls}">Risk: ${riskScore} (${riskScoreLabel})</span>`;
 
                 const TYPE_BADGE = {
-                    domain: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border-[rgba(167,139,250,0.3)]",
-                    ip: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border-[rgba(167,139,250,0.3)]",
-                    network: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border-[rgba(167,139,250,0.3)]",
+                    domain: "text-[#38BDF8] bg-[rgba(56,189,248,0.12)] border-[rgba(56,189,248,0.25)]",
+                    ip: "text-[#C084FC] bg-[rgba(192,132,252,0.12)] border-[rgba(192,132,252,0.25)]",
+                    network: "text-[#F59E0B] bg-[rgba(245,158,11,0.12)] border-[rgba(245,158,11,0.25)]",
                 };
                 const typeBadgeCls = TYPE_BADGE[type] || TYPE_BADGE.domain;
 
                 // Icons for target types
                 const TYPE_ICONS = {
-                    domain: `<svg class="w-5 h-5 text-[#A78BFA] flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    domain: `<svg class="w-5 h-5 text-[#38BDF8] flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-.778.099-1.533.284-2.253" />
                     </svg>`,
-                    ip: `<svg class="w-5 h-5 text-[#A78BFA] flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    ip: `<svg class="w-5 h-5 text-[#C084FC] flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
                     </svg>`,
-                    network: `<svg class="w-5 h-5 text-[#A78BFA] flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    network: `<svg class="w-5 h-5 text-[#F59E0B] flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                         <rect x="16" y="16" width="6" height="6" rx="1" />
                         <rect x="2" y="16" width="6" height="6" rx="1" />
                         <rect x="9" y="2" width="6" height="6" rx="1" />
@@ -3988,20 +4370,20 @@
                 const editDeleteBtns = canEdit
                     ? `
                         <button
-                            onclick="showEditTargetModal('${id}')"
+                            onclick="showEditTargetModal('${id}'); event.stopPropagation();"
                             title="Edit target"
                             aria-label="Edit target ${label}"
-                            class="cyber-btn-ghost text-xs p-1.5 rounded flex items-center justify-center"
+                            class="cyber-btn-ghost text-xs p-2 rounded-xl flex items-center justify-center hover:border-violet-500/40 hover:bg-violet-500/10 flex-shrink-0"
                         >
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/>
                             </svg>
                         </button>
                         <button
-                            onclick="showDeleteTargetModal('${id}', '${label}', '${value}')"
+                            onclick="showDeleteTargetModal('${id}', '${label}', '${value}'); event.stopPropagation();"
                             title="Delete target"
                             aria-label="Delete target ${label}"
-                            class="cyber-btn-danger text-xs p-1.5 rounded flex items-center justify-center"
+                            class="cyber-btn-danger text-xs p-2 rounded-xl flex items-center justify-center flex-shrink-0"
                         >
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
@@ -4018,12 +4400,12 @@
                         data-typ="${esc(type)}"
                         title="Run security scan on this target"
                         aria-label="Run scan on ${label}"
-                        class="cyber-btn-primary text-xs px-2.5 py-1.5 rounded flex items-center gap-1 font-semibold"
+                        class="cyber-btn-primary text-xs px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 font-bold shadow-[0_0_15px_rgba(167,139,250,0.15)] hover:shadow-[0_0_20px_rgba(167,139,250,0.3)] transition-all duration-300 whitespace-nowrap flex-shrink-0"
                     >
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/>
                         </svg>
-                        Scan
+                        Scan Target
                     </button>`;
 
                 const historyBtn = `
@@ -4032,93 +4414,99 @@
                         data-history-btn="${id}"
                         title="View scan history for this target"
                         aria-label="View scan history for ${label}"
-                        class="cyber-btn-ghost text-xs px-2.5 py-1.5 rounded flex items-center gap-1 font-semibold"
+                        class="cyber-btn-ghost text-xs px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 font-bold hover:bg-white/5 hover:text-white whitespace-nowrap flex-shrink-0"
                     >
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                         </svg>
-                        History
+                        Scan History
                     </button>`;
 
                 return `
-                    <div class="target-card-container" data-target-wrapper="${id}">
-                        <div class="target-card-inner">
-                            <!-- FRONT SIDE -->
-                            <div class="target-card-front target-card-type-${type}" data-target-id="${id}">
-                                <!-- Header: Type Badge + Icon + Status dot -->
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-2">
-                                        ${iconSvg}
-                                        <span class="text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider ${typeBadgeCls}">${cap(type)}</span>
-                                        ${riskBadge}
-                                    </div>
-                                    <!-- Status indicator -->
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="relative flex h-2 w-2">
-                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-[var(--cg-success)]"></span>
-                                            <span class="relative inline-flex rounded-full h-2 w-2 bg-[var(--cg-success)]"></span>
-                                        </span>
-                                        <span class="text-[10px] text-slate-500 font-bold tracking-wider uppercase">Active</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Body: Label & Value -->
-                                <div class="my-3 min-w-0">
-                                    <p class="text-sm font-bold text-white truncate mb-2" title="${label}">${label}</p>
-                                    <div class="text-xs text-slate-400 font-mono bg-black/30 px-2.5 py-1.5 rounded border border-white/5 flex items-center gap-2 min-w-0" title="${value}">
-                                        <span class="text-[9px] font-bold text-[#A78BFA] bg-[rgba(167,139,250,0.1)] px-1.5 py-0.5 rounded border border-[rgba(167,139,250,0.2)] uppercase tracking-wider flex-shrink-0 select-none">${valTypeLabel}</span>
-                                        <span class="overflow-x-auto whitespace-nowrap scrollbar-thin select-all flex-1 min-w-0 text-slate-300">${value}</span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Footer Actions -->
-                                <div class="flex items-center justify-between gap-2 border-t border-white/5 pt-3">
-                                    <div class="flex items-center gap-1.5">
-                                        ${scanBtn}
-                                        ${historyBtn}
-                                    </div>
-                                    <div class="flex items-center gap-1">
-                                        ${editDeleteBtns}
-                                    </div>
-                                </div>
+                    <div class="target-row-card group target-card-type-${type} rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-5 relative overflow-hidden" data-target-wrapper="${id}" data-target-id="${id}">
+                        <!-- Left Section: Details & Telemetry Badges -->
+                        <div class="flex-1 min-w-0 flex items-start gap-4">
+                            <!-- Glowing visual category icon container -->
+                            <div class="flex-shrink-0 w-11 h-11 rounded-xl bg-slate-950/45 border border-white/5 flex items-center justify-center group-hover:border-violet-500/30 transition-all duration-300">
+                                    ${iconSvg}
                             </div>
-                            
-                            <!-- BACK SIDE (Scan History) -->
-                            <div class="target-card-back">
-                                <!-- Header: Title & Back Button -->
-                                <div class="flex items-center justify-between border-b border-white/5 pb-2">
-                                    <div class="flex items-center gap-1.5 min-w-0">
-                                        <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                        </svg>
-                                        <span class="text-[10px] font-bold text-slate-300 truncate">History: ${label}</span>
+                            <div class="min-w-0 flex-1 space-y-2.5">
+                                <!-- Row 1: Target Label, Type, Telemetry, and Risk Badge -->
+                                <div class="flex items-center gap-2.5 flex-wrap">
+                                    <h3 class="text-sm font-extrabold text-white tracking-tight truncate max-w-[200px]" title="${label}">${label}</h3>
+                                    
+                                    <!-- Type Badge -->
+                                    <span class="text-[8px] px-1.5 py-0.5 rounded border font-black uppercase tracking-wider flex-shrink-0 ${typeBadgeCls}">${cap(type)}</span>
+                                    
+                                    <!-- Telemetry Status Pulse -->
+                                    <div class="flex items-center justify-center bg-emerald-500/10 border border-emerald-500/25 px-1.5 py-1 rounded flex-shrink-0 text-emerald-400" title="Active Telemetry">
+                                        <span class="relative flex h-1.5 w-1.5">
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-emerald-400"></span>
+                                            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                                        </span>
                                     </div>
-                                    <button
-                                        onclick="toggleTargetScanHistory('${id}')"
-                                        class="cyber-btn-ghost text-[10px] px-2 py-1 rounded flex items-center gap-1 font-semibold"
-                                    >
-                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+
+                                    <!-- Risk Assessment Badge -->
+                                    ${riskBadge}
+                                </div>
+
+                                <!-- Row 2: Monospace Target Value with copy button -->
+                                <div class="flex items-center gap-2 text-[11px] text-slate-400 font-mono bg-black/40 px-2.5 py-1 rounded-lg border border-white/5 max-w-fit shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] min-w-0">
+                                    <span class="text-[8px] font-black text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded border border-violet-500/20 uppercase tracking-widest select-none flex-shrink-0">${valTypeLabel}</span>
+                                    <span class="text-slate-300 truncate select-all max-w-[220px] md:max-w-[340px] xl:max-w-[450px] scrollbar-none">${value}</span>
+                                    <button onclick="copyToClipboard('${value}', this); event.stopPropagation();" class="text-slate-500 hover:text-white p-0.5 rounded transition-colors flex-shrink-0" title="Copy to clipboard">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-1.5a2.251 2.251 0 0 0-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 0 0-9-9Z"/>
                                         </svg>
-                                        Back
                                     </button>
                                 </div>
-                                
-                                <!-- Body: Table container with scroll -->
-                                <div id="target-history-${id}" class="flex-1 overflow-y-auto my-2 pr-1 scrollbar-thin max-h-[125px]">
-                                    <table class="w-full text-[11px] text-left border-collapse">
+                            </div>
+                        </div>
+
+                        <!-- Right Section: Action Controls Suite -->
+                        <div class="flex items-center gap-2.5 flex-shrink-0 flex-wrap md:flex-nowrap">
+                            ${scanBtn}
+                            ${historyBtn}
+                            <div class="hidden md:block w-px h-6 bg-white/5 mx-0.5 flex-shrink-0"></div>
+                            <div class="flex items-center gap-1 flex-shrink-0">
+                                ${editDeleteBtns}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown sliding console drawer for history scans logs -->
+                    <div id="target-history-drawer-${id}" class="target-history-drawer max-h-0 opacity-0 overflow-hidden border-t border-white/0">
+                        <div class="pt-4 pb-1">
+                            <div class="flex items-center justify-between mb-3.5">
+                                <div class="flex items-center gap-2 text-xs font-extrabold text-slate-300">
+                                    <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                    </svg>
+                                    Scan Run Telemetry Logs — ${label}
+                                </div>
+                                <button onclick="toggleTargetScanHistory('${id}')" class="text-slate-400 hover:text-white text-xs px-2.5 py-1.5 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-200 flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                                    </svg>
+                                    Close Log
+                                </button>
+                            </div>
+                            <!-- Telemetry Scans Table -->
+                            <div class="bg-black/45 border border-white/5 rounded-xl overflow-hidden shadow-inner">
+                                <div class="overflow-x-auto scrollbar-none">
+                                    <table class="w-full text-left text-xs border-collapse">
                                         <thead>
-                                            <tr class="border-b border-white/5 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                                                <th class="py-1">ID</th>
-                                                <th class="py-1">Status</th>
-                                                <th class="py-1">Started</th>
-                                                <th class="py-1 text-right">View</th>
+                                            <tr class="bg-slate-950/60 border-b border-white/5 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                                <th class="py-3 px-4">Scan Run ID</th>
+                                                <th class="py-3 px-4">Scanner Engines Status</th>
+                                                <th class="py-3 px-4">Execution Timestamp</th>
+                                                <th class="py-3 px-4 text-right">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody id="target-history-body-${id}">
                                             <tr>
-                                                <td colspan="4" class="py-4 text-center text-slate-500">
-                                                    Click 'History' to load scans.
+                                                <td colspan="4" class="py-6 px-4 text-center text-slate-500">
+                                                    Click 'Scan History' to establish connection...
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -4768,20 +5156,26 @@
             // ─── Target Scan History ──────────────────────────────────────────────────
 
             async function toggleTargetScanHistory(targetId, forceReload = false) {
-                const container = document.querySelector(`[data-target-wrapper="${targetId}"]`);
-                if (!container) return;
+                const drawer = document.getElementById(`target-history-drawer-${targetId}`);
+                if (!drawer) return;
 
-                const isFlipped = container.classList.contains("flipped");
-                if (isFlipped && !forceReload) {
-                    container.classList.remove("flipped");
+                const isOpen = drawer.classList.contains("open");
+                if (isOpen && !forceReload) {
+                    drawer.classList.remove("open");
+                    drawer.style.maxHeight = "0px";
+                    drawer.style.opacity = "0";
+                    drawer.style.borderTopWidth = "0px";
                     return;
                 }
 
-                container.classList.add("flipped");
+                drawer.classList.add("open");
+                drawer.style.maxHeight = "500px";
+                drawer.style.opacity = "1";
+                drawer.style.borderTopWidth = "1px";
 
                 const tbody = document.getElementById(`target-history-body-${targetId}`);
-                if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-500">
-                    <span class="cyber-spinner-sm"></span> Loading…
+                if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="py-6 px-4 text-center text-slate-500">
+                    <span class="cyber-spinner-sm inline-block mr-2 align-middle"></span> Loading telemetry logs…
                 </td></tr>`;
 
                 try {
@@ -4790,7 +5184,7 @@
 
                     if (!tbody) return;
                     if (scans.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-500 text-[10px]">No scans yet.</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="4" class="py-6 px-4 text-center text-slate-500 text-xs">No scan history recorded for this target.</td></tr>`;
                         return;
                     }
 
@@ -4799,10 +5193,19 @@
                         const scanId   = esc(String(s.id || ""));
                         const shortId  = scanId.substring(0, 8).toUpperCase();
                         const status   = (s.status || "unknown").toLowerCase();
-                        const started  = (s.started_at || s.created_at)
-                            ? new Date(s.started_at || s.created_at).toLocaleString("en-US",
-                                {year:"numeric",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})
-                            : "—";
+                        
+                        let started = "—";
+                        const dateVal = s.started_at || s.created_at;
+                        if (dateVal) {
+                            const d = new Date(dateVal);
+                            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                            const mon = months[d.getMonth()];
+                            const day = String(d.getDate()).padStart(2, '0');
+                            const hours = String(d.getHours()).padStart(2, '0');
+                            const mins = String(d.getMinutes()).padStart(2, '0');
+                            started = `${mon} ${day}, ${hours}:${mins}`; // Compact format e.g. "May 30, 19:13"
+                        }
+                        
                         const STATUS_CLS = {
                             running  : "scan-pill-running",
                             pending  : "scan-pill-pending",
@@ -4811,37 +5214,69 @@
                         };
                         const pillCls = STATUS_CLS[status] || "scan-pill-default";
                         return `<tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
-                            <td class="py-2 font-mono text-[10px]">${shortId}</td>
-                            <td class="py-2"><span class="scan-status-pill ${pillCls}">${esc(status.toUpperCase())}</span></td>
-                            <td class="py-2 font-mono text-[10px]">${esc(started)}</td>
-                            <td class="py-2 text-right">
-                                <a href="/scan/${scanId}" class="cyber-btn-ghost text-[10px] px-2 py-0.5 rounded"
-                                   aria-label="View scan ${shortId}">View</a>
+                            <td class="py-3.5 px-4 font-mono text-xs whitespace-nowrap text-slate-300">${shortId}</td>
+                            <td class="py-3.5 px-4"><span class="scan-status-pill ${pillCls} text-[9px] px-2 py-0.5 rounded font-extrabold">${esc(status.toUpperCase())}</span></td>
+                            <td class="py-3.5 px-4 font-mono text-xs text-slate-400 whitespace-nowrap">${esc(started)}</td>
+                            <td class="py-3.5 px-4 text-right">
+                                <a href="/scan/${scanId}" class="cyber-btn-ghost text-xs px-2.5 py-1.5 rounded-lg whitespace-nowrap"
+                                   aria-label="View scan ${shortId}">View Full Report</a>
                             </td>
                         </tr>`;
                     }).join("");
                 } catch (err) {
                     if (tbody) tbody.innerHTML =
-                        `<tr><td colspan="4" class="py-4 text-center text-[10px]" style="color:var(--cg-danger)">
-                            Failed to load. <button onclick="toggleTargetScanHistory('${esc(targetId)}', true)"
-                            class="btn-retry text-[10px] px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-red-400">Retry</button>
+                        `<tr><td colspan="4" class="py-6 px-4 text-center text-xs" style="color:var(--cg-danger)">
+                            Failed to load logs. <button onclick="toggleTargetScanHistory('${esc(targetId)}', true)"
+                            class="btn-retry text-xs px-2.5 py-1 rounded bg-red-500/10 border border-red-500/20 text-red-400 ml-2">Retry</button>
                         </td></tr>`;
                 }
+            }
+
+            function copyToClipboard(text, btn) {
+                if (!text) return;
+                navigator.clipboard.writeText(text).then(() => {
+                    notify("Target value copied!", "success");
+                    if (btn) {
+                        const origHTML = btn.innerHTML;
+                        btn.innerHTML = `
+                            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                            </svg>
+                        `;
+                        btn.classList.add("text-emerald-400");
+                        setTimeout(() => {
+                            btn.innerHTML = origHTML;
+                            btn.classList.remove("text-emerald-400");
+                        }, 2000);
+                    }
+                }).catch(() => {
+                    notify("Failed to copy target.", "warning");
+                });
             }
 
             // ─── Findings ─────────────────────────────────────────────────────────────
 
             let _allFindings   = [];
-            let _currentFilter = 'all';
             let _currentFindingTargetId = null;
+
+            // Pagination state
+            let _findingsCurrentPage = 1;
+            let _findingsLastPage = 1;
+
+            // Filter state
+            let _currentSeverityFilter = 'all';
+            let _currentStatusFilter = 'all';
+            let _currentToolFilter = 'all';
+            let _currentTargetFilter = 'all';
+
+            // Target mapping for displaying target context in project-level findings
+            let _targetLabelMap = {};
 
             /** Return the ID of whichever target row is "active", or null. */
             function getCurrentSelectedTargetId() {
-                // ScanManager may expose the last-scanned target id
                 if (window.ScanManager && window.ScanManager.state && window.ScanManager.state.targetId) {
                     return window.ScanManager.state.targetId;
                 }
-                // Fall back: first target row in the DOM
                 const listEl = document.getElementById('targets-list');
                 const firstRow = listEl ? listEl.querySelector('[data-target-id]') : null;
                 return firstRow ? firstRow.dataset.targetId : null;
@@ -4849,106 +5284,470 @@
 
             function escapeHtml(t) { return esc(t); }
 
-            async function loadFindings(targetId) {
-                if (targetId) _currentFindingTargetId = targetId;
-                if (!_currentFindingTargetId) {
-                    const defaultId = getCurrentSelectedTargetId();
-                    if (defaultId) _currentFindingTargetId = defaultId;
+            // Handle target selection dropdown change
+            function handleFindingsTargetChange(value) {
+                _currentFindingTargetId = value;
+                
+                // Show or hide the target filter dropdown
+                const targetFilter = document.getElementById('filter-target');
+                const subtitleText = document.getElementById('findings-subtitle-text');
+                
+                if (value === 'all') {
+                    if (targetFilter) targetFilter.classList.remove('hidden');
+                    if (subtitleText) subtitleText.textContent = "Security findings across the entire project";
+                } else {
+                    if (targetFilter) targetFilter.classList.add('hidden');
+                    if (subtitleText) subtitleText.textContent = "Vulnerability scan results for this target";
                 }
                 
-                if (!_currentFindingTargetId) { showSelectTargetPrompt(); return; }
+                // Reset page to 1 and reload
+                _findingsCurrentPage = 1;
+                loadFindings(value, 1);
+            }
 
+            // Handle general dropdown filter changes (status, tool, target)
+            function handleFilterChange() {
+                _currentStatusFilter = document.getElementById('filter-status')?.value || 'all';
+                _currentToolFilter = document.getElementById('filter-tool')?.value || 'all';
+                _currentTargetFilter = document.getElementById('filter-target')?.value || 'all';
+                
+                // Reset page to 1
+                _findingsCurrentPage = 1;
+                loadFindings(_currentFindingTargetId, 1);
+            }
+
+            // Severity pills filter
+            function filterFindings(severity) {
+                _currentSeverityFilter = severity;
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.filter === severity);
+                });
+                
+                // Reset page to 1
+                _findingsCurrentPage = 1;
+                loadFindings(_currentFindingTargetId, 1);
+            }
+
+            // Dynamically populate the distinct tools loaded from the current dataset
+            function populateToolsFilter(findings) {
+                const toolFilter = document.getElementById('filter-tool');
+                if (!toolFilter) return;
+                
+                const selectedTool = toolFilter.value || _currentToolFilter || 'all';
+                
+                // Gather unique tool/driver IDs from findings
+                const tools = new Set();
+                findings.forEach(f => {
+                    const toolName = f.tool || f.driver_id || '';
+                    if (toolName) tools.add(toolName);
+                });
+                
+                let html = `<option value="all">All Tools</option>`;
+                Array.from(tools).sort().forEach(t => {
+                    html += `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`;
+                });
+                
+                toolFilter.innerHTML = html;
+                toolFilter.value = selectedTool;
+                
+                // If previously selected tool is not in new list, keep it as selected state in variable
+                if (!toolFilter.value) {
+                    toolFilter.value = 'all';
+                    _currentToolFilter = 'all';
+                }
+            }
+
+            // Populate project-wide target dropdown filter
+            function populateTargetFilterDropdown(targets) {
+                const targetFilter = document.getElementById('filter-target');
+                if (!targetFilter) return;
+                
+                const selectedTarget = targetFilter.value || _currentTargetFilter || 'all';
+                
+                let html = `<option value="all">All Targets</option>`;
+                targets.forEach(t => {
+                    html += `<option value="${t.id}">${escapeHtml(t.label)}</option>`;
+                    _targetLabelMap[t.id] = t.label;
+                });
+                
+                targetFilter.innerHTML = html;
+                targetFilter.value = selectedTarget;
+            }
+
+            // Populate the primary target select header
+            function populateFindingsTargetSelector(targets) {
+                const selector = document.getElementById('findings-target-selector');
+                if (!selector) return;
+                
+                const selectedVal = selector.value || _currentFindingTargetId || 'all';
+                
+                let html = `<option value="all">All Targets (Project-wide)</option>`;
+                targets.forEach(t => {
+                    html += `<option value="${t.id}">${escapeHtml(t.label)}</option>`;
+                    _targetLabelMap[t.id] = t.label;
+                });
+                
+                selector.innerHTML = html;
+                selector.value = selectedVal;
+                
+                if (!selector.value) {
+                    selector.value = 'all';
+                    _currentFindingTargetId = 'all';
+                }
+                
+                populateTargetFilterDropdown(targets);
+            }
+
+            async function loadFindings(targetId, pageNum = 1) {
+                _findingsCurrentPage = pageNum;
+                if (targetId !== undefined) {
+                    _currentFindingTargetId = targetId;
+                }
+                
+                if (!_currentFindingTargetId) {
+                    const defaultId = getCurrentSelectedTargetId();
+                    _currentFindingTargetId = defaultId || 'all';
+                }
+                
+                const selector = document.getElementById('findings-target-selector');
+                if (selector && selector.value !== _currentFindingTargetId) {
+                    selector.value = _currentFindingTargetId;
+                }
+                
+                // Double check sub-tab endpoint logic
+                updateEndpointsTabState();
+                
+                // Update target action button states (Add Finding visibility)
+                updateTargetsBtnState();
+                
                 showFindingsLoading();
+                
+                const params = new URLSearchParams();
+                if (_currentSeverityFilter && _currentSeverityFilter !== 'all') {
+                    params.append('severity', _currentSeverityFilter);
+                }
+                if (_currentStatusFilter && _currentStatusFilter !== 'all') {
+                    params.append('status', _currentStatusFilter);
+                }
+                if (_currentToolFilter && _currentToolFilter !== 'all') {
+                    params.append('tool', _currentToolFilter);
+                }
+                params.append('page', _findingsCurrentPage);
+                
+                let endpoint = '';
+                const isProjectWide = (_currentFindingTargetId === 'all');
+                if (isProjectWide) {
+                    endpoint = `/projects/${_projectId}/findings`;
+                    if (_currentTargetFilter && _currentTargetFilter !== 'all') {
+                        params.append('target', _currentTargetFilter);
+                    }
+                } else {
+                    endpoint = `/targets/${_currentFindingTargetId}/findings`;
+                }
+                
+                const queryStr = params.toString();
+                const url = endpoint + (queryStr ? `?${queryStr}` : '');
+                
                 try {
-                    const res = await apiFetch(`/targets/${_currentFindingTargetId}/findings`);
+                    const res = await apiFetch(url);
+                    if (res.status === 403) {
+                        const c = document.getElementById('findings-list-container');
+                        if (c) {
+                            c.innerHTML = `
+                                <div class="findings-error-state">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                                    </svg>
+                                    <p class="text-sm font-bold text-white">Access Denied</p>
+                                    <span>You do not have access to this project</span>
+                                </div>
+                            `;
+                        }
+                        updateFindingsStats([]);
+                        updateFindingsTabBadge(0);
+                        renderPaginationContainer(1, 1);
+                        return;
+                    }
                     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    
                     const data = await res.json();
                     
                     let findingsList = [];
+                    let currentPage = 1;
+                    let lastPage = 1;
+                    let total = 0;
+                    
                     if (Array.isArray(data)) {
                         findingsList = data;
+                        currentPage = 1;
+                        lastPage = 1;
+                        total = data.length;
                     } else if (data && data.findings) {
-                        findingsList = Array.isArray(data.findings.data)
-                            ? data.findings.data
-                            : (Array.isArray(data.findings) ? data.findings : []);
+                        const findingsObj = data.findings;
+                        if (Array.isArray(findingsObj.data)) {
+                            findingsList = findingsObj.data;
+                            currentPage = findingsObj.current_page || 1;
+                            lastPage = findingsObj.last_page || 1;
+                            total = findingsObj.total || 0;
+                        } else if (Array.isArray(findingsObj)) {
+                            findingsList = findingsObj;
+                            currentPage = 1;
+                            lastPage = 1;
+                            total = findingsObj.length;
+                        }
                     } else if (data && data.data) {
                         findingsList = Array.isArray(data.data) ? data.data : [];
+                        currentPage = data.current_page || 1;
+                        lastPage = data.last_page || 1;
+                        total = data.total || 0;
                     }
+                    
                     _allFindings = findingsList;
-
-                    renderFindings(_allFindings);
-                    updateFindingsStats(_allFindings);
-                    updateFindingsTabBadge(_allFindings.length);
-
-                    // Toggle Endpoints sub-tab based on target type
-                    const endpointsBtn = document.getElementById('subtab-endpoints-btn');
-                    if (endpointsBtn) {
-                        apiFetch(`/targets/${_currentFindingTargetId}`).then(async res => {
-                            if (res.ok) {
-                                const target = await res.json();
-                                const type = target.type || (target.target && target.target.type);
-                                if (type === 'domain') {
-                                    endpointsBtn.classList.remove('hidden');
-                                } else {
-                                    endpointsBtn.classList.add('hidden');
-                                    switchFindingsSubtab('vulns');
-                                }
-                            }
-                        }).catch(() => {
-                            endpointsBtn.classList.add('hidden');
-                        });
-                    }
+                    _findingsCurrentPage = currentPage;
+                    _findingsLastPage = lastPage;
+                    
+                    // Sort findings ordered by severity: critical -> high -> medium -> low -> info
+                    const w = { critical:0, high:1, medium:2, low:3, info:4 };
+                    const sorted = [..._allFindings].sort((a,b) =>
+                        (w[(a.severity||'').toLowerCase()] ?? 5) - (w[(b.severity||'').toLowerCase()] ?? 5)
+                    );
+                    
+                    renderFindings(sorted, isProjectWide);
+                    updateFindingsStats(sorted);
+                    updateFindingsTabBadge(total || sorted.length);
+                    renderPaginationContainer(currentPage, lastPage);
+                    populateToolsFilter(sorted);
+                    
                 } catch (err) {
                     showFindingsError(err);
                 }
             }
 
-            function filterFindings(severity) {
-                _currentFilter = severity;
-                document.querySelectorAll('.filter-btn').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.filter === severity);
-                });
-                const filtered = severity === 'all'
-                    ? _allFindings
-                    : _allFindings.filter(f => (f.severity || '').toLowerCase() === severity);
-                renderFindings(filtered);
-            }
-
-            function renderFindings(findings) {
+            function renderFindings(findings, isProjectWide = false) {
                 const container = document.getElementById('findings-list-container');
                 if (!container) return;
                 if (findings.length === 0) { container.innerHTML = renderFindingsEmptyState(); return; }
-                const w = { critical:0, high:1, medium:2, low:3, info:4 };
-                const sorted = [...findings].sort((a,b) =>
-                    (w[(a.severity||'').toLowerCase()] ?? 5) - (w[(b.severity||'').toLowerCase()] ?? 5)
-                );
-                container.innerHTML = sorted.map(f => renderFindingCard(f)).join('');
+                container.innerHTML = findings.map(f => renderFindingCard(f, isProjectWide)).join('');
             }
 
-            function renderFindingCard(finding) {
+            // Optimistic Inline Updates for Status and Severity
+            async function handleInlineStatusChange(findingId, newStatus, selectEl) {
+                const finding = _allFindings.find(f => String(f.id) === String(findingId));
+                const oldStatus = finding ? (finding.status || 'open') : 'open';
+                
+                // Optimistic UI update
+                if (finding) finding.status = newStatus;
+                selectEl.className = `status-badge-select status-${newStatus}`;
+                
+                try {
+                    const res = await apiFetch(`/findings/${findingId}/status`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ status: newStatus })
+                    });
+                    if (res.status === 403) {
+                        notify("Permission denied", "error");
+                        if (finding) finding.status = oldStatus;
+                        selectEl.value = oldStatus;
+                        selectEl.className = `status-badge-select status-${oldStatus}`;
+                        return;
+                    }
+                    if (res.status === 422) {
+                        const errData = await res.json().catch(() => ({}));
+                        notify(errData.message || "Validation failed", "error");
+                        if (finding) finding.status = oldStatus;
+                        selectEl.value = oldStatus;
+                        selectEl.className = `status-badge-select status-${oldStatus}`;
+                        return;
+                    }
+                    if (!res.ok) throw new Error();
+                    notify("Status updated successfully", "success");
+                    loadProjectFindings();
+                } catch (_) {
+                    notify("Failed to update status", "error");
+                    if (finding) finding.status = oldStatus;
+                    selectEl.value = oldStatus;
+                    selectEl.className = `status-badge-select status-${oldStatus}`;
+                }
+            }
+
+            async function handleInlineSeverityChange(findingId, newSeverity, selectEl) {
+                const finding = _allFindings.find(f => String(f.id) === String(findingId));
+                const oldSeverity = finding ? (finding.severity || 'info') : 'info';
+                
+                // Optimistic UI update
+                if (finding) finding.severity = newSeverity;
+                selectEl.className = `severity-badge-select sev-${newSeverity}`;
+                const cardEl = document.querySelector(`.finding-card[data-finding-id="${findingId}"]`);
+                if (cardEl) {
+                    cardEl.className = cardEl.className.replace(/severity-border-\w+/, `severity-border-${newSeverity}`);
+                }
+                
+                try {
+                    const res = await apiFetch(`/findings/${findingId}/severity`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ severity: newSeverity })
+                    });
+                    if (res.status === 403) {
+                        notify("Permission denied", "error");
+                        if (finding) finding.severity = oldSeverity;
+                        selectEl.value = oldSeverity;
+                        selectEl.className = `severity-badge-select sev-${oldSeverity}`;
+                        if (cardEl) {
+                            cardEl.className = cardEl.className.replace(/severity-border-\w+/, `severity-border-${oldSeverity}`);
+                        }
+                        return;
+                    }
+                    if (res.status === 422) {
+                        const errData = await res.json().catch(() => ({}));
+                        notify(errData.message || "Validation failed", "error");
+                        if (finding) finding.severity = oldSeverity;
+                        selectEl.value = oldSeverity;
+                        selectEl.className = `severity-badge-select sev-${oldSeverity}`;
+                        if (cardEl) {
+                            cardEl.className = cardEl.className.replace(/severity-border-\w+/, `severity-border-${oldSeverity}`);
+                        }
+                        return;
+                    }
+                    if (!res.ok) throw new Error();
+                    notify("Severity updated successfully", "success");
+                    loadProjectFindings();
+                } catch (_) {
+                    notify("Failed to update severity", "error");
+                    if (finding) finding.severity = oldSeverity;
+                    selectEl.value = oldSeverity;
+                    selectEl.className = `severity-badge-select sev-${oldSeverity}`;
+                    if (cardEl) {
+                        cardEl.className = cardEl.className.replace(/severity-border-\w+/, `severity-border-${oldSeverity}`);
+                    }
+                }
+            }
+
+            function renderFindingCard(finding, isProjectWide = false) {
                 const sev      = (finding.severity || 'info').toLowerCase();
                 const sevLabel = sev.toUpperCase();
+                const status   = (finding.status || 'open').toLowerCase();
+                const statusLabel = status.replace('_', ' ').toUpperCase();
                 const date     = finding.created_at
                     ? new Date(finding.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'})
                     : '';
                 const fid      = escapeHtml(String(finding.id || ''));
+                const toolName = escapeHtml(finding.tool || finding.driver_id || '');
+                
+                // Show Target label context if viewing all findings project-wide
+                let targetContextLabel = "";
+                if (isProjectWide && finding.target_id) {
+                    const lbl = _targetLabelMap[finding.target_id] || `Target #${finding.target_id}`;
+                    targetContextLabel = `<span class="text-[10px] px-1.5 py-0.5 rounded border border-white/10 bg-white/5 font-semibold text-slate-400 uppercase select-none">${escapeHtml(lbl)}</span>`;
+                }
+
+                // Interactive elements for editors/owners vs plain text pills for viewers (RBAC context)
+                let severityElement = `<span class="severity-badge sev-${sev}">${sevLabel}</span>`;
+                let statusElement = `<span class="finding-status status-${status}">${statusLabel}</span>`;
+
+                if (canModify()) {
+                    severityElement = `
+                        <select class="severity-badge-select sev-${sev}" onclick="event.stopPropagation()" onchange="handleInlineSeverityChange('${fid}', this.value, this)">
+                            <option value="critical" ${sev === 'critical' ? 'selected' : ''}>CRITICAL</option>
+                            <option value="high" ${sev === 'high' ? 'selected' : ''}>HIGH</option>
+                            <option value="medium" ${sev === 'medium' ? 'selected' : ''}>MEDIUM</option>
+                            <option value="low" ${sev === 'low' ? 'selected' : ''}>LOW</option>
+                            <option value="info" ${sev === 'info' ? 'selected' : ''}>INFO</option>
+                        </select>
+                    `;
+
+                    statusElement = `
+                        <select class="status-badge-select status-${status}" onclick="event.stopPropagation()" onchange="handleInlineStatusChange('${fid}', this.value, this)">
+                            <option value="open" ${status === 'open' ? 'selected' : ''}>OPEN</option>
+                            <option value="in_progress" ${status === 'in_progress' ? 'selected' : ''}>IN PROGRESS</option>
+                            <option value="resolved" ${status === 'resolved' ? 'selected' : ''}>RESOLVED</option>
+                            <option value="false_positive" ${status === 'false_positive' ? 'selected' : ''}>FALSE POSITIVE</option>
+                        </select>
+                    `;
+                }
+
                 return `
                     <div class="finding-card severity-border-${sev} cursor-pointer hover:bg-[var(--cg-bg-elevated)] transition-all duration-200 hover:-translate-y-0.5" data-finding-id="${fid}" data-severity="${sev}" onclick="showFindingDetailModal('${fid}')">
                         <div class="finding-card-header !hover:bg-transparent">
                             <div class="finding-card-left">
-                                <span class="severity-badge sev-${sev}">${sevLabel}</span>
+                                ${severityElement}
                                 <div class="finding-card-title-group">
                                     <span class="finding-card-title">${escapeHtml(finding.title || 'Untitled Finding')}</span>
-                                    <span class="finding-card-driver">${escapeHtml(finding.driver_id || '')}</span>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="finding-card-driver">${toolName}</span>
+                                        ${targetContextLabel}
+                                    </div>
                                 </div>
                             </div>
                             <div class="finding-card-right">
+                                ${statusElement}
                                 ${finding.cvss_score ? `<span class="cvss-badge cvss-${getCVSSSeverity(finding.cvss_score)}">CVSS ${escapeHtml(String(finding.cvss_score))}</span>` : ''}
                                 ${finding.cve_id ? `<a href="https://nvd.nist.gov/vuln/detail/${escapeHtml(finding.cve_id)}" target="_blank" rel="noopener" class="cve-link" onclick="event.stopPropagation()">${escapeHtml(finding.cve_id)}</a>` : ''}
                                 <span class="finding-date">${escapeHtml(date)}</span>
                             </div>
                         </div>
                     </div>`;
+            }
+
+            // Render pagination component with ellipsis (Section 4)
+            function renderPaginationContainer(currentPage, lastPage) {
+                const container = document.getElementById('findings-pagination-container');
+                if (!container) return;
+                
+                if (lastPage <= 1) {
+                    container.innerHTML = "";
+                    container.classList.add('hidden');
+                    return;
+                }
+                container.classList.remove('hidden');
+
+                const prevDisabled = currentPage === 1;
+                const nextDisabled = currentPage === lastPage;
+
+                let html = `
+                    <button class="bg-[rgba(15,23,42,0.6)] border border-white/10 text-slate-300 font-semibold px-3 py-1.5 rounded-lg text-xs transition-all hover:bg-[rgba(15,23,42,0.8)] flex items-center gap-1 ${prevDisabled ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''}" 
+                            onclick="handlePageChange(${currentPage - 1})">
+                        &lsaquo; Previous
+                    </button>
+                `;
+
+                const pages = [];
+                if (lastPage <= 5) {
+                    for (let i = 1; i <= lastPage; i++) pages.push(i);
+                } else {
+                    if (currentPage <= 3) {
+                        pages.push(1, 2, 3, 4, '···', lastPage);
+                    } else if (currentPage >= lastPage - 2) {
+                        pages.push(1, '···', lastPage - 3, lastPage - 2, lastPage - 1, lastPage);
+                    } else {
+                        pages.push(1, '···', currentPage - 1, currentPage, currentPage + 1, '···', lastPage);
+                    }
+                }
+
+                pages.forEach(p => {
+                    if (p === '···') {
+                        html += `<span class="text-slate-500 px-2 py-1 font-mono text-xs select-none">···</span>`;
+                    } else {
+                        const active = p === currentPage;
+                        const cls = active 
+                            ? "bg-white border border-white text-slate-900 font-bold px-3 py-1.5 rounded-lg text-xs"
+                            : "bg-[rgba(15,23,42,0.6)] border border-white/10 text-slate-300 font-semibold px-3 py-1.5 rounded-lg text-xs transition-all hover:border-white/20 hover:bg-[rgba(15,23,42,0.8)]";
+                        html += `<button class="${cls}" onclick="handlePageChange(${p})">${p}</button>`;
+                    }
+                });
+
+                html += `
+                    <button class="bg-[rgba(15,23,42,0.6)] border border-white/10 text-slate-300 font-semibold px-3 py-1.5 rounded-lg text-xs transition-all hover:bg-[rgba(15,23,42,0.8)] flex items-center gap-1 ${nextDisabled ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''}" 
+                            onclick="handlePageChange(${currentPage + 1})">
+                        Next &rsaquo;
+                    </button>
+                `;
+
+                container.innerHTML = html;
+            }
+
+            function handlePageChange(pageNum) {
+                document.getElementById('findings-tab-btn')?.scrollIntoView({ behavior: 'smooth' });
+                loadFindings(_currentFindingTargetId, pageNum);
             }
 
             function toggleFindingsListVisibility() {
@@ -5158,6 +5957,173 @@
                 // Full Vulnerability ID
                 document.getElementById('fd-id').textContent = finding.id || '';
 
+                // ── Metadata Panel ────────────────────────────────────────
+                const metaSection  = document.getElementById('fd-metadata-section');
+                const metaCore     = document.getElementById('fd-meta-core');
+                const metaDynWrap  = document.getElementById('fd-meta-dynamic-wrapper');
+                const metaDynGrid  = document.getElementById('fd-meta-dynamic');
+                metaCore.innerHTML = '';
+                metaDynGrid.innerHTML = '';
+
+                // Helper: create a metadata cell
+                function mkMetaItem(key, valueHTML, fullWidth = false, extraValClass = '') {
+                    const item = document.createElement('div');
+                    item.className = 'fd-meta-item' + (fullWidth ? ' fd-meta-full' : '');
+                    const kEl = document.createElement('div');
+                    kEl.className = 'fd-meta-key';
+                    kEl.textContent = key;
+                    const vEl = document.createElement('div');
+                    vEl.className = 'fd-meta-val ' + extraValClass;
+                    vEl.innerHTML = valueHTML;
+                    item.appendChild(kEl);
+                    item.appendChild(vEl);
+                    return item;
+                }
+
+                // Format ISO date to readable
+                function fmtDate(iso) {
+                    if (!iso) return '—';
+                    try {
+                        const d = new Date(iso);
+                        return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+                    } catch { return iso; }
+                }
+
+                // Build core metadata items
+                const coreItems = [];
+
+                if (finding.cve_id) {
+                    coreItems.push(mkMetaItem('CVE ID',
+                        `<span class="fd-meta-badge">${escapeHtml(finding.cve_id)}</span>`,
+                        false, ''));
+                }
+                if (finding.driver_id) {
+                    coreItems.push(mkMetaItem('Scanner / Tool',
+                        escapeHtml(finding.driver_id), false, 'accent-val'));
+                }
+                if (finding.target_id) {
+                    coreItems.push(mkMetaItem('Target ID',
+                        escapeHtml(String(finding.target_id)), false, 'mono-dim'));
+                }
+                if (finding.scan_job_id) {
+                    coreItems.push(mkMetaItem('Scan Job ID',
+                        escapeHtml(String(finding.scan_job_id)), false, 'mono-dim'));
+                }
+                if (finding.created_at) {
+                    coreItems.push(mkMetaItem('Discovered At',
+                        fmtDate(finding.created_at), false, ''));
+                }
+                if (finding.updated_at) {
+                    coreItems.push(mkMetaItem('Last Updated',
+                        fmtDate(finding.updated_at), false, ''));
+                }
+
+                coreItems.forEach(el => metaCore.appendChild(el));
+
+                // ── Tool Metadata: merge finding.metadata + raw_data.metadata ──
+                // The API returns metadata in two places:
+                //   1. finding.metadata        → { urls, issue_type, risk_score }
+                //   2. finding.raw_data.metadata → adds: scan_time, source_tool, target
+                // We merge both so all 6 canonical fields are always visible.
+                let mergedMeta = {};
+
+                // Layer 1: top-level metadata object
+                if (finding.metadata && typeof finding.metadata === 'object' && !Array.isArray(finding.metadata)) {
+                    Object.assign(mergedMeta, finding.metadata);
+                }
+
+                // Layer 2: enrich from raw_data.metadata (JSON string → parse)
+                if (finding.raw_data) {
+                    try {
+                        const rawParsed = typeof finding.raw_data === 'string'
+                            ? JSON.parse(finding.raw_data)
+                            : finding.raw_data;
+                        if (rawParsed && rawParsed.metadata && typeof rawParsed.metadata === 'object') {
+                            // Add any keys not already present
+                            Object.entries(rawParsed.metadata).forEach(([k, v]) => {
+                                if (!(k in mergedMeta)) mergedMeta[k] = v;
+                            });
+                        }
+                    } catch (_) { /* raw_data not valid JSON — ignore */ }
+                }
+
+                let hasDynamic = false;
+
+                if (Object.keys(mergedMeta).length > 0 || finding.driver_id) {
+                    // Render the 6 canonical fields from the API spec in a fixed order.
+                    // IMPORTANT: source_tool uses finding.driver_id as the authoritative value
+                    // (correct per finding). raw_data.metadata.source_tool reflects only the
+                    // internal engine (e.g. "hakrawler" inside "web-endpoint-fuzzer") and is
+                    // used only as a last-resort fallback when driver_id is missing.
+                    const sourceToolVal = finding.driver_id || mergedMeta.source_tool || null;
+
+                    const canonicalFields = [
+                        { key: 'issue_type',  label: 'Issue Type',   value: mergedMeta.issue_type,  cls: 'accent-val' },
+                        { key: 'risk_score',  label: 'Risk Score',   value: mergedMeta.risk_score,  cls: '' },
+                        { key: 'source_tool', label: 'Source Tool',  value: sourceToolVal,           cls: 'accent-val' },
+                        { key: 'scan_time',   label: 'Scan Time',    value: mergedMeta.scan_time,   cls: '' },
+                        { key: 'target',      label: 'Target Host',  value: mergedMeta.target,      cls: 'mono-dim' },
+                    ];
+
+                    canonicalFields.forEach(({ key, label, value, cls }) => {
+                        if (value === null || value === undefined || value === '') return;
+
+                        // scan_time: format as human-readable date
+                        const display = (key === 'scan_time')
+                            ? fmtDate(String(value))
+                            : escapeHtml(String(value));
+
+                        metaDynGrid.appendChild(mkMetaItem(label, display, false, cls));
+                        hasDynamic = true;
+                    });
+
+                    // Render any extra keys not in the canonical list
+                    const canonicalSet = new Set(['issue_type', 'risk_score', 'source_tool', 'scan_time', 'target', 'urls']);
+                    Object.entries(mergedMeta).forEach(([k, v]) => {
+                        if (canonicalSet.has(k) || Array.isArray(v)) return;
+                        if (v === null || v === undefined) return;
+                        const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                        metaDynGrid.appendChild(mkMetaItem(label, escapeHtml(String(v)), false, ''));
+                        hasDynamic = true;
+                    });
+
+                    // Render discovered URLs as full-width chip list
+                    const urlsArr = Array.isArray(mergedMeta.urls) ? mergedMeta.urls : [];
+                    if (urlsArr.length > 0) {
+                        hasDynamic = true;
+                        const urlItem = document.createElement('div');
+                        urlItem.className = 'fd-meta-item fd-meta-full';
+                        const kEl = document.createElement('div');
+                        kEl.className = 'fd-meta-key';
+                        kEl.textContent = 'Discovered URLs';
+                        const vEl = document.createElement('div');
+                        vEl.className = 'fd-urls-list';
+                        urlsArr.forEach(url => {
+                            const chip = document.createElement('div');
+                            chip.className = 'fd-url-chip';
+                            chip.innerHTML = `<svg class="w-3 h-3 flex-shrink-0 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg><span>${escapeHtml(url)}</span>`;
+                            vEl.appendChild(chip);
+                        });
+                        urlItem.appendChild(kEl);
+                        urlItem.appendChild(vEl);
+                        metaDynGrid.appendChild(urlItem);
+                    }
+                }
+
+                if (hasDynamic) {
+                    metaDynWrap.classList.remove('hidden');
+                } else {
+                    metaDynWrap.classList.add('hidden');
+                }
+
+                // Show/hide entire metadata section
+                const hasCoreItems = coreItems.length > 0;
+                if (hasCoreItems || hasDynamic) {
+                    metaSection.classList.remove('hidden');
+                } else {
+                    metaSection.classList.add('hidden');
+                }
+
                 // Display Modal
                 const modal = document.getElementById('finding-detail-modal');
                 const modalContent = document.getElementById('finding-detail-modal-content');
@@ -5218,7 +6184,7 @@
             }
 
             function clearFindingErrors() {
-                ['af-title', 'af-description', 'af-severity', 'af-cvss-score', 'af-cve-id', 'af-affected-url'].forEach(id => {
+                ['af-title', 'af-description', 'af-severity', 'af-cvss-score', 'af-cve-id', 'af-affected-url', 'af-metadata'].forEach(id => {
                     clearFindingField(id);
                 });
             }
@@ -5238,6 +6204,7 @@
                 const proof = document.getElementById('af-proof')?.value.trim() || "";
                 const remediation = document.getElementById('af-remediation')?.value.trim() || "";
                 const tagsRaw = document.getElementById('af-tags')?.value.trim() || "";
+                const metadataRaw = document.getElementById('af-metadata')?.value.trim() || "";
 
                 let hasErrors = false;
                 if (!title) {
@@ -5276,10 +6243,23 @@
                     }
                 }
 
+                let metadata = null;
+                if (metadataRaw) {
+                    try {
+                        metadata = JSON.parse(metadataRaw);
+                        if (typeof metadata !== 'object' || metadata === null) {
+                            throw new Error();
+                        }
+                    } catch (_) {
+                        showFindingFieldError('af-metadata', 'Metadata must be a valid JSON object/array.');
+                        hasErrors = true;
+                    }
+                }
+
                 if (hasErrors) return;
 
-                if (!_currentFindingTargetId) {
-                    notify("No target selected to attach finding to.", "error");
+                if (!_currentFindingTargetId || _currentFindingTargetId === 'all') {
+                    notify("Please select a specific target to attach manual finding.", "error");
                     return;
                 }
 
@@ -5299,7 +6279,8 @@
                     affected_url: affectedUrl || null,
                     proof: proof || null,
                     remediation: remediation || null,
-                    tags
+                    tags,
+                    metadata
                 };
 
                 try {
@@ -5388,13 +6369,9 @@
                     }
 
                     container.innerHTML = `
-                        <div class="cyber-card p-4 overflow-hidden border border-white/5 bg-black/20">
-                            <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-white/5 pb-2 mb-2">
-                                <span>Endpoint URL</span>
-                                <span>Details</span>
-                            </div>
-                            <div class="space-y-1 divide-y divide-white/5">
-                                ${endpoints.map(ep => renderEndpointRow(ep)).join('')}
+                        <div class="cyber-card p-2 overflow-hidden border border-white/5 bg-black/20 rounded-2xl">
+                            <div class="space-y-1.5">
+                                ${endpoints.map((ep, idx) => renderEndpointRow(ep, idx)).join('')}
                             </div>
                         </div>
                     `;
@@ -5409,10 +6386,22 @@
                 }
             }
 
-            function renderEndpointRow(ep) {
-                const url = esc(ep.url || ep.path || ep.endpoint || "");
-                const method = esc((ep.method || "GET").toUpperCase());
-                const status = ep.status_code || ep.status || "—";
+            function renderEndpointRow(ep, idx) {
+                let url = "";
+                let method = "GET";
+                let status = "—";
+
+                if (typeof ep === "string") {
+                    url = ep;
+                } else if (ep && typeof ep === "object") {
+                    url = ep.url || ep.path || ep.endpoint || "";
+                    method = ep.method || "GET";
+                    status = ep.status_code || ep.status || "—";
+                }
+
+                url = esc(url);
+                method = esc(method.toUpperCase());
+                status = esc(status);
                 
                 const METHOD_CLS = {
                     GET: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
@@ -5422,15 +6411,30 @@
                 };
                 const methodCls = METHOD_CLS[method] || "text-slate-400 bg-slate-500/10 border-slate-500/20";
                 
-                return `
-                    <div class="py-2.5 flex items-center justify-between gap-4 font-mono text-xs hover:bg-white/5 px-2 rounded-lg transition-colors">
-                        <div class="flex items-center gap-2 min-w-0">
-                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border ${methodCls}">${method}</span>
-                            <span class="text-slate-300 truncate select-all" title="${url}">${url}</span>
+                const statusBadge = status !== "—" 
+                    ? `
+                        <div class="flex items-center gap-1.5 text-[10px] text-slate-500 bg-black/30 border border-white/5 px-2 py-1 rounded-md select-none">
+                            <span class="text-[9px] text-slate-600 font-bold uppercase">Status</span>
+                            <span class="text-slate-300 font-extrabold">${status}</span>
                         </div>
-                        <div class="flex items-center gap-2 flex-shrink-0 text-slate-500">
-                            <span>Status:</span>
-                            <span class="text-slate-300 font-semibold">${status}</span>
+                    ` 
+                    : "";
+
+                return `
+                    <div class="group relative py-3 px-4 flex items-center justify-between gap-4 font-mono text-xs hover:bg-white/[0.025] rounded-xl border border-transparent hover:border-white/5 transition-all duration-200">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="text-[9px] font-bold px-2 py-0.5 rounded border tracking-wide uppercase ${methodCls} select-none">${method}</span>
+                            <span id="ep-url-${idx}" class="text-slate-300 truncate select-all hover:text-white transition-colors" title="${url}">${url}</span>
+                        </div>
+                        <div class="flex items-center gap-3 flex-shrink-0">
+                            ${statusBadge}
+                            
+                            <!-- Premium Copy Button -->
+                            <button onclick="copyToClipboard('ep-url-${idx}', this)" class="opacity-0 group-hover:opacity-100 p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-slate-400 hover:text-white transition-all duration-200" title="Copy Endpoint">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 `;
@@ -5442,26 +6446,61 @@
                 const vulnsBtn = document.getElementById('subtab-vulns-btn');
                 const endpointsBtn = document.getElementById('subtab-endpoints-btn');
 
+                const activeCls = ["text-white", "bg-gradient-to-r", "from-[rgba(139,92,246,0.12)]", "to-[rgba(59,130,246,0.12)]", "border", "border-[var(--cg-accent)]/30", "shadow-[0_0_12px_rgba(167,139,250,0.1)]"];
+                const inactiveCls = ["text-slate-400", "hover:text-slate-200", "border-transparent", "hover:bg-white/[0.01]"];
+
                 if (subtab === 'vulns') {
                     vulnsView?.classList.remove('hidden');
                     endpointsView?.classList.add('hidden');
 
-                    vulnsBtn?.classList.add('text-[var(--cg-accent)]', 'bg-[var(--cg-accent-muted)]', 'border', 'border-[var(--cg-accent)]/20');
-                    vulnsBtn?.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-white/5');
+                    activeCls.forEach(c => vulnsBtn?.classList.add(c));
+                    inactiveCls.forEach(c => vulnsBtn?.classList.remove(c));
 
-                    endpointsBtn?.classList.remove('text-[var(--cg-accent)]', 'bg-[var(--cg-accent-muted)]', 'border', 'border-[var(--cg-accent)]/20');
-                    endpointsBtn?.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-white/5');
+                    inactiveCls.forEach(c => endpointsBtn?.classList.add(c));
+                    activeCls.forEach(c => endpointsBtn?.classList.remove(c));
                 } else if (subtab === 'endpoints') {
                     vulnsView?.classList.add('hidden');
                     endpointsView?.classList.remove('hidden');
 
-                    endpointsBtn?.classList.add('text-[var(--cg-accent)]', 'bg-[var(--cg-accent-muted)]', 'border', 'border-[var(--cg-accent)]/20');
-                    endpointsBtn?.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-white/5');
+                    activeCls.forEach(c => endpointsBtn?.classList.add(c));
+                    inactiveCls.forEach(c => endpointsBtn?.classList.remove(c));
 
-                    vulnsBtn?.classList.remove('text-[var(--cg-accent)]', 'bg-[var(--cg-accent-muted)]', 'border', 'border-[var(--cg-accent)]/20');
-                    vulnsBtn?.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-white/5');
+                    inactiveCls.forEach(c => vulnsBtn?.classList.add(c));
+                    activeCls.forEach(c => vulnsBtn?.classList.remove(c));
 
                     loadEndpoints();
+                }
+            }
+
+            async function updateEndpointsTabState() {
+                const endpointsBtn = document.getElementById('subtab-endpoints-btn');
+                if (!endpointsBtn) return;
+                
+                if (!_currentFindingTargetId || _currentFindingTargetId === 'all') {
+                    endpointsBtn.classList.add('hidden');
+                    switchFindingsSubtab('vulns');
+                    return;
+                }
+                
+                try {
+                    const res = await apiFetch(`/targets/${_currentFindingTargetId}`);
+                    if (res.ok) {
+                        const target = await res.json();
+                        const targetObj = target.target || target;
+                        const type = targetObj.type || 'domain';
+                        if (type === 'domain') {
+                            endpointsBtn.classList.remove('hidden');
+                        } else {
+                            endpointsBtn.classList.add('hidden');
+                            switchFindingsSubtab('vulns');
+                        }
+                    } else {
+                        endpointsBtn.classList.add('hidden');
+                        switchFindingsSubtab('vulns');
+                    }
+                } catch (_) {
+                    endpointsBtn.classList.add('hidden');
+                    switchFindingsSubtab('vulns');
                 }
             }
 
@@ -5528,7 +6567,8 @@
             }
 
             function renderFindingsEmptyState() {
-                return `<div class="findings-empty-state"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><h4>No Findings Yet</h4><p>${_currentFilter !== 'all' ? `No ${escapeHtml(_currentFilter)} severity findings for this target.` : 'Run a scan on this target to discover security findings.'}</p>${_currentFilter !== 'all' ? `<button onclick="filterFindings('all')" class="btn-show-all">Show All Findings</button>` : ''}</div>`;
+                const activeFilter = _currentSeverityFilter || 'all';
+                return `<div class="findings-empty-state"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><h4>No Findings Yet</h4><p>${activeFilter !== 'all' ? `No ${escapeHtml(activeFilter)} severity findings for this target.` : 'Run a scan on this target to discover security findings.'}</p>${activeFilter !== 'all' ? `<button onclick="filterFindings('all')" class="btn-show-all">Show All Findings</button>` : ''}</div>`;
             }
 
             function showSelectTargetPrompt() {
