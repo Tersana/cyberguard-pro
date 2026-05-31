@@ -1008,7 +1008,7 @@
                                     <svg class="w-4 h-4 text-[var(--cg-accent)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                                     </svg>
-                                    Project Risk Score
+                                    Last Scan Risk Score
                                 </h3>
                                 
                                 <div class="flex flex-col items-center gap-3">
@@ -5471,7 +5471,13 @@
                 }
                 
                 // Double check sub-tab endpoint logic
-                updateEndpointsTabState();
+                await updateEndpointsTabState();
+                
+                // If endpoints subtab is active, reload endpoints as well
+                const endpointsView = document.getElementById('subtab-endpoints-view');
+                if (endpointsView && !endpointsView.classList.contains('hidden')) {
+                    loadEndpoints();
+                }
                 
                 // Update target action button states (Add Finding visibility)
                 updateTargetsBtnState();
@@ -6538,31 +6544,66 @@
                 container.innerHTML = `<div class="findings-loading">${[1,2,3].map(()=>`<div class="finding-skeleton"><div class="skeleton-text long"></div></div>`).join('')}</div>`;
 
                 try {
-                    const res = await apiFetch(`/targets/${_currentFindingTargetId}/endpoints`);
-                    if (res.status === 400) {
-                        container.innerHTML = `
-                            <div class="text-center py-10 text-slate-500 space-y-2">
-                                <svg class="w-12 h-12 text-slate-600 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z"/>
-                                </svg>
-                                <p class="text-sm font-bold text-white">Feature Not Supported</p>
-                                <p class="text-xs">This target type does not support endpoint discovery.</p>
-                            </div>
-                        `;
-                        return;
+                    let endpoints = [];
+                    if (_currentFindingTargetId === 'all') {
+                        // 1. Fetch all targets of the project
+                        const tRes = await apiFetch(`/projects/${_projectId}/targets`);
+                        if (!tRes.ok) throw new Error(`HTTP ${tRes.status} loading targets`);
+                        const tData = await tRes.json();
+                        const targets = Array.isArray(tData.targets) ? tData.targets : (Array.isArray(tData) ? tData : []);
+                        
+                        // 2. Fetch endpoints for all targets in parallel
+                        const promises = targets.map(async (target) => {
+                            try {
+                                const epRes = await apiFetch(`/targets/${target.id}/endpoints`);
+                                if (epRes.ok) {
+                                    const epData = await epRes.json();
+                                    const epList = Array.isArray(epData.endpoints) ? epData.endpoints : (Array.isArray(epData) ? epData : []);
+                                    return epList.map(ep => {
+                                        if (typeof ep === 'string') {
+                                            return { url: ep, targetLabel: target.label };
+                                        } else if (ep && typeof ep === 'object') {
+                                            return { ...ep, targetLabel: target.label };
+                                        }
+                                        return ep;
+                                    });
+                                }
+                            } catch (e) {
+                                console.error(`Error loading endpoints for target ${target.id}:`, e);
+                            }
+                            return [];
+                        });
+                        const results = await Promise.all(promises);
+                        endpoints = results.flat();
+                    } else {
+                        const res = await apiFetch(`/targets/${_currentFindingTargetId}/endpoints`);
+                        if (res.status === 400) {
+                            container.innerHTML = `
+                                <div class="text-center py-10 text-slate-500 space-y-2">
+                                    <svg class="w-12 h-12 text-slate-600 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z"/>
+                                    </svg>
+                                    <p class="text-sm font-bold text-white">Feature Not Supported</p>
+                                    <p class="text-xs">This target type does not support endpoint discovery.</p>
+                                </div>
+                            `;
+                            return;
+                        }
+                        if (!res.ok) {
+                            throw new Error(`HTTP ${res.status}`);
+                        }
+                        const data = await res.json();
+                        endpoints = Array.isArray(data.endpoints)
+                            ? data.endpoints
+                            : Array.isArray(data)
+                              ? data
+                              : [];
                     }
-                    if (!res.ok) {
-                        throw new Error(`HTTP ${res.status}`);
-                    }
-
-                    const data = await res.json();
-                    const endpoints = Array.isArray(data.endpoints)
-                        ? data.endpoints
-                        : Array.isArray(data)
-                          ? data
-                          : [];
 
                     if (endpoints.length === 0) {
+                        const noEndpointsMsg = _currentFindingTargetId === 'all'
+                            ? "No endpoints discovered yet across any target. Run a scan to discover endpoints."
+                            : "No endpoints discovered yet. Run a scan to discover endpoints.";
                         container.innerHTML = `
                             <div class="text-center py-10 text-slate-500 space-y-2">
                                 <svg class="w-12 h-12 text-slate-600 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
@@ -6570,7 +6611,7 @@
                                     <line x1="8" y1="12" x2="16" y2="12"/>
                                 </svg>
                                 <p class="text-sm font-bold text-white">No Endpoints Discovered</p>
-                                <p class="text-xs">No endpoints discovered yet. Run a scan to discover endpoints.</p>
+                                <p class="text-xs">${noEndpointsMsg}</p>
                             </div>
                         `;
                         return;
@@ -6598,6 +6639,7 @@
                 let url = "";
                 let method = "GET";
                 let status = "—";
+                let targetLabel = "";
 
                 if (typeof ep === "string") {
                     url = ep;
@@ -6605,6 +6647,7 @@
                     url = ep.url || ep.path || ep.endpoint || "";
                     method = ep.method || "GET";
                     status = ep.status_code || ep.status || "—";
+                    targetLabel = ep.targetLabel || "";
                 }
 
                 url = esc(url);
@@ -6619,6 +6662,15 @@
                 };
                 const methodCls = METHOD_CLS[method] || "text-slate-400 bg-slate-500/10 border-slate-500/20";
                 
+                const targetBadge = targetLabel 
+                    ? `
+                        <div class="flex items-center gap-1.5 text-[10px] text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1 rounded-md select-none font-semibold">
+                            <span class="text-[9px] text-indigo-500 font-bold uppercase">Target</span>
+                            <span>${esc(targetLabel)}</span>
+                        </div>
+                    ` 
+                    : "";
+
                 const statusBadge = status !== "—" 
                     ? `
                         <div class="flex items-center gap-1.5 text-[10px] text-slate-500 bg-black/30 border border-white/5 px-2 py-1 rounded-md select-none">
@@ -6635,6 +6687,7 @@
                             <span id="ep-url-${idx}" class="text-slate-300 truncate select-all hover:text-white transition-colors" title="${url}">${url}</span>
                         </div>
                         <div class="flex items-center gap-3 flex-shrink-0">
+                            ${targetBadge}
                             ${statusBadge}
                             
                             <!-- Premium Copy Button -->
@@ -6684,9 +6737,14 @@
                 const endpointsBtn = document.getElementById('subtab-endpoints-btn');
                 if (!endpointsBtn) return;
                 
-                if (!_currentFindingTargetId || _currentFindingTargetId === 'all') {
+                if (!_currentFindingTargetId) {
                     endpointsBtn.classList.add('hidden');
                     switchFindingsSubtab('vulns');
+                    return;
+                }
+
+                if (_currentFindingTargetId === 'all') {
+                    endpointsBtn.classList.remove('hidden');
                     return;
                 }
                 
