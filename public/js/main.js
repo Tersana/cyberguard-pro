@@ -6246,7 +6246,7 @@ document.addEventListener("DOMContentLoaded", () => {
     logResult(
       new Date(),
       "IP Geolocation",
-      `🌍 Fetching geolocation for ${target}...`,
+      `Fetching geolocation for ${target}...`,
     );
     try {
       addActivityLog("Querying geolocation API...", "IP Geolocation");
@@ -6257,8 +6257,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       addActivityLog("Processing geolocation data...", "IP Geolocation");
       // Format comprehensive geolocation information
-      let result = `✅ [INFO] Detailed Geolocation for ${target}:\n\n`;
-      result += `📍 Location Details:\n`;
+      let result = `Detailed Geolocation for ${target}:\n\n`;
+      result += `Location Details:\n`;
       result += `  Country: ${d.country_name || "N/A"} (${
         d.country || "N/A"
       })\n`;
@@ -6269,12 +6269,12 @@ document.addEventListener("DOMContentLoaded", () => {
         d.longitude || "N/A"
       }\n\n`;
 
-      result += `🌐 Network Information:\n`;
+      result += `Network Information:\n`;
       result += `  ISP/Organization: ${d.org || "N/A"}\n`;
       result += `  ASN: ${d.asn || "N/A"}\n`;
       result += `  Connection Type: ${d.connection || "N/A"}\n\n`;
 
-      result += `🕐 Regional Details:\n`;
+      result += `Regional Details:\n`;
       result += `  Timezone: ${d.timezone || "N/A"}\n`;
       result += `  UTC Offset: ${d.utc_offset || "N/A"}\n`;
       result += `  Currency: ${d.currency_name || "N/A"} (${
@@ -6282,7 +6282,7 @@ document.addEventListener("DOMContentLoaded", () => {
       })\n`;
       result += `  Languages: ${d.languages || "N/A"}\n\n`;
 
-      result += `🔒 Security Information:\n`;
+      result += `Security Information:\n`;
       result += `  Threat Level: ${d.threat || "Low"}\n`;
       result += `  Is EU Country: ${d.in_eu ? "Yes" : "No"}\n`;
 
@@ -6293,7 +6293,7 @@ document.addEventListener("DOMContentLoaded", () => {
       logResult(
         new Date(),
         "IP Geolocation",
-        `❌ [ERROR] Geolocation fetch failed. ${e.message}`,
+        `[ERROR] Geolocation fetch failed. ${e.message}`,
         "danger",
       );
     }

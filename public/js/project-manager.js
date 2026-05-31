@@ -599,7 +599,20 @@ class ProjectManager {
             return [];
           });
           console.log(`[ProjectManager] Fetch findings success for target ${target.id}:`, res);
-          return Array.isArray(res) ? res : (res.findings || res.data || []);
+          
+          let arr = [];
+          if (Array.isArray(res)) {
+            arr = res;
+          } else if (res && res.findings) {
+            if (Array.isArray(res.findings.data)) {
+              arr = res.findings.data;
+            } else if (Array.isArray(res.findings)) {
+              arr = res.findings;
+            }
+          } else if (res && res.data) {
+            arr = Array.isArray(res.data) ? res.data : [];
+          }
+          return arr;
         } catch (_) {
           return [];
         }
