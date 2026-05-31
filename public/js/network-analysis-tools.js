@@ -963,7 +963,7 @@
   // ===== 4. IP GEOLOCATION =====
   async function ipGeolocation(target) {
     addActivityLog(`Starting geolocation lookup for ${target}`, "IP Geolocation");
-    logResult(new Date(), "IP Geolocation", `🌍 Fetching geolocation for ${target}...`);
+    logResult(new Date(), "IP Geolocation", `Fetching geolocation for ${target}...`);
     try {
       addActivityLog("Querying geolocation API...", "IP Geolocation");
       const r = await fetch(`https://ipapi.co/${target}/json/`);
@@ -972,26 +972,26 @@
       if (d.error) throw new Error(d.reason);
 
       addActivityLog("Processing geolocation data...", "IP Geolocation");
-      let result = `✅ [INFO] Detailed Geolocation for ${target}:\n\n`;
-      result += `📍 Location Details:\n`;
+      let result = `Detailed Geolocation for ${target}:\n\n`;
+      result += `Location Details:\n`;
       result += `  Country: ${d.country_name || "N/A"} (${d.country || "N/A"})\n`;
       result += `  Region/State: ${d.region || "N/A"}\n`;
       result += `  City: ${d.city || "N/A"}\n`;
       result += `  Postal Code: ${d.postal || "N/A"}\n`;
       result += `  Coordinates: ${d.latitude || "N/A"}, ${d.longitude || "N/A"}\n\n`;
 
-      result += `🌐 Network Information:\n`;
+      result += `Network Information:\n`;
       result += `  ISP/Organization: ${d.org || "N/A"}\n`;
       result += `  ASN: ${d.asn || "N/A"}\n`;
       result += `  Connection Type: ${d.connection || "N/A"}\n\n`;
 
-      result += `🕐 Regional Details:\n`;
+      result += `Regional Details:\n`;
       result += `  Timezone: ${d.timezone || "N/A"}\n`;
       result += `  UTC Offset: ${d.utc_offset || "N/A"}\n`;
       result += `  Currency: ${d.currency_name || "N/A"} (${d.currency || "N/A"})\n`;
       result += `  Languages: ${d.languages || "N/A"}\n\n`;
 
-      result += `🔒 Security Information:\n`;
+      result += `Security Information:\n`;
       result += `  Threat Level: ${d.threat || "Low"}\n`;
       result += `  Is EU Country: ${d.in_eu ? "Yes" : "No"}\n`;
 
@@ -999,7 +999,7 @@
       logResult(new Date(), "IP Geolocation", result, "success");
     } catch (e) {
       addActivityLog(`Lookup failed: ${e.message}`, "IP Geolocation");
-      logResult(new Date(), "IP Geolocation", `❌ [ERROR] Geolocation fetch failed. ${e.message}`, "danger");
+      logResult(new Date(), "IP Geolocation", `[ERROR] Geolocation fetch failed. ${e.message}`, "danger");
     }
   }
 

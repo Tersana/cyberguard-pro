@@ -2783,6 +2783,7 @@
 
                 _apiClient = new APIClient(API_BASE);
 
+                initializeAllowedTools();
                 loadProject(isOwnedHint);
             })();
 
@@ -5258,6 +5259,32 @@
 
             let _allFindings   = [];
             let _currentFindingTargetId = null;
+            let _allSeenTools  = new Set([
+                'PORT_SCANNER',
+                'TCP_CONNECTIVITY',
+                'UDP_SERVICES',
+                'IP_GEOLOCATION',
+                'REVERSE_DNS',
+                'WHOIS_LOOKUP'
+            ]);
+
+            async function initializeAllowedTools() {
+                try {
+                    const res = await apiFetch('/scanners');
+                    if (res.ok) {
+                        const data = await res.json();
+                        const scanners = Array.isArray(data.scanners) ? data.scanners : [];
+                        scanners.forEach(s => {
+                            if (s.id) _allSeenTools.add(s.id);
+                        });
+                    }
+                } catch (e) {
+                    console.error("Failed to load backend scanners for filtering:", e);
+                }
+
+                // Repopulate tool filter if dropdown exists
+                populateToolsFilter(_allFindings);
+            }
 
             // Pagination state
             let _findingsCurrentPage = 1;
@@ -5328,6 +5355,41 @@
                 loadFindings(_currentFindingTargetId, 1);
             }
 
+            // Mapping of tool/driver IDs to human-readable names for display in filter dropdown
+            const TOOL_DISPLAY_NAMES = {
+                'web-endpoint-fuzzer': 'Web Endpoint Fuzzer',
+                'subdomain-scan': 'Subdomain Scan',
+                'SQLi Testing': 'SQLi Testing',
+                'IP_GEOLOCATION': 'IP Geolocation',
+                'REVERSE_DNS': 'Reverse DNS',
+                'WHOIS_LOOKUP': 'WHOIS Lookup',
+                'PORT_SCANNER': 'Port Scanner',
+                'TCP_CONNECTIVITY': 'TCP Connectivity',
+                'UDP_SERVICES': 'UDP Services',
+                'THREAT_INTELLIGENCE': 'Threat Intelligence',
+                'HEADERS_ANALYSIS': 'Headers Analysis',
+                'LINK_CHECKER': 'Link Checker',
+                'TECH_FINGERPRINT': 'Tech Fingerprint',
+                'XSS_SCANNER': 'XSS Scanner',
+                'SSL_CERTIFICATE_CHECK': 'SSL Certificate Check',
+                'PHISHING_ANALYSIS': 'Phishing Analysis',
+                'DNS_SPOOF_ANALYSIS': 'DNS Spoof Analysis',
+                
+                // Casing/name variations
+                'ip-geolocation': 'IP Geolocation',
+                'ip_geolocation': 'IP Geolocation',
+                'whois-lookup': 'WHOIS Lookup',
+                'whois_lookup': 'WHOIS Lookup',
+                'reverse-dns': 'Reverse DNS',
+                'reverse_dns': 'Reverse DNS',
+                'port-scanner': 'Port Scanner',
+                'port_scanner': 'Port Scanner',
+                'tcp-connectivity': 'TCP Connectivity',
+                'tcp_connectivity': 'TCP Connectivity',
+                'udp-services': 'UDP Services',
+                'udp_services': 'UDP Services'
+            };
+
             // Dynamically populate the distinct tools loaded from the current dataset
             function populateToolsFilter(findings) {
                 const toolFilter = document.getElementById('filter-tool');
@@ -5335,16 +5397,10 @@
                 
                 const selectedTool = toolFilter.value || _currentToolFilter || 'all';
                 
-                // Gather unique tool/driver IDs from findings
-                const tools = new Set();
-                findings.forEach(f => {
-                    const toolName = f.tool || f.driver_id || '';
-                    if (toolName) tools.add(toolName);
-                });
-                
                 let html = `<option value="all">All Tools</option>`;
-                Array.from(tools).sort().forEach(t => {
-                    html += `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`;
+                Array.from(_allSeenTools).sort().forEach(t => {
+                    const displayName = TOOL_DISPLAY_NAMES[t] || cap(t.replace(/[_-]/g, ' '));
+                    html += `<option value="${escapeHtml(t)}">${escapeHtml(displayName)}</option>`;
                 });
                 
                 toolFilter.innerHTML = html;
@@ -5501,6 +5557,55 @@
                         lastPage = data.last_page || 1;
                         total = data.total || 0;
                     }
+
+                    // Retrieve local scans and extract their findings to merge
+                    let localScans = [];
+                    try {
+                        const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+                        if (storedScansRaw) {
+                            localScans = JSON.parse(storedScansRaw);
+                        }
+                    } catch (_) {}
+
+                    let matchingScans = [];
+                    if (isProjectWide) {
+                        matchingScans = localScans.filter(s => s.project_id === _projectId);
+                        if (_currentTargetFilter && _currentTargetFilter !== 'all') {
+                            matchingScans = matchingScans.filter(s => String(s.target_id) === String(_currentTargetFilter));
+                        }
+                    } else {
+                        matchingScans = localScans.filter(s => String(s.target_id) === String(_currentFindingTargetId));
+                    }
+
+                    let localFindingsList = [];
+                    matchingScans.forEach(scan => {
+                        if (Array.isArray(scan.findings)) {
+                            scan.findings.forEach(f => {
+                                // Prevent duplicate IDs
+                                if (!localFindingsList.some(existing => existing.id === f.id)) {
+                                    localFindingsList.push(f);
+                                }
+                            });
+                        }
+                    });
+
+                    // Filter local findings using active severity, status, and tool filters
+                    if (_currentSeverityFilter && _currentSeverityFilter !== 'all') {
+                        localFindingsList = localFindingsList.filter(f => (f.severity || '').toLowerCase() === _currentSeverityFilter.toLowerCase());
+                    }
+                    if (_currentStatusFilter && _currentStatusFilter !== 'all') {
+                        localFindingsList = localFindingsList.filter(f => (f.status || '').toLowerCase() === _currentStatusFilter.toLowerCase());
+                    }
+                    if (_currentToolFilter && _currentToolFilter !== 'all') {
+                        localFindingsList = localFindingsList.filter(f => {
+                            const toolName = f.tool || f.driver_id || '';
+                            return toolName.toLowerCase() === _currentToolFilter.toLowerCase();
+                        });
+                    }
+
+                    // Merge the filtered local findings
+                    findingsList = [...findingsList, ...localFindingsList];
+                    total += localFindingsList.length;
                     
                     _allFindings = findingsList;
                     _findingsCurrentPage = currentPage;
@@ -5765,6 +5870,102 @@
                 }
             }
 
+            function formatIPGeolocationHtml(text) {
+                if (!text) return '';
+                
+                // Parse sections
+                const lines = text.split('\n');
+                let html = '<div class="ip-geo-container mt-4 space-y-6">';
+                
+                let currentSection = null;
+                let currentItems = [];
+                
+                const sections = [];
+                
+                lines.forEach(line => {
+                    const trimmed = line.trim();
+                    if (!trimmed) return;
+                    
+                    if (trimmed.includes('Location Details') || trimmed.includes('Network Information') || trimmed.includes('Regional Details') || trimmed.includes('Security Information')) {
+                        if (currentSection) {
+                            sections.push({ name: currentSection, items: currentItems });
+                        }
+                        currentSection = trimmed.replace(/[📍🌐🕐🔒]/g, '').replace(/:$/, '').trim();
+                        currentItems = [];
+                    } else if (trimmed.includes(':') && currentSection) {
+                        const colonIdx = trimmed.indexOf(':');
+                        const key = trimmed.substring(0, colonIdx).trim();
+                        const val = trimmed.substring(colonIdx + 1).trim();
+                        currentItems.push({ key, val });
+                    }
+                });
+                
+                if (currentSection) {
+                    sections.push({ name: currentSection, items: currentItems });
+                }
+                
+                const iconMap = {
+                    'Location Details': `
+                        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/>
+                        </svg>`,
+                    'Network Information': `
+                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3s-4.5 4.03-4.5 9 2.015 9 4.5 9Z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12c0 5.385 4.365 9.75 9.75 9.75s9.75-4.365 9.75-9.75S17.385 2.25 12 2.25 2.25 6.615 2.25 12Z"/>
+                        </svg>`,
+                    'Regional Details': `
+                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                        </svg>`,
+                    'Security Information': `
+                        <svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/>
+                        </svg>`
+                };
+                
+                const cardColors = {
+                    'Location Details': 'border-indigo-500/20 bg-indigo-500/5',
+                    'Network Information': 'border-emerald-500/20 bg-emerald-500/5',
+                    'Regional Details': 'border-amber-500/20 bg-amber-500/5',
+                    'Security Information': 'border-rose-500/20 bg-rose-500/5'
+                };
+                
+                html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+                
+                sections.forEach(section => {
+                    const icon = iconMap[section.name] || '';
+                    const colorCls = cardColors[section.name] || 'border-white/10 bg-white/5';
+                    
+                    html += `
+                        <div class="ip-geo-card p-4 rounded-xl border ${colorCls} transition-all duration-200 hover:border-white/20">
+                            <div class="flex items-center gap-2 mb-3 pb-2 border-b border-white/5">
+                                ${icon}
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-200">${escapeHtml(section.name)}</span>
+                            </div>
+                            <div class="space-y-2">
+                    `;
+                    
+                    section.items.forEach(item => {
+                        html += `
+                            <div class="flex justify-between items-center text-[11px] font-mono py-0.5">
+                                <span class="text-slate-400 select-none">${escapeHtml(item.key)}</span>
+                                <span class="text-slate-200 font-bold text-right">${escapeHtml(item.val)}</span>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+                return html;
+            }
+
             function showFindingDetailModal(findingId) {
                 const finding = _allFindings.find(f => String(f.id) === String(findingId));
                 if (!finding) return;
@@ -5890,7 +6091,14 @@
                 const descSection = document.getElementById('fd-desc-section');
                 const descText = document.getElementById('fd-description');
                 if (finding.description) {
-                    descText.textContent = finding.description;
+                    const isIPGeo = (finding.driver_id === 'IP_GEOLOCATION' || (finding.title && finding.title.includes('Geolocation')));
+                    if (isIPGeo) {
+                        descText.className = "select-text text-sm w-full";
+                        descText.innerHTML = formatIPGeolocationHtml(finding.description);
+                    } else {
+                        descText.className = "text-slate-300 leading-relaxed break-words whitespace-pre-wrap select-text";
+                        descText.textContent = finding.description;
+                    }
                     descSection.classList.remove('hidden');
                 } else {
                     descSection.classList.add('hidden');
