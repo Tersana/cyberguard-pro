@@ -5399,7 +5399,7 @@ document.addEventListener("DOMContentLoaded", () => {
     logResult(
       new Date(),
       "Reverse DNS",
-      `🔄 Advanced DNS analysis for ${target}...`,
+      `Advanced DNS analysis for ${target}...`,
     );
     try {
       // Check if target is an IP address
@@ -5464,7 +5464,7 @@ document.addEventListener("DOMContentLoaded", () => {
         logResult(
           new Date(),
           "Reverse DNS",
-          `🔍 Querying PTR record: ${reverseIP}`,
+          `Querying PTR record: ${reverseIP}`,
           "info",
         );
 
@@ -5476,38 +5476,38 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         const d = await r.json();
 
-        let result = `✅ [SUCCESS] IP: ${target}\n`;
+        let result = `[SUCCESS] IP: ${target}\n`;
 
         // Add known service information if available
         if (knownIPs[target]) {
           const info = knownIPs[target];
-          result += `🏢 Service: ${info.service}\n`;
-          result += `🏭 Provider: ${info.provider}\n`;
-          result += `📋 Type: ${info.type}\n`;
+          result += `Service: ${info.service}\n`;
+          result += `Provider: ${info.provider}\n`;
+          result += `Type: ${info.type}\n`;
         }
 
         if (d.Answer && d.Answer.length > 0) {
           const hostnames = d.Answer.map((a) => a.data.replace(/\.$/, "")).join(
             "\n - ",
           );
-          result += `🌐 Hostname(s):\n - ${hostnames}`;
+          result += `Hostname(s):\n - ${hostnames}`;
 
           // Additional analysis for common services
           if (
             hostnames.includes("cloudflare") ||
             hostnames.includes("one.one.one.one")
           ) {
-            result += `\n💡 This is Cloudflare's public DNS resolver (1.1.1.1)`;
+            result += `\nThis is Cloudflare's public DNS resolver (1.1.1.1)`;
           } else if (
             hostnames.includes("google") ||
             hostnames.includes("dns.google")
           ) {
-            result += `\n💡 This is Google's public DNS resolver (8.8.8.8)`;
+            result += `\nThis is Google's public DNS resolver (8.8.8.8)`;
           } else if (hostnames.includes("quad9")) {
-            result += `\n💡 This is Quad9's public DNS resolver`;
+            result += `\nThis is Quad9's public DNS resolver`;
           }
         } else {
-          result += `⚠️ No reverse DNS record found`;
+          result += `No reverse DNS record found`;
         }
 
         logResult(new Date(), "Reverse DNS", result, "success");
@@ -5516,7 +5516,7 @@ document.addEventListener("DOMContentLoaded", () => {
         logResult(
           new Date(),
           "Reverse DNS",
-          `🔍 Querying A record for: ${target}`,
+          `Querying A record for: ${target}`,
           "info",
         );
 
@@ -5532,8 +5532,8 @@ document.addEventListener("DOMContentLoaded", () => {
           const ips = d.Answer.filter((a) => a.type === 1).map((a) => a.data);
           const ipList = ips.join("\n - ");
 
-          let result = `✅ [SUCCESS] Hostname: ${target}\n`;
-          result += `🌐 IP Address(es):\n - ${ipList}`;
+          let result = `[SUCCESS] Hostname: ${target}\n`;
+          result += `IP Address(es):\n - ${ipList}`;
 
           // Analyze IP ranges for common services
           const cloudflareRanges = [
@@ -5634,22 +5634,22 @@ document.addEventListener("DOMContentLoaded", () => {
             awsRanges.some((range) => ip.startsWith(range)),
           );
 
-          if (isCloudflare) result += `\n☁️ Hosted on Cloudflare CDN`;
-          if (isGoogle) result += `\n🔍 Hosted on Google Cloud Platform`;
-          if (isAWS) result += `\n☁️ Hosted on Amazon Web Services`;
+          if (isCloudflare) result += `\nHosted on Cloudflare CDN`;
+          if (isGoogle) result += `\nHosted on Google Cloud Platform`;
+          if (isAWS) result += `\nHosted on Amazon Web Services`;
 
           // Check for common TLDs and their implications
-          if (target.endsWith(".gov")) result += `\n🏛️ Government domain`;
-          if (target.endsWith(".edu")) result += `\n🎓 Educational institution`;
-          if (target.endsWith(".mil")) result += `\n🛡️ Military domain`;
-          if (target.endsWith(".org")) result += `\n🏢 Organization domain`;
+          if (target.endsWith(".gov")) result += `\nGovernment domain`;
+          if (target.endsWith(".edu")) result += `\nEducational institution`;
+          if (target.endsWith(".mil")) result += `\nMilitary domain`;
+          if (target.endsWith(".org")) result += `\nOrganization domain`;
 
           logResult(new Date(), "Reverse DNS", result, "success");
         } else {
           logResult(
             new Date(),
             "Reverse DNS",
-            `⚠️ [WARNING] Could not resolve: ${target}`,
+            `[WARNING] Could not resolve: ${target}`,
             "warning",
           );
         }
@@ -5658,7 +5658,7 @@ document.addEventListener("DOMContentLoaded", () => {
       logResult(
         new Date(),
         "Reverse DNS",
-        `❌ [ERROR] DNS lookup failed. ${e.message}`,
+        `[ERROR] DNS lookup failed. ${e.message}`,
         "danger",
       );
     }

@@ -26,7 +26,7 @@
 
   const NETWORK_ANALYSIS_TOOLS = [
     {
-      id: 'frontend-port-scanner',
+      id: 'net-port-scanner',
       name: 'Port Scanner',
       description: 'Deep Shodan-powered analysis of open ports, running services, banners, and CVE exposure.',
       badge: 'SHODAN',
@@ -38,7 +38,7 @@
       isFrontend: true
     },
     {
-      id: 'frontend-tcp-connectivity',
+      id: 'net-tcp-connectivity',
       name: 'TCP Connectivity',
       description: 'Real-time TCP handshake verification and response time measurement via WebSocket probing.',
       badge: 'TCP',
@@ -50,7 +50,7 @@
       isFrontend: true
     },
     {
-      id: 'frontend-udp-services',
+      id: 'net-udp-services',
       name: 'UDP Services',
       description: 'Probe UDP-based services including DNS, NTP, mDNS, and DHCP indicators via browser APIs.',
       badge: 'UDP',
@@ -62,7 +62,7 @@
       isFrontend: true
     },
     {
-      id: 'frontend-ip-geolocation',
+      id: 'net-ip-geolocation',
       name: 'IP Geolocation',
       description: 'Geolocate any IP: country, ISP, ASN, coordinates, timezone, and threat classification.',
       badge: 'GEO',
@@ -75,7 +75,7 @@
       isFrontend: true
     },
     {
-      id: 'frontend-reverse-dns',
+      id: 'net-reverse-dns',
       name: 'Reverse DNS',
       description: 'PTR record resolution with CDN fingerprinting, cloud provider detection, and hostname mapping.',
       badge: 'RECURSIVE',
@@ -87,7 +87,7 @@
       isFrontend: true
     },
     {
-      id: 'frontend-whois-lookup',
+      id: 'net-whois-lookup',
       name: 'WHOIS Lookup',
       description: 'Full domain registration intelligence: registrar, creation dates, nameservers, contacts.',
       badge: 'WHOISXML',
@@ -475,7 +475,7 @@
           started_at: scanState.startedAt,
           created_at: scanState.startedAt,
           finished_at: null,
-          driver_id: ["FRONTEND_ANALYSIS"],
+          driver_id: ["NETWORK_ANALYSIS"],
           target: {
             id: scanState.targetId,
             value: scanState.targetValue

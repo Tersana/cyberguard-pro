@@ -640,7 +640,7 @@ function withLoading(asyncFn, options = {}) {
               id: targetId,
               value: targetValue
             },
-            driver_id: ["FRONTEND_ANALYSIS"],
+            driver_id: ["NETWORK_ANALYSIS"],
             created_at: new Date().toISOString(),
             finished_at: null
           };
@@ -830,7 +830,7 @@ function withLoading(asyncFn, options = {}) {
       mockFrontendScans[scanJobId] = storedScan || {
         id: scanJobId,
         status: "completed",
-        driver_id: ["FRONTEND_ANALYSIS"],
+        driver_id: ["NETWORK_ANALYSIS"],
         created_at: new Date().toISOString(),
       };
     }
