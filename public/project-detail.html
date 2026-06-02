@@ -644,16 +644,22 @@
 
             /* Pending Invitations smooth height transition */
             .pending-invitations-wrapper {
-                display: grid;
-                grid-template-rows: 1fr;
+                max-height: 1200px;
+                overflow: hidden;
                 margin-top: 12px;
-                transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+                transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+                            opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                            transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+                            margin-top 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                 opacity: 1;
+                transform: translateY(0);
+                will-change: transform, opacity;
             }
             .pending-invitations-wrapper.collapsed {
-                grid-template-rows: 0fr;
+                max-height: 0 !important;
                 opacity: 0;
                 margin-top: 0;
+                transform: translateY(-8px);
                 pointer-events: none;
             }
             .pending-invitations-inner {
