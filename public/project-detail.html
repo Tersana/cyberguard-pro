@@ -3902,7 +3902,6 @@
                 navigator.clipboard
                     .writeText(text)
                     .then(() => {
-                        notify("Invite link copied!", "success");
                         if (btn) {
                             const origHTML = btn.innerHTML;
                             btn.innerHTML = `
@@ -3913,10 +3912,12 @@
                             `;
                             btn.style.borderColor = "rgba(52, 211, 153, 0.4)";
                             btn.style.background = "rgba(52, 211, 153, 0.08)";
+                            btn.style.color = "#34d399";
                             setTimeout(() => {
                                 btn.innerHTML = origHTML;
                                 btn.style.borderColor = "";
                                 btn.style.background = "";
+                                btn.style.color = "";
                             }, 2500);
                         }
                     })
