@@ -6,7 +6,7 @@
         <title>Project Detail — CyberGuard</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
             rel="stylesheet"
         />
         <link rel="stylesheet" href="css/theme-tokens.css" />
@@ -640,6 +640,24 @@
                 border-color: var(--cg-accent) !important;
                 box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2) !important;
                 outline: none;
+            }
+
+            /* Pending Invitations smooth height transition */
+            .pending-invitations-wrapper {
+                display: grid;
+                grid-template-rows: 1fr;
+                margin-top: 12px;
+                transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+                opacity: 1;
+            }
+            .pending-invitations-wrapper.collapsed {
+                grid-template-rows: 0fr;
+                opacity: 0;
+                margin-top: 0;
+                pointer-events: none;
+            }
+            .pending-invitations-inner {
+                overflow: hidden;
             }
         </style>
     </head>
@@ -1513,13 +1531,33 @@
                 </div>
 
                 <!-- Pending Invitations section -->
-                <div id="pending-invitations-container" class="hidden mt-6 space-y-3">
-                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                        <span>Pending Invitations</span>
-                        <span id="pending-invitations-count" class="tab-badge !bg-[var(--cg-accent)] !ml-1">0</span>
-                    </h3>
-                    <div id="pending-invitations-list" class="space-y-2">
-                        <!-- Pending invitations will be injected here -->
+                <div id="pending-invitations-container" class="hidden mt-6">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <span>Pending Invitations</span>
+                            <span id="pending-invitations-count" class="tab-badge !bg-[var(--cg-accent)] !ml-1">0</span>
+                        </h3>
+                        <div class="flex items-center gap-2">
+                            <button id="toggle-pending-invitations-btn" class="cyber-btn-ghost text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5" onclick="togglePendingInvitations()">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                                </svg>
+                                <span>Hide</span>
+                            </button>
+                            <button id="remove-pending-invitations-btn" class="cyber-btn-ghost text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-rose-400 hover:text-white" onclick="removeAllPendingInvitations()">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                </svg>
+                                <span>Remove All</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="pending-invitations-wrapper" class="pending-invitations-wrapper">
+                        <div class="pending-invitations-inner">
+                            <div id="pending-invitations-list" class="space-y-2 pb-1">
+                                <!-- Pending invitations will be injected here -->
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1602,25 +1640,6 @@
                 </div>
                 <!-- === END SECTION: ROLES & PERMISSIONS TABLE === -->
 
-                <!-- === SECTION: PENDING INVITATIONS === -->
-                <div class="cyber-card overflow-hidden" id="pending-invitations-card">
-                    <div class="px-5 py-4 border-b border-[var(--cg-border)] flex items-center justify-between">
-                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--cg-warning)]">
-                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.65a16 16 0 0 0 6 6l.94-.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.74 16z"/>
-                            </svg>
-                            Pending Invitations
-                            <span id="pending-invitations-count" class="text-xs bg-[rgba(251,191,36,0.15)] text-[#FBBF24] px-1.5 py-0.5 rounded-full font-mono">0</span>
-                        </h3>
-                    </div>
-                    <div id="pending-invitations-list" class="divide-y divide-[var(--cg-border)]">
-                        <!-- TODO: Replace with API call to GET /api/projects/{id}/invitations -->
-                        <div class="px-5 py-6 text-center text-slate-500 text-sm">
-                            No pending invitations.
-                        </div>
-                    </div>
-                </div>
-                <!-- === END SECTION: PENDING INVITATIONS === -->
 
             </div>
 
@@ -3129,7 +3148,7 @@
                             arr = Array.isArray(list.data) ? list.data : [];
                         }
 
-                        // Calculate target's dynamic risk score (0-100 scale: Critical - 15, High - 8, Medium - 4, Low - 1)
+                        // Calculate target's dynamic risk score (0-100 scale: Critical - 10, High - 7, Medium - 4, Low - 1)
                         let openCritical = 0, openHigh = 0, openMedium = 0, openLow = 0;
                         arr.forEach(f => {
                             if ((f.status || "open").toLowerCase() === "open") {
@@ -3141,7 +3160,7 @@
                             }
                         });
 
-                        let targetRisk = openCritical * 15 + openHigh * 8 + openMedium * 4 + openLow * 1;
+                        let targetRisk = openCritical * 10 + openHigh * 7 + openMedium * 4 + openLow * 1;
                         targetRisk = Math.min(100, Math.max(0, targetRisk));
 
                         updateTargetRiskBadge(target.id, targetRisk);
@@ -3402,7 +3421,7 @@
                     _set("risk-footer-findings", String(totalOpen));
 
                     // 6. Calculate risk score
-                    let riskScore = 100 - (openCritical * 15 + openHigh * 8 + openMedium * 4 + openLow * 1);
+                    let riskScore = 100 - (openCritical * 10 + openHigh * 7 + openMedium * 4 + openLow * 1);
                     riskScore = Math.max(0, Math.min(100, riskScore));
 
                     // 7. Map category & color & description
@@ -3987,6 +4006,15 @@
                 const expDate = expires ? fmtDate(expires.split("T")[0]) : "Never";
                 const createdDate = created ? fmtDate(created.split("T")[0]) : "—";
                 
+                const invIdOrToken = inv.id || inv.token || "";
+                const deleteBtnHtml = invIdOrToken ? `
+                    <button class="cyber-btn-ghost text-xs p-1 rounded-lg text-rose-400 hover:text-white" onclick="revokeInvitation('${invIdOrToken}')" title="Revoke Invitation">
+                        <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" style="width: 1.125rem; height: 1.125rem;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                ` : '';
+
                 return `
                     <div class="cyber-card p-3 flex items-center justify-between gap-3 border-[var(--cg-border-subtle)]">
                         <div class="flex-1 min-w-0">
@@ -3998,12 +4026,165 @@
                                 Generated: ${createdDate} &bull; Invited by: ${esc(invitedBy)}
                             </p>
                         </div>
-                        <div class="text-right flex-shrink-0">
-                            <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Expires</p>
-                            <p class="text-xs text-slate-500 font-mono mt-0.5">${expDate}</p>
+                        <div class="flex items-center gap-3 flex-shrink-0">
+                            <div class="text-right">
+                                <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Expires</p>
+                                <p class="text-xs text-slate-500 font-mono mt-0.5">${expDate}</p>
+                            </div>
+                            ${deleteBtnHtml}
                         </div>
                     </div>
                 `;
+            }
+
+            function togglePendingInvitations() {
+                const wrapperEl = document.getElementById("pending-invitations-wrapper");
+                const btn = document.getElementById("toggle-pending-invitations-btn");
+                if (!wrapperEl || !btn) return;
+
+                const isCollapsed = wrapperEl.classList.contains("collapsed");
+                const textEl = btn.querySelector("span");
+                const svgEl = btn.querySelector("svg");
+
+                if (isCollapsed) {
+                    wrapperEl.classList.remove("collapsed");
+                    if (textEl) textEl.textContent = "Hide";
+                    if (svgEl) {
+                        svgEl.innerHTML = `
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                        `;
+                    }
+                } else {
+                    wrapperEl.classList.add("collapsed");
+                    if (textEl) textEl.textContent = "Show";
+                    if (svgEl) {
+                        svgEl.innerHTML = `
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        `;
+                    }
+                }
+            }
+
+            async function revokeInvitation(invIdOrToken) {
+                const performRevocation = async () => {
+                    try {
+                        let res = await apiFetch(`/projects/${_projectId}/invitations/${invIdOrToken}`, {
+                            method: "DELETE"
+                        });
+                        
+                        if (res.status === 404) {
+                            res = await apiFetch(`/invitations/${invIdOrToken}`, {
+                                method: "DELETE"
+                            });
+                        }
+
+                        if (!res.ok) {
+                            notify("Failed to revoke invitation.", "error");
+                            return;
+                        }
+
+                        notify("Invitation revoked successfully.", "success");
+                        loadPendingInvitations();
+                    } catch (err) {
+                        console.error("Error revoking invitation:", err);
+                        notify("Network error revoking invitation.", "error");
+                    }
+                };
+
+                if (window.CyberNotify && typeof window.CyberNotify.confirm === "function") {
+                    window.CyberNotify.confirm(
+                        "Are you sure you want to revoke this invitation?",
+                        (confirmed) => {
+                            if (confirmed) {
+                                performRevocation();
+                            }
+                        },
+                        { type: "warning" }
+                    );
+                } else {
+                    if (confirm("Are you sure you want to revoke this invitation?")) {
+                        performRevocation();
+                    }
+                }
+            }
+
+            async function removeAllPendingInvitations() {
+                const performRemoval = async () => {
+                    try {
+                        const res = await apiFetch(`/projects/${_projectId}/invitations`, {
+                            method: "DELETE"
+                        });
+
+                        if (res.ok) {
+                            notify("All pending invitations revoked.", "success");
+                            loadPendingInvitations();
+                            return;
+                        }
+
+                        // Fallback: delete one by one
+                        const getRes = await apiFetch(`/projects/${_projectId}/invitations`);
+                        if (!getRes.ok) {
+                            notify("Failed to revoke invitations.", "error");
+                            return;
+                        }
+                        const data = await getRes.json();
+                        const invitations = Array.isArray(data.pending_invitations)
+                            ? data.pending_invitations
+                            : Array.isArray(data.invitations)
+                              ? data.invitations
+                              : Array.isArray(data)
+                                ? data
+                                : [];
+
+                        if (invitations.length === 0) {
+                            notify("No pending invitations to revoke.", "info");
+                            return;
+                        }
+
+                        let succeededCount = 0;
+                        for (const inv of invitations) {
+                            const invIdOrToken = inv.id || inv.token;
+                            if (!invIdOrToken) continue;
+                            
+                            let delRes = await apiFetch(`/projects/${_projectId}/invitations/${invIdOrToken}`, {
+                                method: "DELETE"
+                            });
+                            if (delRes.status === 404) {
+                                delRes = await apiFetch(`/invitations/${invIdOrToken}`, {
+                                    method: "DELETE"
+                                });
+                            }
+                            if (delRes.ok) succeededCount++;
+                        }
+
+                        if (succeededCount > 0) {
+                            notify(`Revoked ${succeededCount} pending invitation(s).`, "success");
+                        } else {
+                            notify("Failed to revoke invitations.", "error");
+                        }
+                        loadPendingInvitations();
+                    } catch (err) {
+                        console.error("Error revoking invitations:", err);
+                        notify("Network error revoking invitations.", "error");
+                    }
+                };
+
+                if (window.CyberNotify && typeof window.CyberNotify.confirm === "function") {
+                    window.CyberNotify.confirm(
+                        "Are you sure you want to revoke all pending invitations for this project?",
+                        (confirmed) => {
+                            if (confirmed) {
+                                performRemoval();
+                            }
+                        },
+                        { type: "warning" }
+                    );
+                } else {
+                    if (confirm("Are you sure you want to revoke all pending invitations for this project?")) {
+                        performRemoval();
+                    }
+                }
             }
 
             // ─── Role change ──────────────────────────────────────────────────────────
@@ -4030,6 +4211,7 @@
                         return;
                     }
                     notify("Role updated.", "success");
+                    loadTeam();
                 } catch (_) {
                     notify("Network error.", "error");
                     loadTeam();
@@ -4038,31 +4220,48 @@
 
             // ─── Remove member ────────────────────────────────────────────────────────
             async function removeMember(userId) {
-                if (!confirm("Remove this team member?")) return;
-                try {
-                    const res = await apiFetch(
-                        `/projects/${_projectId}/collaborators/${userId}`,
-                        { method: "DELETE" },
-                    );
-                    if (res.status === 400) {
-                        notify("You cannot remove yourself.", "error");
-                        return;
-                    }
-                    if (res.status === 403) {
-                        notify(
-                            "Only the project owner can remove members.",
-                            "error",
+                const performRemoval = async () => {
+                    try {
+                        const res = await apiFetch(
+                            `/projects/${_projectId}/collaborators/${userId}`,
+                            { method: "DELETE" },
                         );
-                        return;
+                        if (res.status === 400) {
+                            notify("You cannot remove yourself.", "error");
+                            return;
+                        }
+                        if (res.status === 403) {
+                            notify(
+                                "Only the project owner can remove members.",
+                                "error",
+                            );
+                            return;
+                        }
+                        if (!res.ok) {
+                            notify("Failed to remove member.", "error");
+                            return;
+                        }
+                        notify("Team member removed.", "success");
+                        loadTeam();
+                    } catch (_) {
+                        notify("Network error.", "error");
                     }
-                    if (!res.ok) {
-                        notify("Failed to remove member.", "error");
-                        return;
+                };
+
+                if (window.CyberNotify && typeof window.CyberNotify.confirm === "function") {
+                    window.CyberNotify.confirm(
+                        "Remove this team member?",
+                        (confirmed) => {
+                            if (confirmed) {
+                                performRemoval();
+                            }
+                        },
+                        { type: "warning" }
+                    );
+                } else {
+                    if (confirm("Remove this team member?")) {
+                        performRemoval();
                     }
-                    notify("Team member removed.", "success");
-                    loadTeam();
-                } catch (_) {
-                    notify("Network error.", "error");
                 }
             }
 
@@ -6234,75 +6433,49 @@
 
                 coreItems.forEach(el => metaCore.appendChild(el));
 
-                // ── Tool Metadata: merge finding.metadata + raw_data.metadata ──
-                // The API returns metadata in two places:
-                //   1. finding.metadata        → { urls, issue_type, risk_score }
-                //   2. finding.raw_data.metadata → adds: scan_time, source_tool, target
-                // We merge both so all 6 canonical fields are always visible.
-                let mergedMeta = {};
-
-                // Layer 1: top-level metadata object
-                if (finding.metadata && typeof finding.metadata === 'object' && !Array.isArray(finding.metadata)) {
-                    Object.assign(mergedMeta, finding.metadata);
-                }
-
-                // Layer 2: enrich from raw_data.metadata (JSON string → parse)
-                if (finding.raw_data) {
+                // ── Tool Metadata: fetched strictly from Backend (finding.metadata) ──
+                // The API returns metadata exactly as mentioned in the API Reference:
+                //   finding.metadata → { urls, issue_type, risk_score } (and custom fields for manual findings)
+                let metaObj = {};
+                if (finding.metadata) {
                     try {
-                        const rawParsed = typeof finding.raw_data === 'string'
-                            ? JSON.parse(finding.raw_data)
-                            : finding.raw_data;
-                        if (rawParsed && rawParsed.metadata && typeof rawParsed.metadata === 'object') {
-                            // Add any keys not already present
-                            Object.entries(rawParsed.metadata).forEach(([k, v]) => {
-                                if (!(k in mergedMeta)) mergedMeta[k] = v;
-                            });
+                        const parsed = typeof finding.metadata === 'string'
+                            ? JSON.parse(finding.metadata)
+                            : finding.metadata;
+                        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                            metaObj = parsed;
                         }
-                    } catch (_) { /* raw_data not valid JSON — ignore */ }
+                    } catch (_) { /* invalid JSON/object — ignore */ }
                 }
 
                 let hasDynamic = false;
 
-                if (Object.keys(mergedMeta).length > 0 || finding.driver_id) {
-                    // Render the 6 canonical fields from the API spec in a fixed order.
-                    // IMPORTANT: source_tool uses finding.driver_id as the authoritative value
-                    // (correct per finding). raw_data.metadata.source_tool reflects only the
-                    // internal engine (e.g. "hakrawler" inside "web-endpoint-fuzzer") and is
-                    // used only as a last-resort fallback when driver_id is missing.
-                    const sourceToolVal = finding.driver_id || mergedMeta.source_tool || null;
-
+                if (Object.keys(metaObj).length > 0) {
+                    // Render the canonical fields from the API spec
                     const canonicalFields = [
-                        { key: 'issue_type',  label: 'Issue Type',   value: mergedMeta.issue_type,  cls: 'accent-val' },
-                        { key: 'risk_score',  label: 'Risk Score',   value: mergedMeta.risk_score,  cls: '' },
-                        { key: 'source_tool', label: 'Source Tool',  value: sourceToolVal,           cls: 'accent-val' },
-                        { key: 'scan_time',   label: 'Scan Time',    value: mergedMeta.scan_time,   cls: '' },
-                        { key: 'target',      label: 'Target Host',  value: mergedMeta.target,      cls: 'mono-dim' },
+                        { key: 'issue_type',  label: 'Issue Type',   value: metaObj.issue_type,  cls: 'accent-val' },
+                        { key: 'risk_score',  label: 'Risk Score',   value: metaObj.risk_score,  cls: '' },
                     ];
 
-                    canonicalFields.forEach(({ key, label, value, cls }) => {
+                    canonicalFields.forEach(({ label, value, cls }) => {
                         if (value === null || value === undefined || value === '') return;
 
-                        // scan_time: format as human-readable date
-                        const display = (key === 'scan_time')
-                            ? fmtDate(String(value))
-                            : escapeHtml(String(value));
-
-                        metaDynGrid.appendChild(mkMetaItem(label, display, false, cls));
+                        metaDynGrid.appendChild(mkMetaItem(label, escapeHtml(String(value)), false, cls));
                         hasDynamic = true;
                     });
 
-                    // Render any extra keys not in the canonical list
-                    const canonicalSet = new Set(['issue_type', 'risk_score', 'source_tool', 'scan_time', 'target', 'urls']);
-                    Object.entries(mergedMeta).forEach(([k, v]) => {
+                    // Render any extra keys not in the canonical list (for manual or custom tool findings)
+                    const canonicalSet = new Set(['issue_type', 'risk_score', 'urls']);
+                    Object.entries(metaObj).forEach(([k, v]) => {
                         if (canonicalSet.has(k) || Array.isArray(v)) return;
-                        if (v === null || v === undefined) return;
+                        if (v === null || v === undefined || v === '') return;
                         const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
                         metaDynGrid.appendChild(mkMetaItem(label, escapeHtml(String(v)), false, ''));
                         hasDynamic = true;
                     });
 
                     // Render discovered URLs as full-width chip list
-                    const urlsArr = Array.isArray(mergedMeta.urls) ? mergedMeta.urls : [];
+                    const urlsArr = Array.isArray(metaObj.urls) ? metaObj.urls : [];
                     if (urlsArr.length > 0) {
                         hasDynamic = true;
                         const urlItem = document.createElement('div');
@@ -6842,5 +7015,34 @@
                 if (c) c.innerHTML = `<div class="findings-empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><h4>Select a Target</h4><p>Go to the Targets tab and select a target to view its findings.</p></div>`;
             }
         </script>
+
+        <!-- CyberNotify Modal -->
+        <div
+            id="cyber-notify-modal"
+            class="hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cyber-notify-message"
+        >
+            <div id="cyber-notify-backdrop"></div>
+            <div id="cyber-notify-dialog">
+                <span
+                    id="cyber-notify-icon"
+                    class="material-symbols-outlined"
+                    aria-hidden="true"
+                ></span>
+                <p id="cyber-notify-message"></p>
+                <div id="cyber-notify-actions">
+                    <button
+                        id="cyber-notify-confirm-btn"
+                        class="cyber-btn-primary"
+                    ></button>
+                    <button
+                        id="cyber-notify-cancel-btn"
+                        class="cyber-btn-ghost"
+                    ></button>
+                </div>
+            </div>
+        </div>
     </body>
 </html>

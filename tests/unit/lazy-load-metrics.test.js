@@ -83,8 +83,8 @@ describe('ProjectManager - lazyLoadProjectMetrics', () => {
     expect(findingsEl.textContent).toBe('4 findings');
     
     // Critical: 1, High: 1, Medium: 1, Low: 1
-    // Score calculation: 1 * 1.5 + 1 * 0.8 + 1 * 0.4 + 1 * 0.1 = 1.5 + 0.8 + 0.4 + 0.1 = 2.8
-    expect(scoreEl.textContent).toBe('2.8 / 10');
-    expect(fillEl.style.width).toBe('28%');
+    // Score calculation: (1 * 10 + 1 * 7 + 1 * 4 + 1 * 1) / 100 = 22 / 100 = 0.22
+    expect(scoreEl.textContent).toBe('0.2 / 10');
+    expect(fillEl.style.width).toBe('2%');
   });
 });

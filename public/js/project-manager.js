@@ -647,7 +647,7 @@ class ProjectManager {
         }
       });
 
-      let riskScore = (openCritical * 1.5 + openHigh * 0.8 + openMedium * 0.4 + openLow * 0.1);
+      let riskScore = (openCritical * 10 + openHigh * 7 + openMedium * 4 + openLow * 1) / 100;
       riskScore = Math.max(0, Math.min(10.0, riskScore));
 
       const riskScoreStr = riskScore.toFixed(1);
