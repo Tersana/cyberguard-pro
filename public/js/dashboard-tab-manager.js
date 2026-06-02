@@ -44,6 +44,19 @@ const DashboardTabManager = {
     if (activeButton) {
       this.currentTab = activeButton.dataset.tab;
       this.initializeTab(this.currentTab);
+    } else {
+      // Look for the active cyber-nav-item
+      const activeNavItem = document.querySelector('.cyber-nav-item.cyber-nav-active');
+      if (activeNavItem) {
+        const onclickAttr = activeNavItem.getAttribute('onclick');
+        if (onclickAttr) {
+          const match = onclickAttr.match(/switchToTab\('([^']+)'\)/);
+          if (match) {
+            this.currentTab = match[1];
+          }
+        }
+      }
+      this.initializeTab(this.currentTab);
     }
     
     console.log('DashboardTabManager: Initialization complete');
