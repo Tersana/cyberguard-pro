@@ -6225,6 +6225,281 @@
                 return html;
             }
 
+            function formatReverseDNSHtml(text) {
+                if (!text) return '';
+                
+                // Clean emojis
+                const cleanText = text.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2600-\u26FF]|\uD83E[\uDD10-\uDDFF]|[\uFE0F]/g, '').trim();
+                
+                const lines = cleanText.split('\n').map(l => l.trim()).filter(Boolean);
+                let ip = '';
+                let service = '';
+                let provider = '';
+                let type = '';
+                let hostnames = [];
+                let note = '';
+                let isParsingHostnames = false;
+                
+                lines.forEach(line => {
+                    if (line.includes('IP:')) {
+                        ip = line.split('IP:')[1].trim();
+                        isParsingHostnames = false;
+                    } else if (line.startsWith('Service:')) {
+                        service = line.split('Service:')[1].trim();
+                        isParsingHostnames = false;
+                    } else if (line.startsWith('Provider:')) {
+                        provider = line.split('Provider:')[1].trim();
+                        isParsingHostnames = false;
+                    } else if (line.startsWith('Type:')) {
+                        type = line.split('Type:')[1].trim();
+                        isParsingHostnames = false;
+                    } else if (line.startsWith('Hostname(s):') || line.startsWith('Hostname:')) {
+                        isParsingHostnames = true;
+                    } else if (isParsingHostnames && line.startsWith('-')) {
+                        hostnames.push(line.replace(/^-/, '').trim());
+                    } else {
+                        note = line.trim();
+                        isParsingHostnames = false;
+                    }
+                });
+
+                const cardColorCls = 'border-emerald-500/20 bg-emerald-500/5';
+                const icon = `
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3s-4.5 4.03-4.5 9 2.015 9 4.5 9Z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12c0 5.385 4.365 9.75 9.75 9.75s9.75-4.365 9.75-9.75S17.385 2.25 12 2.25 2.25 6.615 2.25 12Z"/>
+                    </svg>`;
+
+                let html = `
+                    <div class="rev-dns-container mt-4 space-y-4">
+                        <div class="rev-dns-card p-5 rounded-xl border ${cardColorCls} transition-all duration-200 hover:border-white/20">
+                            <div class="flex items-center gap-2 mb-4 pb-2 border-b border-white/5">
+                                ${icon}
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-200">Reverse DNS Analysis</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+                `;
+
+                if (ip) {
+                    html += `
+                        <div class="flex justify-between items-center text-[11px] font-mono py-1 border-b border-white/5 md:border-none">
+                            <span class="text-slate-400 select-none">IP Address</span>
+                            <span class="text-slate-200 font-bold text-right">${escapeHtml(ip)}</span>
+                        </div>
+                    `;
+                }
+                if (service) {
+                    html += `
+                        <div class="flex justify-between items-center text-[11px] font-mono py-1 border-b border-white/5 md:border-none">
+                            <span class="text-slate-400 select-none">Service</span>
+                            <span class="text-slate-200 font-bold text-right">${escapeHtml(service)}</span>
+                        </div>
+                    `;
+                }
+                if (provider) {
+                    html += `
+                        <div class="flex justify-between items-center text-[11px] font-mono py-1 border-b border-white/5 md:border-none">
+                            <span class="text-slate-400 select-none">Provider</span>
+                            <span class="text-slate-200 font-bold text-right">${escapeHtml(provider)}</span>
+                        </div>
+                    `;
+                }
+                if (type) {
+                    html += `
+                        <div class="flex justify-between items-center text-[11px] font-mono py-1 border-b border-white/5 md:border-none">
+                            <span class="text-slate-400 select-none">Type</span>
+                            <span class="text-slate-200 font-bold text-right">${escapeHtml(type)}</span>
+                        </div>
+                    `;
+                }
+                if (hostnames.length > 0) {
+                    html += `
+                        <div class="flex justify-between items-start text-[11px] font-mono py-1 md:col-span-2 border-t border-white/5 mt-2 pt-2">
+                            <span class="text-slate-400 select-none">Hostname(s)</span>
+                            <div class="text-slate-200 font-bold text-right space-y-1">
+                                ${hostnames.map(h => `<div class="bg-white/5 px-2 py-0.5 rounded border border-white/10 text-[10px] text-slate-200 inline-block ml-1">${escapeHtml(h)}</div>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += `
+                            </div>
+                `;
+
+                if (note) {
+                    html += `
+                        <div class="mt-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-start gap-2.5 text-xs text-blue-300">
+                            <svg class="w-4 h-4 text-blue-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+                            </svg>
+                            <div class="font-sans leading-relaxed">${escapeHtml(note)}</div>
+                        </div>
+                    `;
+                }
+
+                html += `
+                        </div>
+                    </div>
+                `;
+                return html;
+            }
+
+            function formatWhoisHtml(text) {
+                if (!text) return '';
+                
+                // Clean emojis
+                const cleanText = text.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2600-\u26FF]|\uD83E[\uDD10-\uDDFF]|[\uFE0F]/g, '').trim();
+                
+                const lines = cleanText.split('\n');
+                const sections = [];
+                let currentSection = null;
+                let currentItems = [];
+                let lastItem = null;
+                let title = '';
+
+                lines.forEach(line => {
+                    const trimmed = line.trim();
+                    if (!trimmed) return;
+                    
+                    // Ignore dividers
+                    if (/^[─=\-_\s]+$/.test(trimmed)) return;
+                    
+                    // Check for title
+                    if (trimmed.includes('WHOIS DATA')) {
+                        title = trimmed;
+                        return;
+                    }
+                    
+                    const leadingSpaces = line.length - line.trimStart().length;
+                    
+                    if (trimmed.includes(':')) {
+                        const colonIdx = trimmed.indexOf(':');
+                        const key = trimmed.substring(0, colonIdx).trim();
+                        const val = trimmed.substring(colonIdx + 1).trim();
+                        
+                        lastItem = { key, val: [val] };
+                        currentItems.push(lastItem);
+                    } else {
+                        // No colon. Is it a continuation or a section header?
+                        if (leadingSpaces > 8 && lastItem) {
+                            lastItem.val.push(trimmed);
+                        } else {
+                            if (currentSection) {
+                                sections.push({ name: currentSection, items: currentItems });
+                            }
+                            currentSection = trimmed;
+                            currentItems = [];
+                            lastItem = null;
+                        }
+                    }
+                });
+                if (currentSection) {
+                    sections.push({ name: currentSection, items: currentItems });
+                }
+
+                const iconMap = {
+                    'Location': `
+                        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/>
+                        </svg>`,
+                    'Network': `
+                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3s-4.5 4.03-4.5 9 2.015 9 4.5 9Z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12c0 5.385 4.365 9.75 9.75 9.75s9.75-4.365 9.75-9.75S17.385 2.25 12 2.25 2.25 6.615 2.25 12Z"/>
+                        </svg>`,
+                    'Security': `
+                        <svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/>
+                        </svg>`,
+                    'Registration': `
+                        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+                        </svg>`,
+                    'Status': `
+                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581a1.44 1.44 0 0 0 2.037 0l4.318-4.318a1.44 1.44 0 0 0 0-2.037L10.01 3.659A2.25 2.25 0 0 0 8.42 3H9.568Z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 7.5h.008v.008H6V7.5Z"/>
+                        </svg>`,
+                    'DNS': `
+                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 0 1-3-3m3 3a3 3 0 0 0 3 3m13.5-3a3 3 0 0 1 3-3m-3 3a3 3 0 0 0-3 3m0-12h.008v.008H12V5.25Zm0 2.25h.008v.008H12V7.5Zm0 2.25h.008v.008H12V9.75ZM3 11.25a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3m0 0v-6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v6Zm3 3a3 3 0 0 0-3 3v2.25a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3V17.25a3 3 0 0 0-3-3H6Z"/>
+                        </svg>`
+                };
+
+                const cardColors = {
+                    'Location': 'border-indigo-500/20 bg-indigo-500/5',
+                    'Network': 'border-emerald-500/20 bg-emerald-500/5',
+                    'Security': 'border-rose-500/20 bg-rose-500/5',
+                    'Registration': 'border-indigo-500/20 bg-indigo-500/5',
+                    'Status': 'border-amber-500/20 bg-amber-500/5',
+                    'DNS': 'border-purple-500/20 bg-purple-500/5'
+                };
+
+                const defaultIcon = `
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+                    </svg>`;
+
+                let html = '<div class="whois-container mt-4 space-y-6">';
+
+                if (title) {
+                    html += `
+                        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-500/10 border border-slate-500/20 text-xs font-mono text-slate-300 w-fit select-none">
+                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.637 10.637z"/>
+                            </svg>
+                            <span>${escapeHtml(title)}</span>
+                        </div>
+                    `;
+                }
+
+                html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+
+                sections.forEach(section => {
+                    const icon = iconMap[section.name] || defaultIcon;
+                    const colorCls = cardColors[section.name] || 'border-slate-500/20 bg-slate-500/5';
+                    
+                    html += `
+                        <div class="whois-card p-4 rounded-xl border ${colorCls} transition-all duration-200 hover:border-white/20">
+                            <div class="flex items-center gap-2 mb-3 pb-2 border-b border-white/5">
+                                ${icon}
+                                <span class="text-xs font-bold uppercase tracking-wider text-slate-200">${escapeHtml(section.name)}</span>
+                            </div>
+                            <div class="space-y-2">
+                    `;
+                    
+                    section.items.forEach(item => {
+                        if (item.val.length === 1) {
+                            html += `
+                                <div class="flex justify-between items-center text-[11px] font-mono py-0.5">
+                                    <span class="text-slate-400 select-none">${escapeHtml(item.key)}</span>
+                                    <span class="text-slate-200 font-bold text-right">${escapeHtml(item.val[0])}</span>
+                                </div>
+                            `;
+                        } else {
+                            html += `
+                                <div class="flex flex-col text-[11px] font-mono py-1 border-t border-white/5 first:border-none mt-1">
+                                    <span class="text-slate-400 select-none mb-1">${escapeHtml(item.key)}</span>
+                                    <div class="flex flex-wrap gap-1 justify-end">
+                                        ${item.val.map(v => `<span class="bg-white/5 px-2 py-0.5 rounded border border-white/10 text-[10px] text-slate-200 ml-1">${escapeHtml(v)}</span>`).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div></div>';
+                return html;
+            }
+
             function showFindingDetailModal(findingId) {
                 const finding = _allFindings.find(f => String(f.id) === String(findingId));
                 if (!finding) return;
@@ -6351,9 +6626,18 @@
                 const descText = document.getElementById('fd-description');
                 if (finding.description) {
                     const isIPGeo = (finding.driver_id === 'IP_GEOLOCATION' || (finding.title && finding.title.includes('Geolocation')));
+                    const isReverseDNS = (finding.driver_id === 'REVERSE_DNS' || (finding.title && finding.title.includes('Reverse DNS')));
+                    const isWhois = (finding.driver_id === 'WHOIS_LOOKUP' || (finding.title && finding.title.includes('WHOIS')));
+
                     if (isIPGeo) {
                         descText.className = "select-text text-sm w-full";
                         descText.innerHTML = formatIPGeolocationHtml(finding.description);
+                    } else if (isReverseDNS) {
+                        descText.className = "select-text text-sm w-full";
+                        descText.innerHTML = formatReverseDNSHtml(finding.description);
+                    } else if (isWhois) {
+                        descText.className = "select-text text-sm w-full";
+                        descText.innerHTML = formatWhoisHtml(finding.description);
                     } else {
                         descText.className = "text-slate-300 leading-relaxed break-words whitespace-pre-wrap select-text";
                         descText.textContent = finding.description;

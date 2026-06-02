@@ -122,11 +122,11 @@
     }
   }
 
-  // Execute selected frontend tools
+  // Execute selected network analysis tools
   async function runFrontendTools(selectedTools, targetValue) {
-    appendTerminalSystem("Starting selected frontend-only network analysis tools…");
+    appendTerminalSystem("Starting selected network analysis tools…");
 
-    // Define custom hooks to route frontend tools' outputs into the progress page UI
+    // Define custom hooks to route tools' outputs into the progress page UI
     window.onFrontendToolLog = function (msg, scanner) {
       appendTerminalLine(`[INFO] [${scanner}] ${msg}`);
     };
@@ -143,7 +143,7 @@
       if (status === "danger" || status === "threat" || status === "success" || status === "safe" || message.includes("COMPLETE") || message.includes("Detailed")) {
         const severity = (status === "danger" || status === "threat") ? "high" : (status === "warning" ? "medium" : "info");
         const finding = {
-          id: `frontend-${feature.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`,
+          id: `net-${feature.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`,
           title: `${feature}: Analysis Complete`,
           severity: severity,
           status: "open",
@@ -165,34 +165,35 @@
 
     // Run them sequentially
     for (const toolId of selectedTools) {
-      appendTerminalSystem(`Initialising ${toolId.replace("frontend-", "").toUpperCase().replace("-", " ")}…`);
+      appendTerminalSystem(`Initialising ${toolId.replace("net-", "").replace("frontend-", "").toUpperCase().replace("-", " ")}…`);
       try {
-        if (toolId === "frontend-port-scanner") {
+        if (toolId === "net-port-scanner" || toolId === "frontend-port-scanner") {
           await window.portScan(targetValue);
-        } else if (toolId === "frontend-tcp-connectivity") {
+        } else if (toolId === "net-tcp-connectivity" || toolId === "frontend-tcp-connectivity") {
           await window.realTcpPortScan(targetValue);
-        } else if (toolId === "frontend-udp-services") {
+        } else if (toolId === "net-udp-services" || toolId === "frontend-udp-services") {
           await window.realUdpConnectivityTest(targetValue);
-        } else if (toolId === "frontend-ip-geolocation") {
+        } else if (toolId === "net-ip-geolocation" || toolId === "frontend-ip-geolocation") {
           await window.ipGeolocation(targetValue);
-        } else if (toolId === "frontend-reverse-dns") {
+        } else if (toolId === "net-reverse-dns" || toolId === "frontend-reverse-dns") {
           await window.reverseDns(targetValue);
-        } else if (toolId === "frontend-whois-lookup") {
+        } else if (toolId === "net-whois-lookup" || toolId === "frontend-whois-lookup") {
           await window.whoisLookup(targetValue);
         }
       } catch (err) {
-        console.error(`[Frontend Tool Error] ${toolId}:`, err);
+        console.error(`[Tool Error] ${toolId}:`, err);
         appendTerminalLine(`[ERROR] [${toolId}] Execution failed: ${err.message}`);
       }
     }
 
-    appendTerminalSystem("All selected frontend-only network analysis tools completed.");
+    appendTerminalSystem("All selected network analysis tools completed.");
 
-    // Mark frontend scan completed
+    // Mark scan completed
     if (typeof scanJobId === "string" && scanJobId.startsWith("frontend_")) {
       if (window.scannerAPI && typeof window.scannerAPI.completeFrontendScan === "function") {
         window.scannerAPI.completeFrontendScan(scanJobId);
       }
+      onScanComplete({ status: "completed" });
     }
   }
 
@@ -204,7 +205,12 @@
     const target = s.target || {};
 
     _set("sp-target-name", target.value || "Unknown Target");
-    _set("sp-scan-id-short", (s.id || "").substring(0, 8).toUpperCase());
+    
+    let displayId = s.id || "";
+    if (displayId.startsWith("frontend_")) {
+      displayId = displayId.replace("frontend_", "");
+    }
+    _set("sp-scan-id-short", displayId.substring(0, 8).toUpperCase());
 
     // Started at
     if (s.started_at) {
