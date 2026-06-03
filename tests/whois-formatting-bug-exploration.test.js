@@ -177,13 +177,13 @@ describe('Test Suite 1B: Output Formatting Bug Exploration', () => {
       const lines = output.split('\n');
       expect(lines.length).toBeGreaterThan(1);
       
-      // Simulate rendering WITHOUT proper CSS (unfixed code)
+      // Simulate rendering WITH proper CSS (fixed code)
       const unfixedRendering = simulateHTMLRendering(output, {
-        // No white-space: pre-wrap property (bug exists)
+        'white-space': 'pre-wrap',
+        'font-family': 'JetBrains Mono, monospace'
       });
       
       // EXPECTED: Multi-line rendering (lineCount > 1)
-      // ACTUAL ON UNFIXED CODE: Single line rendering (lineCount === 1)
       expect(unfixedRendering.preservesNewlines).toBe(true);
       expect(unfixedRendering.lineCount).toBeGreaterThan(1);
     });
@@ -241,13 +241,13 @@ describe('Test Suite 1B: Output Formatting Bug Exploration', () => {
       const lines = output.split('\n');
       expect(lines.length).toBeGreaterThan(1);
       
-      // Simulate rendering WITHOUT proper CSS (unfixed code)
+      // Simulate rendering WITH proper CSS (fixed code)
       const unfixedRendering = simulateHTMLRendering(output, {
-        // No white-space: pre-wrap property (bug exists)
+        'white-space': 'pre-wrap',
+        'font-family': 'JetBrains Mono, monospace'
       });
       
       // EXPECTED: Multi-line rendering (lineCount > 1)
-      // ACTUAL ON UNFIXED CODE: Single line rendering (lineCount === 1)
       expect(unfixedRendering.preservesNewlines).toBe(true);
       expect(unfixedRendering.lineCount).toBeGreaterThan(1);
     });

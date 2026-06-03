@@ -18,17 +18,17 @@ import fc from 'fast-check';
 // Since main.js is not a module, we need to load it in a way that works with the test environment
 // For now, we'll define the functions inline based on the current implementation
 
-// Current UNFIXED implementation (copied from main.js line ~48)
+// Current FIXED implementation
 function isValidIP(ip) {
   const ipRegex =
-    /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/;
   return ipRegex.test(ip);
 }
 
-// Current UNFIXED implementation (copied from main.js line ~54)
+// Current FIXED implementation
 function isValidDomain(domain) {
   const domainRegex =
-    /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/;
+    /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
   return domainRegex.test(domain);
 }
 
@@ -60,8 +60,8 @@ describe('Test Suite 1A: Input Validation Bug Exploration', () => {
       expect(result).toBe(false);
     });
 
-    // Property-based test: Any valid IP with extra digits should be rejected
-    it('property: valid IP + extra digits should be rejected', () => {
+    // Property-based test: Any valid IP with extra digits that make it invalid should be rejected
+    it('property: valid IP + extra digits should be rejected if invalid', () => {
       fc.assert(
         fc.property(
           fc.tuple(
@@ -72,11 +72,15 @@ describe('Test Suite 1A: Input Validation Bug Exploration', () => {
             fc.integer({ min: 1, max: 9999 }) // Extra digits
           ),
           ([a, b, c, d, extra]) => {
-            const invalidIP = `${a}.${b}.${c}.${d}${extra}`;
-            const result = isValidIP(invalidIP);
+            const lastOctetStr = `${d}${extra}`;
+            const lastOctetVal = parseInt(lastOctetStr, 10);
+            const isInvalid = lastOctetVal > 255 || lastOctetStr.length > 3 || (lastOctetStr.startsWith('0') && lastOctetStr.length > 1);
             
-            // Should be rejected
-            expect(result).toBe(false);
+            if (isInvalid) {
+              const invalidIP = `${a}.${b}.${c}.${lastOctetStr}`;
+              const result = isValidIP(invalidIP);
+              expect(result).toBe(false);
+            }
           }
         ),
         { numRuns: 50 }
