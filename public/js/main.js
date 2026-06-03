@@ -973,187 +973,7 @@ const CyberGuardHashTools = {
   },
 };
 
-// ===== CYBERNOTIFY MODAL CONTROLLER =====
-// Replaces native alert() and confirm() with themed, accessible modals
 
-const CyberNotify = {
-  _currentCallback: null,
-
-  _resolveIcon(type) {
-    const _v = (n, fb) => {
-      try {
-        return (
-          getComputedStyle(document.documentElement)
-            .getPropertyValue(n)
-            .trim() || fb
-        );
-      } catch (_) {
-        return fb;
-      }
-    };
-    const ICON_MAP = {
-      warning: { icon: "warning", color: _v("--cg-warning", "#FBBF24") },
-      error: { icon: "error", color: _v("--cg-danger", "#F87171") },
-      info: { icon: "info", color: _v("--cg-info", "#38BDF8") },
-    };
-    return ICON_MAP[type] || ICON_MAP["info"];
-  },
-
-  _hide() {
-    const modal = document.getElementById("cyber-notify-modal");
-    if (!modal) return;
-    modal.classList.remove("cyber-notify-open");
-    setTimeout(() => {
-      modal.classList.add("hidden");
-    }, 300);
-    this._currentCallback = null;
-  },
-
-  _show(message, mode, callback, type, defaultValue = "", options = {}) {
-    const modal = document.getElementById("cyber-notify-modal");
-    const iconEl = document.getElementById("cyber-notify-icon");
-    const msgEl = document.getElementById("cyber-notify-message");
-    const confirmBtn = document.getElementById("cyber-notify-confirm-btn");
-    const cancelBtn = document.getElementById("cyber-notify-cancel-btn");
-
-    if (!modal || !iconEl || !msgEl || !confirmBtn || !cancelBtn) {
-      console.error("CyberNotify: Required DOM elements not found");
-      return;
-    }
-
-    // Dynamic creation of text input for prompt mode if not present
-    let inputEl = document.getElementById("cyber-notify-input");
-    if (!inputEl) {
-      inputEl = document.createElement("input");
-      inputEl.id = "cyber-notify-input";
-      inputEl.type = "text";
-      inputEl.className = "w-full bg-slate-950/80 border border-white/15 focus:border-purple-500/80 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none mt-1 mb-5 transition-colors font-sans text-center shadow-inner shadow-black/40";
-      const actions = document.getElementById("cyber-notify-actions");
-      if (actions) {
-        actions.parentNode.insertBefore(inputEl, actions);
-      }
-    }
-
-    if (mode === "prompt") {
-      inputEl.value = defaultValue || "";
-      inputEl.style.display = "block";
-      setTimeout(() => {
-        inputEl.focus();
-        inputEl.select();
-      }, 100);
-    } else {
-      inputEl.style.display = "none";
-    }
-
-    const { icon, color } = this._resolveIcon(type);
-    iconEl.textContent = icon;
-    iconEl.style.color = color;
-
-    msgEl.textContent = String(message ?? "");
-
-    if (mode === "alert" || options.singleButton) {
-      confirmBtn.textContent = options.confirmText || "OK";
-      confirmBtn.style.display = "";
-      cancelBtn.style.display = "none";
-
-      const okHandler = () => {
-        confirmBtn.removeEventListener("click", okHandler);
-        if (options.singleButton && mode === "prompt") {
-          inputEl.removeEventListener("keydown", inputKeydownHandler);
-        }
-        this._hide();
-        if (typeof callback === "function") {
-          callback(mode === "prompt" ? inputEl.value : true);
-        }
-      };
-      const inputKeydownHandler = (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          okHandler();
-        }
-      };
-
-      confirmBtn.addEventListener("click", okHandler);
-      if (options.singleButton && mode === "prompt") {
-        inputEl.addEventListener("keydown", inputKeydownHandler);
-      }
-    } else {
-      confirmBtn.textContent = "Confirm";
-      cancelBtn.textContent = "Cancel";
-      confirmBtn.style.display = "";
-      cancelBtn.style.display = "";
-
-      const confirmHandler = () => {
-        confirmBtn.removeEventListener("click", confirmHandler);
-        cancelBtn.removeEventListener("click", cancelHandler);
-        if (mode === "prompt") {
-          inputEl.removeEventListener("keydown", inputKeydownHandler);
-        }
-        this._hide();
-        if (typeof callback === "function") {
-          callback(mode === "prompt" ? inputEl.value : true);
-        }
-      };
-      const cancelHandler = () => {
-        confirmBtn.removeEventListener("click", confirmHandler);
-        cancelBtn.removeEventListener("click", cancelHandler);
-        if (mode === "prompt") {
-          inputEl.removeEventListener("keydown", inputKeydownHandler);
-        }
-        this._hide();
-        if (typeof callback === "function") {
-          callback(mode === "prompt" ? null : false);
-        }
-      };
-      const inputKeydownHandler = (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          confirmHandler();
-        } else if (e.key === "Escape") {
-          e.preventDefault();
-          cancelHandler();
-        }
-      };
-
-      confirmBtn.addEventListener("click", confirmHandler);
-      cancelBtn.addEventListener("click", cancelHandler);
-      if (mode === "prompt") {
-        inputEl.addEventListener("keydown", inputKeydownHandler);
-      }
-    }
-
-    modal.classList.remove("hidden");
-    requestAnimationFrame(() => {
-      modal.classList.add("cyber-notify-open");
-    });
-  },
-
-  alert(message, callback, options = {}) {
-    if (typeof callback === "object" && callback !== null) {
-      options = callback;
-      callback = null;
-    }
-    this._show(message, "alert", callback, options.type, "", options);
-  },
-
-  confirm(message, callback, options = {}) {
-    if (typeof callback !== "function") {
-      console.warn("CyberNotify.confirm: callback is not a function");
-      this._hide();
-      return;
-    }
-    this._show(message, "confirm", callback, options.type, "", options);
-  },
-
-  prompt(message, defaultValue, callback, options = {}) {
-    if (typeof callback !== "function") {
-      console.warn("CyberNotify.prompt: callback is not a function");
-      this._hide();
-      return;
-    }
-    this._show(message, "prompt", callback, options.type, defaultValue, options);
-  },
-};
 
 // ===== SHODAN-BASED PORT SCANNER =====
 // Professional port scanning using Shodan API for comprehensive network intelligence
@@ -1191,6 +1011,20 @@ document.addEventListener("DOMContentLoaded", () => {
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
     };
+  }
+
+  /**
+   * Helper function to get theme custom properties (CSS variables)
+   * @param {string} name - The CSS variable name
+   * @param {string} fallback - The fallback value
+   * @returns {string} The CSS variable value or fallback
+   */
+  function getThemeToken(name, fallback) {
+    try {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+    } catch (_) {
+      return fallback;
+    }
   }
 
   // ===== FILTER CONTROLS COMPONENT =====
@@ -4295,36 +4129,25 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getStatusColor(status) {
-    const _v = (n, fb) => {
-      try {
-        return (
-          getComputedStyle(document.documentElement)
-            .getPropertyValue(n)
-            .trim() || fb
-        );
-      } catch (_) {
-        return fb;
-      }
-    };
     const colors = {
       safe: {
         background: "rgba(52, 211, 153, 0.15)",
-        text: _v("--cg-success", "#34D399"),
+        text: getThemeToken("--cg-success", "#34D399"),
         border: "rgba(52, 211, 153, 0.4)",
       },
       warning: {
         background: "rgba(251, 191, 36, 0.15)",
-        text: _v("--cg-warning", "#FBBF24"),
+        text: getThemeToken("--cg-warning", "#FBBF24"),
         border: "rgba(251, 191, 36, 0.4)",
       },
       threat: {
         background: "rgba(248, 113, 113, 0.15)",
-        text: _v("--cg-danger", "#F87171"),
+        text: getThemeToken("--cg-danger", "#F87171"),
         border: "rgba(248, 113, 113, 0.4)",
       },
       system: {
         background: "rgba(167, 139, 250, 0.15)",
-        text: _v("--cg-accent", "#A78BFA"),
+        text: getThemeToken("--cg-accent", "#A78BFA"),
         border: "rgba(167, 139, 250, 0.4)",
       },
     };
@@ -4507,37 +4330,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const group = document.createElement("div");
     group.className = `result-group result-group-${status}`;
 
-    const _v = (n, fb) => {
-      try {
-        return (
-          getComputedStyle(document.documentElement)
-            .getPropertyValue(n)
-            .trim() || fb
-        );
-      } catch (_) {
-        return fb;
-      }
-    };
     const statusInfo = {
       threat: {
         title: "🚨 Security Threats",
         icon: "🚨",
-        color: _v("--cg-danger", "#F87171"),
+        color: getThemeToken("--cg-danger", "#F87171"),
       },
       warning: {
         title: "⚠️ Security Warnings",
         icon: "⚠️",
-        color: _v("--cg-warning", "#FBBF24"),
+        color: getThemeToken("--cg-warning", "#FBBF24"),
       },
       safe: {
         title: "🛡️ Safe Results",
         icon: "🛡️",
-        color: _v("--cg-success", "#34D399"),
+        color: getThemeToken("--cg-success", "#34D399"),
       },
       system: {
         title: "⚙️ System Information",
         icon: "⚙️",
-        color: _v("--cg-accent", "#A78BFA"),
+        color: getThemeToken("--cg-accent", "#A78BFA"),
       },
     };
 
@@ -4789,10 +4601,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const button = event.target;
         const originalText = button.textContent;
         button.textContent = "Copied!";
-        button.style.background =
-          getComputedStyle(document.documentElement)
-            .getPropertyValue("--cg-success")
-            .trim() || "#34D399";
+        button.style.background = getThemeToken("--cg-success", "#34D399");
         button.style.color = "white";
         setTimeout(() => {
           button.textContent = originalText;
@@ -5249,231 +5058,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  async function whoisLookup(target) {
-    addActivityLog(`Starting WHOIS lookup for ${target}`, "WHOIS Lookup");
-    logResult(new Date(), "WHOIS Lookup", `[*] Fetching WHOIS data for: ${target}`);
-    try {
-      const isIP = isValidIP(target);
-      const isDomain = isValidDomain(target);
 
-      if (!isIP && !isDomain) {
-        addActivityLog("Invalid target format", "WHOIS Lookup");
-        logResult(new Date(), "WHOIS Lookup", `[!] ERROR: Invalid input format. Please enter a valid IP address (e.g., 8.8.8.8) or domain name (e.g., google.com).`, "danger");
-        return;
-      }
-
-      // Check if API key is available
-      const apiKey = whoisApiKey || "";
-
-      let data;
-      let queryType = isIP ? "IP Geolocation" : "Domain WHOIS";
-      updateStatus(`Querying WHOIS data for ${queryType}...`);
-
-      if (apiKey) {
-        // If API key is available, attempt to use WHOISXML API
-        let apiUrl;
-        if (isIP) {
-          apiUrl = `https://ip-geolocation.whoisxmlapi.com/api/v1?apiKey=${apiKey}&ipAddress=${encodeURIComponent(target)}`;
-        } else {
-          let normalizedDomain = target.trim().toLowerCase();
-          if (normalizedDomain.includes("://")) {
-            normalizedDomain = new URL(normalizedDomain).hostname;
-          }
-          if (normalizedDomain.startsWith("www.")) {
-            normalizedDomain = normalizedDomain.substring(4);
-          }
-          apiUrl = `https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey=${apiKey}&domainName=${encodeURIComponent(normalizedDomain)}&outputFormat=JSON`;
-        }
-
-        try {
-          addActivityLog(`Querying WHOISXML API...`, "WHOIS Lookup");
-          const res = await fetch(apiUrl);
-          if (res.ok) {
-            data = await res.json();
-            if (data.errorMessage) {
-              addActivityLog(`WHOISXML API Error: ${data.errorMessage}. Falling back to free sources...`, "WHOIS Lookup");
-              data = null;
-            }
-          } else {
-            addActivityLog(`WHOISXML API failed with status ${res.status}. Falling back to free sources...`, "WHOIS Lookup");
-          }
-        } catch (err) {
-          addActivityLog(`WHOISXML API network error. Falling back to free sources...`, "WHOIS Lookup");
-        }
-      }
-
-      // Fallback if no API key or if WHOISXML API failed
-      if (!data) {
-        if (isIP) {
-          addActivityLog("Using ipwho.is free fallback...", "WHOIS Lookup");
-          const proxyUrl = `/api/proxy?url=${encodeURIComponent(`https://ipwho.is/${target}`)}`;
-          const res = await fetch(proxyUrl);
-          if (!res.ok) {
-            throw new Error(`Failed to query free IP WHOIS service: ${res.status} ${res.statusText}`);
-          }
-          const rawData = await res.json();
-          const ipData = typeof rawData.contents === 'string' ? JSON.parse(rawData.contents) : (rawData.contents || rawData);
-          
-          if (ipData && ipData.success) {
-            // Map ipwho.is structure to WHOISXML API format
-            data = {
-              ip: ipData.ip,
-              location: {
-                country: ipData.country,
-                region: ipData.region,
-                city: ipData.city,
-                postalCode: ipData.postal,
-                latitude: ipData.latitude,
-                longitude: ipData.longitude,
-                timezone: ipData.timezone?.utc
-              },
-              asn: {
-                asn: ipData.connection?.asn ? `AS${ipData.connection.asn}` : "N/A",
-                organization: ipData.connection?.org || "N/A",
-                name: ipData.connection?.isp || "N/A",
-                domain: ipData.connection?.domain || "N/A",
-                country: ipData.country_code || "N/A"
-              },
-              security: {
-                isProxy: ipData.security?.proxy || false,
-                isVpn: ipData.security?.vpn || false,
-                isHosting: ipData.security?.hosting || false,
-                isTor: ipData.security?.tor || false
-              }
-            };
-          } else {
-            throw new Error(ipData?.message || "Failed to fetch geolocation from free fallback");
-          }
-        } else {
-          // Domain RDAP Fallback
-          let normalizedDomain = target.trim().toLowerCase();
-          if (normalizedDomain.includes("://")) {
-            normalizedDomain = new URL(normalizedDomain).hostname;
-          }
-          if (normalizedDomain.startsWith("www.")) {
-            normalizedDomain = normalizedDomain.substring(4);
-          }
-
-          addActivityLog("Using free bootstrap RDAP fallback...", "WHOIS Lookup");
-          const rdapUrl = `https://rdap.org/domain/${encodeURIComponent(normalizedDomain)}`;
-          const proxyUrl = `/api/proxy?url=${encodeURIComponent(rdapUrl)}`;
-          const res = await fetch(proxyUrl);
-          if (!res.ok) {
-            throw new Error(`Failed to query RDAP server: ${res.status} ${res.statusText}`);
-          }
-          
-          const rawData = await res.json();
-          const rdapData = typeof rawData.contents === 'string' ? JSON.parse(rawData.contents) : (rawData.contents || rawData);
-
-          if (rdapData && rdapData.ldhName) {
-            // Helper to parse RDAP entity organization
-            const extractEntityOrg = (entities, role) => {
-              const entity = entities?.find(e => e.roles?.includes(role));
-              if (!entity) return "N/A";
-              const vcard = entity.vcardArray?.[1];
-              if (Array.isArray(vcard)) {
-                const fnProperty = vcard.find(prop => prop[0] === 'fn');
-                if (fnProperty) return fnProperty[3];
-                const orgProperty = vcard.find(prop => prop[0] === 'org');
-                if (orgProperty) return orgProperty[3];
-              }
-              return entity.handle || "N/A";
-            };
-
-            let createdDate = "N/A";
-            let updatedDate = "N/A";
-            let expiresDate = "N/A";
-            
-            if (rdapData.events) {
-              rdapData.events.forEach(evt => {
-                if (evt.eventAction === "registration") createdDate = evt.eventDate;
-                else if (evt.eventAction === "last changed") updatedDate = evt.eventDate;
-                else if (evt.eventAction === "expiration") expiresDate = evt.eventDate;
-              });
-            }
-
-            const registrar = extractEntityOrg(rdapData.entities, "registrar");
-            const registrant = extractEntityOrg(rdapData.entities, "registrant");
-            const status = rdapData.status || ["N/A"];
-            const nameServers = rdapData.nameservers ? rdapData.nameservers.map(ns => ns.ldhName.toLowerCase()) : [];
-
-            data = {
-              WhoisRecord: {
-                domainName: rdapData.ldhName.toLowerCase(),
-                registrarName: registrar,
-                registrar: { name: registrar },
-                creationDate: createdDate,
-                createdDate: createdDate,
-                updatedDate: updatedDate,
-                lastUpdated: updatedDate,
-                expirationDate: expiresDate,
-                expiresDate: expiresDate,
-                status: status,
-                domainStatus: status.join(", "),
-                nameServers: { hostNames: nameServers },
-                registrant: { organization: registrant }
-              }
-            };
-          } else {
-            throw new Error("No domain registration data returned from RDAP server");
-          }
-        }
-      }
-
-      // Present the final output
-      if (isIP) {
-        if (data.ip) {
-          addActivityLog(`WHOIS lookup complete for ${data.ip}`, "WHOIS Lookup");
-          const output = formatIpWhoisOutput(data.ip, data.location || {}, data.asn || {}, data.security || {});
-          logResult(new Date(), "WHOIS Lookup", output, "success");
-          updateStatus("IP WHOIS lookup completed");
-        } else {
-          throw new Error("No IP data found in the response");
-        }
-      } else {
-        if (data.WhoisRecord) {
-          const record = data.WhoisRecord;
-          const domainName = record.domainName || target;
-          const registrar = record.registrar?.name || record.registrarName || "Unknown";
-          const createdDate = record.creationDate || record.createdDate || "N/A";
-          const updatedDate = record.updatedDate || record.lastUpdated || "N/A";
-          const expiresDate = record.expiresDate || record.expirationDate || "N/A";
-          const status = record.status || record.domainStatus || "N/A";
-          const nameServers = record.nameServers?.hostNames || record.nameServers?.nameserver || record.nameServers || [];
-          const registrant = record.registrant || {};
-
-          const formatDate = (dateStr) => {
-            if (!dateStr || dateStr === "N/A") return "N/A";
-            try {
-              return new Date(dateStr).toLocaleDateString();
-            } catch {
-              return dateStr;
-            }
-          };
-
-          addActivityLog(`WHOIS lookup complete for ${domainName}`, "WHOIS Lookup");
-          const output = formatDomainWhoisOutput(domainName, {
-            createdDate: formatDate(createdDate),
-            updatedDate: formatDate(updatedDate),
-            expiresDate: formatDate(expiresDate),
-            registrar,
-            registrant: registrant.organization || "N/A",
-            status,
-            nameServers,
-          });
-
-          logResult(new Date(), "WHOIS Lookup", output, "success");
-          updateStatus("Domain WHOIS lookup completed");
-        } else {
-          throw new Error("No domain data found in the response");
-        }
-      }
-    } catch (e) {
-      addActivityLog(`Lookup failed: ${e.message}`, "WHOIS Lookup");
-      updateStatus("WHOIS lookup failed");
-      logResult(new Date(), "WHOIS Lookup", `[!] ERROR: WHOIS lookup failed: ${e.message}`, "danger");
-    }
-  }
 
   const reverseDnsBtn = document.getElementById("reverse-dns-btn");
   if (reverseDnsBtn) {
