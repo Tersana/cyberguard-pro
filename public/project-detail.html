@@ -643,19 +643,31 @@
             }
 
             .pending-table-wrapper {
-                max-height: 1500px;
-                overflow: hidden;
-                transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+                display: grid;
+                grid-template-rows: 1fr;
+                transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                 opacity: 1;
             }
             .pending-table-wrapper.collapsed {
-                max-height: 0 !important;
+                grid-template-rows: 0fr;
                 opacity: 0;
-                pointer-events: none;
+            }
+            .pending-table-inner {
+                overflow: hidden;
+                transform: translateY(0) scale(1);
+                transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+                transform-origin: top center;
+                opacity: 1;
+            }
+            .pending-table-wrapper.collapsed .pending-table-inner {
+                transform: translateY(-8px) scale(0.98);
+                opacity: 0;
             }
 
 
         </style>
+        <!-- Third-party Libraries (GSAP) -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     </head>
     <body class="cyber-body min-h-screen">
         <!-- ─── Top Bar ─────────────────────────────────────────────────────────── -->
@@ -1655,7 +1667,8 @@
                     </div>
                     
                     <div id="pending-invitations-table-wrapper" class="pending-table-wrapper">
-                        <div class="overflow-x-auto">
+                        <div class="pending-table-inner">
+                            <div class="overflow-x-auto">
                         <table class="w-full text-xs text-left">
                             <thead>
                                 <tr class="border-b border-[var(--cg-border)] bg-slate-950/30">
@@ -1670,6 +1683,7 @@
                                 <!-- Table rows will be injected here -->
                             </tbody>
                         </table>
+                    </div>
                     </div>
                     </div>
                 </div>
@@ -4098,14 +4112,34 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
                         `;
                     }
+                    if (typeof gsap !== "undefined") {
+                        gsap.fromTo("#pending-invitations-list tr", 
+                            { y: 15, opacity: 0 },
+                            { y: 0, opacity: 1, duration: 0.4, stagger: 0.03, ease: "power2.out", overwrite: "auto" }
+                        );
+                    }
                 } else {
-                    wrapperEl.classList.add("collapsed");
                     if (textEl) textEl.textContent = "Show";
                     if (svgEl) {
                         svgEl.innerHTML = `
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         `;
+                    }
+                    if (typeof gsap !== "undefined") {
+                        gsap.to("#pending-invitations-list tr", {
+                            y: -10,
+                            opacity: 0,
+                            duration: 0.25,
+                            stagger: 0.02,
+                            ease: "power2.in",
+                            overwrite: "auto",
+                            onComplete: () => {
+                                wrapperEl.classList.add("collapsed");
+                            }
+                        });
+                    } else {
+                        wrapperEl.classList.add("collapsed");
                     }
                 }
             }
@@ -4147,6 +4181,15 @@
                     `;
                 } else {
                     listEl.innerHTML = filtered.map(inv => renderInvitationRow(inv)).join("");
+                    
+                    // Stagger entrance using GSAP if the table is currently shown
+                    const wrapperEl = document.getElementById("pending-invitations-table-wrapper");
+                    if (typeof gsap !== "undefined" && wrapperEl && !wrapperEl.classList.contains("collapsed")) {
+                        gsap.fromTo("#pending-invitations-list tr", 
+                            { y: 12, opacity: 0 },
+                            { y: 0, opacity: 1, duration: 0.35, stagger: 0.03, ease: "power2.out", overwrite: "auto" }
+                        );
+                    }
                 }
             }
 
