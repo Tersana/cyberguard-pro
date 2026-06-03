@@ -81,16 +81,15 @@
     }
   }
 
-  // ===== INPUT VALIDATION FUNCTIONS =====
   function isValidIP(ip) {
     const ipRegex =
-      /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+      /^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$/;
     return ipRegex.test(ip);
   }
 
   function isValidDomain(domain) {
     const domainRegex =
-      /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/;
+      /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
     return domainRegex.test(domain);
   }
 
@@ -135,7 +134,7 @@
     return "low";
   }
 
-  const WHOIS_DIVIDER = "─".repeat(45);
+  const WHOIS_DIVIDER = "─".repeat(54);
 
   function formatIpWhoisOutput(ip, location, asn, security) {
     const coords =
@@ -145,7 +144,7 @@
 
     return [
       WHOIS_DIVIDER,
-      `  IP WHOIS DATA ─ ${ip}`,
+      `  IP WHOIS DATA — ${ip}`,
       WHOIS_DIVIDER,
       "  Location",
       `    Country        : ${location.country || "N/A"}`,
@@ -204,7 +203,7 @@
 
     return [
       WHOIS_DIVIDER,
-      `  DOMAIN WHOIS DATA ─ ${domainName}`,
+      `  DOMAIN WHOIS DATA — ${domainName}`,
       WHOIS_DIVIDER,
       "  Registration",
       `    Domain         : ${domainName}`,
@@ -1005,12 +1004,44 @@
 
   // ===== 5. REVERSE DNS =====
   async function reverseDns(target) {
-    logResult(new Date(), "Reverse DNS", `Advanced DNS analysis for ${target}...`);
+    logResult(
+      new Date(),
+      "Reverse DNS",
+      `Advanced DNS analysis and security audit for ${target}...`,
+    );
     try {
-      const isIP =
-        /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(target);
+      const isIP = isValidIP(target);
+
+      // Helper function to query DNS over Cloudflare HTTPS JSON API
+      const queryDNS = async (name, type) => {
+        try {
+          const res = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${type}`, {
+            headers: { accept: "application/dns-json" },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            return {
+              answer: data.Answer || [],
+              ad: data.AD || false
+            };
+          }
+        } catch (_) {}
+        return { answer: [], ad: false };
+      };
 
       if (isIP) {
+        // Reverse DNS lookup for IP
+        const reverseIP = target.split(".").reverse().join(".") + ".in-addr.arpa";
+        logResult(new Date(), "Reverse DNS", `Querying PTR record for IP: ${reverseIP}`, "info");
+
+        const ptrResult = await queryDNS(reverseIP, "PTR");
+        const ptrAnswers = ptrResult.answer.filter(a => a.type === 12);
+        
+        let service = "Unknown Service";
+        let provider = "Unknown Provider";
+        let type = "Unknown Type";
+        let hostnames = [];
+        
         const knownIPs = {
           "1.1.1.1": { service: "Cloudflare DNS", provider: "Cloudflare", type: "Public DNS" },
           "1.0.0.1": { service: "Cloudflare DNS", provider: "Cloudflare", type: "Public DNS" },
@@ -1023,86 +1054,181 @@
           "76.223.122.150": { service: "Alternate DNS", provider: "Alternate", type: "Public DNS" },
         };
 
-        const reverseIP = target.split(".").reverse().join(".") + ".in-addr.arpa";
-        logResult(new Date(), "Reverse DNS", `Querying PTR record: ${reverseIP}`, "info");
-
-        const r = await fetch(`https://cloudflare-dns.com/dns-query?name=${reverseIP}&type=PTR`, {
-          headers: { accept: "application/dns-json" },
-        });
-        const d = await r.json();
-
-        let result = `[SUCCESS] IP: ${target}\n`;
-
         if (knownIPs[target]) {
           const info = knownIPs[target];
-          result += `Service: ${info.service}\n`;
-          result += `Provider: ${info.provider}\n`;
-          result += `Type: ${info.type}\n`;
+          service = info.service;
+          provider = info.provider;
+          type = info.type;
         }
 
-        if (d.Answer && d.Answer.length > 0) {
-          const hostnames = d.Answer.map((a) => a.data.replace(/\.$/, "")).join("\n - ");
-          result += `Hostname(s):\n - ${hostnames}`;
-
-          if (hostnames.includes("cloudflare") || hostnames.includes("one.one.one.one")) {
-            result += `\nThis is Cloudflare's public DNS resolver (1.1.1.1)`;
-          } else if (hostnames.includes("google") || hostnames.includes("dns.google")) {
-            result += `\nThis is Google's public DNS resolver (8.8.8.8)`;
-          } else if (hostnames.includes("quad9")) {
-            result += `\nThis is Quad9's public DNS resolver`;
+        // Fetch IP details from ipwho.is
+        let geoInfo = null;
+        try {
+          const proxyUrl = `/api/proxy?url=${encodeURIComponent(`https://ipwho.is/${target}`)}`;
+          const geoRes = await fetch(proxyUrl);
+          if (geoRes.ok) {
+            const rawGeo = await geoRes.json();
+            geoInfo = typeof rawGeo.contents === 'string' ? JSON.parse(rawGeo.contents) : (rawGeo.contents || rawGeo);
           }
-        } else {
-          result += `No reverse DNS record found`;
+        } catch (_) {}
+
+        if (geoInfo && geoInfo.success) {
+          if (provider === "Unknown Provider") {
+            provider = geoInfo.connection?.org || geoInfo.connection?.isp || "Unknown Provider";
+          }
+          if (type === "Unknown Type") {
+            type = geoInfo.security?.hosting ? "Cloud Hosting" : "Residential / Corporate";
+          }
         }
 
-        logResult(new Date(), "Reverse DNS", result, "success");
+        if (ptrAnswers.length > 0) {
+          for (const ans of ptrAnswers) {
+            const ptrHostname = ans.data.replace(/\.$/, "");
+            // FCrDNS Check
+            updateStatus(`Verifying FCrDNS for ${ptrHostname}...`);
+            const forwardResult = await queryDNS(ptrHostname, "A");
+            const forwardIPs = forwardResult.answer.filter(a => a.type === 1).map(a => a.data);
+            const verified = forwardIPs.includes(target);
+            hostnames.push(`${ptrHostname}${verified ? " (FCrDNS Verified)" : " (FCrDNS Unverified)"}`);
+          }
+        }
+
+        let output = `[SUCCESS] IP: ${target}\n`;
+        output += `Service: ${service}\n`;
+        output += `Provider: ${provider}\n`;
+        output += `Type: ${type}\n`;
+        
+        if (hostnames.length > 0) {
+          output += `Hostname(s):\n - ${hostnames.join("\n - ")}\n`;
+        } else {
+          output += `No reverse DNS record found\n`;
+        }
+
+        // Append detailed passive intelligence as Note lines
+        if (geoInfo && geoInfo.success) {
+          output += `\nPassive Geolocation:\n`;
+          output += `  Location: ${geoInfo.city || "N/A"}, ${geoInfo.region || "N/A"}, ${geoInfo.country || "N/A"}\n`;
+          output += `  Coordinates: ${geoInfo.latitude || "N/A"}, ${geoInfo.longitude || "N/A"}\n`;
+          output += `  ISP: ${geoInfo.connection?.isp || "N/A"} (${geoInfo.connection?.asn ? "AS" + geoInfo.connection.asn : "N/A"})\n`;
+          
+          if (geoInfo.security) {
+            output += `Security Threat Profile:\n`;
+            output += `  Proxy: ${geoInfo.security.proxy ? "Detected" : "No"}\n`;
+            output += `  VPN: ${geoInfo.security.vpn ? "Detected" : "No"}\n`;
+            output += `  Tor Exit: ${geoInfo.security.tor ? "Detected" : "No"}\n`;
+            output += `  Hosting Range: ${geoInfo.security.hosting ? "Yes" : "No"}\n`;
+          }
+        }
+
+        logResult(new Date(), "Reverse DNS", output, "success");
+        updateStatus("Reverse DNS completed");
       } else {
-        logResult(new Date(), "Reverse DNS", `Querying A record for: ${target}`, "info");
-
-        const r = await fetch(`https://cloudflare-dns.com/dns-query?name=${target}`, {
-          headers: { accept: "application/dns-json" },
-        });
-        const d = await r.json();
-
-        if (d.Answer && d.Answer.length > 0) {
-          const ips = d.Answer.filter((a) => a.type === 1).map((a) => a.data);
-          const ipList = ips.join("\n - ");
-
-          let result = `[SUCCESS] Hostname: ${target}\n`;
-          result += `IP Address(es):\n - ${ipList}`;
-
-          const cloudflareRanges = [
-            "104.16.", "104.17.", "104.18.", "104.19.", "104.20.", "104.21.", "104.22.",
-            "104.23.", "104.24.", "104.25.", "104.26.", "104.27.", "104.28.", "104.29.",
-            "104.30.", "104.31.", "172.64.", "172.65.", "172.66.", "172.67.", "172.68.",
-            "172.69.", "172.70.", "172.71.", "173.245.", "188.114.", "190.93.", "197.234.", "198.41.",
-          ];
-          const googleRanges = [
-            "142.250.", "172.217.", "216.58.", "74.125.", "173.194.", "209.85.", "108.177.",
-            "64.233.", "66.102.", "66.249.", "72.14.", "216.239.", "216.252.", "216.253.",
-          ];
-          const awsRanges = [
-            "3.", "13.", "18.", "23.", "34.", "35.", "44.", "50.", "52.", "54.", "107.",
-            "174.", "184.", "205.", "207.", "209.", "216.",
-          ];
-
-          const isCloudflare = ips.some((ip) => cloudflareRanges.some((range) => ip.startsWith(range)));
-          const isGoogle = ips.some((ip) => googleRanges.some((range) => ip.startsWith(range)));
-          const isAWS = ips.some((ip) => awsRanges.some((range) => ip.startsWith(range)));
-
-          if (isCloudflare) result += `\nHosted on Cloudflare CDN`;
-          if (isGoogle) result += `\nHosted on Google Cloud Platform`;
-          if (isAWS) result += `\nHosted on Amazon Web Services`;
-
-          if (target.endsWith(".gov")) result += `\nGovernment domain`;
-          if (target.endsWith(".edu")) result += `\nEducational institution`;
-          if (target.endsWith(".mil")) result += `\nMilitary domain`;
-          if (target.endsWith(".org")) result += `\nOrganization domain`;
-
-          logResult(new Date(), "Reverse DNS", result, "success");
-        } else {
-          logResult(new Date(), "Reverse DNS", `[WARNING] Could not resolve: ${target}`, "warning");
+        // Domain DNS Profile
+        let domain = target.trim().toLowerCase();
+        if (domain.includes("://")) {
+          domain = new URL(domain).hostname;
         }
+        if (domain.startsWith("www.")) {
+          domain = domain.substring(4);
+        }
+
+        logResult(new Date(), "Reverse DNS", `Querying DNS Profile for domain: ${domain}`, "info");
+
+        // Fetch A, AAAA, MX, NS, CAA, TXT records in parallel
+        updateStatus("Fetching DNS records...");
+        const [aRes, aaaaRes, mxRes, nsRes, caaRes, txtRes, dmarcRes] = await Promise.all([
+          queryDNS(domain, "A"),
+          queryDNS(domain, "AAAA"),
+          queryDNS(domain, "MX"),
+          queryDNS(domain, "NS"),
+          queryDNS(domain, "CAA"),
+          queryDNS(domain, "TXT"),
+          queryDNS(`_dmarc.${domain}`, "TXT")
+        ]);
+
+        const aIPs = aRes.answer.filter(a => a.type === 1).map(a => a.data);
+        const aaaaIPs = aaaaRes.answer.filter(a => a.type === 28).map(a => a.data);
+        const mxServers = mxRes.answer.filter(a => a.type === 15).map(a => a.data);
+        const nsServers = nsRes.answer.filter(a => a.type === 2).map(a => a.data.replace(/\.$/, ""));
+        const caaRecords = caaRes.answer.filter(a => a.type === 257).map(a => a.data);
+        const txtRecords = txtRes.answer.filter(a => a.type === 16).map(a => a.data);
+        const dmarcRecords = dmarcRes.answer.filter(a => a.type === 16).map(a => a.data);
+
+        // Check DNSSEC via AD flag
+        const dnssecEnabled = aRes.ad || aaaaRes.ad || mxRes.ad || nsRes.ad;
+
+        // Fetch ISP info of the first resolved IP
+        let hostingProvider = "Unknown Hosting";
+        if (aIPs.length > 0) {
+          try {
+            const proxyUrl = `/api/proxy?url=${encodeURIComponent(`https://ipwho.is/${aIPs[0]}`)}`;
+            const geoRes = await fetch(proxyUrl);
+            if (geoRes.ok) {
+              const rawGeo = await geoRes.json();
+              const geoInfo = typeof rawGeo.contents === 'string' ? JSON.parse(rawGeo.contents) : (rawGeo.contents || rawGeo);
+              if (geoInfo && geoInfo.success) {
+                hostingProvider = geoInfo.connection?.org || geoInfo.connection?.isp || hostingProvider;
+              }
+            }
+          } catch (_) {}
+        }
+
+        // Parse SPF
+        let spfRecord = "None configured";
+        const spf = txtRecords.find(t => t.includes("v=spf1"));
+        if (spf) {
+          spfRecord = spf.replace(/^"|"$/g, "");
+        }
+
+        // Parse DMARC
+        let dmarcRecord = "None configured";
+        const dmarc = dmarcRecords.find(t => t.includes("v=DMARC1"));
+        if (dmarc) {
+          dmarcRecord = dmarc.replace(/^"|"$/g, "");
+        }
+
+        let output = `[SUCCESS] Hostname: ${domain}\n`;
+        output += `Service: Domain DNS Profile\n`;
+        output += `Provider: ${hostingProvider}\n`;
+        output += `Type: Public Website\n`;
+
+        // Output resolved IPs under Hostname(s) so UI displays them
+        const allResolvedIPs = [...aIPs, ...aaaaIPs];
+        if (allResolvedIPs.length > 0) {
+          output += `Hostname(s):\n - ${allResolvedIPs.join("\n - ")}\n`;
+        }
+
+        // Build DNS profile details as Note lines
+        output += `\nDNSSEC Validation:\n`;
+        output += `  DNSSEC Status: ${dnssecEnabled ? "Enabled (Authentic Data verified)" : "Disabled / Unsigned"}\n`;
+
+        if (nsServers.length > 0) {
+          output += `Name Servers:\n`;
+          nsServers.forEach(ns => {
+            output += `  - ${ns}\n`;
+          });
+        }
+
+        if (mxServers.length > 0) {
+          output += `Mail Exchange (MX) Servers:\n`;
+          mxServers.forEach(mx => {
+            output += `  - ${mx}\n`;
+          });
+        }
+
+        if (caaRecords.length > 0) {
+          output += `Certification Authority Authorization (CAA):\n`;
+          caaRecords.forEach(caa => {
+            output += `  - ${caa}\n`;
+          });
+        }
+
+        output += `Email Security Assessment:\n`;
+        output += `  SPF: ${spfRecord}\n`;
+        output += `  DMARC: ${dmarcRecord}\n`;
+
+        logResult(new Date(), "Reverse DNS", output, "success");
+        updateStatus("Domain DNS lookup completed");
       }
     } catch (e) {
       logResult(new Date(), "Reverse DNS", `[ERROR] DNS lookup failed. ${e.message}`, "danger");
@@ -1114,13 +1240,6 @@
     addActivityLog(`Starting WHOIS lookup for ${target}`, "WHOIS Lookup");
     logResult(new Date(), "WHOIS Lookup", `[*] Fetching WHOIS data for: ${target}`);
     try {
-      const whoisApiKey = getStoredApiKey("whoisApiKey");
-      if (!whoisApiKey) {
-        addActivityLog("API key not configured", "WHOIS Lookup");
-        logResult(new Date(), "WHOIS Lookup", `[!] ERROR: WhoisXML API key not set. Please configure it in the sidebar.`, "danger");
-        return;
-      }
-
       const isIP = isValidIP(target);
       const isDomain = isValidDomain(target);
 
@@ -1130,63 +1249,173 @@
         return;
       }
 
-      let apiUrl;
-      let queryType;
+      // Check if API key is available
+      const whoisApiKey = getStoredApiKey("whoisApiKey");
 
-      if (isIP) {
-        queryType = "IP Geolocation";
-        addActivityLog("Querying IP geolocation data...", "WHOIS Lookup");
-        apiUrl = `https://ip-geolocation.whoisxmlapi.com/api/v1?apiKey=${whoisApiKey}&ipAddress=${encodeURIComponent(target)}`;
-      } else {
-        let normalizedDomain = target.trim().toLowerCase();
-        if (normalizedDomain.includes("://")) {
-          normalizedDomain = new URL(normalizedDomain).hostname;
-        } else if (!normalizedDomain.includes(".")) {
-          throw new Error("Invalid domain format");
-        }
+      let data;
+      let queryType = isIP ? "IP Geolocation" : "Domain WHOIS";
+      updateStatus(`Querying WHOIS data for ${queryType}...`);
 
-        if (normalizedDomain.startsWith("www.")) {
-          normalizedDomain = normalizedDomain.substring(4);
-        }
-
-        queryType = "Domain WHOIS";
-        addActivityLog("Querying domain WHOIS data...", "WHOIS Lookup");
-        apiUrl = `https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey=${whoisApiKey}&domainName=${encodeURIComponent(normalizedDomain)}&outputFormat=JSON`;
-      }
-
-      updateStatus(`Querying WHOISXML API for ${queryType}...`);
-      const res = await fetch(apiUrl);
-
-      if (!res.ok) {
-        if (res.status === 401) {
-          throw new Error("Invalid API key. Please check your WHOISXML API key.");
-        } else if (res.status === 403) {
-          throw new Error("API quota exceeded or access denied. Please check your WHOISXML subscription.");
-        } else if (res.status === 404) {
-          throw new Error("Domain not found in WHOIS database.");
+      if (whoisApiKey) {
+        // If API key is available, attempt to use WHOISXML API
+        let apiUrl;
+        if (isIP) {
+          apiUrl = `https://ip-geolocation.whoisxmlapi.com/api/v1?apiKey=${whoisApiKey}&ipAddress=${encodeURIComponent(target)}`;
         } else {
-          throw new Error(`WHOISXML API error: ${res.status} ${res.statusText}`);
+          let normalizedDomain = target.trim().toLowerCase();
+          if (normalizedDomain.includes("://")) {
+            normalizedDomain = new URL(normalizedDomain).hostname;
+          }
+          if (normalizedDomain.startsWith("www.")) {
+            normalizedDomain = normalizedDomain.substring(4);
+          }
+          apiUrl = `https://www.whoisxmlapi.com/whoisserver/WhoisService?apiKey=${whoisApiKey}&domainName=${encodeURIComponent(normalizedDomain)}&outputFormat=JSON`;
+        }
+
+        try {
+          addActivityLog(`Querying WHOISXML API...`, "WHOIS Lookup");
+          const res = await fetch(apiUrl);
+          if (res.ok) {
+            data = await res.json();
+            if (data.errorMessage) {
+              addActivityLog(`WHOISXML API Error: ${data.errorMessage}. Falling back to free sources...`, "WHOIS Lookup");
+              data = null;
+            }
+          } else {
+            addActivityLog(`WHOISXML API failed with status ${res.status}. Falling back to free sources...`, "WHOIS Lookup");
+          }
+        } catch (err) {
+          addActivityLog(`WHOISXML API network error. Falling back to free sources...`, "WHOIS Lookup");
         }
       }
 
-      addActivityLog("Processing WHOIS data...", "WHOIS Lookup");
-      const data = await res.json();
+      // Fallback if no API key or if WHOISXML API failed
+      if (!data) {
+        if (isIP) {
+          addActivityLog("Using ipwho.is free fallback...", "WHOIS Lookup");
+          const proxyUrl = `/api/proxy?url=${encodeURIComponent(`https://ipwho.is/${target}`)}`;
+          const res = await fetch(proxyUrl);
+          if (!res.ok) {
+            throw new Error(`Failed to query free IP WHOIS service: ${res.status} ${res.statusText}`);
+          }
+          const rawData = await res.json();
+          const ipData = typeof rawData.contents === 'string' ? JSON.parse(rawData.contents) : (rawData.contents || rawData);
+          
+          if (ipData && ipData.success) {
+            // Map ipwho.is structure to WHOISXML API format
+            data = {
+              ip: ipData.ip,
+              location: {
+                country: ipData.country,
+                region: ipData.region,
+                city: ipData.city,
+                postalCode: ipData.postal,
+                latitude: ipData.latitude,
+                longitude: ipData.longitude,
+                timezone: ipData.timezone?.utc
+              },
+              asn: {
+                asn: ipData.connection?.asn ? `AS${ipData.connection.asn}` : "N/A",
+                organization: ipData.connection?.org || "N/A",
+                name: ipData.connection?.isp || "N/A",
+                domain: ipData.connection?.domain || "N/A",
+                country: ipData.country_code || "N/A"
+              },
+              security: {
+                isProxy: ipData.security?.proxy || false,
+                isVpn: ipData.security?.vpn || false,
+                isHosting: ipData.security?.hosting || false,
+                isTor: ipData.security?.tor || false
+              }
+            };
+          } else {
+            throw new Error(ipData?.message || "Failed to fetch geolocation from free fallback");
+          }
+        } else {
+          // Domain RDAP Fallback
+          let normalizedDomain = target.trim().toLowerCase();
+          if (normalizedDomain.includes("://")) {
+            normalizedDomain = new URL(normalizedDomain).hostname;
+          }
+          if (normalizedDomain.startsWith("www.")) {
+            normalizedDomain = normalizedDomain.substring(4);
+          }
 
+          addActivityLog("Using free bootstrap RDAP fallback...", "WHOIS Lookup");
+          const rdapUrl = `https://rdap.org/domain/${encodeURIComponent(normalizedDomain)}`;
+          const proxyUrl = `/api/proxy?url=${encodeURIComponent(rdapUrl)}`;
+          const res = await fetch(proxyUrl);
+          if (!res.ok) {
+            throw new Error(`Failed to query RDAP server: ${res.status} ${res.statusText}`);
+          }
+          
+          const rawData = await res.json();
+          const rdapData = typeof rawData.contents === 'string' ? JSON.parse(rawData.contents) : (rawData.contents || rawData);
+
+          if (rdapData && rdapData.ldhName) {
+            // Helper to parse RDAP entity organization
+            const extractEntityOrg = (entities, role) => {
+              const entity = entities?.find(e => e.roles?.includes(role));
+              if (!entity) return "N/A";
+              const vcard = entity.vcardArray?.[1];
+              if (Array.isArray(vcard)) {
+                const fnProperty = vcard.find(prop => prop[0] === 'fn');
+                if (fnProperty) return fnProperty[3];
+                const orgProperty = vcard.find(prop => prop[0] === 'org');
+                if (orgProperty) return orgProperty[3];
+              }
+              return entity.handle || "N/A";
+            };
+
+            let createdDate = "N/A";
+            let updatedDate = "N/A";
+            let expiresDate = "N/A";
+            
+            if (rdapData.events) {
+              rdapData.events.forEach(evt => {
+                if (evt.eventAction === "registration") createdDate = evt.eventDate;
+                else if (evt.eventAction === "last changed") updatedDate = evt.eventDate;
+                else if (evt.eventAction === "expiration") expiresDate = evt.eventDate;
+              });
+            }
+
+            const registrar = extractEntityOrg(rdapData.entities, "registrar");
+            const registrant = extractEntityOrg(rdapData.entities, "registrant");
+            const status = rdapData.status || ["N/A"];
+            const nameServers = rdapData.nameservers ? rdapData.nameservers.map(ns => ns.ldhName.toLowerCase()) : [];
+
+            data = {
+              WhoisRecord: {
+                domainName: rdapData.ldhName.toLowerCase(),
+                registrarName: registrar,
+                registrar: { name: registrar },
+                creationDate: createdDate,
+                createdDate: createdDate,
+                updatedDate: updatedDate,
+                lastUpdated: updatedDate,
+                expirationDate: expiresDate,
+                expiresDate: expiresDate,
+                status: status,
+                domainStatus: status.join(", "),
+                nameServers: { hostNames: nameServers },
+                registrant: { organization: registrant }
+              }
+            };
+          } else {
+            throw new Error("No domain registration data returned from RDAP server");
+          }
+        }
+      }
+
+      // Present the final output
       if (isIP) {
         if (data.ip) {
-          const ip = data.ip;
-          const location = data.location || {};
-          const asn = data.asn || {};
-          const security = data.security || {};
-
-          addActivityLog(`WHOIS lookup complete for ${ip}`, "WHOIS Lookup");
-          const output = formatIpWhoisOutput(ip, location, asn, security);
+          addActivityLog(`WHOIS lookup complete for ${data.ip}`, "WHOIS Lookup");
+          const output = formatIpWhoisOutput(data.ip, data.location || {}, data.asn || {}, data.security || {});
           logResult(new Date(), "WHOIS Lookup", output, "success");
           updateStatus("IP WHOIS lookup completed");
-        } else if (data.errorMessage) {
-          throw new Error(data.errorMessage);
         } else {
-          throw new Error("No IP data found");
+          throw new Error("No IP data found in the response");
         }
       } else {
         if (data.WhoisRecord) {
@@ -1197,7 +1426,6 @@
           const updatedDate = record.updatedDate || record.lastUpdated || "N/A";
           const expiresDate = record.expiresDate || record.expirationDate || "N/A";
           const status = record.status || record.domainStatus || "N/A";
-
           const nameServers = record.nameServers?.hostNames || record.nameServers?.nameserver || record.nameServers || [];
           const registrant = record.registrant || {};
 
@@ -1223,10 +1451,8 @@
 
           logResult(new Date(), "WHOIS Lookup", output, "success");
           updateStatus("Domain WHOIS lookup completed");
-        } else if (data.errorMessage) {
-          throw new Error(data.errorMessage);
         } else {
-          throw new Error("No WHOIS data found for this domain");
+          throw new Error("No domain data found in the response");
         }
       }
     } catch (e) {
