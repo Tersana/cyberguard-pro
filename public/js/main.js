@@ -1159,10 +1159,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const severityText = severity.toUpperCase();
 
     // Extract short summary from message (first line or first 100 chars)
-    const shortSummary = result.message.split("\n")[0].substring(0, 100);
+    const shortSummary = escapeHtml(stripEmojis(result.message.split("\n")[0].substring(0, 100)));
 
     // Extract description, evidence, and remediation from message or details
-    let description = result.description || result.message;
+    let description = escapeHtml(stripEmojis(result.description || result.message));
     let evidence = result.evidence || "";
     let remediation = result.remediation || [];
 
@@ -1216,7 +1216,7 @@ document.addEventListener("DOMContentLoaded", () => {
             How to Fix
           </h4>
           <ul class="text-sm text-slate-400 space-y-2 list-disc list-inside">
-            ${remediation.map((step) => `<li>${step}</li>`).join("")}
+            ${remediation.map((step) => `<li>${escapeHtml(stripEmojis(step))}</li>`).join("")}
           </ul>
         </div>
         `
@@ -1963,9 +1963,9 @@ document.addEventListener("DOMContentLoaded", () => {
     entry.innerHTML =
       `<span class="activity-time">${timeStr}</span>` +
       `<span class="activity-scanner">[${escapeHtml(String(scanner).toUpperCase())}]</span>` +
-      `<span class="activity-message">${escapeHtml(String(message))}</span>` +
+      `<span class="activity-message">${escapeHtml(stripEmojis(String(message)))}</span>` +
       (detail
-        ? `<span class="activity-detail">${escapeHtml(String(detail))}</span>`
+        ? `<span class="activity-detail">${escapeHtml(stripEmojis(String(detail)))}</span>`
         : "") +
       `<span class="activity-indicator"></span>`;
 
@@ -4473,7 +4473,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const featureToToolId = {
         "SSL/TLS Check": "ssl",
         "URL Phishing Analyzer": "phishing",
-        "DNS Spoof Check": "dns-spoof"
+        "DNS Spoof Check": "dns-spoof",
+        "Email Security": "email"
       };
       const toolId = featureToToolId[feature];
       if (toolId) {
@@ -6468,7 +6469,7 @@ document.addEventListener("DOMContentLoaded", () => {
     logResult(
       new Date(),
       "URL Phishing Analyzer",
-      `🤖 ML Model analyzing: ${url}`,
+      `ML Model analyzing: ${url}`,
     );
     await new Promise((r) => setTimeout(r, 1500));
 
@@ -6485,37 +6486,37 @@ document.addEventListener("DOMContentLoaded", () => {
       const prediction = phishingModel.predict(features);
 
       // Generate detailed report
-      let result = `🤖 ML Phishing Analysis Complete\n`;
-      result += `📊 Phishing Probability: ${(
+      let result = `ML Phishing Analysis Complete\n`;
+      result += `Phishing Probability: ${(
         prediction.probability * 100
       ).toFixed(1)}%\n`;
-      result += `🎯 Prediction: `;
+      result += `Prediction: `;
 
       let riskLevel, status;
       if (prediction.isLegitimate) {
         riskLevel = "VERIFIED LEGITIMATE DOMAIN";
         status = "success";
-        result += `✅ ${riskLevel}\n`;
-        result += `\n🏆 Domain Verification:\n`;
+        result += `${riskLevel}\n`;
+        result += `\nDomain Verification:\n`;
         result += `• This domain is in our verified legitimate domains database\n`;
         result += `• High confidence this is the official website\n`;
         result += `• No suspicious patterns detected\n`;
       } else if (prediction.probability >= 0.7) {
         riskLevel = "HIGH RISK - LIKELY PHISHING";
         status = "danger";
-        result += `🚨 ${riskLevel}\n`;
+        result += `${riskLevel}\n`;
       } else if (prediction.probability >= 0.4) {
         riskLevel = "MEDIUM RISK - SUSPICIOUS";
         status = "warning";
-        result += `🟡 ${riskLevel}\n`;
+        result += `${riskLevel}\n`;
       } else {
         riskLevel = "LOW RISK - LIKELY SAFE";
         status = "success";
-        result += `✅ ${riskLevel}\n`;
+        result += `${riskLevel}\n`;
       }
 
       if (prediction.reasons.length > 0) {
-        result += `\n🚨 Suspicious Features Detected:\n`;
+        result += `\nSuspicious Features Detected:\n`;
         prediction.reasons.forEach((reason, index) => {
           const reasonText =
             {
@@ -6549,31 +6550,31 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // Add specific recommendations based on analysis
-      result += `\n🛡️ Recommendations:\n`;
+      result += `\nRecommendations:\n`;
       if (prediction.isLegitimate) {
-        result += `• ✅ This is a verified legitimate domain - safe to visit\n`;
-        result += `• 🔒 Always ensure you're using HTTPS when entering sensitive information\n`;
-        result += `• 🛡️ Keep your browser and security software updated\n`;
-        result += `• 📱 Use official mobile apps when available for better security\n`;
-        result += `• 🔍 Bookmark official domains to avoid typosquatting\n`;
+        result += `• This is a verified legitimate domain - safe to visit\n`;
+        result += `• Always ensure you're using HTTPS when entering sensitive information\n`;
+        result += `• Keep your browser and security software updated\n`;
+        result += `• Use official mobile apps when available for better security\n`;
+        result += `• Bookmark official domains to avoid typosquatting\n`;
       } else if (prediction.probability >= 0.7) {
-        result += `• 🚫 DO NOT visit this URL - high phishing risk detected\n`;
-        result += `• 📧 Report this URL to your email provider if received via email\n`;
-        result += `• 🔍 Search for the official website using a search engine\n`;
-        result += `• 📞 Contact the company directly through official channels\n`;
-        result += `• 🛡️ Run a full antivirus scan if you already visited\n`;
+        result += `• DO NOT visit this URL - high phishing risk detected\n`;
+        result += `• Report this URL to your email provider if received via email\n`;
+        result += `• Search for the official website using a search engine\n`;
+        result += `• Contact the company directly through official channels\n`;
+        result += `• Run a full antivirus scan if you already visited\n`;
       } else if (prediction.probability >= 0.4) {
-        result += `• ⚠️ Exercise extreme caution - multiple suspicious indicators\n`;
-        result += `• 🔍 Verify the domain through official company websites\n`;
-        result += `• 📞 Contact the company directly to confirm legitimacy\n`;
-        result += `• 🔒 Check for HTTPS and valid SSL certificate\n`;
-        result += `• 🛡️ Use a reputable link scanner before visiting\n`;
+        result += `• Exercise extreme caution - multiple suspicious indicators\n`;
+        result += `• Verify the domain through official company websites\n`;
+        result += `• Contact the company directly to confirm legitimacy\n`;
+        result += `• Check for HTTPS and valid SSL certificate\n`;
+        result += `• Use a reputable link scanner before visiting\n`;
       } else {
-        result += `• ✅ URL appears relatively safe based on current analysis\n`;
-        result += `• 🔍 Still verify through official channels when in doubt\n`;
-        result += `• 🔒 Always check for HTTPS before entering sensitive data\n`;
-        result += `• 🛡️ Keep security software updated for real-time protection\n`;
-        result += `• 📱 Consider using official mobile apps for better security\n`;
+        result += `• URL appears relatively safe based on current analysis\n`;
+        result += `• Still verify through official channels when in doubt\n`;
+        result += `• Always check for HTTPS before entering sensitive data\n`;
+        result += `• Keep security software updated for real-time protection\n`;
+        result += `• Consider using official mobile apps for better security\n`;
       }
 
       logResult(new Date(), "URL Phishing Analyzer", result, status);
@@ -6581,7 +6582,7 @@ document.addEventListener("DOMContentLoaded", () => {
       logResult(
         new Date(),
         "URL Phishing Analyzer",
-        `❌ [ERROR] Analysis failed: ${error.message}`,
+        `[ERROR] Analysis failed: ${error.message}`,
         "danger",
       );
     }
@@ -10623,7 +10624,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Web Auditing Tools - Map tool IDs to arrow functions that execute the scanning functions
     "headers-btn": () => window.WebAuditing?.runHeadersAnalysis(),
     "links-btn":   () => window.WebAuditing?.runLinkChecker(),
-    "tech-btn":    () => window.WebAuditing?.runTechFingerprint(),
+    "email-btn":   () => window.WebAuditing?.runEmailSecurityAnalysis(),
     "xss-btn": () => testXss(document.getElementById("target-url").value),
     "ssl-btn":       () => window.WebAuditing?.runSslAnalysis(),
     "phishing-btn":  () => window.WebAuditing?.runPhishingAnalysis(),
@@ -10992,7 +10993,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Map tool button IDs to WebAuditing switchTool keys
       const toolSwitchMap = {
-        'headers-btn': 'headers', 'links-btn': 'links', 'tech-btn': 'tech',
+        'headers-btn': 'headers', 'links-btn': 'links', 'email-btn': 'email',
         'ssl-btn': 'ssl', 'phishing-btn': 'phishing', 'dns-spoof-btn': 'dns-spoof'
       };
 
@@ -11113,967 +11114,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ===== WEB AUDITING MODULE REDESIGN =====
-  // ── WAPPALYZER-GRADE TECHNOLOGY SIGNATURE DATABASE (70+ technologies) ──────
-  // Each entry: { category, checks[], extractVersion?, cveRisk, icon? }
-  // check.type: 'html' | 'header' | 'cookie' | 'script' | 'meta' | 'dom'
-  // check.pattern: RegExp applied to respective source
-  // check.name: header/meta name, cookie name, or DOM selector for 'dom' type
-  const WAPPALYZER_SIGNATURES = {
-
-    // ── JAVASCRIPT FRAMEWORKS ─────────────────────────────────
-    'React': {
-      category: 'JavaScript frameworks',
-      checks: [
-        { type: 'html', pattern: /["']react(?:\.production)?(?:\.min)?\.js["']/i },
-        { type: 'html', pattern: /\/react@[\d.]+\/umd\/react/i },
-        { type: 'html', pattern: /data-reactroot|data-reactid/i },
-        { type: 'html', pattern: /__REACT_DEVTOOLS_GLOBAL_HOOK__|react\.development/i },
-        { type: 'html', pattern: /_next\/static\/chunks\/(?:framework|react)-[a-f0-9]+/i },
-        { type: 'html', pattern: /"react":\s*"([\d.]+)"/i },
-        { type: 'script', pattern: /\/react(?:@[\d.]+)?\/.*\.js/i },
-        { type: 'script', pattern: /unpkg\.com\/react@([\d.]+)/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'low'
-    },
-    'Vue.js': {
-      category: 'JavaScript frameworks',
-      checks: [
-        { type: 'html', pattern: /vue(?:\.runtime)?(?:\.esm|(?:\.global))?(?:\.prod)?(?:\.min)?\.js/i },
-        { type: 'html', pattern: /\/vue@([\d.]+)\//i },
-        { type: 'html', pattern: /__vue__|__VUE__|__vueParent/i },
-        { type: 'html', pattern: /data-v-[a-f0-9]{6,8}/i },
-        { type: 'html', pattern: /nuxt-link|<nuxt>|__NUXT__/i },
-        { type: 'script', pattern: /\/vue(?:@[\d.]+)?\/dist\/vue/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'low'
-    },
-    'Angular': {
-      category: 'JavaScript frameworks',
-      checks: [
-        { type: 'html', pattern: /ng-version="([\d.]+)"/i },
-        { type: 'html', pattern: /_ngcontent-[a-z]+-c\d+|ng-app="/i },
-        { type: 'html', pattern: /angular(?:\.min)?\.js/i },
-        { type: 'html', pattern: /\[ng-app\]|ng-controller=|ng-model=/i },
-        { type: 'script', pattern: /\/angular(?:@[\d.]+)?\/.*angular/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'low'
-    },
-    'Svelte': {
-      category: 'JavaScript frameworks',
-      checks: [
-        { type: 'html', pattern: /svelte-[a-z0-9]+|__svelte__/i },
-        { type: 'html', pattern: /svelte\/internal|sveltekit/i },
-        { type: 'script', pattern: /\.svelte(?:\.[a-z]+)?\.js/i }
-      ],
-      cveRisk: 'low'
-    },
-    'Ember.js': {
-      category: 'JavaScript frameworks',
-      checks: [
-        { type: 'html', pattern: /ember(?:\.min)?\.js|ember-cli/i },
-        { type: 'html', pattern: /Ember\.VERSION|EmberENV/i },
-        { type: 'script', pattern: /\/ember(?:@[\d.]+)?\//i }
-      ],
-      cveRisk: 'low'
-    },
-    'Backbone.js': {
-      category: 'JavaScript frameworks',
-      checks: [
-        { type: 'html', pattern: /backbone(?:\.min)?\.js|Backbone\.VERSION/i },
-        { type: 'script', pattern: /\/backbone(?:@[\d.]+)?\//i }
-      ],
-      cveRisk: 'low'
-    },
-    'RequireJS': {
-      category: 'JavaScript frameworks',
-      checks: [
-        { type: 'html', pattern: /require(?:\.min)?\.js|data-main="[^"]+"/i },
-        { type: 'script', pattern: /\/require(?:js)?(?:@[\d.]+)?\//i }
-      ],
-      cveRisk: 'low'
-    },
-    'Alpine.js': {
-      category: 'JavaScript frameworks',
-      checks: [
-        { type: 'html', pattern: /x-data="|x-bind:|x-on:|alpine(?:\.min)?\.js/i },
-        { type: 'script', pattern: /\/alpinejs(?:@[\d.]+)?\//i }
-      ],
-      cveRisk: 'low'
-    },
-    'Stimulus': {
-      category: 'JavaScript frameworks',
-      checks: [
-        { type: 'html', pattern: /data-controller="|stimulus(?:\.js)?/i }
-      ],
-      cveRisk: 'none'
-    },
-
-    // ── META-FRAMEWORKS ───────────────────────────────────────
-    'Next.js': {
-      category: 'Web frameworks',
-      checks: [
-        { type: 'html', pattern: /__NEXT_DATA__|__nextjs|_next\/static/i },
-        { type: 'html', pattern: /<meta\s+name="next-head-count"\s+content="([\d]+)"/i },
-        { type: 'header', name: 'x-powered-by', pattern: /Next\.js(?:\s+([\d.]+))?/i },
-        { type: 'header', name: 'x-nextjs-cache', pattern: /.+/ }
-      ],
-      extractVersion: true,
-      cveRisk: 'low'
-    },
-    'Nuxt.js': {
-      category: 'Web frameworks',
-      checks: [
-        { type: 'html', pattern: /__NUXT__|_nuxt\/|nuxt(?:\.js)?/i },
-        { type: 'html', pattern: /\bNuxt\b|nuxt-link/i },
-        { type: 'header', name: 'x-powered-by', pattern: /Nuxt(?:\.js)?/i }
-      ],
-      cveRisk: 'low'
-    },
-    'Gatsby': {
-      category: 'Web frameworks',
-      checks: [
-        { type: 'html', pattern: /___gatsby|gatsby-chunk|<div\s+id="___gatsby"/i },
-        { type: 'html', pattern: /window\.___gatsby|gatsby-image/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Remix': {
-      category: 'Web frameworks',
-      checks: [
-        { type: 'html', pattern: /__remixContext|remix-routes/i },
-        { type: 'html', pattern: /\/build\/[a-f0-9]+\/routes\//i }
-      ],
-      cveRisk: 'none'
-    },
-    'Astro': {
-      category: 'Web frameworks',
-      checks: [
-        { type: 'html', pattern: /astro-island|data-astro-|astro\.build/i },
-        { type: 'header', name: 'x-powered-by', pattern: /Astro/i }
-      ],
-      cveRisk: 'none'
-    },
-    'SvelteKit': {
-      category: 'Web frameworks',
-      checks: [
-        { type: 'html', pattern: /sveltekit|__sveltekit/i },
-        { type: 'html', pattern: /data-sveltekit-preload/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Ruby on Rails': {
-      category: 'Web frameworks',
-      checks: [
-        { type: 'header', name: 'x-powered-by', pattern: /Phusion Passenger/i },
-        { type: 'header', name: 'server', pattern: /Phusion Passenger/i },
-        { type: 'html', pattern: /rails-ujs|data-turbolinks|data-turbo="true"/i },
-        { type: 'html', pattern: /csrf-param[^\n]+rails/i },
-        { type: 'cookie', pattern: /^_session_id$|^_rails_app_session$/i }
-      ],
-      cveRisk: 'low'
-    },
-    'Django': {
-      category: 'Web frameworks',
-      checks: [
-        { type: 'html', pattern: /csrfmiddlewaretoken|__admin_media_prefix__/i },
-        { type: 'cookie', pattern: /^csrftoken$|^sessionid$/i },
-        { type: 'header', name: 'x-frame-options', pattern: /DENY|SAMEORIGIN/i }
-      ],
-      cveRisk: 'low'
-    },
-    'Laravel': {
-      category: 'Web frameworks',
-      checks: [
-        { type: 'cookie', pattern: /laravel_session/i },
-        { type: 'cookie', pattern: /XSRF-TOKEN/i },
-        { type: 'html', pattern: /<input[^>]+name="_token"[^>]+value=/i },
-        { type: 'html', pattern: /laravel-echo|window\.Echo/i }
-      ],
-      cveRisk: 'low'
-    },
-    'ASP.NET': {
-      category: 'Web frameworks',
-      checks: [
-        { type: 'header', name: 'x-powered-by', pattern: /ASP\.NET/i },
-        { type: 'header', name: 'x-aspnet-version', pattern: /([\d.]+)/i },
-        { type: 'cookie', pattern: /^ASP\.NET_SessionId$/i },
-        { type: 'html', pattern: /__VIEWSTATE|__EVENTVALIDATION|__doPostBack/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'medium'
-    },
-    'Spring Boot': {
-      category: 'Web frameworks',
-      checks: [
-        { type: 'header', name: 'x-application-context', pattern: /.+/ },
-        { type: 'cookie', pattern: /^JSESSIONID$/i },
-        { type: 'html', pattern: /Spring Framework|spring-security/i }
-      ],
-      cveRisk: 'medium'
-    },
-
-    // ── UI FRAMEWORKS ─────────────────────────────────────────
-    'Bootstrap': {
-      category: 'UI frameworks',
-      checks: [
-        { type: 'html', pattern: /bootstrap(?:\.[\d.-]+)?(?:\.bundle)?(?:\.min)?\.(?:css|js)/i },
-        { type: 'script', pattern: /\/bootstrap(?:@([\d.]+))?\/dist\/js/i },
-        { type: 'html', pattern: /class="[^"]*(?:container|navbar|btn-primary|col-md-)/i },
-        { type: 'html', pattern: /\/bootstrap@([\d.]+)\//i }
-      ],
-      extractVersion: true,
-      cveRisk: 'low'
-    },
-    'Tailwind CSS': {
-      category: 'UI frameworks',
-      checks: [
-        { type: 'html', pattern: /tailwindcss|cdn\.tailwindcss\.com/i },
-        { type: 'html', pattern: /class="[^"]*(?:flex|grid|p-\d|m-\d|text-[a-z]+-\d{3}|bg-[a-z]+-\d{3}|rounded-(?:lg|xl|2xl)|shadow-[a-z]+)[^"]*"/i },
-        { type: 'script', pattern: /tailwindcss/i },
-        { type: 'html', pattern: /\/tailwindcss@([\d.]+)\//i }
-      ],
-      cveRisk: 'none'
-    },
-    'Chakra UI': {
-      category: 'UI frameworks',
-      checks: [
-        { type: 'html', pattern: /chakra-ui|@chakra-ui/i },
-        { type: 'html', pattern: /css-[a-z0-9]{6,8}.*chakra/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Material UI': {
-      category: 'UI frameworks',
-      checks: [
-        { type: 'html', pattern: /MuiButton|MuiGrid|@mui\/material/i },
-        { type: 'html', pattern: /MuiPaper-root|MuiTypography/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Ant Design': {
-      category: 'UI frameworks',
-      checks: [
-        { type: 'html', pattern: /ant-design|antd(?:\.min)?\.css|ant-btn/i },
-        { type: 'script', pattern: /\/antd(?:@[\d.]+)?\//i }
-      ],
-      cveRisk: 'none'
-    },
-    'Bulma': {
-      category: 'UI frameworks',
-      checks: [
-        { type: 'html', pattern: /bulma(?:\.min)?\.css|\/bulma@/i },
-        { type: 'html', pattern: /class="[^"]*(?:is-primary|is-danger|is-info|column is-)[^"]*"/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Foundation': {
-      category: 'UI frameworks',
-      checks: [
-        { type: 'html', pattern: /foundation(?:\.min)?\.(css|js)|zurb-foundation/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Semantic UI': {
-      category: 'UI frameworks',
-      checks: [
-        { type: 'html', pattern: /semantic(?:\.min)?\.(css|js)|semantic-ui-react/i },
-        { type: 'html', pattern: /class="[^"]*ui (button|container|grid|menu|segment)[^"]*"/i }
-      ],
-      cveRisk: 'none'
-    },
-
-    // ── JAVASCRIPT LIBRARIES ─────────────────────────────────
-    'jQuery': {
-      category: 'JavaScript libraries',
-      checks: [
-        { type: 'html', pattern: /jquery[.-]([\d.]+)(?:\.slim)?(?:\.min)?\.js/i },
-        { type: 'html', pattern: /\/jquery@([\d.]+)\//i },
-        { type: 'html', pattern: /ajax\.googleapis\.com\/ajax\/libs\/jquery\/([\d.]+)/i },
-        { type: 'html', pattern: /code\.jquery\.com\/jquery-([\d.]+)/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'medium'
-    },
-    'Lodash': {
-      category: 'JavaScript libraries',
-      checks: [
-        { type: 'html', pattern: /lodash(?:\.min)?\.js|lodash\.core/i },
-        { type: 'html', pattern: /\/lodash@([\d.]+)\//i }
-      ],
-      extractVersion: true,
-      cveRisk: 'low'
-    },
-    'Underscore.js': {
-      category: 'JavaScript libraries',
-      checks: [
-        { type: 'html', pattern: /underscore(?:\.min)?\.js/i },
-        { type: 'html', pattern: /\/underscore@([\d.]+)\//i }
-      ],
-      cveRisk: 'low'
-    },
-    'Moment.js': {
-      category: 'JavaScript libraries',
-      checks: [
-        { type: 'html', pattern: /moment(?:\.min)?\.js|moment-timezone/i },
-        { type: 'html', pattern: /\/moment@([\d.]+)\//i }
-      ],
-      cveRisk: 'medium'
-    },
-    'D3.js': {
-      category: 'JavaScript libraries',
-      checks: [
-        { type: 'html', pattern: /d3(?:\.v\d+)?(?:\.min)?\.js/i },
-        { type: 'html', pattern: /\/d3@([\d.]+)\//i }
-      ],
-      cveRisk: 'none'
-    },
-    'Three.js': {
-      category: 'JavaScript libraries',
-      checks: [
-        { type: 'html', pattern: /three(?:\.min)?\.js|THREE\.WebGLRenderer/i },
-        { type: 'html', pattern: /\/three@([\d.]+)\//i }
-      ],
-      cveRisk: 'none'
-    },
-    'Framer Motion': {
-      category: 'JavaScript libraries',
-      checks: [
-        { type: 'html', pattern: /framer-motion|framer\/motion/i },
-        { type: 'html', pattern: /\/framer-motion@([\d.]+)\//i }
-      ],
-      cveRisk: 'none'
-    },
-    'GSAP': {
-      category: 'JavaScript libraries',
-      checks: [
-        { type: 'html', pattern: /gsap(?:\.min)?\.js|TweenMax|TweenLite/i },
-        { type: 'html', pattern: /\/gsap@([\d.]+)\//i }
-      ],
-      cveRisk: 'none'
-    },
-    'Axios': {
-      category: 'JavaScript libraries',
-      checks: [
-        { type: 'html', pattern: /axios(?:\.min)?\.js/i },
-        { type: 'html', pattern: /\/axios@([\d.]+)\//i }
-      ],
-      cveRisk: 'low'
-    },
-    'styled-components': {
-      category: 'JavaScript libraries',
-      checks: [
-        { type: 'html', pattern: /styled-components|sc-[a-z]{6,10}\s/i },
-        { type: 'html', pattern: /\/styled-components@([\d.]+)\//i }
-      ],
-      extractVersion: true,
-      cveRisk: 'none'
-    },
-    'Emotion': {
-      category: 'JavaScript libraries',
-      checks: [
-        { type: 'html', pattern: /@emotion\/react|@emotion\/styled|css-[a-z0-9]{6}/i },
-        { type: 'html', pattern: /\/emotion@([\d.]+)\//i }
-      ],
-      cveRisk: 'none'
-    },
-    'lit-html': {
-      category: 'JavaScript libraries',
-      checks: [
-        { type: 'html', pattern: /lit-html|lit-element|@lit\/reactive-element/i },
-        { type: 'script', pattern: /\/lit(?:-html|-element)?(?:@[\d.]+)?\/dist/i }
-      ],
-      cveRisk: 'none'
-    },
-    'MobX': {
-      category: 'JavaScript libraries',
-      checks: [
-        { type: 'html', pattern: /mobx(?:-react)?(?:\.min)?\.js/i },
-        { type: 'html', pattern: /\/mobx@([\d.]+)\//i }
-      ],
-      cveRisk: 'none'
-    },
-    'Redux': {
-      category: 'JavaScript libraries',
-      checks: [
-        { type: 'html', pattern: /redux(?:\.min)?\.js|react-redux|@reduxjs\/toolkit/i },
-        { type: 'html', pattern: /\/redux@([\d.]+)\//i }
-      ],
-      cveRisk: 'none'
-    },
-    'core-js': {
-      category: 'JavaScript libraries',
-      checks: [
-        { type: 'html', pattern: /core-js(?:\/stable)?\/|core-js@([\d.]+)/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'none'
-    },
-
-    // ── CMS ───────────────────────────────────────────────────
-    'WordPress': {
-      category: 'CMS',
-      checks: [
-        { type: 'html', pattern: /\/wp-content\/|wp-includes/i },
-        { type: 'html', pattern: /<meta\s+name="generator"\s+content="WordPress\s*([\d.]+)?/i },
-        { type: 'header', name: 'link', pattern: /\/wp-json\//i },
-        { type: 'cookie', pattern: /wordpress_[a-f0-9]+|wp-settings-/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'high'
-    },
-    'Drupal': {
-      category: 'CMS',
-      checks: [
-        { type: 'html', pattern: /drupal(?:\.js)?|Drupal\.settings|sites\/all\/(?:themes|modules)/i },
-        { type: 'header', name: 'x-generator', pattern: /Drupal\s*([\d.]+)?/i },
-        { type: 'cookie', pattern: /^SESS[a-f0-9]{32}$/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'high'
-    },
-    'Joomla': {
-      category: 'CMS',
-      checks: [
-        { type: 'html', pattern: /\/media\/jui\/|Joomla\.JText/i },
-        { type: 'html', pattern: /<meta\s+name="generator"\s+content="Joomla/i },
-        { type: 'cookie', pattern: /^[a-f0-9]{32}$/ }
-      ],
-      extractVersion: true,
-      cveRisk: 'high'
-    },
-    'Ghost': {
-      category: 'CMS',
-      checks: [
-        { type: 'html', pattern: /ghost\.io|content\/themes\/ghost-theme/i },
-        { type: 'html', pattern: /<meta\s+name="generator"\s+content="Ghost\s*([\d.]+)?/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'low'
-    },
-    'Wix': {
-      category: 'CMS',
-      checks: [
-        { type: 'html', pattern: /wix\.com|wixstatic\.com/i },
-        { type: 'html', pattern: /_wix_browser_|WixBiSession/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Squarespace': {
-      category: 'CMS',
-      checks: [
-        { type: 'html', pattern: /squarespace\.com|sqsp-theme/i },
-        { type: 'html', pattern: /"squarespace"|\bSquarespace\b/i }
-      ],
-      cveRisk: 'none'
-    },
-
-    // ── E-COMMERCE ────────────────────────────────────────────
-    'Shopify': {
-      category: 'Ecommerce',
-      checks: [
-        { type: 'html', pattern: /cdn\.shopify\.com|Shopify\.theme/i },
-        { type: 'html', pattern: /shopify-features|shopifycloud\.com/i },
-        { type: 'header', name: 'x-shopid', pattern: /.+/ },
-        { type: 'header', name: 'x-shopify-stage', pattern: /.+/ }
-      ],
-      cveRisk: 'low'
-    },
-    'WooCommerce': {
-      category: 'Ecommerce',
-      checks: [
-        { type: 'html', pattern: /\/wp-content\/plugins\/woocommerce\//i },
-        { type: 'html', pattern: /woocommerce-cart|wc-block-/i },
-        { type: 'cookie', pattern: /woocommerce_cart_hash|wc_session/i }
-      ],
-      cveRisk: 'medium'
-    },
-    'Magento': {
-      category: 'Ecommerce',
-      checks: [
-        { type: 'html', pattern: /mage\//i },
-        { type: 'html', pattern: /Mage\.Cookies|skin\/frontend\/|frontend\/default/i },
-        { type: 'cookie', pattern: /^frontend$/i }
-      ],
-      cveRisk: 'high'
-    },
-    'BigCommerce': {
-      category: 'Ecommerce',
-      checks: [
-        { type: 'html', pattern: /bigcommerce\.com|cdn\.bigcommerce\.com/i },
-        { type: 'html', pattern: /BCData|window\.__BCStencilSettings/i }
-      ],
-      cveRisk: 'none'
-    },
-    'PrestaShop': {
-      category: 'Ecommerce',
-      checks: [
-        { type: 'html', pattern: /prestashop|presta-shop|PrestaShop/i },
-        { type: 'cookie', pattern: /PrestaShop-/i }
-      ],
-      cveRisk: 'medium'
-    },
-
-    // ── PAYMENT PROCESSORS ────────────────────────────────────
-    'Stripe': {
-      category: 'Payment processors',
-      checks: [
-        { type: 'html', pattern: /js\.stripe\.com|stripe-js/i },
-        { type: 'html', pattern: /Stripe\s*\(/i },
-        { type: 'script', pattern: /js\.stripe\.com/i }
-      ],
-      cveRisk: 'none'
-    },
-    'PayPal': {
-      category: 'Payment processors',
-      checks: [
-        { type: 'html', pattern: /paypal\.com\/sdk|paypal-button/i },
-        { type: 'script', pattern: /paypal\.com\/sdk\/js/i },
-        { type: 'html', pattern: /PAYPAL\.apps\.DualFlow|paypal-checkout/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Klarna': {
-      category: 'Payment processors',
-      checks: [
-        { type: 'html', pattern: /klarna(?:-checkout)?\.js|klarna\.com/i },
-        { type: 'script', pattern: /klarna\.com.*\/js\/klarna/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Square': {
-      category: 'Payment processors',
-      checks: [
-        { type: 'html', pattern: /squareup\.com|web-payments-sdk/i },
-        { type: 'script', pattern: /js\.squareupsandbox\.com|js\.squareup\.com/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Braintree': {
-      category: 'Payment processors',
-      checks: [
-        { type: 'html', pattern: /braintree(?:-web)?\.js|braintreegateway\.com/i },
-        { type: 'script', pattern: /js\.braintreegateway\.com/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Adyen': {
-      category: 'Payment processors',
-      checks: [
-        { type: 'html', pattern: /adyen\.com|adyen-checkout/i },
-        { type: 'script', pattern: /checkoutshopper-live\.adyen\.com/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Google Pay': {
-      category: 'Payment processors',
-      checks: [
-        { type: 'html', pattern: /pay\.google\.com\/gp\/p\/js\/pay\.js|google-pay/i },
-        { type: 'script', pattern: /pay\.google\.com.*\/pay\.js/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Apple Pay': {
-      category: 'Payment processors',
-      checks: [
-        { type: 'html', pattern: /apple-pay-button|ApplePaySession/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Plaid': {
-      category: 'Payment processors',
-      checks: [
-        { type: 'html', pattern: /cdn\.plaid\.com|plaid-link/i },
-        { type: 'script', pattern: /cdn\.plaid\.com\/link/i }
-      ],
-      cveRisk: 'none'
-    },
-
-    // ── ANALYTICS & DATA ─────────────────────────────────────
-    'Google Analytics': {
-      category: 'Analytics',
-      checks: [
-        { type: 'html', pattern: /google-analytics\.com\/analytics\.js|UA-\d+-\d+/i },
-        { type: 'html', pattern: /gtag\.js\?id=G-[A-Z0-9]+|G-[A-Z0-9]{6,12}/i },
-        { type: 'html', pattern: /googletagmanager\.com\/gtag\/js/i },
-        { type: 'script', pattern: /google-analytics\.com|googletagmanager\.com\/gtag/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Google Tag Manager': {
-      category: 'Tag managers',
-      checks: [
-        { type: 'html', pattern: /googletagmanager\.com\/gtm\.js\?id=GTM-/i },
-        { type: 'html', pattern: /GTM-[A-Z0-9]{6,8}/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Segment': {
-      category: 'Customer data platform',
-      checks: [
-        { type: 'html', pattern: /cdn\.segment\.com|analytics\.identify/i },
-        { type: 'html', pattern: /window\.analytics(?:\.load)?\s*\(/i },
-        { type: 'script', pattern: /cdn\.segment\.com\/analytics\.js/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Mixpanel': {
-      category: 'Analytics',
-      checks: [
-        { type: 'html', pattern: /cdn\.mxpnl\.com|mixpanel(?:\.min)?\.js/i },
-        { type: 'html', pattern: /mixpanel\.track|mixpanel\.identify/i },
-        { type: 'script', pattern: /cdn\.mxpnl\.com\/libs\/mixpanel/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Hotjar': {
-      category: 'Analytics',
-      checks: [
-        { type: 'html', pattern: /static\.hotjar\.com|hj\.id|hjid\s*:/i },
-        { type: 'script', pattern: /static\.hotjar\.com\/c\/hotjar/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Amplitude': {
-      category: 'Analytics',
-      checks: [
-        { type: 'html', pattern: /cdn\.amplitude\.com|amplitude(?:\.min)?\.js/i },
-        { type: 'script', pattern: /cdn\.amplitude\.com\/libs/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Plausible': {
-      category: 'Analytics',
-      checks: [
-        { type: 'html', pattern: /plausible\.io\/js|data-domain="[^"]+" src="[^"]*plausible/i },
-        { type: 'script', pattern: /plausible\.io\/js\/plausible/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Intercom': {
-      category: 'Live chat',
-      checks: [
-        { type: 'html', pattern: /widget\.intercom\.io|Intercom\s*\(|window\.intercomSettings/i },
-        { type: 'script', pattern: /widget\.intercom\.io/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Zendesk': {
-      category: 'Live chat',
-      checks: [
-        { type: 'html', pattern: /ekr\.zdassets\.com|zendesk\.com\/embeddables/i },
-        { type: 'script', pattern: /static\.zdassets\.com\/ekr/i }
-      ],
-      cveRisk: 'none'
-    },
-
-    // ── AUTHENTICATION ────────────────────────────────────────
-    'Auth0': {
-      category: 'Authentication',
-      checks: [
-        { type: 'html', pattern: /cdn\.auth0\.com|auth0(?:\.min)?\.js/i },
-        { type: 'html', pattern: /auth0\.WebAuth/i },
-        { type: 'script', pattern: /cdn\.auth0\.com\/js/i }
-      ],
-      cveRisk: 'low'
-    },
-    'Firebase': {
-      category: 'Authentication',
-      checks: [
-        { type: 'html', pattern: /firebaseapp\.com|firebase(?:io\.com)?|gstatic\.com\/firebasejs/i },
-        { type: 'html', pattern: /initializeApp.*firebase/i },
-        { type: 'script', pattern: /gstatic\.com\/firebasejs\/([\d.]+)/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'none'
-    },
-    'Google Sign-in': {
-      category: 'Authentication',
-      checks: [
-        { type: 'html', pattern: /accounts\.google\.com\/gsi\/client|google-signin-client/i },
-        { type: 'script', pattern: /accounts\.google\.com\/gsi\/client/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Facebook Login': {
-      category: 'Authentication',
-      checks: [
-        { type: 'html', pattern: /connect\.facebook\.net.*all\.js|FB\.init/i },
-        { type: 'script', pattern: /connect\.facebook\.net\/[a-z_]+\/all\.js/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Apple Sign-in': {
-      category: 'Authentication',
-      checks: [
-        { type: 'html', pattern: /appleid\.apple\.com.*auth|sign-in-with-apple/i },
-        { type: 'script', pattern: /appleid\.apple\.com\/auth\/auth\.js/i }
-      ],
-      cveRisk: 'none'
-    },
-
-    // ── WEB SERVERS ──────────────────────────────────────────
-    'Nginx': {
-      category: 'Web servers',
-      checks: [
-        { type: 'header', name: 'server', pattern: /nginx(?:\/([\d.]+))?/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'medium'
-    },
-    'Apache HTTP Server': {
-      category: 'Web servers',
-      checks: [
-        { type: 'header', name: 'server', pattern: /Apache(?:\/([\d.]+))?(?:\s+\([^)]*\))?/i },
-        { type: 'header', name: 'server', pattern: /httpd(?:\/([\d.]+))?/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'medium'
-    },
-    'Microsoft IIS': {
-      category: 'Web servers',
-      checks: [
-        { type: 'header', name: 'server', pattern: /Microsoft-IIS(?:\/([\d.]+))?/i },
-        { type: 'header', name: 'x-powered-by', pattern: /ASP\.NET/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'medium'
-    },
-    'Caddy': {
-      category: 'Web servers',
-      checks: [
-        { type: 'header', name: 'server', pattern: /Caddy(?:\/([\d.]+))?/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'low'
-    },
-    'LiteSpeed': {
-      category: 'Web servers',
-      checks: [
-        { type: 'header', name: 'server', pattern: /LiteSpeed(?:\/([\d.]+))?/i },
-        { type: 'header', name: 'x-litespeed-cache', pattern: /.+/ }
-      ],
-      extractVersion: true,
-      cveRisk: 'low'
-    },
-    'Gunicorn': {
-      category: 'Web servers',
-      checks: [
-        { type: 'header', name: 'server', pattern: /gunicorn(?:\/([\d.]+))?/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'low'
-    },
-
-    // ── CDN / REVERSE PROXIES ────────────────────────────────
-    'Cloudflare': {
-      category: 'CDN',
-      checks: [
-        { type: 'header', name: 'cf-ray', pattern: /.+/ },
-        { type: 'header', name: 'server', pattern: /^cloudflare$/i },
-        { type: 'header', name: 'cf-cache-status', pattern: /.+/ },
-        { type: 'header', name: 'cf-request-id', pattern: /.+/ }
-      ],
-      cveRisk: 'none'
-    },
-    'Fastly': {
-      category: 'CDN',
-      checks: [
-        { type: 'header', name: 'x-served-by', pattern: /cache-[a-z]+/i },
-        { type: 'header', name: 'x-cache', pattern: /.+/ },
-        { type: 'header', name: 'fastly-restarts', pattern: /.+/ },
-        { type: 'header', name: 'via', pattern: /varnish/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Akamai': {
-      category: 'CDN',
-      checks: [
-        { type: 'header', name: 'x-check-cacheable', pattern: /.+/ },
-        { type: 'header', name: 'server', pattern: /AkamaiGHost/i },
-        { type: 'header', name: 'x-akamai-transformed', pattern: /.+/ }
-      ],
-      cveRisk: 'none'
-    },
-    'AWS CloudFront': {
-      category: 'CDN',
-      checks: [
-        { type: 'header', name: 'x-amz-cf-id', pattern: /.+/ },
-        { type: 'header', name: 'via', pattern: /CloudFront/i },
-        { type: 'header', name: 'x-amz-cf-pop', pattern: /.+/ }
-      ],
-      cveRisk: 'none'
-    },
-    'jsDelivr': {
-      category: 'CDN',
-      checks: [
-        { type: 'html', pattern: /cdn\.jsdelivr\.net|jsDelivr/i },
-        { type: 'script', pattern: /cdn\.jsdelivr\.net\/npm/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Vercel': {
-      category: 'PaaS',
-      checks: [
-        { type: 'header', name: 'x-vercel-id', pattern: /.+/ },
-        { type: 'header', name: 'server', pattern: /Vercel/i },
-        { type: 'header', name: 'x-vercel-cache', pattern: /.+/ }
-      ],
-      cveRisk: 'none'
-    },
-    'Netlify': {
-      category: 'PaaS',
-      checks: [
-        { type: 'header', name: 'x-nf-request-id', pattern: /.+/ },
-        { type: 'header', name: 'server', pattern: /Netlify/i },
-        { type: 'header', name: 'netlify-vary', pattern: /.+/ }
-      ],
-      cveRisk: 'none'
-    },
-    'Amazon Web Services': {
-      category: 'PaaS',
-      checks: [
-        { type: 'header', name: 'x-amz-request-id', pattern: /.+/ },
-        { type: 'header', name: 'x-amz-id-2', pattern: /.+/ },
-        { type: 'html', pattern: /amazonaws\.com|aws-amplify\.github\.io/i },
-        { type: 'cookie', pattern: /^aws-userInfo$|^amplify-signin-with-hostedUI$/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Atlassian Statuspage': {
-      category: 'PaaS',
-      checks: [
-        { type: 'html', pattern: /statuspage\.io|atlassian-statuspage/i },
-        { type: 'script', pattern: /statuspage\.io/i }
-      ],
-      cveRisk: 'none'
-    },
-
-    // ── BACKEND LANGUAGES ─────────────────────────────────────
-    'PHP': {
-      category: 'Programming languages',
-      checks: [
-        { type: 'header', name: 'x-powered-by', pattern: /PHP(?:\/([\d.]+))?/i },
-        { type: 'cookie', pattern: /^PHPSESSID$/i },
-        { type: 'html', pattern: /\.php(?:[?#]|")/i },
-        { type: 'html', pattern: /action="[^"]+\.php"/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'high'
-    },
-    'Node.js': {
-      category: 'Programming languages',
-      checks: [
-        { type: 'header', name: 'x-powered-by', pattern: /Express/i },
-        { type: 'cookie', pattern: /connect\.sid/i },
-        { type: 'header', name: 'server', pattern: /Node\.js/i }
-      ],
-      cveRisk: 'low'
-    },
-    'Python': {
-      category: 'Programming languages',
-      checks: [
-        { type: 'header', name: 'x-powered-by', pattern: /Python|Django|Flask|FastAPI/i },
-        { type: 'header', name: 'server', pattern: /Python\/|gunicorn|uvicorn|waitress/i },
-        { type: 'cookie', pattern: /^csrftoken$|^sessionid$/ }
-      ],
-      cveRisk: 'low'
-    },
-    'Ruby': {
-      category: 'Programming languages',
-      checks: [
-        { type: 'header', name: 'x-powered-by', pattern: /Phusion Passenger|Rack/i },
-        { type: 'header', name: 'server', pattern: /Phusion Passenger(?:\s+([\d.]+))?/i },
-        { type: 'cookie', pattern: /^_session_id$|^rack\.session$/i }
-      ],
-      cveRisk: 'low'
-    },
-    'Java': {
-      category: 'Programming languages',
-      checks: [
-        { type: 'cookie', pattern: /^JSESSIONID$/i },
-        { type: 'header', name: 'x-powered-by', pattern: /JSP|Servlet|Java EE/i },
-        { type: 'header', name: 'server', pattern: /Apache Tomcat\/([\d.]+)/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'medium'
-    },
-
-    // ── FONTS & ICONS ─────────────────────────────────────────
-    'Google Fonts': {
-      category: 'Font scripts',
-      checks: [
-        { type: 'html', pattern: /fonts\.googleapis\.com\/css|fonts\.gstatic\.com/i },
-        { type: 'html', pattern: /href="https:\/\/fonts\.googleapis\.com/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Font Awesome': {
-      category: 'Font scripts',
-      checks: [
-        { type: 'html', pattern: /font-awesome|fontawesome|fa-(?:solid|brands|regular)|kit\.fontawesome\.com/i },
-        { type: 'html', pattern: /\/font-awesome@([\d.]+)\//i },
-        { type: 'script', pattern: /kit\.fontawesome\.com/i }
-      ],
-      extractVersion: true,
-      cveRisk: 'none'
-    },
-    'Material Icons': {
-      category: 'Font scripts',
-      checks: [
-        { type: 'html', pattern: /fonts\.googleapis\.com\/icon\?family=Material/i },
-        { type: 'html', pattern: /material-symbols-outlined|material-icons/i }
-      ],
-      cveRisk: 'none'
-    },
-
-    // ── JAVASCRIPT GRAPHICS ──────────────────────────────────
-    'Highcharts': {
-      category: 'JavaScript graphics',
-      checks: [
-        { type: 'html', pattern: /highcharts(?:\.js|\.src\.js|\.min\.js)/i },
-        { type: 'html', pattern: /\/highcharts@([\d.]+)\//i }
-      ],
-      extractVersion: true,
-      cveRisk: 'none'
-    },
-    'Chart.js': {
-      category: 'JavaScript graphics',
-      checks: [
-        { type: 'html', pattern: /chart(?:\.min)?\.js|Chart\.register/i },
-        { type: 'html', pattern: /\/chart\.js@([\d.]+)\//i }
-      ],
-      cveRisk: 'none'
-    },
-    'Recharts': {
-      category: 'JavaScript graphics',
-      checks: [
-        { type: 'html', pattern: /recharts(?:\.js)?/i },
-        { type: 'html', pattern: /\/recharts@([\d.]+)\//i }
-      ],
-      cveRisk: 'none'
-    },
-
-    // ── EMAIL MARKETING ──────────────────────────────────────
-    'Mailchimp': {
-      category: 'Email',
-      checks: [
-        { type: 'html', pattern: /mailchimp|chimpified|cdn-images\.mailchimp\.com/i },
-        { type: 'script', pattern: /chimpified\.com|mailchimp\.com/i }
-      ],
-      cveRisk: 'none'
-    },
-    'Klaviyo': {
-      category: 'Email',
-      checks: [
-        { type: 'html', pattern: /klaviyo(?:\.js)?|static\.klaviyo\.com/i },
-        { type: 'script', pattern: /static\.klaviyo\.com\/onsite/i }
-      ],
-      cveRisk: 'none'
-    }
-  };
 
   const WebAuditing = {
     activeToolId: 'headers',
@@ -12083,11 +11123,200 @@ document.addEventListener("DOMContentLoaded", () => {
       this.switchTool('headers', false); // default tool
     },
 
+    updateAuditorFilterControls(toolId) {
+      const container = document.getElementById('wa-filter-controls-container');
+      if (!container) return;
+
+      this.activeFilters = this.activeFilters || new Set();
+      this.activeFilters.clear();
+
+      const toolFilters = {
+        headers: [
+          { label: 'Missing', status: 'missing', type: 'danger' },
+          { label: 'Misconfigured', status: 'misconfigured', type: 'warning' },
+          { label: 'Present / Secure', status: 'present', type: 'success' }
+        ],
+        links: [
+          { label: 'Broken Links', status: 'broken', type: 'danger' },
+          { label: 'Mixed Content', status: 'mixed', type: 'warning' },
+          { label: 'Scripts', status: 'scripts', type: 'info' },
+          { label: 'Images', status: 'images', type: 'info' }
+        ],
+        email: [
+          { label: 'Missing Defenses', status: 'missing', type: 'danger' },
+          { label: 'Weak Policies', status: 'warning', type: 'warning' },
+          { label: 'Secure Policies', status: 'passed', type: 'success' }
+        ],
+        ssl: [
+          { label: 'Failed Checks', status: 'failed', type: 'danger' },
+          { label: 'Warnings', status: 'warning', type: 'warning' },
+          { label: 'Passed Checks', status: 'passed', type: 'success' }
+        ],
+        phishing: [
+          { label: 'Flagged Heuristics', status: 'flagged', type: 'danger' },
+          { label: 'Passed Checks', status: 'passed', type: 'success' }
+        ],
+        'dns-spoof': [
+          { label: 'Failed Checks', status: 'failed', type: 'danger' },
+          { label: 'Passed Checks', status: 'passed', type: 'success' }
+        ]
+      };
+
+      const filters = toolFilters[toolId] || [];
+
+      let html = `<span class="text-sm text-slate-400 w-full sm:w-auto mb-1 sm:mb-0">Filter:</span>`;
+      
+      filters.forEach(f => {
+        html += `
+          <button data-status="${f.status}" data-type="${f.type}" class="filter-pill px-3 sm:px-4 py-2 rounded-full text-xs font-bold transition-all bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10">
+            ${f.label}
+          </button>
+        `;
+      });
+
+      html += `
+        <button id="wa-clear-filters-btn" class="sm:ml-auto text-xs text-slate-400 hover:text-white transition-colors">Clear Filters</button>
+        <button id="wa-clear-results-btn" class="btn-clear-history">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6M14 11v6" />
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+            </svg>
+            Clear Results
+        </button>
+      `;
+
+      container.innerHTML = html;
+
+      const buttons = container.querySelectorAll('.filter-pill');
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const status = btn.dataset.status;
+          if (this.activeFilters.has(status)) {
+            this.activeFilters.delete(status);
+          } else {
+            this.activeFilters.add(status);
+          }
+          this.updateFilterPillsUI();
+          this.applyAuditorFilters();
+        });
+      });
+
+      const clearBtn = container.querySelector('#wa-clear-filters-btn');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          this.activeFilters.clear();
+          this.updateFilterPillsUI();
+          this.applyAuditorFilters();
+        });
+      }
+
+      const clearResultsBtn = container.querySelector('#wa-clear-results-btn');
+      if (clearResultsBtn) {
+        clearResultsBtn.addEventListener('click', () => {
+          this.clearActiveToolResults();
+        });
+      }
+    },
+
+    updateFilterPillsUI() {
+      const container = document.getElementById('wa-filter-controls-container');
+      if (!container) return;
+
+      const buttons = container.querySelectorAll('.filter-pill');
+      buttons.forEach(btn => {
+        const status = btn.dataset.status;
+        const type = btn.dataset.type;
+
+        const activeClassMap = {
+          danger: 'active-critical',
+          warning: 'active-warning',
+          info: 'active-info',
+          success: 'active-success'
+        };
+
+        const activeClass = activeClassMap[type] || 'active-info';
+
+        btn.classList.remove('active-critical', 'active-warning', 'active-info', 'active-success');
+
+        if (this.activeFilters.has(status)) {
+          btn.classList.add(activeClass);
+        }
+      });
+    },
+
+    applyAuditorFilters() {
+      const bodyEl = document.getElementById('wa-results-body');
+      if (!bodyEl) return;
+
+      const toolId = this.activeToolId;
+      const filtersActive = this.activeFilters && this.activeFilters.size > 0;
+
+      if (toolId === 'headers') {
+        const items = bodyEl.querySelectorAll('.wa-header-item');
+        items.forEach(el => {
+          if (!filtersActive) {
+            el.style.display = '';
+          } else {
+            const status = el.dataset.status;
+            if (this.activeFilters.has(status)) {
+              el.style.display = '';
+            } else {
+              el.style.display = 'none';
+            }
+          }
+        });
+      } else if (toolId === 'links') {
+        const rows = bodyEl.querySelectorAll('.wa-link-resource-row');
+        rows.forEach(el => {
+          if (!filtersActive) {
+            el.style.display = 'flex';
+          } else {
+            const cat = el.dataset.category;
+            if (this.activeFilters.has(cat)) {
+              el.style.display = 'flex';
+            } else {
+              el.style.display = 'none';
+            }
+          }
+        });
+      } else if (['email', 'ssl', 'phishing', 'dns-spoof'].includes(toolId)) {
+        const items = bodyEl.querySelectorAll('.wa-legacy-item');
+        items.forEach(el => {
+          if (!filtersActive) {
+            el.style.display = '';
+          } else {
+            const status = el.dataset.status;
+            let show = false;
+            if (this.activeFilters.has(status)) show = true;
+            if (this.activeFilters.has('flagged') && (status === 'failed' || status === 'warning')) show = true;
+            if (this.activeFilters.has('failed') && (status === 'failed' || status === 'warning')) show = true;
+            el.style.display = show ? '' : 'none';
+          }
+        });
+      }
+    },
+
+    clearActiveToolResults() {
+      if (typeof clearResults === 'function') {
+        clearResults();
+      }
+      this.headersResults = null;
+      this.linksResults = null;
+      this.emailResults = null;
+      const tools = ['headers', 'links', 'email', 'ssl', 'phishing', 'dns-spoof'];
+      tools.forEach(t => {
+        this.setToolStatus(t, 'idle');
+      });
+      this.renderCurrentToolView();
+    },
+
     switchTool(toolId, openModal = true) {
       this.activeToolId = toolId;
       
       // Update left panel active class
-      const tabs = ['headers', 'links', 'tech', 'ssl', 'phishing', 'dns-spoof'];
+      const tabs = ['headers', 'links', 'email', 'ssl', 'phishing', 'dns-spoof'];
       tabs.forEach(t => {
         const el = document.getElementById(`wa-tool-tab-${t}`);
         if (el) {
@@ -12103,7 +11332,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const toolNames = {
         headers: 'HTTP Security Headers Analysis',
         links: 'Link Scanner & Mixed Content',
-        tech: 'Technology Fingerprinting',
+        email: 'Email Security Policy Audit',
         ssl: 'SSL / TLS Certificate Analysis',
         phishing: 'URL Phishing ML Analyzer',
         'dns-spoof': 'DNS Spoofing Detection'
@@ -12111,7 +11340,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const toolDescs = {
         headers: 'Analyze security headers and get an A-F grade',
         links: 'Audit webpage links for mixed content and broken resources',
-        tech: 'Fingerprint technologies, frameworks, servers, and vulnerability CVE risk levels',
+        email: 'Audit SPF and DMARC DNS records to detect email spoofing vulnerabilities',
         ssl: 'Inspect SSL/TLS certificate chains, expiry dates, and cipher suites',
         phishing: 'Run machine-learning risk checks for domain typosquatting & spoofing',
         'dns-spoof': 'Audit resolver lookups and DNSSEC cryptographic signature configurations'
@@ -12124,6 +11353,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Update right panel content
       this.renderCurrentToolView();
+      this.updateAuditorFilterControls(toolId);
 
       // Intercept with dedicated pop-up modal if requested
       if (openModal) {
@@ -12219,9 +11449,9 @@ document.addEventListener("DOMContentLoaded", () => {
         this.renderHeadersResults(this.headersResults.results, this.headersResults.grade, this.headersResults.score, this.headersResults.target);
       } else if (this.activeToolId === 'links' && this.linksResults) {
         this.renderLinksResults(this.linksResults.results, this.linksResults.total, this.linksResults.target);
-      } else if (this.activeToolId === 'tech' && this.techResults) {
-        this.renderTechResults(this.techResults.detected, this.techResults.target);
-      } else if (['ssl', 'phishing', 'dns-spoof'].includes(this.activeToolId)) {
+      } else if (this.activeToolId === 'email' && this.emailResults) {
+        this.renderEmailResults(this.emailResults);
+      } else if (['ssl', 'phishing', 'dns-spoof', 'email'].includes(this.activeToolId)) {
         this.renderLegacyResults();
       }
       
@@ -12235,7 +11465,7 @@ document.addEventListener("DOMContentLoaded", () => {
     },
 
     updateCountBadges() {
-      const tools = ['headers', 'links', 'tech', 'ssl', 'phishing', 'dns-spoof'];
+      const tools = ['headers', 'links', 'email', 'ssl', 'phishing', 'dns-spoof'];
       tools.forEach(t => {
         const badgeEl = document.getElementById(`wa-tool-count-${t}`);
         if (!badgeEl) return;
@@ -12245,8 +11475,8 @@ document.addEventListener("DOMContentLoaded", () => {
           count = this.headersResults.results.filter(r => r.result.status !== 'present').length;
         } else if (t === 'links' && this.linksResults) {
           count = this.linksResults.results.broken.length + this.linksResults.results.mixed.length;
-        } else if (t === 'tech' && this.techResults) {
-          count = this.techResults.detected.filter(tech => tech.cveRisk === 'high').length;
+        } else if (t === 'email' && this.emailResults) {
+          count = (this.emailResults.checks || []).filter(ch => ch.status === 'missing').length;
         } else if (t === 'ssl') {
           const latest = this.getLatestResultForFeature('SSL/TLS Check');
           if (latest) {
@@ -12286,10 +11516,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const bodyEl = document.getElementById('wa-results-body');
       if (!bodyEl) return;
 
+      // Email tool uses its own dedicated renderer
+      if (this.activeToolId === 'email') {
+        return this.renderEmailResults(this.emailResults);
+      }
+
       const featureMap = {
         'ssl': 'SSL/TLS Check',
         'phishing': 'URL Phishing Analyzer',
-        'dns-spoof': 'DNS Spoof Check'
+        'dns-spoof': 'DNS Spoof Check',
+        'email': 'Email Security'
       };
       const feature = featureMap[this.activeToolId];
       const toolResults = resultsData.filter(r => r.feature === feature);
@@ -12347,21 +11583,23 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           return `
-            <div class="wa-header-row" onclick="window.WebAuditing.toggleLegacyDetail('ssl', ${idx})">
-              <span class="wa-header-name" style="font-weight: 600;">${escapeHtml(title)}</span>
-              <span class="wa-header-status ${statusClass}">${statusText}</span>
-              <span style="font-size:12px;color:var(--cg-text-2);font-family:var(--cg-font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-                ${escapeHtml(value)}
-              </span>
-            </div>
-            <div class="wa-header-detail" id="wa-legacy-detail-ssl-${idx}" style="display: none; padding: 16px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--cg-border); font-size: 12px; color: var(--cg-text-2); line-height: 1.5;">
-              <div style="font-weight: 600; color: var(--cg-text-1); margin-bottom: 6px;">Evaluation Check: ${escapeHtml(title)}</div>
-              <div style="margin-bottom: 8px;">Result Status: <span class="font-bold text-${isPassed ? 'green-400' : 'red-400'}">${isPassed ? 'PASSED' : 'ALERT'}</span></div>
-              <div style="margin-bottom: 8px; font-family: var(--cg-font-mono);">${escapeHtml(value)}</div>
-              ${recommendation ? `
-                <div style="margin-top:8px;padding:10px;background:rgba(0,0,0,0.4);border:1px solid var(--cg-border);border-radius:6px;font-family:var(--cg-font-mono);font-size:11px;color:var(--cg-success)">
-                  Recommended Action: ${escapeHtml(recommendation)}
-                </div>` : ''}
+            <div class="wa-legacy-item" data-status="${statusText}">
+              <div class="wa-header-row" onclick="window.WebAuditing.toggleLegacyDetail('ssl', ${idx})">
+                <span class="wa-header-name" style="font-weight: 600;">${escapeHtml(title)}</span>
+                <span class="wa-header-status ${statusClass}">${statusText}</span>
+                <span style="font-size:12px;color:var(--cg-text-2);font-family:var(--cg-font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                  ${escapeHtml(value)}
+                </span>
+              </div>
+              <div class="wa-header-detail" id="wa-legacy-detail-ssl-${idx}" style="display: none; padding: 16px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--cg-border); font-size: 12px; color: var(--cg-text-2); line-height: 1.5;">
+                <div style="font-weight: 600; color: var(--cg-text-1); margin-bottom: 6px;">Evaluation Check: ${escapeHtml(title)}</div>
+                <div style="margin-bottom: 8px;">Result Status: <span class="font-bold text-${isPassed ? 'green-400' : 'red-400'}">${isPassed ? 'PASSED' : 'ALERT'}</span></div>
+                <div style="margin-bottom: 8px; font-family: var(--cg-font-mono);">${escapeHtml(value)}</div>
+                ${recommendation ? `
+                  <div style="margin-top:8px;padding:10px;background:rgba(0,0,0,0.4);border:1px solid var(--cg-border);border-radius:6px;font-family:var(--cg-font-mono);font-size:11px;color:var(--cg-success)">
+                    Recommended Action: ${escapeHtml(recommendation)}
+                  </div>` : ''}
+              </div>
             </div>
           `;
         }).join('');
@@ -12435,12 +11673,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (suspiciousFeatures.length === 0) {
           findingsHtml = `
-            <div class="wa-header-row" style="cursor: default;">
-              <span class="wa-header-name" style="font-weight: 600;">Typosquatting & Spoofing Heuristics</span>
-              <span class="wa-header-status wa-present">passed</span>
-              <span style="font-size:12px;color:var(--cg-text-2);font-family:var(--cg-font-mono);">
-                No suspicious features detected
-              </span>
+            <div class="wa-legacy-item" data-status="passed">
+              <div class="wa-header-row" style="cursor: default;">
+                <span class="wa-header-name" style="font-weight: 600;">Typosquatting & Spoofing Heuristics</span>
+                <span class="wa-header-status wa-present">passed</span>
+                <span style="font-size:12px;color:var(--cg-text-2);font-family:var(--cg-font-mono);">
+                  No suspicious features detected
+                </span>
+              </div>
             </div>
           `;
         } else {
@@ -12478,11 +11718,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const explanation = featureDetails[matchedKey] || "Suspicious URL keyword or syntax detected.";
 
             return `
-              <div class="wa-header-row" onclick="window.WebAuditing.toggleLegacyDetail('phishing', ${idx})">
-                <span class="wa-header-name" style="font-weight: 600;">${escapeHtml(feat)}</span>
-                <span class="wa-header-status ${statusClass}">${statusText}</span>
-                <span style="font-size:12px;color:var(--cg-text-2);font-family:var(--cg-font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-                  ${escapeHtml(explanation.substring(0, 50))}...
                 </span>
               </div>
               <div class="wa-header-detail" id="wa-legacy-detail-phishing-${idx}" style="display: none; padding: 16px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--cg-border); font-size: 12px; color: var(--cg-text-2); line-height: 1.5;">
@@ -12587,21 +11822,23 @@ document.addEventListener("DOMContentLoaded", () => {
           const statusText = isPassed ? 'passed' : (latestResult.status === 'threat' ? 'failed' : 'warning');
 
           return `
-            <div class="wa-header-row" onclick="window.WebAuditing.toggleLegacyDetail('dns-spoof', ${idx})">
-              <span class="wa-header-name" style="font-weight: 600;">${escapeHtml(chk.name)}</span>
-              <span class="wa-header-status ${statusClass}">${statusText}</span>
-              <span style="font-size:12px;color:var(--cg-text-2);font-family:var(--cg-font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-                ${escapeHtml(detailText)}
-              </span>
-            </div>
-            <div class="wa-header-detail" id="wa-legacy-detail-dns-spoof-${idx}" style="display: none; padding: 16px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--cg-border); font-size: 12px; color: var(--cg-text-2); line-height: 1.5;">
-              <div style="font-weight: 600; color: var(--cg-text-1); margin-bottom: 6px;">Evaluation Check: ${escapeHtml(chk.name)}</div>
-              <div style="margin-bottom: 8px;">Audit Status: <span class="font-bold text-${isPassed ? 'green-400' : 'red-400'}">${isPassed ? 'PASSED' : 'ALERT'}</span></div>
-              <div style="margin-bottom: 8px; font-family: var(--cg-font-mono);">${escapeHtml(detailText)}</div>
-              ${!isPassed ? `
-                <div style="margin-top:8px;padding:10px;background:rgba(0,0,0,0.4);border:1px solid var(--cg-border);border-radius:6px;font-family:var(--cg-font-mono);font-size:11px;color:var(--cg-success)">
-                  Recommended Action: ${escapeHtml(remText)}
-                </div>` : ''}
+            <div class="wa-legacy-item" data-status="${statusText}">
+              <div class="wa-header-row" onclick="window.WebAuditing.toggleLegacyDetail('dns-spoof', ${idx})">
+                <span class="wa-header-name" style="font-weight: 600;">${escapeHtml(chk.name)}</span>
+                <span class="wa-header-status ${statusClass}">${statusText}</span>
+                <span style="font-size:12px;color:var(--cg-text-2);font-family:var(--cg-font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                  ${escapeHtml(detailText)}
+                </span>
+              </div>
+              <div class="wa-header-detail" id="wa-legacy-detail-dns-spoof-${idx}" style="display: none; padding: 16px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--cg-border); font-size: 12px; color: var(--cg-text-2); line-height: 1.5;">
+                <div style="font-weight: 600; color: var(--cg-text-1); margin-bottom: 6px;">Evaluation Check: ${escapeHtml(chk.name)}</div>
+                <div style="margin-bottom: 8px;">Audit Status: <span class="font-bold text-${isPassed ? 'green-400' : 'red-400'}">${isPassed ? 'PASSED' : 'ALERT'}</span></div>
+                <div style="margin-bottom: 8px; font-family: var(--cg-font-mono);">${escapeHtml(detailText)}</div>
+                ${!isPassed ? `
+                  <div style="margin-top:8px;padding:10px;background:rgba(0,0,0,0.4);border:1px solid var(--cg-border);border-radius:6px;font-family:var(--cg-font-mono);font-size:11px;color:var(--cg-success)">
+                    Recommended Action: ${escapeHtml(remText)}
+                  </div>` : ''}
+              </div>
             </div>
           `;
         }).join('');
@@ -12668,6 +11905,8 @@ document.addEventListener("DOMContentLoaded", () => {
         
         ${additionalInfoHtml}
       `;
+
+      this.applyAuditorFilters();
 
       if (document.getElementById("wa-auditor-modal") && !document.getElementById("wa-auditor-modal").classList.contains("hidden")) {
         this.renderModalResults(this.activeToolId);
@@ -12917,22 +12156,26 @@ document.addEventListener("DOMContentLoaded", () => {
         
         <div>
           ${results.map((h, i) => `
-            <div class="wa-header-row" onclick="window.WebAuditing.toggleHeaderDetail(${i})">
-              <span class="wa-header-name">${h.label}</span>
-              <span class="wa-header-status wa-${h.result.status}">${h.result.status}</span>
-              <span style="font-size:11px;color:var(--cg-text-2);font-family:var(--cg-font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-                ${h.value || 'not set'}
-              </span>
-            </div>
-            <div class="wa-header-detail" id="wa-hd-${i}">
-              <div style="margin-bottom:6px;color:var(--cg-text-1);font-weight:500">${h.result.detail}</div>
-              ${h.result.fix ? `
-                <div style="margin-top:8px;padding:10px;background:rgba(0,0,0,0.4);border:1px solid var(--cg-border);border-radius:6px;font-family:var(--cg-font-mono);font-size:11px;color:var(--cg-success)">
-                  Recommended Fix: ${h.result.fix}
-                </div>` : ''}
+            <div class="wa-header-item" data-status="${h.result.status}">
+              <div class="wa-header-row" onclick="window.WebAuditing.toggleHeaderDetail(${i})">
+                <span class="wa-header-name">${h.label}</span>
+                <span class="wa-header-status wa-${h.result.status}">${h.result.status}</span>
+                <span style="font-size:11px;color:var(--cg-text-2);font-family:var(--cg-font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                  ${h.value || 'not set'}
+                </span>
+              </div>
+              <div class="wa-header-detail" id="wa-hd-${i}">
+                <div style="margin-bottom:6px;color:var(--cg-text-1);font-weight:500">${h.result.detail}</div>
+                ${h.result.fix ? `
+                  <div style="margin-top:8px;padding:10px;background:rgba(0,0,0,0.4);border:1px solid var(--cg-border);border-radius:6px;font-family:var(--cg-font-mono);font-size:11px;color:var(--cg-success)">
+                    Recommended Fix: ${h.result.fix}
+                  </div>` : ''}
+              </div>
             </div>
           `).join('')}
         </div>`;
+
+      this.applyAuditorFilters();
 
       if (document.getElementById("wa-auditor-modal") && !document.getElementById("wa-auditor-modal").classList.contains("hidden")) {
         this.renderModalResults('headers');
@@ -13102,6 +12345,28 @@ document.addEventListener("DOMContentLoaded", () => {
       const bodyEl = document.getElementById('wa-results-body');
       if (!bodyEl) return;
 
+      const allResources = [];
+      results.broken.forEach(r => allResources.push({ ...r, category: 'broken', statusText: `Broken (${r.status})`, statusClass: 'wa-status-missing' }));
+      results.mixed.forEach(r => allResources.push({ ...r, category: 'mixed', statusText: 'Insecure HTTPS', statusClass: 'wa-status-misconfigured' }));
+      results.ok.forEach(r => {
+        if (r.type === 'Script') {
+          allResources.push({ ...r, category: 'scripts', statusText: 'Script', statusClass: 'wa-status-present' });
+        } else if (r.type === 'Image') {
+          allResources.push({ ...r, category: 'images', statusText: 'Image', statusClass: 'wa-status-present' });
+        } else {
+          allResources.push({ ...r, category: 'ok', statusText: r.type || 'Resource', statusClass: 'wa-status-present' });
+        }
+      });
+      results.redirects.forEach(r => {
+        if (r.type === 'Script') {
+          allResources.push({ ...r, category: 'scripts', statusText: `Redirect (${r.status})`, statusClass: 'wa-status-present' });
+        } else if (r.type === 'Image') {
+          allResources.push({ ...r, category: 'images', statusText: `Redirect (${r.status})`, statusClass: 'wa-status-present' });
+        } else {
+          allResources.push({ ...r, category: 'redirects', statusText: `Redirect (${r.status})`, statusClass: 'wa-status-present' });
+        }
+      });
+
       bodyEl.innerHTML = `
         <div style="margin-bottom:16px">
           <div style="font-size:13px;color:var(--cg-text-2);margin-bottom:8px">
@@ -13122,14 +12387,18 @@ document.addEventListener("DOMContentLoaded", () => {
         <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div style="padding:16px;background:var(--cg-bg-surface);border-radius:8px;border:1px solid var(--cg-border)">
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--cg-text-3);margin-bottom:10px">
-              Mixed Content Warnings
+              Resource Audit Breakdown
             </div>
-            <div style="max-height: 120px; overflow-y: auto;">
-              ${results.mixed.length === 0 
-                ? '<div style="color:var(--cg-success);font-size:13px;font-weight:500">None detected. Clean HTTPS.</div>'
-                : results.mixed.map(r => `
-                    <div style="font-size:12px;color:var(--cg-warning);font-family:var(--cg-font-mono);padding:4px 0;border-bottom:1px solid var(--cg-border);word-break:break-all">
-                      [${r.type}] ${r.url}
+            <div style="max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;" id="wa-links-findings-list">
+              ${allResources.length === 0 
+                ? '<div style="color:var(--cg-success);font-size:13px;font-weight:500;padding:12px;text-align:center">No resources detected.</div>'
+                : allResources.map(r => `
+                    <div class="wa-link-resource-row" data-category="${r.category}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;padding:8px 12px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02);border-radius:6px;word-break:break-all">
+                      <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0">
+                        <span style="font-weight:600;color:var(--cg-text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.url)}</span>
+                        <span style="font-size:10px;color:var(--cg-text-3)">${r.type}</span>
+                      </div>
+                      <span class="wa-header-status ${r.statusClass}" style="flex-shrink:0">${r.statusText}</span>
                     </div>`).join('')}
             </div>
           </div>
@@ -13146,280 +12415,276 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>`;
 
+      this.applyAuditorFilters();
+
       if (document.getElementById("wa-auditor-modal") && !document.getElementById("wa-auditor-modal").classList.contains("hidden")) {
         this.renderModalResults('links');
       }
     },
 
     // ── TOOL 3: TECHNOLOGY FINGERPRINTING (Wappalyzer-Grade) ─
-    async runTechFingerprint() {
+    // ── TOOL 3: EMAIL SECURITY POLICY AUDITOR (SPF & DMARC) ──────────────
+    async runEmailSecurityAnalysis() {
       const target = this.getTarget();
       if (!target) return;
-      
-      this.setToolStatus('tech', 'running');
-      this.switchTool('tech');
-      
+
+      this.setToolStatus('email', 'running');
+      this.switchTool('email');
+
       try {
-        const { html, headers } = await this.fetchViaProxy(target);
-        
-        // Helper: get header value (handles both Headers object and plain object)
-        const getHeader = (name) => {
-          if (!headers) return null;
-          if (typeof headers.get === 'function') return headers.get(name);
-          return headers[name] || headers[name.toLowerCase()] || null;
-        };
+        // Extract root domain from URL
+        let domain = target.trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '').toLowerCase();
 
-        // ── PASS 1: Extract all script src URLs from HTML ─────
-        const scriptUrls = [];
-        const scriptSrcRe = /<script[^>]+src=["']([^"']+)["']/gi;
-        let scriptMatch;
-        while ((scriptMatch = scriptSrcRe.exec(html)) !== null) scriptUrls.push(scriptMatch[1]);
-        const scriptUrlsStr = scriptUrls.join(' ');
+        logResult(new Date(), 'Email Security', `Starting email security audit for ${domain}`, 'info');
 
-        // ── PASS 2: Extract all <link href> stylesheet URLs ───
-        const linkUrls = [];
-        const linkHrefRe = /<link[^>]+href=["']([^"']+)["']/gi;
-        let linkMatch;
-        while ((linkMatch = linkHrefRe.exec(html)) !== null) linkUrls.push(linkMatch[1]);
-
-        // ── PASS 3: Extract all cookie names from Set-Cookie ──
-        const setCookieHeader = getHeader('set-cookie') || '';
-        const cookieNames = [];
-        // parse multiple Set-Cookie header values (may be joined by comma-newline)
-        const cookieParts = setCookieHeader.split(/,(?=\s*[A-Za-z])/g);
-        cookieParts.forEach(part => {
-          const nameMatch = part.trim().match(/^([^=;]+)/);
-          if (nameMatch) cookieNames.push(nameMatch[1].trim());
-        });
-        const cookieStr = cookieNames.join(' ');
-
-        // ── PASS 4: Meta tag extraction ───────────────────────
-        const metaStr = (() => {
-          const metas = [];
-          const metaRe = /<meta[^>]+>/gi;
-          let m;
-          while ((m = metaRe.exec(html)) !== null) metas.push(m[0]);
-          return metas.join(' ');
-        })();
-
-        const detected = [];
-        const detectedNames = new Set();
-
-        // ── MAIN DETECTION LOOP ───────────────────────────────
-        for (const [name, config] of Object.entries(WAPPALYZER_SIGNATURES)) {
-          if (detectedNames.has(name)) continue;
-          
-          let matched = false;
-          let version = null;
-
-          for (const check of config.checks) {
-            let haystack = null;
-            let match = null;
-
-            if (check.type === 'html') {
-              haystack = html;
-            } else if (check.type === 'script') {
-              haystack = scriptUrlsStr;
-            } else if (check.type === 'meta') {
-              haystack = metaStr;
-            } else if (check.type === 'header') {
-              haystack = getHeader(check.name) || '';
-            } else if (check.type === 'cookie') {
-              // match against cookie names string
-              haystack = cookieStr;
-            }
-
-            if (haystack !== null) {
-              match = haystack.match(check.pattern);
-              if (match) {
-                matched = true;
-                if (config.extractVersion && match[1]) version = match[1].trim();
-                break;
-              }
-            }
-          }
-
-          if (matched) {
-            detected.push({ name, version, category: config.category, cveRisk: config.cveRisk });
-            detectedNames.add(name);
-          }
+        // ── Query SPF (TXT records on root domain) ──
+        let spfRecord = null;
+        let spfRaw = '';
+        try {
+          const spfResp = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=TXT`, {
+            headers: { accept: 'application/dns-json' }
+          });
+          const spfData = await spfResp.json();
+          const txtAnswers = (spfData.Answer || []).map(a => (a.data || '').replace(/"/g, '').trim());
+          spfRecord = txtAnswers.find(t => t.startsWith('v=spf1')) || null;
+          spfRaw = spfRecord || '(none)';
+          logResult(new Date(), 'Email Security', `SPF TXT lookup complete: ${spfRecord ? 'record found' : 'no SPF record'}`, 'info');
+        } catch (spfErr) {
+          logResult(new Date(), 'Email Security', `SPF lookup error: ${spfErr.message}`, 'warning');
         }
 
-        // ── IMPLICATION SYSTEM ────────────────────────────────
-        // Resolves hidden dependencies similar to Wappalyzer
-        const implications = [
-          { trigger: 'Next.js',           implies: { name: 'React',                  category: 'JavaScript frameworks',    cveRisk: 'low' }},
-          { trigger: 'Nuxt.js',           implies: { name: 'Vue.js',                 category: 'JavaScript frameworks',    cveRisk: 'low' }},
-          { trigger: 'Gatsby',            implies: { name: 'React',                  category: 'JavaScript frameworks',    cveRisk: 'low' }},
-          { trigger: 'Remix',             implies: { name: 'React',                  category: 'JavaScript frameworks',    cveRisk: 'low' }},
-          { trigger: 'WordPress',         implies: { name: 'PHP',                    category: 'Programming languages',    cveRisk: 'high' }},
-          { trigger: 'Drupal',            implies: { name: 'PHP',                    category: 'Programming languages',    cveRisk: 'high' }},
-          { trigger: 'Joomla',            implies: { name: 'PHP',                    category: 'Programming languages',    cveRisk: 'high' }},
-          { trigger: 'Laravel',           implies: { name: 'PHP',                    category: 'Programming languages',    cveRisk: 'high' }},
-          { trigger: 'WooCommerce',       implies: { name: 'WordPress',              category: 'CMS',                      cveRisk: 'high' }},
-          { trigger: 'WooCommerce',       implies: { name: 'PHP',                    category: 'Programming languages',    cveRisk: 'high' }},
-          { trigger: 'ASP.NET',           implies: { name: 'Microsoft IIS',          category: 'Web servers',              cveRisk: 'medium' }},
-          { trigger: 'Spring Boot',       implies: { name: 'Java',                   category: 'Programming languages',    cveRisk: 'medium' }},
-          { trigger: 'Ruby on Rails',     implies: { name: 'Ruby',                   category: 'Programming languages',    cveRisk: 'low' }},
-          { trigger: 'Django',            implies: { name: 'Python',                 category: 'Programming languages',    cveRisk: 'low' }},
-          { trigger: 'Node.js',           implies: { name: 'Node.js',                category: 'Programming languages',    cveRisk: 'low' }},
-          { trigger: 'SvelteKit',         implies: { name: 'Svelte',                 category: 'JavaScript frameworks',    cveRisk: 'low' }},
-          { trigger: 'Cloudflare',        implies: null }, // no further implications
-          { trigger: 'WooCommerce',       implies: { name: 'WordPress',              category: 'CMS',                      cveRisk: 'high' }}
+        // ── Query DMARC (TXT records on _dmarc.domain) ──
+        let dmarcRecord = null;
+        let dmarcRaw = '';
+        try {
+          const dmarcDomain = `_dmarc.${domain}`;
+          const dmarcResp = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(dmarcDomain)}&type=TXT`, {
+            headers: { accept: 'application/dns-json' }
+          });
+          const dmarcData = await dmarcResp.json();
+          const dmarcAnswers = (dmarcData.Answer || []).map(a => (a.data || '').replace(/"/g, '').trim());
+          dmarcRecord = dmarcAnswers.find(t => t.startsWith('v=DMARC1')) || null;
+          dmarcRaw = dmarcRecord || '(none)';
+          logResult(new Date(), 'Email Security', `DMARC TXT lookup complete: ${dmarcRecord ? 'record found' : 'no DMARC record'}`, 'info');
+        } catch (dmarcErr) {
+          logResult(new Date(), 'Email Security', `DMARC lookup error: ${dmarcErr.message}`, 'warning');
+        }
+
+        // ── Evaluate SPF ──────────────────────────────────
+        let spfStatus, spfDetail, spfRec;
+        if (!spfRecord) {
+          spfStatus = 'missing';
+          spfDetail = 'No SPF record found. Unauthenticated senders can spoof your domain in email From headers.';
+          spfRec = 'Publish a TXT record on your root domain: v=spf1 include:your-mail-provider.com -all';
+        } else if (spfRecord.includes('-all')) {
+          spfStatus = 'passed';
+          spfDetail = 'SPF record exists with hard fail (-all). Unauthorized senders are rejected.';
+          spfRec = 'Maintain your current SPF record. Periodically audit include: mechanisms for unused services.';
+        } else if (spfRecord.includes('~all')) {
+          spfStatus = 'warning';
+          spfDetail = 'SPF record uses soft fail (~all). Unauthorized senders are marked but not rejected.';
+          spfRec = 'Upgrade from ~all to -all once all legitimate sending sources are included in your SPF record.';
+        } else if (spfRecord.includes('?all') || spfRecord.includes('+all')) {
+          spfStatus = 'missing';
+          spfDetail = 'SPF record uses neutral/pass-all (?all or +all). This provides no spoofing protection.';
+          spfRec = 'Replace ?all or +all with -all to enforce a strict SPF policy.';
+        } else {
+          spfStatus = 'warning';
+          spfDetail = 'SPF record exists but does not include a recognized all mechanism.';
+          spfRec = 'Ensure your SPF record ends with -all for strict enforcement.';
+        }
+
+        // ── Evaluate DMARC ────────────────────────────────
+        let dmarcStatus, dmarcDetail, dmarcRec;
+        const dmarcPolicy = dmarcRecord ? (dmarcRecord.match(/p=([^;\s]+)/i)?.[1] || '').toLowerCase() : '';
+        if (!dmarcRecord) {
+          dmarcStatus = 'missing';
+          dmarcDetail = 'No DMARC record found at _dmarc.' + domain + '. Email spoofing cannot be reported or blocked.';
+          dmarcRec = 'Publish: _dmarc.' + domain + ' TXT "v=DMARC1; p=quarantine; rua=mailto:dmarc@' + domain + '"';
+        } else if (dmarcPolicy === 'reject') {
+          dmarcStatus = 'passed';
+          dmarcDetail = 'DMARC policy is p=reject. Spoofed emails are blocked by receiving mail servers.';
+          dmarcRec = 'Maintain the reject policy and ensure rua/ruf reporting addresses are monitored.';
+        } else if (dmarcPolicy === 'quarantine') {
+          dmarcStatus = 'warning';
+          dmarcDetail = 'DMARC policy is p=quarantine. Spoofed emails are sent to spam, but not rejected outright.';
+          dmarcRec = 'Escalate from p=quarantine to p=reject once DMARC reporting confirms all legitimate mail passes.';
+        } else if (dmarcPolicy === 'none') {
+          dmarcStatus = 'warning';
+          dmarcDetail = 'DMARC policy is p=none (monitor only). No enforcement action is taken on spoofed emails.';
+          dmarcRec = 'Review DMARC aggregate reports (rua), then escalate to p=quarantine and then p=reject.';
+        } else {
+          dmarcStatus = 'warning';
+          dmarcDetail = 'DMARC record found but policy could not be determined.';
+          dmarcRec = 'Verify the p= tag in your DMARC record and set it to quarantine or reject.';
+        }
+
+        const checks = [
+          {
+            name: 'SPF Record Presence',
+            status: spfRecord ? (spfStatus === 'passed' ? 'passed' : spfStatus) : 'missing',
+            value: spfRaw,
+            detail: spfDetail,
+            recommendation: spfRec
+          },
+          {
+            name: 'SPF Policy Enforcement',
+            status: spfStatus,
+            value: spfRecord ? (spfRecord.match(/[~?+-]all/i)?.[0] || 'unknown') : 'N/A',
+            detail: spfDetail,
+            recommendation: spfRec
+          },
+          {
+            name: 'DMARC Record Presence',
+            status: dmarcRecord ? (dmarcStatus === 'passed' ? 'passed' : dmarcStatus) : 'missing',
+            value: dmarcRaw,
+            detail: dmarcDetail,
+            recommendation: dmarcRec
+          },
+          {
+            name: 'DMARC Policy Enforcement',
+            status: dmarcStatus,
+            value: dmarcRecord ? ('p=' + (dmarcPolicy || 'unknown')) : 'N/A',
+            detail: dmarcDetail,
+            recommendation: dmarcRec
+          }
         ];
 
-        implications.forEach(({ trigger, implies }) => {
-          if (!implies) return;
-          if (detectedNames.has(trigger) && !detectedNames.has(implies.name)) {
-            detected.push({ name: implies.name, version: null, category: implies.category, cveRisk: implies.cveRisk });
-            detectedNames.add(implies.name);
-          }
-        });
-        
-        this.techResults = { detected, target };
-        this.renderTechResults(detected, target);
-        this.setToolStatus('tech', 'done', `${detected.length} techs`);
+        const missingCount = checks.filter(ch => ch.status === 'missing').length;
+        const warnCount    = checks.filter(ch => ch.status === 'warning').length;
+        const safeCount    = checks.filter(ch => ch.status === 'passed').length;
 
-        const highRiskCount = detected.filter(d => d.cveRisk === 'high').length;
+        const overallStatus = missingCount > 0 ? 'threat' : warnCount > 0 ? 'warning' : 'safe';
+        const summaryMsg = [
+          spfRecord ? `SPF: ${spfStatus.toUpperCase()}` : 'SPF: MISSING',
+          dmarcRecord ? `DMARC: ${dmarcStatus.toUpperCase()}` : 'DMARC: MISSING'
+        ].join(' | ');
+
+        this.emailResults = { checks, domain, spfRaw, dmarcRaw };
+        this.renderEmailResults(this.emailResults);
+        this.setToolStatus('email', 'done', `${missingCount + warnCount} issue${(missingCount + warnCount) !== 1 ? 's' : ''}`);
+
         logResult(
           new Date(),
-          "Tech Fingerprint",
-          `Stack discovery completed for ${target}. Detected ${detected.length} technologies: ${detected.map(d => d.name).join(', ')}`,
-          highRiskCount > 0 ? "danger" : "success"
+          'Email Security',
+          `Email security audit for ${domain} — ${summaryMsg}. Missing: ${missingCount}, Weak: ${warnCount}, Secure: ${safeCount}`,
+          overallStatus === 'threat' ? 'danger' : overallStatus === 'warning' ? 'warning' : 'success',
+          {
+            evidence: JSON.stringify({ domain, spfRaw, dmarcRaw, checks }),
+            remediation: checks.filter(ch => ch.status !== 'passed').map(ch => ch.recommendation)
+          }
         );
-        
+
       } catch(e) {
-        this.setToolStatus('tech', 'error');
-        this.showError('tech', e.message);
+        this.setToolStatus('email', 'error');
+        this.showError('email', e.message);
       }
     },
 
-    // ── SHARED TECH RENDERER (used by both sidebar & modal) ─────────────
-    _renderTechToElement(detected, target, container) {
-      if (!container) return;
+    // ── EMAIL SECURITY RESULTS RENDERER ──────────────────────────────────
+    renderEmailResults(results, container) {
+      const bodyEl = container || document.getElementById('wa-results-body');
+      if (!bodyEl || !results) return;
 
-      const CATEGORY_STYLES = {
-        'JavaScript frameworks':  { accent: '#61dafb', icon: 'JS' },
-        'Web frameworks':         { accent: '#7c3aed', icon: 'WF' },
-        'UI frameworks':          { accent: '#f472b6', icon: 'UI' },
-        'JavaScript libraries':   { accent: '#fbbf24', icon: 'LB' },
-        'CMS':                    { accent: '#10b981', icon: 'CM' },
-        'Ecommerce':              { accent: '#f59e0b', icon: 'EC' },
-        'Payment processors':     { accent: '#34d399', icon: 'PAY' },
-        'Analytics':              { accent: '#818cf8', icon: 'AN' },
-        'Tag managers':           { accent: '#a78bfa', icon: 'TM' },
-        'Customer data platform': { accent: '#fb923c', icon: 'CDP' },
-        'Authentication':         { accent: '#38bdf8', icon: 'AU' },
-        'Web servers':            { accent: '#94a3b8', icon: 'WS' },
-        'CDN':                    { accent: '#f97316', icon: 'CDN' },
-        'PaaS':                   { accent: '#2dd4bf', icon: 'PaaS' },
-        'Programming languages':  { accent: '#c084fc', icon: 'PL' },
-        'Font scripts':           { accent: '#fb7185', icon: 'FT' },
-        'JavaScript graphics':    { accent: '#22d3ee', icon: 'GR' },
-        'Live chat':              { accent: '#4ade80', icon: 'LC' },
-        'Email':                  { accent: '#e879f9', icon: 'EM' }
-      };
-      const DEFAULT_STYLE = { accent: '#64748b', icon: '??' };
+      const { checks = [], domain = '', spfRaw = '', dmarcRaw = '' } = results;
+      const missingCount = checks.filter(ch => ch.status === 'missing').length;
+      const warnCount    = checks.filter(ch => ch.status === 'warning').length;
+      const safeCount    = checks.filter(ch => ch.status === 'passed').length;
 
-      const riskColors = {
-        high:   { bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.4)', text: '#f87171', label: 'HIGH RISK' },
-        medium: { bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.4)', text: '#fbbf24', label: 'MEDIUM RISK' },
-        low:    { bg: 'rgba(99,102,241,0.12)', border: 'rgba(99,102,241,0.3)', text: '#a5b4fc', label: 'LOW RISK' },
-        none:   null
-      };
+      const threatColor  = missingCount > 0 ? 'var(--cg-danger)'  : 'var(--cg-text-3)';
+      const warningColor = warnCount    > 0 ? 'var(--cg-warning)' : 'var(--cg-text-3)';
+      const safeColor    = safeCount    > 0 ? 'var(--cg-success)' : 'var(--cg-text-3)';
 
-      if (detected.length === 0) {
-        container.innerHTML = `
-          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px;gap:12px;text-align:center">
-            <div style="width:52px;height:52px;border-radius:50%;background:rgba(100,116,139,0.1);border:1px solid rgba(100,116,139,0.2);display:flex;align-items:center;justify-content:center">
-              <svg width="22" height="22" fill="none" stroke="#64748b" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      const findingsHtml = checks.map((ch, idx) => {
+        const statusClass = ch.status === 'passed' ? 'wa-present' : ch.status === 'warning' ? 'wa-misconfigured' : 'wa-missing';
+        const statusText  = ch.status === 'passed' ? 'passed'     : ch.status === 'warning' ? 'warning'          : 'missing';
+        return `
+          <div class="wa-legacy-item" data-status="${statusText}">
+            <div class="wa-header-row" onclick="window.WebAuditing.toggleLegacyDetail('email', ${idx})">
+              <span class="wa-header-name" style="font-weight:600;">${escapeHtml(ch.name)}</span>
+              <span class="wa-header-status ${statusClass}">${statusText}</span>
+              <span style="font-size:12px;color:var(--cg-text-2);font-family:var(--cg-font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                ${escapeHtml(ch.value)}
+              </span>
             </div>
-            <div style="font-size:15px;font-weight:600;color:var(--cg-text-2)">No technologies detected</div>
-            <div style="font-size:12px;color:var(--cg-text-3);max-width:320px;line-height:1.6">
-              The scan completed but no matching technology fingerprints were found for
-              <strong style="color:var(--cg-text-2);font-family:var(--cg-font-mono);font-size:11px">${escapeHtml(target)}</strong>.
-              The site may use heavily obfuscated assets or block automated scanning.
+            <div class="wa-header-detail" id="wa-legacy-detail-email-${idx}" style="display:none;padding:16px;background:rgba(0,0,0,0.3);border-bottom:1px solid var(--cg-border);font-size:12px;color:var(--cg-text-2);line-height:1.5;">
+              <div style="font-weight:600;color:var(--cg-text-1);margin-bottom:6px;">Check: ${escapeHtml(ch.name)}</div>
+              <div style="margin-bottom:8px;">Status: <span class="font-bold" style="color:${ch.status === 'passed' ? 'var(--cg-success)' : ch.status === 'warning' ? 'var(--cg-warning)' : 'var(--cg-danger)'}">${statusText.toUpperCase()}</span></div>
+              <div style="margin-bottom:8px;font-family:var(--cg-font-mono);">${escapeHtml(ch.detail)}</div>
+              ${ch.recommendation ? `
+                <div style="margin-top:8px;padding:10px;background:rgba(0,0,0,0.4);border:1px solid var(--cg-border);border-radius:6px;font-family:var(--cg-font-mono);font-size:11px;color:var(--cg-success)">
+                  Recommended Action: ${escapeHtml(ch.recommendation)}
+                </div>` : ''}
             </div>
           </div>`;
-        return;
-      }
+      }).join('');
 
-      const categories = {};
-      detected.forEach(tech => {
-        if (!categories[tech.category]) categories[tech.category] = [];
-        categories[tech.category].push(tech);
-      });
-
-      const highRiskCount = detected.filter(t => t.cveRisk === 'high').length;
-      const totalCats = Object.keys(categories).length;
-
-      container.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;padding:14px 18px;background:linear-gradient(135deg,rgba(30,41,59,0.95),rgba(15,23,42,0.9));border:1px solid rgba(100,116,139,0.2);border-radius:12px">
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#f1f5f9;letter-spacing:0.02em">Stack Fingerprint Summary</div>
-            <div style="font-size:11px;color:#64748b;font-family:var(--cg-font-mono);margin-top:3px;word-break:break-all">${escapeHtml(target)}</div>
+      const additionalInfoHtml = `
+        <div style="margin-top:16px;padding:16px;background:rgba(255,255,255,0.02);border:1px solid var(--cg-border);border-radius:8px;">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--cg-text-3);margin-bottom:10px">
+            DNS Record Snapshot
           </div>
-          <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
-            <div style="text-align:center;padding:8px 14px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);border-radius:8px">
-              <div style="font-size:20px;font-weight:800;color:#818cf8;line-height:1">${detected.length}</div>
-              <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;margin-top:2px">TECHS</div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;font-size:11px;font-family:var(--cg-font-mono);border-collapse:collapse;color:var(--cg-text-2);">
+              <thead>
+                <tr style="border-bottom:1px solid var(--cg-border);text-align:left;">
+                  <th style="padding:6px 8px;color:var(--cg-text-3)">RECORD TYPE</th>
+                  <th style="padding:6px 8px;color:var(--cg-text-3)">QUERY</th>
+                  <th style="padding:6px 8px;color:var(--cg-text-3)">RAW VALUE</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+                  <td style="padding:6px 8px;color:var(--cg-text-1);font-weight:600;">SPF</td>
+                  <td style="padding:6px 8px;">${escapeHtml(domain)}</td>
+                  <td style="padding:6px 8px;word-break:break-all;">${escapeHtml(spfRaw)}</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 8px;color:var(--cg-text-1);font-weight:600;">DMARC</td>
+                  <td style="padding:6px 8px;">_dmarc.${escapeHtml(domain)}</td>
+                  <td style="padding:6px 8px;word-break:break-all;">${escapeHtml(dmarcRaw)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+
+      bodyEl.innerHTML = `
+        <div class="wa-grade-display" style="padding:16px;margin-bottom:16px;">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--cg-text-1);margin-bottom:4px;">
+              Target Audited: <span style="font-family:var(--cg-font-mono);">${escapeHtml(domain)}</span>
             </div>
-            <div style="text-align:center;padding:8px 14px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:8px">
-              <div style="font-size:20px;font-weight:800;color:#a5b4fc;line-height:1">${totalCats}</div>
-              <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#64748b;margin-top:2px">CATEGORIES</div>
+            <div style="display:flex;gap:16px;font-size:12px;margin-top:4px;">
+              <span style="color:${threatColor};font-weight:600;">${missingCount} missing defense${missingCount !== 1 ? 's' : ''}</span>
+              <span style="color:${warningColor};font-weight:600;">${warnCount} weak polic${warnCount !== 1 ? 'ies' : 'y'}</span>
+              <span style="color:${safeColor};font-weight:600;">${safeCount} secure polic${safeCount !== 1 ? 'ies' : 'y'}</span>
             </div>
-            ${highRiskCount > 0 ? `
-            <div style="text-align:center;padding:8px 14px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px">
-              <div style="font-size:20px;font-weight:800;color:#f87171;line-height:1">${highRiskCount}</div>
-              <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#f87171;margin-top:2px">HIGH CVE</div>
-            </div>` : ''}
           </div>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:10px">
-          ${Object.entries(categories).map(([cat, techs]) => {
-            const style = CATEGORY_STYLES[cat] || DEFAULT_STYLE;
-            return `
-            <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(100,116,139,0.15);border-left:3px solid ${style.accent};border-radius:10px;overflow:hidden">
-              <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(100,116,139,0.1)">
-                <div style="width:28px;height:28px;border-radius:7px;background:${style.accent}18;border:1px solid ${style.accent}33;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:${style.accent};letter-spacing:0.04em;flex-shrink:0">${style.icon}</div>
-                <span style="font-size:12px;font-weight:700;color:#cbd5e1;text-transform:uppercase;letter-spacing:0.07em">${escapeHtml(cat)}</span>
-                <span style="margin-left:auto;font-size:11px;color:#64748b;font-weight:600">${techs.length} detected</span>
-              </div>
-              <div style="padding:12px 14px;display:flex;flex-wrap:wrap;gap:8px">
-                ${techs.map(t => {
-                  const risk = riskColors[t.cveRisk];
-                  return `
-                  <div style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(30,41,59,0.8);border:1px solid rgba(100,116,139,0.2);border-radius:20px;transition:border-color 0.15s,background 0.15s"
-                       onmouseover="this.style.background='rgba(51,65,85,0.9)';this.style.borderColor='${style.accent}55'"
-                       onmouseout="this.style.background='rgba(30,41,59,0.8)';this.style.borderColor='rgba(100,116,139,0.2)'">
-                    <span style="font-size:12px;font-weight:600;color:#e2e8f0">${escapeHtml(t.name)}</span>
-                    ${t.version ? `<span style="font-size:10px;color:#64748b;font-family:var(--cg-font-mono);background:rgba(100,116,139,0.1);padding:1px 6px;border-radius:10px">${escapeHtml(t.version)}</span>` : ''}
-                    ${risk ? `<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:${risk.bg};border:1px solid ${risk.border};color:${risk.text};letter-spacing:0.04em">${risk.label}</span>` : ''}
-                  </div>`;
-                }).join('')}
-              </div>
-            </div>`;
-          }).join('')}
-        </div>`;
-    },
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--cg-text-3);margin-bottom:12px;">
+          Audit Findings Breakdown
+        </div>
 
-    renderTechResults(detected, target) {
-      const bodyEl = document.getElementById('wa-results-body');
-      if (!bodyEl) return;
+        <div>${findingsHtml}</div>
 
-      // Render into sidebar
-      this._renderTechToElement(detected, target, bodyEl);
+        ${additionalInfoHtml}
+      `;
 
-      // If modal is open, also render into modal pane
-      const modal = document.getElementById("wa-auditor-modal");
-      if (modal && !modal.classList.contains("hidden")) {
-        const modalPane = document.getElementById("wa-modal-results-pane");
-        if (modalPane) this._renderTechToElement(detected, target, modalPane);
+      // Only run sidebar-specific post-render if writing to the main results body
+      if (!container) {
+        this.applyAuditorFilters();
+
+        const modal = document.getElementById('wa-auditor-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+          const modalPane = document.getElementById('wa-modal-results-pane');
+          if (modalPane) this.renderEmailResults(this.emailResults, modalPane);
+        }
       }
     },
 
-    // ── SHARED UTILITIES ──────────────────────────────────────
+        // ── SHARED UTILITIES ──────────────────────────────────────
     setToolStatus(toolId, status, badge = '') {
       const el = document.getElementById(`wa-tool-status-${toolId}`);
       if (!el) return;
@@ -13503,8 +12768,8 @@ document.addEventListener("DOMContentLoaded", () => {
         await this.runHeadersAnalysis();
       } else if (this.activeToolId === 'links') {
         await this.runLinkChecker();
-      } else if (this.activeToolId === 'tech') {
-        await this.runTechFingerprint();
+      } else if (this.activeToolId === 'email') {
+        await this.runEmailSecurityAnalysis();
       } else if (this.activeToolId === 'ssl') {
         await this.runSslAnalysis();
       } else if (this.activeToolId === 'phishing') {
@@ -13519,8 +12784,8 @@ document.addEventListener("DOMContentLoaded", () => {
       await this.runHeadersAnalysis();
       this.switchTool('links');
       await this.runLinkChecker();
-      this.switchTool('tech');
-      await this.runTechFingerprint();
+      this.switchTool('email');
+      await this.runEmailSecurityAnalysis();
     },
 
     copyResults() {
@@ -13537,10 +12802,10 @@ document.addEventListener("DOMContentLoaded", () => {
         text += `- OK: ${this.linksResults.results.ok.length}\n`;
         text += `- Broken: ${this.linksResults.results.broken.length}\n`;
         text += `- Mixed Content: ${this.linksResults.results.mixed.length}\n`;
-      } else if (this.activeToolId === 'tech' && this.techResults) {
-        text = `Technology Stack Fingerprint for ${this.techResults.target}\n`;
-        this.techResults.detected.forEach(t => {
-          text += `- [${t.category}] ${t.name} (CVE Risk: ${t.cveRisk})\n`;
+      } else if (this.activeToolId === 'email' && this.emailResults) {
+        text = `Email Security Audit for ${this.emailResults.domain}\n`;
+        this.emailResults.checks.forEach(ch => {
+          text += `- ${ch.name}: ${ch.status.toUpperCase()} (${ch.value})\n`;
         });
       } else if (['ssl', 'phishing', 'dns-spoof'].includes(this.activeToolId)) {
         const featureMap = {
@@ -13896,18 +13161,17 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `;
       }
-
-      // 3. Tech Fingerprint — delegate to the shared Wappalyzer-grade renderer
-      else if (toolId === 'tech') {
-        if (!this.techResults) {
+
+      // 3. Email Security Policy Audit
+      else if (toolId === 'email') {
+        if (!this.emailResults) {
           resultsPane.innerHTML = `
             <div style="padding:40px;text-align:center;color:var(--cg-text-3);font-size:12px">
-              No Tech Fingerprint data available yet. Enter a target URL and click Fingerprint Stack.
+              No Email Security data available yet. Enter a target URL and click Run Analysis.
             </div>`;
           return;
         }
-        // Temporarily point the renderer at the modal pane, then restore
-        this._renderTechToElement(this.techResults.detected, this.techResults.target, resultsPane);
+        this.renderEmailResults(this.emailResults, resultsPane);
       }
 
       // 4. SSL / TLS
@@ -14208,7 +13472,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const DEFAULT_OPENROUTER_KEY = "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";
   
   // Initialize default localStorage settings on first load
-  if (!localStorage.getItem("cg_ai_provider")) {
+  if (localStorage.getItem("cg_ai_provider") !== "openrouter") {
     localStorage.setItem("cg_ai_provider", "openrouter");
   }
   if (!localStorage.getItem("cg_ai_openrouter_key")) {
@@ -14223,24 +13487,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const SYSTEM_PROMPT = `You are CyberGuard Pro AI, a premium, elite cybersecurity copilot built directly into the CyberGuard Security Dashboard.
 Your primary role is to help security engineers, developers, and administrators understand and operate the dashboard's tools:
-- Web Auditing: Phishing URL Analyser, SSL/TLS Checker, DNS Spoofing Detector
-- Hash & Crypto: MD5/SHA-1/SHA-256 Hashing, File Integrity verification, Password Strength analysis
+- Security Dashboard: Main telemetry, charts, and metrics overview.
+- OSINT (Passive Recon): Subdomain Finder, DNS Record Lookup, Wayback Machine, Username OSINT, Email Format Guesser, IP Intelligence.
+- Web Auditing: Phishing URL Analyser, SSL/TLS Checker, DNS Spoofing Detector.
+- Cipher Suite (Hash & Crypto): MD5/SHA-1/SHA-256 Hashing, File Integrity verification, Password Strength analysis, Hash Identifier.
 - JWT Debugger: Decodes & verifies JSON Web Tokens (algorithms HS256, RS256, ES256, etc.) and signs new custom tokens.
+- Threat Intel Hub: Compile global feeds, check IP/domain blacklist databases, VirusTotal, AbuseIPDB, URLScan.io.
+- Security Projects: CRUD projects, add target hosts, invite collaborators, and launch automated network scans (Port Scanner, TCP/UDP, Geo, WHOIS).
+- Billing History: Manage subscriptions and payment logs.
 
 [HOW TO ANSWER "What tools are available on this dashboard?"]
 When asked about available tools, tabs, or capabilities of the dashboard, you MUST present a highly structured and comprehensive summary of each tab/module of the application. Do NOT simply list the individual tools; instead, mention each tab of the application and describe in detail what the user can do in it:
-1. **Web Auditing**: Focuses on modern web application auditing and threat detection. Users can analyze suspicious links with a machine-learning-based Phishing URL Analyzer, inspect SSL/TLS certificates for configuration weaknesses, and detect potential DNS Spoofing and hijacking attempts.
-2. **Hash & Crypto**: Offers essential cryptographic and security utilities. Users can generate MD5, SHA-1, and SHA-256 hashes, verify file integrity, perform password strength analysis using mathematical entropy checks, and utilize interactive wizards to harden their security credentials.
-3. **JWT Debugger**: A full-featured JSON Web Token (JWT) auditing terminal. Users can paste a token to decode its header and payload instantly, verify signatures against HS256, RS256, or ES256 algorithms with custom keys, edit token payloads, and sign new custom-signed tokens.
-4. **Threat Intel Hub**: A comprehensive security intelligence aggregator. It compiles global security feeds, allows users to check suspicious IPs/domains across active blacklist databases, and stores historical threat research logs.
-5. **Security Projects**: An elite dashboard project manager allowing users to organize their security assessments. Users can create distinct projects, assign specific target hosts, aggregate findings under target directories, calculate global dynamic risk ratings based on open vulnerability severities, and invite collaborators. Note: Automated network scans (including Port Scanner, TCP/UDP services, IP Geolocation, Reverse DNS, and WHOIS lookup) are integrated here and run as part of project scanning.
+1. **Security Dashboard**: General security posture overview, active scans telemetry, and threat metric tracking.
+2. **OSINT**: Contains 6 passive recon tools: Subdomain Finder, DNS Lookup, Wayback Machine, Username OSINT, Email Format Guesser, and IP Intelligence.
+3. **Web Auditing**: Focuses on web app audits: Phishing URL Analyzer, SSL/TLS Checker, and DNS Spoofing Detector.
+4. **Cipher Suite (Hash & Crypto)**: Hashing generator (MD5/SHA1/SHA256/SHA512), Password Strength analyzer with bits entropy checks, smart Hash Identifier, and File Integrity checker.
+5. **JWT Debugger**: Real-time JWT decoder (validates signatures, displays header/payload claims) and custom JWT signer.
+6. **Threat Intel Hub**: Single-search VirusTotal, AbuseIPDB, and URLScan aggregator with history logs.
+7. **Security Projects**: Organize assessments, manage collaborators, assign targets, and run automated network scans (Port Scanner, TCP/UDP services, Geo, WHOIS, DNS) directly.
+8. **Billing History**: View pricing plans, checkout history, and active subscriptions.
 
 [DASHBOARD AUTOPILOT CAPABILITY]
 You can operate the dashboard for the user! To perform dashboard operations, append action command tags at the very end of your response. You can output multiple actions if needed. Supported tags:
 1. Switch to a tab: [[ACTION: switch_tab(tabId)]]
-   - Valid tabIds: "web-security", "hash-tools", "jwt-debugger", "threat-intel", "projects"
-2. Fill a target scan input: [[ACTION: fill_input(elementId, value)]]
-   - Valid elementIds: "target-url" (for Web tab)
+   - Valid tabIds: "security-dashboard", "osint", "web-security", "hash-tools", "jwt-debugger", "threat-intel", "projects", "billing-history"
+2. Fill an input field: [[ACTION: fill_input(elementId, value)]]
+   - Valid elementIds:
+     - OSINT: "osint-global-target", "osint-subdomain-input", "osint-dns-input", "osint-wayback-input", "osint-username-input", "osint-emailformat-firstname", "osint-emailformat-lastname", "osint-emailformat-domain", "osint-ip-input"
+     - Web Auditing: "target-url"
+     - Hash & Crypto: "ht-hash-input", "ht-password-input", "ht-identifier-input", "ht-file-expected"
+     - JWT Debugger: "jwt-decoder-token" (accepts raw token), "jwt-decoder-secret", "jwt-encoder-header", "jwt-encoder-payload", "jwt-encoder-secret"
+     - Threat Intel: "threat-intel-search-input"
 3. Launch a scan immediately: [[ACTION: run_scan(type, target)]]
    - type is "web". target is the domain or URL.
 4. Clear all results: [[ACTION: clear_results()]]
@@ -14302,17 +13579,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
   const MODEL_PRESETS = {
     openrouter: [
       { value: "openai/gpt-oss-120b:free", text: "GPT-OSS 120B (Free Recommended)" },
-      { value: "meta-llama/llama-3-8b-instruct:free", text: "Llama 3 8B (Free Presets)" },
-      { value: "mistralai/mistral-7b-instruct:free", text: "Mistral 7B (Free Presets)" },
       { value: "custom", text: "Custom Model..." }
-    ],
-    groq: [
-      { value: "llama-3.1-8b-instant", text: "Llama 3.1 8B (Ultra-fast)" },
-      { value: "mixtral-8x7b-32768", text: "Mixtral 8x7b" },
-      { value: "custom", text: "Custom Model..." }
-    ],
-    offline: [
-      { value: "local", text: "Local Wizards (Zero API cost)" }
     ]
   };
 
@@ -14610,7 +13877,8 @@ Always align dashboard actions with what the user requests! Explain briefly what
 
   // ─── CONFIGURATION STORAGE ──────────────────────────────────────
   function loadConfigurations() {
-    const provider = localStorage.getItem("cg_ai_provider") || "openrouter";
+    const provider = "openrouter";
+    localStorage.setItem("cg_ai_provider", provider);
     providerSelect.value = provider;
     
     // Repopulate presets select
@@ -14623,18 +13891,14 @@ Always align dashboard actions with what the user requests! Explain briefly what
     if (MODEL_PRESETS[provider].some(m => m.value === savedModel)) {
       modelSelect.value = savedModel;
       customModelInput.classList.add("hidden");
-    } else if (provider !== "offline") {
+    } else {
       modelSelect.value = "custom";
       customModelInput.value = savedModel;
       customModelInput.classList.remove("hidden");
     }
 
     // Toggle key visual container based on provider
-    if (provider === "offline") {
-      keyContainer.classList.add("hidden");
-    } else {
-      keyContainer.classList.remove("hidden");
-    }
+    keyContainer.classList.remove("hidden");
 
     promptInput.value = localStorage.getItem("cg_ai_system_prompt") || "";
     
@@ -15077,67 +14341,93 @@ Always align dashboard actions with what the user requests! Explain briefly what
           const val = args[1];
           const el = document.getElementById(elId);
           if (el) {
-            el.value = val;
+            if (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT") {
+              el.value = val;
+            } else {
+              el.innerText = val;
+            }
             el.dispatchEvent(new Event("input", { bubbles: true }));
+            el.dispatchEvent(new Event("change", { bubbles: true }));
+            if (elId === "jwt-decoder-token" && typeof CyberGuardJWTDebugger !== "undefined" && typeof CyberGuardJWTDebugger.parseDecoderToken === "function") {
+              CyberGuardJWTDebugger.parseDecoderToken();
+            }
           }
           break;
         }
         case "select_tool": {
           const toolId = args[0];
           const isSelected = args[1] === "true" || args[1] === true || args[1] === "1";
-          const card = document.querySelector(`.cyber-tool-card[data-tool-id="${toolId}"]`);
-          if (card) {
-            card.dataset.selected = isSelected.toString();
-            if (typeof SelectionManager !== "undefined") {
-              SelectionManager.updateVisuals(card);
-              SelectionManager.saveToLocalStorage();
-              SelectionManager.updateSelectionCount();
+          if (toolId.startsWith("osint-toggle-") || ["subdomain", "dns", "wayback", "username", "emailformat", "ip"].includes(toolId)) {
+            const cleanId = toolId.replace("osint-toggle-", "");
+            const cb = document.getElementById("osint-toggle-" + cleanId);
+            if (cb) {
+              cb.checked = isSelected;
+              cb.dispatchEvent(new Event("change", { bubbles: true }));
             }
-            if (typeof SelectAllToggle !== "undefined" && typeof SelectAllToggle.updateButtonLabel === "function") {
-              SelectAllToggle.updateButtonLabel();
+            if (isSelected && typeof OSINT !== "undefined" && typeof OSINT.selectTool === "function") {
+              OSINT.selectTool(cleanId);
+            }
+          } else {
+            const card = document.querySelector(`.cyber-tool-card[data-tool-id="${toolId}"]`);
+            if (card) {
+              card.dataset.selected = isSelected.toString();
+              if (typeof SelectionManager !== "undefined") {
+                SelectionManager.updateVisuals(card);
+                SelectionManager.saveToLocalStorage();
+                SelectionManager.updateSelectionCount();
+              }
+              if (typeof SelectAllToggle !== "undefined" && typeof SelectAllToggle.updateButtonLabel === "function") {
+                SelectAllToggle.updateButtonLabel();
+              }
             }
           }
           break;
         }
         case "select_only_tool": {
           const toolId = args[0];
-          const card = document.querySelector(`.cyber-tool-card[data-tool-id="${toolId}"]`);
-          if (card) {
-            const tabPane = card.closest(".tab-pane");
-            if (tabPane) {
-              const toolCards = tabPane.querySelectorAll(".cyber-tool-card");
-              toolCards.forEach(c => {
-                c.dataset.selected = "false";
-                if (typeof SelectionManager !== "undefined") {
-                  SelectionManager.updateVisuals(c);
-                }
-              });
+          if (toolId.startsWith("osint-toggle-") || ["subdomain", "dns", "wayback", "username", "emailformat", "ip"].includes(toolId)) {
+            const cleanId = toolId.replace("osint-toggle-", "");
+            ["subdomain", "dns", "wayback", "username", "emailformat", "ip"].forEach(id => {
+              const cb = document.getElementById("osint-toggle-" + id);
+              if (cb) {
+                cb.checked = (id === cleanId);
+                cb.dispatchEvent(new Event("change", { bubbles: true }));
+              }
+            });
+            if (typeof OSINT !== "undefined" && typeof OSINT.selectTool === "function") {
+              OSINT.selectTool(cleanId);
             }
-            card.dataset.selected = "true";
-            if (typeof SelectionManager !== "undefined") {
-              SelectionManager.updateVisuals(card);
-              SelectionManager.saveToLocalStorage();
-              SelectionManager.updateSelectionCount();
-            }
-            if (typeof SelectAllToggle !== "undefined" && typeof SelectAllToggle.updateButtonLabel === "function") {
-              SelectAllToggle.updateButtonLabel();
+          } else {
+            const card = document.querySelector(`.cyber-tool-card[data-tool-id="${toolId}"]`);
+            if (card) {
+              const tabPane = card.closest(".tab-pane");
+              if (tabPane) {
+                const toolCards = tabPane.querySelectorAll(".cyber-tool-card");
+                toolCards.forEach(c => {
+                  c.dataset.selected = "false";
+                  if (typeof SelectionManager !== "undefined") {
+                    SelectionManager.updateVisuals(c);
+                  }
+                });
+              }
+              card.dataset.selected = "true";
+              if (typeof SelectionManager !== "undefined") {
+                SelectionManager.updateVisuals(card);
+                SelectionManager.saveToLocalStorage();
+                SelectionManager.updateSelectionCount();
+              }
+              if (typeof SelectAllToggle !== "undefined" && typeof SelectAllToggle.updateButtonLabel === "function") {
+                SelectAllToggle.updateButtonLabel();
+              }
             }
           }
           break;
         }
         case "run_scan": {
-          const type = args[0]; // "network" or "web"
+          const type = args[0];
           const target = args[1];
           
-          if (type === "network") {
-            const input = document.getElementById("target-ip");
-            if (input) {
-              input.value = target;
-              input.dispatchEvent(new Event("input", { bubbles: true }));
-            }
-            const btn = document.getElementById("execute-scan-btn");
-            if (btn) btn.click();
-          } else if (type === "web") {
+          if (type === "web") {
             const input = document.getElementById("target-url");
             if (input) {
               input.value = target;
@@ -15145,6 +14435,58 @@ Always align dashboard actions with what the user requests! Explain briefly what
             }
             const btn = document.getElementById("run-analysis-btn");
             if (btn) btn.click();
+          } else if (type === "osint") {
+            const input = document.getElementById("osint-global-target");
+            if (input) {
+              input.value = target;
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+            ["subdomain", "dns", "wayback", "username", "emailformat", "ip"].forEach(id => {
+              const cb = document.getElementById("osint-toggle-" + id);
+              if (cb) cb.checked = true;
+            });
+            const btn = document.getElementById("osint-run-all-btn");
+            if (btn) btn.click();
+          } else if (type.startsWith("osint-")) {
+            const toolId = type.replace("osint-", "");
+            let inputId = `osint-${toolId}-input`;
+            if (toolId === "emailformat") inputId = "osint-emailformat-domain";
+            const input = document.getElementById(inputId);
+            if (input) {
+              input.value = target;
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+            if (typeof OSINT !== "undefined" && typeof OSINT.selectTool === "function") {
+              OSINT.selectTool(toolId);
+            }
+            const btn = document.getElementById(`osint-${toolId}-btn`);
+            if (btn) btn.click();
+          } else if (type === "threat-intel" || type === "threat") {
+            const input = document.getElementById("threat-intel-search-input");
+            if (input) {
+              input.value = target;
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+            const btn = document.getElementById("threat-intel-search-btn");
+            if (btn) btn.click();
+          } else if (type === "project" || type === "network") {
+            const scanBtns = document.querySelectorAll('button[onclick*="openScanModal"]');
+            const btn = Array.from(scanBtns).find(b => b.dataset.val === target || b.dataset.lbl === target);
+            if (btn) {
+              btn.click();
+              setTimeout(() => {
+                const checkboxes = document.querySelectorAll('#scan-scanner-modal .scan-cb');
+                checkboxes.forEach(cb => {
+                  if (!cb.checked) {
+                    cb.click();
+                  }
+                });
+                const startBtn = document.getElementById("scan-start-btn");
+                if (startBtn) startBtn.click();
+              }, 600);
+            } else {
+              console.warn(`No scan button found for project target: ${target}`);
+            }
           }
           break;
         }
@@ -15222,6 +14564,15 @@ Always align dashboard actions with what the user requests! Explain briefly what
       if (/\b(project|projects|collaborator)\b/.test(q)) {
         return `Opening the Projects workspace. [[ACTION: switch_tab("projects")]]`;
       }
+      if (/\b(osint|recon|passive)\b/.test(q)) {
+        return `I've transitioned your view to the OSINT Passive Recon tab. [[ACTION: switch_tab("osint")]]`;
+      }
+      if (/\b(billing|plan|subscription)\b/.test(q)) {
+        return `I will open your Billing History panel. [[ACTION: switch_tab("billing-history")]]`;
+      }
+      if (/\b(dashboard|telemetry)\b/.test(q)) {
+        return `Returning to the Security Dashboard. [[ACTION: switch_tab("security-dashboard")]]`;
+      }
     }
 
     // Check for scan command with a target in query
@@ -15246,7 +14597,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
       }
     }
 
-    if (target && /\b(scan|run|analyze|test|trigger)\b/.test(q)) {
+    if (target && /\b(scan|run|analyze|test|trigger|check|lookup)\b/.test(q)) {
       let targetTool = null;
       let tabId = "web-security";
       let scanType = "web";
@@ -15265,24 +14616,46 @@ Always align dashboard actions with what the user requests! Explain briefly what
         targetTool = "dns-spoof-btn";
         tabId = "web-security";
         scanType = "web";
-      } else if (q.includes("whois") || q.includes("geo") || q.includes("location") || q.includes("dns") || q.includes("reverse") || q.includes("tcp") || q.includes("udp") || q.includes("port")) {
-        return `Standalone network scans have been removed, but network security scans are fully integrated into Projects! I've switched you to the Projects workspace. [[ACTION: switch_tab("projects")]]`;
+      } else if (q.includes("subdomain")) {
+        tabId = "osint";
+        scanType = "osint-subdomain";
+      } else if (q.includes("dns")) {
+        tabId = "osint";
+        scanType = "osint-dns";
+      } else if (q.includes("wayback") || q.includes("archive")) {
+        tabId = "osint";
+        scanType = "osint-wayback";
+      } else if (q.includes("username") || q.includes("profile")) {
+        tabId = "osint";
+        scanType = "osint-username";
+      } else if (q.includes("email") && q.includes("format")) {
+        tabId = "osint";
+        scanType = "osint-emailformat";
+      } else if (q.includes("ip") && (q.includes("intel") || q.includes("geo") || q.includes("reputation"))) {
+        tabId = "osint";
+        scanType = "osint-ip";
+      } else if (q.includes("osint") || q.includes("recon")) {
+        tabId = "osint";
+        scanType = "osint";
       } else if (q.includes("threat") || q.includes("intel") || q.includes("virus") || q.includes("vt") || q.includes("abuse")) {
-        return `Opening the Threat Intelligence Hub for global threat analysis. [[ACTION: switch_tab("threat-intel")]]`;
+        tabId = "threat-intel";
+        scanType = "threat-intel";
+      } else if (q.includes("whois") || q.includes("location") || q.includes("tcp") || q.includes("udp") || q.includes("port") || q.includes("project")) {
+        return `I'll switch you to the Projects workspace and initiate a target scan on ${target}. [[ACTION: switch_tab("projects")]] [[ACTION: run_scan("project", "${target}")]]`;
       } else {
         // Default fallback based on target type
         if (target.includes("://") || target.includes("www.") || (isNaN(target.split(".")[0]) && target.includes("."))) {
           tabId = "web-security";
           scanType = "web";
         } else {
-          return `Standalone network scans have been removed, but network security scans are fully integrated into Projects! I've switched you to the Projects workspace. [[ACTION: switch_tab("projects")]]`;
+          return `I'll switch you to the Projects workspace and initiate a target scan on ${target}. [[ACTION: switch_tab("projects")]] [[ACTION: run_scan("project", "${target}")]]`;
         }
       }
 
       if (targetTool) {
         return `I will switch to the Web Auditing tab, select only the requested tool, and analyze ${target} for you. [[ACTION: switch_tab("${tabId}")]] [[ACTION: select_only_tool("${targetTool}")]] [[ACTION: run_scan("${scanType}", "${target}")]]`;
       } else {
-        return `I will execute a Web Auditing scan on the target ${target} now. [[ACTION: switch_tab("${tabId}")]] [[ACTION: run_scan("${scanType}", "${target}")]]`;
+        return `I will execute the requested ${scanType.replace('-', ' ')} analysis on the target ${target} now. [[ACTION: switch_tab("${tabId}")]] [[ACTION: run_scan("${scanType}", "${target}")]]`;
       }
     }
 
@@ -15312,13 +14685,16 @@ Always align dashboard actions with what the user requests! Explain briefly what
     if (/\b(what tools|available tools|tools available|list tools|all tools|tabs)\b/.test(q)) {
       return `### Available Dashboard Modules & Capabilities
 
-The **CyberGuard Pro Security Dashboard** organizes its elite security suites into 5 dedicated, highly integrated modules/tabs:
+The **CyberGuard Pro Security Dashboard** organizes its elite security suites into 8 dedicated, highly integrated modules/tabs:
 
-1. **Web Auditing**: Focuses on modern web application auditing and threat detection. Users can analyze suspicious links with a machine-learning-based Phishing URL Analyzer, inspect SSL/TLS certificates for configuration weaknesses, and detect potential DNS Spoofing and hijacking attempts.
-2. **Hash & Crypto**: Offers essential cryptographic and security utilities. Users can generate MD5, SHA-1, and SHA-256 hashes, verify file integrity, perform password strength analysis using mathematical entropy checks, and utilize interactive wizards to harden their security credentials.
-3. **JWT Debugger**: A full-featured JSON Web Token (JWT) auditing terminal. Users can paste a token to decode its header and payload instantly, verify signatures against HS256, RS256, or ES256 algorithms with custom keys, edit token payloads, and sign new custom-signed tokens.
-4. **Threat Intel Hub**: A comprehensive security intelligence aggregator. It compiles global security feeds, allows users to check suspicious IPs/domains across active blacklist databases, and stores historical threat research logs.
-5. **Security Projects**: An elite dashboard project manager allowing users to organize their security assessments. Users can create distinct projects, assign specific target hosts, aggregate findings under target directories, calculate global dynamic risk ratings based on open vulnerability severities, and invite collaborators. Note: Automated network scans (including Port Scanner, TCP/UDP services, IP Geolocation, Reverse DNS, and WHOIS lookup) are integrated here and run as part of project scanning.
+1. **Security Dashboard**: General security posture overview, active scans telemetry, and threat metric tracking.
+2. **OSINT**: Contains 6 passive recon tools: Subdomain Finder, DNS Lookup, Wayback Machine, Username OSINT, Email Format Guesser, and IP Intelligence.
+3. **Web Auditing**: Focuses on web app audits: Phishing URL Analyzer, SSL/TLS Checker, and DNS Spoofing Detector.
+4. **Cipher Suite (Hash & Crypto)**: Hashing generator (MD5/SHA1/SHA256/SHA512), Password Strength analyzer with bits entropy checks, smart Hash Identifier, and File Integrity checker.
+5. **JWT Debugger**: Real-time JWT decoder (validates signatures, displays header/payload claims) and custom JWT signer.
+6. **Threat Intel Hub**: Single-search VirusTotal, AbuseIPDB, and URLScan aggregator with history logs.
+7. **Security Projects**: Organize assessments, manage collaborators, assign targets, and run automated network scans (Port Scanner, TCP/UDP services, Geo, WHOIS, DNS) directly.
+8. **Billing History**: View pricing plans, checkout history, and active subscriptions.
 
 You can switch to any of these tabs directly or tell me what scan you'd like to perform, and I will configure and run it for you instantly!`;
     }
@@ -15419,7 +14795,9 @@ Launch our interactive local **Password Strength Solver Wizard** by asking for i
     if (/\b(hello|hi|hey|greet)\b/.test(q)) {
       return `Hello! I'm the CyberGuard Pro AI assistant. I can operate your dashboard via Autopilot commands! Try asking me:
 - *"Switch to the JWT Debugger tab"*
-- *"Run a scan on google.com"*
+- *"Run a subdomain scan on google.com"*
+- *"Run a threat intel lookup on 8.8.8.8"*
+- *"Verify password strength for P@ssword123!"*
 - *"Launch the phishing auditor wizard"*
 - *"Launch the password entropy solver wizard"*
 - *"Launch the port explorer wizard"*
@@ -15444,7 +14822,6 @@ Or save your OpenRouter key in my settings configurations at the top right!`;
       </button>
     </div>`;
   }
-
   // Phishing wizard renderer
   function renderPhishingWizardStep() {
     if (wizardStep === 1) {

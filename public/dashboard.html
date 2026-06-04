@@ -2297,24 +2297,26 @@
                                                         <button id="links-btn" class="hidden" aria-hidden="true"></button>
                                                     </div>
 
-                                                    <!-- 3. Tech Fingerprint -->
+
+                                                    <!-- 3. Email Security -->
                                                     <div class="wa-cp-tool-item"
-                                                         onclick="window.WebAuditing.switchTool('tech')"
-                                                         data-tool-id="tech-btn"
+                                                         onclick="window.WebAuditing.switchTool('email')"
+                                                         data-tool-id="email-btn"
                                                          data-selected="true"
-                                                         id="wa-tool-tab-tech">
+                                                         id="wa-tool-tab-email">
                                                         <div class="wa-cp-tool-meta">
                                                             <div class="flex items-center gap-2">
-                                                                <input type="checkbox" class="wa-cp-checkbox" id="wa-check-tech" checked onclick="event.stopPropagation()">
+                                                                <input type="checkbox" class="wa-cp-checkbox" id="wa-check-email" checked onclick="event.stopPropagation()">
                                                                 <div>
-                                                                    <span class="wa-cp-tool-name" id="wa-tool-label-tech">Tech Fingerprint</span>
-                                                                    <div class="wa-cp-tool-desc">Technology stack detection</div>
+                                                                    <span class="wa-cp-tool-name" id="wa-tool-label-email">Email Security</span>
+                                                                    <div class="wa-cp-tool-desc">Audit SPF &amp; DMARC spoofing risks</div>
                                                                 </div>
                                                             </div>
-                                                            <span class="wa-cp-status-dot idle" id="wa-tool-status-tech"></span>
+                                                            <span class="wa-cp-status-dot idle" id="wa-tool-status-email"></span>
                                                         </div>
-                                                        <button id="tech-btn" class="hidden" aria-hidden="true"></button>
+                                                        <button id="email-btn" class="hidden" aria-hidden="true"></button>
                                                     </div>
+
 
                                                     <!-- 4. SSL / TLS Certificate -->
                                                     <div class="wa-cp-tool-item"
@@ -2418,7 +2420,7 @@
                                                 </div>
 
                                                 <!-- Filter Controls -->
-                                                <div class="filter-controls flex flex-wrap items-center gap-2 sm:gap-3 p-4 border-b border-white/10">
+                                                <div id="wa-filter-controls-container" class="filter-controls flex flex-wrap items-center gap-2 sm:gap-3 p-4 border-b border-white/10">
                                                     <span class="text-sm text-slate-400 w-full sm:w-auto mb-1 sm:mb-0">Filter by severity:</span>
                                                     <button data-severity="critical" class="filter-pill px-3 sm:px-4 py-2 rounded-full text-xs font-bold transition-all bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10">Critical</button>
                                                     <button data-severity="warning" class="filter-pill px-3 sm:px-4 py-2 rounded-full text-xs font-bold transition-all bg-white/5 border border-white/10 text-slate-400 hover:bg-white/10">Warning</button>
@@ -3460,8 +3462,6 @@
                                                 <label for="ai-provider-select" class="ai-settings-label">AI Engine Provider</label>
                                                 <select id="ai-provider-select" class="ai-select">
                                                     <option value="openrouter">OpenRouter API</option>
-                                                    <option value="groq">Groq API</option>
-                                                    <option value="offline">Offline Fallback Agent</option>
                                                 </select>
                                             </div>
                                             <!-- Model Presets -->
