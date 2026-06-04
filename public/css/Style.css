@@ -3327,28 +3327,220 @@ body.authenticated #guest-notice {
 }
 
 .wa-remediation-box {
-  background: rgba(16, 185, 129, 0.03);
-  border: 1px solid rgba(16, 185, 129, 0.08);
-  border-radius: 6px;
-  padding: 12px;
-  margin-top: 4px;
+  background: rgba(16, 185, 129, 0.02);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 6px;
 }
 
 .wa-remediation-box ul {
-  list-style-type: disc !important;
-  padding-left: 18px !important;
+  list-style-type: none !important;
+  padding-left: 0 !important;
   margin: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .wa-remediation-box li {
   font-size: 12px;
   color: var(--cg-text-2);
-  line-height: 1.6;
-  margin-bottom: 6px;
+  line-height: 1.5;
+  margin-bottom: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+  transition: all 0.2s ease;
 }
 
-.wa-remediation-box li:last-child {
-  margin-bottom: 0;
+.wa-remediation-box li:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.05);
+  transform: translateX(2px);
+}
+
+.wa-remediation-box li::before {
+  content: '';
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310B981' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  display: inline-block;
+}
+
+/* Accordion Remediation list styling overrides */
+.remediation-section ul {
+  list-style-type: none !important;
+  padding-left: 0 !important;
+  margin-top: 8px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.remediation-section li {
+  font-size: 12px;
+  color: var(--cg-text-2);
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.remediation-section li:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.05);
+  transform: translateX(2px);
+}
+
+.remediation-section li::before {
+  content: '';
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310B981' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  display: inline-block;
+}
+
+/* Modern Remediation & Guidelines Container */
+.wa-remediation-container {
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid var(--cg-border);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.wa-remediation-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--remediation-accent, var(--cg-accent));
+}
+
+.wa-remediation-container.status-safe {
+  --remediation-accent: var(--cg-success);
+  border-color: rgba(16, 185, 129, 0.15);
+  background: linear-gradient(to right, rgba(16, 185, 129, 0.02), rgba(255, 255, 255, 0.005));
+}
+
+.wa-remediation-container.status-warning {
+  --remediation-accent: var(--cg-warning);
+  border-color: rgba(245, 158, 11, 0.15);
+  background: linear-gradient(to right, rgba(245, 158, 11, 0.02), rgba(255, 255, 255, 0.005));
+}
+
+.wa-remediation-container.status-threat {
+  --remediation-accent: var(--cg-danger);
+  border-color: rgba(239, 68, 68, 0.15);
+  background: linear-gradient(to right, rgba(239, 68, 68, 0.02), rgba(255, 255, 255, 0.005));
+}
+
+.wa-remediation-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.wa-remediation-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--remediation-accent, var(--cg-text-1));
+  font-family: var(--cg-font-sans);
+}
+
+.wa-remediation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wa-remediation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.wa-remediation-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.05);
+  transform: translateX(2px);
+}
+
+.wa-remediation-item-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--remediation-accent, var(--cg-text-2));
+}
+
+.wa-remediation-item-content {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--cg-text-2);
+}
+
+/* Modern styling for recommended actions in audit details */
+.wa-legacy-recommendation-box {
+  margin-top: 10px;
+  padding: 12px;
+  background: rgba(16, 185, 129, 0.04);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  border-radius: 8px;
+  font-family: var(--cg-font-mono);
+  font-size: 11px;
+  color: var(--cg-success);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.4;
+  transition: all 0.2s ease;
+}
+
+.wa-legacy-recommendation-box:hover {
+  background: rgba(16, 185, 129, 0.06);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.wa-legacy-recommendation-box-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--cg-success);
 }
 
 /* Monospace command terminal style for Live Activity feed */
@@ -3700,6 +3892,25 @@ body.authenticated #guest-notice {
 .wa-status-present { color: #10b981; border-color: rgba(16, 185, 129, 0.2) !important; background: rgba(16, 185, 129, 0.05) !important; }
 .wa-status-missing { color: #f43f5e; border-color: rgba(244, 63, 94, 0.2) !important; background: rgba(244, 63, 94, 0.05) !important; }
 .wa-status-misconfigured { color: #fbbf24; border-color: rgba(251, 191, 36, 0.2) !important; background: rgba(251, 191, 36, 0.05) !important; }
+
+/* Dynamic Filter Pills - Active Success Theme */
+.filter-pill.active-success {
+  background: rgba(16, 185, 129, 0.2) !important;
+  backdrop-filter: blur(12px) !important;
+  border-color: rgba(16, 185, 129, 0.5) !important;
+  color: var(--cg-success) !important;
+  box-shadow:
+    0 0 20px rgba(16, 185, 129, 0.5),
+    0 0 40px rgba(16, 185, 129, 0.2) !important;
+  transform: translateY(0) !important;
+}
+
+.filter-pill.active-success:hover {
+  background: rgba(16, 185, 129, 0.25) !important;
+  box-shadow:
+    0 0 24px rgba(16, 185, 129, 0.6),
+    0 0 48px rgba(16, 185, 129, 0.25) !important;
+}
 
 
 
