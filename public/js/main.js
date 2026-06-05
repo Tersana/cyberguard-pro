@@ -12937,7 +12937,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `;
       }
-
+
       // 3. Email Security Policy Audit
       else if (toolId === 'email') {
         if (!this.emailResults) {
@@ -13247,12 +13247,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Pre-saved official OpenRouter API key for instant out-of-the-box operation
   const DEFAULT_OPENROUTER_KEY = "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";
   
+  // Clean up any legacy localStorage keys for AI provider keys
+  localStorage.removeItem("cg_ai_openrouter_key");
+  localStorage.removeItem("cg_ai_groq_key");
+
   // Initialize default localStorage settings on first load
   if (localStorage.getItem("cg_ai_provider") !== "openrouter") {
     localStorage.setItem("cg_ai_provider", "openrouter");
-  }
-  if (!localStorage.getItem("cg_ai_openrouter_key")) {
-    localStorage.setItem("cg_ai_openrouter_key", DEFAULT_OPENROUTER_KEY);
   }
   if (!localStorage.getItem("cg_ai_openrouter_model")) {
     localStorage.setItem("cg_ai_openrouter_model", "openai/gpt-oss-120b:free");
@@ -13672,8 +13673,18 @@ Always align dashboard actions with what the user requests! Explain briefly what
     // Repopulate presets select
     populateModelPresets(provider);
 
-    const savedKey = localStorage.getItem("cg_ai_" + provider + "_key") || "";
-    keyInput.value = savedKey;
+    // Load API Key configuration from backend/window.userApiKeys
+    const keyInfo = (window.userApiKeys && window.userApiKeys.ai_assistant) || {};
+    const hasKey = !!keyInfo.has_key;
+    const masked = keyInfo.masked || "";
+    
+    if (hasKey) {
+      keyInput.placeholder = masked || "Configured (API Key)";
+      keyInput.value = "";
+    } else {
+      keyInput.placeholder = "Enter API key...";
+      keyInput.value = "";
+    }
 
     let savedModel = localStorage.getItem("cg_ai_" + provider + "_model") || "";
 
@@ -13835,7 +13846,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
 
     // Save configurations
     if (saveSettingsBtn) {
-      saveSettingsBtn.addEventListener("click", () => {
+      saveSettingsBtn.addEventListener("click", async () => {
         const prov = providerSelect.value;
         localStorage.setItem("cg_ai_provider", prov);
         
@@ -13853,13 +13864,39 @@ Always align dashboard actions with what the user requests! Explain briefly what
         }
         
         localStorage.setItem("cg_ai_" + prov + "_model", targetModel);
-        if (prov !== "offline") {
-          localStorage.setItem("cg_ai_" + prov + "_key", keyInput.value.trim());
+        
+        // Save key to backend if non-empty
+        const newKey = keyInput.value.trim();
+        if (newKey) {
+          try {
+            if (typeof showLoading === "function") {
+              showLoading("Saving AI Assistant key...");
+            }
+            await window.apiClient.post("apiKeys", {
+              keys: {
+                ai_assistant: newKey
+              }
+            });
+            await window.fetchUserApiKeys();
+            if (window.ApiKeysSettings && typeof window.ApiKeysSettings.init === "function") {
+              await window.ApiKeysSettings.init();
+            }
+          } catch (err) {
+            console.error("Failed to save AI Assistant key:", err);
+            if (window.CyberNotify) {
+              window.CyberNotify.alert("Failed to save API key to server.", { type: "error" });
+            }
+          } finally {
+            if (typeof hideLoading === "function") {
+              hideLoading();
+            }
+          }
         }
         
         localStorage.setItem("cg_ai_system_prompt", promptInput.value.trim());
         localStorage.setItem("cg_ai_temp", tempInput.value);
 
+        loadConfigurations();
         updateEngineLabel();
         settingsPanel.classList.add("hidden");
         
@@ -13871,18 +13908,37 @@ Always align dashboard actions with what the user requests! Explain briefly what
 
     // Reset defaults
     if (resetSettingsBtn) {
-      resetSettingsBtn.addEventListener("click", () => {
+      resetSettingsBtn.addEventListener("click", async () => {
         localStorage.removeItem("cg_ai_provider");
-        localStorage.removeItem("cg_ai_openrouter_key");
         localStorage.removeItem("cg_ai_openrouter_model");
-        localStorage.removeItem("cg_ai_groq_key");
-        localStorage.removeItem("cg_ai_groq_model");
         localStorage.removeItem("cg_ai_system_prompt");
         localStorage.removeItem("cg_ai_temp");
 
+        localStorage.removeItem("cg_ai_openrouter_key");
+        localStorage.removeItem("cg_ai_groq_key");
+
         localStorage.setItem("cg_ai_provider", "openrouter");
-        localStorage.setItem("cg_ai_openrouter_key", DEFAULT_OPENROUTER_KEY);
         localStorage.setItem("cg_ai_openrouter_model", "openai/gpt-oss-120b:free");
+
+        const keyInfo = (window.userApiKeys && window.userApiKeys.ai_assistant) || {};
+        if (keyInfo.id) {
+          try {
+            if (typeof showLoading === "function") {
+              showLoading("Resetting API Key...");
+            }
+            await window.apiClient.delete(`apiKeys/${keyInfo.id}`);
+            await window.fetchUserApiKeys();
+            if (window.ApiKeysSettings && typeof window.ApiKeysSettings.init === "function") {
+              await window.ApiKeysSettings.init();
+            }
+          } catch (err) {
+            console.error("Failed to delete user AI key on reset:", err);
+          } finally {
+            if (typeof hideLoading === "function") {
+              hideLoading();
+            }
+          }
+        }
 
         loadConfigurations();
         updateEngineLabel();
@@ -13953,8 +14009,14 @@ Always align dashboard actions with what the user requests! Explain briefly what
 
       const fullSystemPrompt = promptOverride ? promptOverride : SYSTEM_PROMPT;
 
-      // Use pre-configured system fallback key for OpenRouter if none configured by user
-      const activeKey = key || (prov === "openrouter" ? DEFAULT_OPENROUTER_KEY : "");
+      // Retrieve key using window.getApiKey ("ai_assistant")
+      let activeKey = "";
+      if (prov === "openrouter" || prov === "groq") {
+        activeKey = window.getApiKey("ai_assistant");
+        if (!activeKey || activeKey === "system-default-key") {
+          activeKey = prov === "openrouter" ? DEFAULT_OPENROUTER_KEY : "";
+        }
+      }
       // Use stored model; if empty or accidentally "custom" was saved, fall back to default
       const activeModel = (model && model !== "custom") ? model : (prov === "openrouter" ? "openai/gpt-oss-120b:free" : "");
 
@@ -15200,6 +15262,12 @@ Or save your OpenRouter key in my settings configurations at the top right!`;
     
     return out.join("");
   }
+
+  // Listen for API keys loaded event to refresh configurations
+  document.addEventListener("cyberguard:apiKeysLoaded", () => {
+    loadConfigurations();
+    updateEngineLabel();
+  });
 })(); // end initAIAssistant IIFE
 
   // Header Export PDF — delegates to the footer export-pdf-btn
