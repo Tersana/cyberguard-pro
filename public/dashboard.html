@@ -1579,13 +1579,13 @@
                                         </div>
                                         
                                         <div class="severity-chart-layout flex flex-col sm:flex-row items-center gap-6 mt-4">
-                                            <div class="severity-donut-wrapper flex-shrink-0">
-                                                <!-- Dynamic conic-gradient donut chart -->
-                                                <div id="severity-donut-chart" class="severity-donut-chart-container">
-                                                    <div class="donut-center-overlay bg-[var(--cg-bg-surface)]">
-                                                        <div class="donut-total-count text-white font-extrabold text-2xl font-mono" id="donut-total-findings-count">0</div>
-                                                        <div class="donut-total-label text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Total</div>
-                                                    </div>
+                                            <div class="severity-donut-wrapper flex-shrink-0" style="position: relative; width: 140px; height: 140px;">
+                                                <!-- Dynamic ApexCharts donut chart -->
+                                                <div id="severity-donut-chart" class="severity-donut-chart-container"></div>
+                                                <!-- Center overlay sits on top of ApexCharts SVG via absolute positioning -->
+                                                <div class="donut-center-overlay bg-[var(--cg-bg-surface)]" style="pointer-events: none; z-index: 10;">
+                                                    <div class="donut-total-count text-white font-extrabold text-2xl font-mono" id="donut-total-findings-count">0</div>
+                                                    <div class="donut-total-label text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Total</div>
                                                 </div>
                                             </div>
                                             <div class="severity-bar-list-container flex-1 w-full space-y-3" id="severity-bar-list">

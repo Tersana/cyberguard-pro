@@ -13257,6 +13257,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!localStorage.getItem("cg_ai_openrouter_model")) {
     localStorage.setItem("cg_ai_openrouter_model", "openai/gpt-oss-120b:free");
   }
+  // Clean up stale model values from old presets that have been removed
+  const _staleModels = [
+    "meta-llama/llama-3-8b-instruct:free",
+    "mistralai/mistral-7b-instruct:free",
+    "llama-3.1-8b-instant",
+    "mixtral-8x7b-32768",
+    "local"
+  ];
+  const _storedModel = localStorage.getItem("cg_ai_openrouter_model");
+  if (_staleModels.includes(_storedModel)) {
+    localStorage.setItem("cg_ai_openrouter_model", "openai/gpt-oss-120b:free");
+  }
   if (!localStorage.getItem("cg_ai_temp")) {
     localStorage.setItem("cg_ai_temp", "0.7");
   }
@@ -13663,11 +13675,26 @@ Always align dashboard actions with what the user requests! Explain briefly what
     const savedKey = localStorage.getItem("cg_ai_" + provider + "_key") || "";
     keyInput.value = savedKey;
 
-    const savedModel = localStorage.getItem("cg_ai_" + provider + "_model") || MODEL_PRESETS[provider][0].value;
-    if (MODEL_PRESETS[provider].some(m => m.value === savedModel)) {
+    let savedModel = localStorage.getItem("cg_ai_" + provider + "_model") || "";
+
+    // Check if the saved model is one of the non-custom presets
+    const nonCustomPresets = MODEL_PRESETS[provider].filter(m => m.value !== "custom");
+    const isKnownPreset = nonCustomPresets.some(m => m.value === savedModel);
+    const isCustom = savedModel && !isKnownPreset;
+
+    if (!savedModel || savedModel === "custom") {
+      // No valid saved model — fall back to first preset
+      modelSelect.value = MODEL_PRESETS[provider][0].value;
+      customModelInput.value = "";
+      customModelInput.classList.add("hidden");
+      // Save the cleaned-up model so stale values don't persist
+      localStorage.setItem("cg_ai_" + provider + "_model", MODEL_PRESETS[provider][0].value);
+    } else if (isKnownPreset) {
       modelSelect.value = savedModel;
+      customModelInput.value = "";
       customModelInput.classList.add("hidden");
     } else {
+      // It's a custom model identifier typed by the user
       modelSelect.value = "custom";
       customModelInput.value = savedModel;
       customModelInput.classList.remove("hidden");
@@ -13814,7 +13841,15 @@ Always align dashboard actions with what the user requests! Explain briefly what
         
         let targetModel = modelSelect.value;
         if (targetModel === "custom") {
-          targetModel = customModelInput.value.trim();
+          const customVal = customModelInput.value.trim();
+          if (!customVal) {
+            // Prevent saving with an empty custom model
+            if (window.CyberNotify) {
+              window.CyberNotify.alert("Please enter a valid custom model identifier (e.g. openai/gpt-4o:free)", { type: "warning" });
+            }
+            return;
+          }
+          targetModel = customVal;
         }
         
         localStorage.setItem("cg_ai_" + prov + "_model", targetModel);
@@ -13920,7 +13955,8 @@ Always align dashboard actions with what the user requests! Explain briefly what
 
       // Use pre-configured system fallback key for OpenRouter if none configured by user
       const activeKey = key || (prov === "openrouter" ? DEFAULT_OPENROUTER_KEY : "");
-      const activeModel = model || (prov === "openrouter" ? "openai/gpt-oss-120b:free" : "");
+      // Use stored model; if empty or accidentally "custom" was saved, fall back to default
+      const activeModel = (model && model !== "custom") ? model : (prov === "openrouter" ? "openai/gpt-oss-120b:free" : "");
 
       // Check if dynamic context queries or offline wizards triggered
       const isOfflineMode = prov === "offline" || (!activeKey && prov !== "offline");
