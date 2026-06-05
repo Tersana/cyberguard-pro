@@ -8,7 +8,16 @@
     "start": "node dev-server.js",
     "dev": "nodemon dev-server.js",
     "test": "vitest --run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "sandbox:extract": "node scripts/sandbox.js extract",
+    "sandbox:merge": "node scripts/sandbox.js merge",
+    "test:generate": "node scripts/generate-test.js",
+    "lint:theme": "node scripts/lint-theme-tokens.js",
+    "lint:clean": "node scripts/lint-clean-code.js",
+    "audit:security": "node scripts/security-audit.js",
+    "graphify:update": "graphify update .",
+    "graphify:query": "graphify query",
+    "graphify:path": "graphify path"
   },
   "dependencies": {
     "cors": "^2.8.5",

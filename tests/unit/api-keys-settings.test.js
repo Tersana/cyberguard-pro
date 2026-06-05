@@ -65,7 +65,7 @@ describe('API Keys Settings Module', () => {
 
     // Mock APIClient HTTP calls before executing api-keys-settings.js
     window.APIClient.prototype.get = vi.fn().mockImplementation(async (url) => {
-      if (url === "user/api-keys") {
+      if (url === "apiKeys") {
         return {
           virustotal: { has_key: true, key: "vtKeyReal", masked: "••••1234", id: "vt-id" },
           abuseipdb: { has_key: false, masked: "", id: null },
@@ -114,7 +114,7 @@ describe('API Keys Settings Module', () => {
     await window.ApiKeysSettings.init();
 
     // Verify GET request was called
-    expect(window.APIClient.prototype.get).toHaveBeenCalledWith("user/api-keys");
+    expect(window.APIClient.prototype.get).toHaveBeenCalledWith("apiKeys");
 
     // Verify transient memory cache population
     expect(window.userApiKeys.virustotal).toBeDefined();
@@ -151,7 +151,7 @@ describe('API Keys Settings Module', () => {
     expect(lastDirtyState).toEqual({ tabId: "api-keys", isDirty: true });
   });
 
-  it('should submit bulk updates to POST /api/user/api-keys when save is called', async () => {
+  it('should submit bulk updates to POST /api/apiKeys when save is called', async () => {
     await window.ApiKeysSettings.init();
 
     // Modify VirusTotal input and Shodan input
@@ -169,7 +169,7 @@ describe('API Keys Settings Module', () => {
     expect(success).toBe(true);
 
     // Verify POST payload
-    expect(window.APIClient.prototype.post).toHaveBeenCalledWith("user/api-keys", {
+    expect(window.APIClient.prototype.post).toHaveBeenCalledWith("apiKeys", {
       keys: {
         virustotal: "newVTKey",
         shodan: "newShodanKey"
@@ -194,7 +194,7 @@ describe('API Keys Settings Module', () => {
     await new Promise(resolve => setTimeout(resolve, 10));
 
     // Verify DELETE request was sent with the correct ID
-    expect(window.APIClient.prototype.delete).toHaveBeenCalledWith("user/api-keys/vt-id");
+    expect(window.APIClient.prototype.delete).toHaveBeenCalledWith("apiKeys/vt-id");
 
     // Verify CyberNotify alert called
     expect(window.CyberNotify.alert).toHaveBeenCalledWith("API Key deleted successfully", { type: "success" });

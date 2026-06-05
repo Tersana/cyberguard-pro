@@ -951,9 +951,10 @@ window.fetchUserApiKeys = async function () {
   }
 
   try {
-    const data = await client.get("user/api-keys");
+    const data = await client.get("apiKeys");
     if (data) {
       window.userApiKeys = data;
+      document.dispatchEvent(new CustomEvent("cyberguard:apiKeysLoaded"));
       return data;
     }
   } catch (e) {
