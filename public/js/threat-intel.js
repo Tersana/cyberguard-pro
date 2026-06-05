@@ -359,13 +359,11 @@ const APIOrchestrator = {
    */
   async fetchVirusTotal(input, type) {
     try {
-      // Get API key from localStorage
-      const storedKey = localStorage.getItem('vtApiKey');
-      if (!storedKey) {
-        throw new Error('VirusTotal API key not configured');
+      // Get API key from memory cache
+      let apiKey = "";
+      if (typeof window.getApiKey === "function") {
+        apiKey = window.getApiKey('virustotal');
       }
-      
-      const apiKey = decryptApiKey(storedKey);
       if (!apiKey) {
         throw new Error('VirusTotal API key not configured');
       }
@@ -426,13 +424,11 @@ const APIOrchestrator = {
    */
   async fetchAbuseIPDB(ip) {
     try {
-      // Get API key from localStorage
-      const storedKey = localStorage.getItem('abuseipdbApiKey');
-      if (!storedKey) {
-        throw new Error('AbuseIPDB API key not configured');
+      // Get API key from memory cache
+      let apiKey = "";
+      if (typeof window.getApiKey === "function") {
+        apiKey = window.getApiKey('abuseipdb');
       }
-      
-      const apiKey = decryptApiKey(storedKey);
       if (!apiKey) {
         throw new Error('AbuseIPDB API key not configured');
       }
@@ -493,13 +489,11 @@ const APIOrchestrator = {
    */
   async fetchURLScan(url) {
     try {
-      // Get API key from localStorage
-      const storedKey = localStorage.getItem('urlscanApiKey');
-      if (!storedKey) {
-        throw new Error('URLScan API key not configured');
+      // Get API key from memory cache
+      let apiKey = "";
+      if (typeof window.getApiKey === "function") {
+        apiKey = window.getApiKey('urlscan');
       }
-
-      const apiKey = decryptApiKey(storedKey);
       if (!apiKey) {
         throw new Error('URLScan API key not configured');
       }
@@ -1125,13 +1119,14 @@ const ThreatIntelHub = {
    * Validates URLScan, VirusTotal, and AbuseIPDB API keys
    */
   checkAPIKeys() {
-    const urlscanKey = localStorage.getItem('urlscanApiKey');
-    const vtKey = localStorage.getItem('vtApiKey');
-    const abuseKey = localStorage.getItem('abuseipdbApiKey');
+    let urlscanKey = "";
+    if (typeof window.getApiKey === "function") {
+      urlscanKey = window.getApiKey('urlscan');
+    }
     
     // Check for URLScan API key and show warning if missing
     if (!urlscanKey && typeof CyberNotify !== 'undefined') {
-      CyberNotify.alert('URLScan API key not configured. Add it in API Management to enable URL/domain scanning.', { type: 'warning' });
+      CyberNotify.alert('URLScan API key not configured. Add it in Settings to enable URL/domain scanning.', { type: 'warning' });
     }
     
     console.log('ThreatIntelHub: API key validation complete');

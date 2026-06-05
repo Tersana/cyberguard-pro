@@ -23,6 +23,9 @@
   }
 
   function getStoredApiKey(name) {
+    if (typeof window.getApiKey === "function") {
+      return window.getApiKey(name);
+    }
     const stored = localStorage.getItem(name);
     return stored ? decryptApiKey(stored) : "";
   }

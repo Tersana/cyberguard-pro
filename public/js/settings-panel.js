@@ -11,7 +11,8 @@ class SettingsPanel {
             profile: false,
             security: false,
             notifications: false,
-            appearance: false
+            appearance: false,
+            "api-keys": false
         };
         this.focusedElementBeforeOpen = null;
     }
@@ -48,6 +49,7 @@ class SettingsPanel {
             window.NotificationSettings.init();
             window.AppearanceSettings.init();
             if (window.BillingSettings) window.BillingSettings.init();
+            if (window.ApiKeysSettings) window.ApiKeysSettings.init();
             window.AccountSettings.init();
 
             // Set focus inside the modal for screen readers (Focus Trap)
@@ -88,6 +90,7 @@ class SettingsPanel {
             window.SecuritySettings.reset();
             window.NotificationSettings.reset();
             window.AppearanceSettings.reset();
+            if (window.ApiKeysSettings) window.ApiKeysSettings.reset();
 
             // Restore focus (Accessibility)
             if (this.focusedElementBeforeOpen) {
@@ -242,6 +245,9 @@ class SettingsPanel {
         if (this.dirtyRegistry.appearance) {
             success = success && window.AppearanceSettings.save();
         }
+        if (this.dirtyRegistry["api-keys"]) {
+            success = success && window.ApiKeysSettings.save();
+        }
 
         if (success) {
             this.updateDirtyBarVisibility();
@@ -253,6 +259,7 @@ class SettingsPanel {
         if (this.dirtyRegistry.security) window.SecuritySettings.reset();
         if (this.dirtyRegistry.notifications) window.NotificationSettings.reset();
         if (this.dirtyRegistry.appearance) window.AppearanceSettings.reset();
+        if (this.dirtyRegistry["api-keys"]) window.ApiKeysSettings.reset();
 
         this.updateDirtyBarVisibility();
         CyberNotify.alert("Unsaved changes discarded.", { type: "info" });
