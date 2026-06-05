@@ -898,12 +898,17 @@ const OSINT = {
       let abuseKey = '';
       
       // Try resolving configured AbuseIPDB API key
-      const plain1 = localStorage.getItem('abuseipdb_api_key');
-      const plain2 = localStorage.getItem('abuseipdb_key');
-      const encrypted = localStorage.getItem('abuseipdbApiKey');
-      if (plain1) abuseKey = plain1;
-      else if (plain2) abuseKey = plain2;
-      else if (encrypted) abuseKey = decryptApiKey(encrypted);
+      if (typeof window.getApiKey === "function") {
+        abuseKey = window.getApiKey("abuseipdb");
+      }
+      if (!abuseKey) {
+        const plain1 = localStorage.getItem('abuseipdb_api_key');
+        const plain2 = localStorage.getItem('abuseipdb_key');
+        const encrypted = localStorage.getItem('abuseipdbApiKey');
+        if (plain1) abuseKey = plain1;
+        else if (plain2) abuseKey = plain2;
+        else if (encrypted) abuseKey = decryptApiKey(encrypted);
+      }
 
       if (abuseKey) {
         try {

@@ -42,22 +42,19 @@ describe('ProjectManager - lazyLoadProjectMetrics', () => {
             scans: [{ id: 'scan_1', status: 'completed' }]
           });
         }
-        if (url === '/targets/target_1/findings') {
+        if (url === '/projects/123/findings?page=1') {
           return Promise.resolve({
             status: 'success',
-            findings: [
-              { id: 'f1', severity: 'critical', status: 'open' },
-              { id: 'f2', severity: 'high', status: 'open' }
-            ]
-          });
-        }
-        if (url === '/targets/target_2/findings') {
-          return Promise.resolve({
-            status: 'success',
-            findings: [
-              { id: 'f3', severity: 'medium', status: 'open' },
-              { id: 'f4', severity: 'low', status: 'open' }
-            ]
+            findings: {
+              current_page: 1,
+              last_page: 1,
+              data: [
+                { id: 'f1', severity: 'critical', status: 'open' },
+                { id: 'f2', severity: 'high', status: 'open' },
+                { id: 'f3', severity: 'medium', status: 'open' },
+                { id: 'f4', severity: 'low', status: 'open' }
+              ]
+            }
           });
         }
         return Promise.reject(new Error('Unknown url: ' + url));

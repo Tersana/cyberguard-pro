@@ -2462,18 +2462,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const exportPdfBtn = document.getElementById("export-pdf-btn");
   const tabButtons = document.querySelectorAll(".tab-button");
   const tabPanes = document.querySelectorAll(".tab-pane");
-  const vtApiKeyInput = document.getElementById("vt-api-key");
-  const saveVtKeyBtn = document.getElementById("save-vt-key-btn");
-  const abuseApiKeyInput = document.getElementById("abuse-api-key");
-  const saveAbuseKeyBtn = document.getElementById("save-abuse-key-btn");
-  const whoisApiKeyInput = document.getElementById("whois-api-key");
-  const saveWhoisKeyBtn = document.getElementById("save-whois-key-btn");
-  const shodanApiKeyInput = document.getElementById("shodan-api-key");
-  const saveShodanKeyBtn = document.getElementById("save-shodan-key-btn");
-  const clearAllKeysBtn = document.getElementById("clear-all-keys-btn");
   const apiKeysToggle = document.getElementById("api-keys-toggle");
-  const apiKeysModal = document.getElementById("api-keys-modal");
-  const apiKeysClose = document.getElementById("api-keys-close");
   const floatingSidebarToggle = document.getElementById("sidebar-toggle-btn");
 
   const VT_BASE_URL = "https://www.virustotal.com/api/v3";
@@ -2545,47 +2534,21 @@ document.addEventListener("DOMContentLoaded", () => {
     currentTheme = "dark";
   }
 
-  // --- API Keys Modal Management ---
+  // --- API Keys Settings Tab Management ---
 
-  function showApiKeysModal() {
-    apiKeysModal.classList.remove("hidden");
-    document.body.style.overflow = "hidden"; // Prevent background scrolling
-
-    // Add click outside to close
-    apiKeysModal.addEventListener("click", (e) => {
-      if (e.target === apiKeysModal) {
-        hideApiKeysModal();
+  if (apiKeysToggle) {
+    apiKeysToggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (typeof authManager !== "undefined" && !authManager.isAuthenticated()) {
+        if (typeof authManager.showApiKeysRestriction === "function") {
+          authManager.showApiKeysRestriction();
+        }
+        return;
+      }
+      if (typeof window.SettingsPanel !== "undefined") {
+        window.SettingsPanel.open("api-keys");
       }
     });
-
-    // Add ESC key to close
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && !apiKeysModal.classList.contains("hidden")) {
-        hideApiKeysModal();
-      }
-    });
-  }
-
-  function hideApiKeysModal() {
-    apiKeysModal.classList.add("hidden");
-    document.body.style.overflow = "auto"; // Restore scrolling
-  }
-
-  function toggleApiKeysModal() {
-    // Check if user is authenticated before allowing API keys access
-    if (typeof authManager !== "undefined" && !authManager.isAuthenticated()) {
-      // Show authentication prompt instead of opening modal
-      if (typeof authManager.showApiKeysRestriction === "function") {
-        authManager.showApiKeysRestriction();
-      }
-      return;
-    }
-
-    if (apiKeysModal.classList.contains("hidden")) {
-      showApiKeysModal();
-    } else {
-      hideApiKeysModal();
-    }
   }
 
   // --- Sidebar Panel Management ---
@@ -2600,10 +2563,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Keep the floating button reference for backward compatibility
   // but don't add event listener since it's handled in dashboard.html
-
-  apiKeysToggle.addEventListener("click", toggleApiKeysModal);
-  apiKeysClose.addEventListener("click", hideApiKeysModal);
-  // floatingSidebarToggle event listener is now in dashboard.html
 
   // NOTE: Sidebar overlay click handler is now in dashboard.html
   // The new implementation uses .sidebar-collapsed class and handles mobile/desktop modes
@@ -3141,6 +3100,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // Wait for session restoration
     await authManager.loadUserSession();
 
+    // Fetch live API keys
+    try {
+      await window.fetchUserApiKeys();
+      loadVtKey();
+      loadWhoisKey();
+      loadShodanKey();
+    } catch (e) {
+      console.error("Failed to initialize API keys:", e);
+    }
+
     // Fetch live 2FA status from the API (not local state)
     await update2FAStatus();
   }
@@ -3153,65 +3122,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize dashboard asynchronously
   initializeDashboard();
 
-  // --- API Key Management ---
-  saveVtKeyBtn.addEventListener("click", () => {
-    virusTotalApiKey = vtApiKeyInput.value.trim();
-    if (virusTotalApiKey) {
-      const encryptedKey = encryptApiKey(virusTotalApiKey);
-      localStorage.setItem("vtApiKey", encryptedKey);
-      logResult(
-        new Date(),
-        "System",
-        "✅ VirusTotal API Key saved securely.",
-        "success",
-      );
-      // Show success notification
-      CyberNotify.alert("VirusTotal API Key saved successfully!", {
-        type: "success",
-      });
-      vtApiKeyInput.value = ""; // Clear for security
-    } else {
-      console.error("Invalid VirusTotal API key provided");
-      CyberNotify.alert("Please enter a valid API key.", { type: "warning" });
-    }
-  });
+  // --- API Key Management (Legacy wrappers redirected to window.getApiKey) ---
   function loadVtKey() {
-    const storedKey = localStorage.getItem("vtApiKey");
-    if (storedKey) {
-      virusTotalApiKey = decryptApiKey(storedKey);
-      logResult(
-        new Date(),
-        "System",
-        "ℹ️ VirusTotal API Key loaded from secure storage.",
-      );
-    }
+    virusTotalApiKey = window.getApiKey("virustotal");
   }
 
-  // AbuseIPDB key management
-  saveAbuseKeyBtn.addEventListener("click", () => {
-    const key = abuseApiKeyInput.value.trim();
-    if (key) {
-      const encryptedKey = encryptApiKey(key);
-      localStorage.setItem("abuseipdbApiKey", encryptedKey);
-      logResult(
-        new Date(),
-        "System",
-        "✅ AbuseIPDB API Key saved securely.",
-        "success",
-      );
-      // Show success notification
-      CyberNotify.alert("AbuseIPDB API Key saved successfully!", {
-        type: "success",
-      });
-      abuseApiKeyInput.value = "";
-    } else {
-      console.error("Invalid AbuseIPDB API key provided");
-      CyberNotify.alert("Please enter a valid API key.", { type: "warning" });
-    }
-  });
   function loadAbuseKey() {
-    const storedKey = localStorage.getItem("abuseipdbApiKey");
-    return storedKey ? decryptApiKey(storedKey) : "";
+    return window.getApiKey("abuseipdb");
   }
 
   // --- Session Management ---
@@ -3238,8 +3155,6 @@ document.addEventListener("DOMContentLoaded", () => {
       xssInput: document.getElementById("xss-input")?.value || "",
       phishingInput: document.getElementById("phishing-input")?.value || "",
       currentTheme: currentTheme,
-      virusTotalApiKey: virusTotalApiKey,
-      whoisApiKey: whoisApiKey,
     };
 
     try {
@@ -3423,14 +3338,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("xss-input").value = session.xssInput;
       if (session.phishingInput)
         document.getElementById("phishing-input").value = session.phishingInput;
-
-      // Restore API keys
-      if (session.virusTotalApiKey) {
-        virusTotalApiKey = session.virusTotalApiKey;
-      }
-      if (session.whoisApiKey) {
-        whoisApiKey = session.whoisApiKey;
-      }
 
       // Restore theme
       if (session.currentTheme) {
@@ -3698,155 +3605,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // WhoisXML key management
-  saveWhoisKeyBtn.addEventListener("click", () => {
-    const key = whoisApiKeyInput.value.trim();
-    if (key) {
-      const encryptedKey = encryptApiKey(key);
-      localStorage.setItem("whoisApiKey", encryptedKey);
-      whoisApiKey = key;
-      logResult(
-        new Date(),
-        "System",
-        "✅ WhoisXML API Key saved securely.",
-        "success",
-      );
-      // Show success notification
-      CyberNotify.alert("WhoisXML API Key saved successfully!", {
-        type: "success",
-      });
-      whoisApiKeyInput.value = "";
-    } else {
-      console.error("Invalid WhoisXML API key provided");
-      CyberNotify.alert("Please enter a valid API key.", { type: "warning" });
-    }
-  });
   function loadWhoisKey() {
-    const storedKey = localStorage.getItem("whoisApiKey");
-    if (storedKey) {
-      whoisApiKey = decryptApiKey(storedKey);
-      logResult(
-        new Date(),
-        "System",
-        "ℹ️ WhoisXML API Key loaded from secure storage.",
-      );
-    }
+    whoisApiKey = window.getApiKey("whoisxml");
     return whoisApiKey || "";
   }
 
   // Shodan key management
-  saveShodanKeyBtn.addEventListener("click", () => {
-    const key = shodanApiKeyInput.value.trim();
-    if (key) {
-      const encryptedKey = encryptApiKey(key);
-      localStorage.setItem("shodanApiKey", encryptedKey);
-      shodanApiKey = key;
-      logResult(
-        new Date(),
-        "System",
-        "✅ Shodan API Key saved securely.",
-        "success",
-      );
-      // Show success notification
-      CyberNotify.alert("Shodan API Key saved successfully!", {
-        type: "success",
-      });
-      shodanApiKeyInput.value = "";
-    } else {
-      console.error("Invalid Shodan API key provided");
-      CyberNotify.alert("Please enter a valid API key.", { type: "warning" });
-    }
-  });
   function loadShodanKey() {
-    const storedKey = localStorage.getItem("shodanApiKey");
-    if (storedKey) {
-      shodanApiKey = decryptApiKey(storedKey);
-      logResult(
-        new Date(),
-        "System",
-        "ℹ️ Shodan API Key loaded from secure storage.",
-      );
-    }
+    shodanApiKey = window.getApiKey("shodan");
     return shodanApiKey || "";
   }
 
   // URLScan key management
-  const urlscanApiKeyInput = document.getElementById("urlscan-api-key");
-  const saveUrlscanKeyBtn = document.getElementById("save-urlscan-key-btn");
-
-  if (saveUrlscanKeyBtn) {
-    saveUrlscanKeyBtn.addEventListener("click", () => {
-      const key = urlscanApiKeyInput.value.trim();
-      if (key) {
-        const encryptedKey = encryptApiKey(key);
-        localStorage.setItem("urlscanApiKey", encryptedKey);
-        logResult(
-          new Date(),
-          "System",
-          "✅ URLScan API Key saved securely.",
-          "success",
-        );
-        // Show success notification
-        CyberNotify.alert("URLScan API Key saved successfully!", {
-          type: "success",
-        });
-        urlscanApiKeyInput.value = "";
-      } else {
-        console.error("Invalid URLScan API key provided");
-        CyberNotify.alert("Please enter a valid API key.", { type: "warning" });
-      }
-    });
-  }
   function loadUrlscanKey() {
-    const storedKey = localStorage.getItem("urlscanApiKey");
-    if (storedKey) {
-      logResult(
-        new Date(),
-        "System",
-        "ℹ️ URLScan API Key loaded from secure storage.",
-      );
-    }
-    return storedKey ? decryptApiKey(storedKey) : "";
+    return window.getApiKey("urlscan");
   }
 
-  // Clear all API keys function
-  function clearAllApiKeys() {
-    CyberNotify.confirm(
-      "Are you sure you want to clear ALL API keys? This action cannot be undone.",
-      (confirmed) => {
-        if (confirmed) {
-          // Clear from localStorage
-          localStorage.removeItem("vtApiKey");
-          localStorage.removeItem("whoisApiKey");
-          localStorage.removeItem("shodanApiKey");
-          localStorage.removeItem("urlscanApiKey");
-          localStorage.removeItem("abuseipdbApiKey");
 
-          // Clear from memory
-          virusTotalApiKey = "";
-          whoisApiKey = "";
-          shodanApiKey = "";
 
-          // Clear input fields
-          vtApiKeyInput.value = "";
-          abuseApiKeyInput.value = "";
-          whoisApiKeyInput.value = "";
-          shodanApiKeyInput.value = "";
-          if (urlscanApiKeyInput) urlscanApiKeyInput.value = "";
-
-          logResult(
-            new Date(),
-            "System",
-            "🗑️ All API keys cleared from secure storage.",
-            "success",
-          );
-        }
-      },
-      { type: "warning" },
-    );
-  }
-
-  // Add event listener for clear all keys button
-  clearAllKeysBtn.addEventListener("click", clearAllApiKeys);
 
   // --- Core Functions ---
   function showProgressBar() {

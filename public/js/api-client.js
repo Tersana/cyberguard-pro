@@ -916,6 +916,59 @@ function withLoading(asyncFn, options = {}) {
   };
 })();
 
+// Transient in-memory storage for user API keys
+window.userApiKeys = {};
+
+// Retrieve an API key from transient memory
+window.getApiKey = function (serviceName) {
+  if (!serviceName) return "";
+  let name = serviceName.toLowerCase().replace(/[^a-z0-9_]/g, "");
+  // Map legacy names to service names in backend response
+  if (name === "vtapikey") name = "virustotal";
+  if (name === "whoisapikey") name = "whoisxml";
+  if (name === "shodanapikey") name = "shodan";
+  if (name === "urlscanapikey") name = "urlscan";
+  if (name === "abuseipdbapikey") name = "abuseipdb";
+
+  const serviceData = window.userApiKeys[name];
+  if (serviceData && serviceData.has_key) {
+    return serviceData.key || "";
+  }
+  return "";
+};
+
+// Fetch API keys from the backend API and update transient cache
+window.fetchUserApiKeys = async function () {
+  // Clean up any legacy localStorage keys left from the frontend side for security
+  const legacyKeys = ["vtApiKey", "whoisApiKey", "shodanApiKey", "urlscanApiKey", "abuseipdbApiKey", "abuseipdb_api_key", "abuseipdb_key"];
+  legacyKeys.forEach(k => localStorage.removeItem(k));
+
+  // If there is no auth token, we skip fetching
+  const client = new APIClient();
+  if (!client.getToken()) {
+    window.userApiKeys = {};
+    return {};
+  }
+
+  try {
+    const data = await client.get("user/api-keys");
+    if (data) {
+      window.userApiKeys = data;
+      return data;
+    }
+  } catch (e) {
+    console.error("[APIClient] Failed to fetch user API keys:", e);
+  }
+  return {};
+};
+
+if (typeof window !== "undefined") {
+  window.APIClient = APIClient;
+  window.APIError = APIError;
+  window.ValidationError = ValidationError;
+  window.NetworkError = NetworkError;
+}
+
 // Export for use in other modules
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
