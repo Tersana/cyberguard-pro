@@ -13765,7 +13765,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
       newChatBtn.addEventListener("click", startNewChat);
     }
 
-    clearBtn.addEventListener("click", () => {
+    if (clearBtn) clearBtn.addEventListener("click", () => {
       if (currentChatId && chatSessions[currentChatId]) {
         chatSessions[currentChatId].history = [];
         chatSessions[currentChatId].timestamp = Date.now();
