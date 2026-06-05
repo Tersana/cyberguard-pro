@@ -249,7 +249,7 @@ class ApiKeysSettings {
                 showLoading("Deleting API Key...");
             }
 
-            const response = await window.apiClient.delete(`user/api-keys/${keyId}`);
+            const response = await window.apiClient.delete(`apiKeys/${keyId}`);
 
             if (window.CyberNotify) {
                 window.CyberNotify.alert(response.message || "API Key deleted successfully", { type: "success" });
@@ -296,7 +296,7 @@ class ApiKeysSettings {
                 showLoading("Saving API Keys...");
             }
 
-            const response = await window.apiClient.post("user/api-keys", { keys: keysToSubmit });
+            const response = await window.apiClient.post("apiKeys", { keys: keysToSubmit });
 
             if (window.CyberNotify) {
                 window.CyberNotify.alert(response.message || "API Keys Saved Or Updated Successfuly.", { type: "success" });
