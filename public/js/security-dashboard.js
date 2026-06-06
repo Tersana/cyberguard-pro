@@ -337,7 +337,7 @@
     // Circular gauge geometry
     const RADIUS = 50;
     const CIRCUMFERENCE = 2 * Math.PI * RADIUS; // ≈ 314.16
-    const offset = CIRCUMFERENCE - (overallScore / 10) * CIRCUMFERENCE;
+    const offset = CIRCUMFERENCE - (overallScore / 100) * CIRCUMFERENCE;
 
     // Check if the SVG gauge structure is already in place
     const existingCircleValue = document.querySelector("#risk-score-display-container .risk-circle-value");
@@ -385,7 +385,7 @@
           </svg>
           <div class="risk-score-inner-text-container absolute">
             <span class="text-3xl font-extrabold text-white font-mono" id="overall-risk-score">0.0</span>
-            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">/ 10</span>
+            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">/ 100</span>
           </div>
         </div>
       `;
@@ -416,8 +416,8 @@
       }
     }
 
-    // Celebration: Confetti burst on a perfect 10.0 score (LOW RISK / healthy)
-    if (overallScore === 10.0 && lastOverallScore !== 10.0 && targets.length > 0) {
+    // Celebration: Confetti burst on a perfect 100.0 score (LOW RISK / healthy)
+    if (overallScore === 100.0 && lastOverallScore !== 100.0 && targets.length > 0) {
       if (typeof confetti === "function") {
         confetti({
           particleCount: 50,

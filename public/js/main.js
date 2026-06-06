@@ -15410,17 +15410,17 @@ function renderProjectCard(project) {
   if (project.risk_score !== undefined && project.risk_score !== null) {
     riskScore = Number(project.risk_score);
   } else if (findingsCount > 0) {
-    riskScore = 1.0 + Math.log2(findingsCount) * 1.5;
-    riskScore = Math.min(10.0, Math.max(0.0, riskScore));
+    riskScore = (1.0 + Math.log2(findingsCount) * 1.5) * 10;
+    riskScore = Math.min(100.0, Math.max(0.0, riskScore));
   }
 
   const riskScoreStr = riskScore.toFixed(1);
-  const fillWidth = Math.round((riskScore / 10) * 100);
+  const fillWidth = Math.round((riskScore / 100) * 100);
 
   let scoreColor = "#34D399"; // green
-  if (riskScore > 7.0) {
+  if (riskScore > 70.0) {
     scoreColor = "#f87171"; // red
-  } else if (riskScore > 3.0) {
+  } else if (riskScore > 30.0) {
     scoreColor = "#fbbf24"; // orange/yellow
   }
 
@@ -15456,7 +15456,7 @@ function renderProjectCard(project) {
     <div class="mb-4">
       <div class="flex items-center justify-between mb-1.5">
         <span class="text-xs text-slate-400 font-medium">Risk Score</span>
-        <span class="text-xs font-bold px-2 py-0.5 rounded project-risk-score-value" data-project-id="${id}" style="color: ${scoreColor}; background: ${scoreColor}15; border: 1px solid ${scoreColor}30">${riskScoreStr} / 10</span>
+        <span class="text-xs font-bold px-2 py-0.5 rounded project-risk-score-value" data-project-id="${id}" style="color: ${scoreColor}; background: ${scoreColor}15; border: 1px solid ${scoreColor}30">${riskScoreStr} / 100</span>
       </div>
       <div class="project-progress-track" style="background: rgba(255, 255, 255, 0.05); height: 6px; border-radius: 999px; overflow: hidden; position: relative;">
         <div class="project-progress-fill" data-progress-project-id="${id}" style="width: ${fillWidth}%; height: 100%; border-radius: 999px; background: ${scoreColor}; transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);"></div>

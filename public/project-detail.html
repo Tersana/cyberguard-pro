@@ -3481,7 +3481,7 @@
                     // Count open findings
                     let openCritical = 0;
                     let openHigh = 0;
-                    let openMedium = 0;
+                let openMedium = 0;
                     let openLow = 0;
                     let openInfo = 0;
                     let totalOpen = 0;
@@ -3501,27 +3501,27 @@
                     _set("risk-footer-findings", String(totalOpen));
 
                     // 6. Calculate risk score
-                    let riskScore = (openCritical * 10 + openHigh * 7 + openMedium * 4 + openLow * 1) / 100;
-                    riskScore = Math.max(0, Math.min(10.0, riskScore));
+                    let riskScore = (openCritical * 10 + openHigh * 7 + openMedium * 4 + openLow * 1) / 10;
+                    riskScore = Math.max(0, Math.min(100.0, riskScore));
 
                     // 7. Map category & color & description
                     let riskCategory = "SECURE";
                     let riskColor = "#10b981";
                     let riskDesc = "All checks passed. No high or critical risks identified.";
 
-                    if (riskScore >= 8.0) {
+                    if (riskScore >= 80.0) {
                         riskCategory = "CRITICAL";
                         riskColor = "#7f1d1d";
                         riskDesc = "Critical threat level. Immediate security response required.";
-                    } else if (riskScore >= 6.0) {
+                    } else if (riskScore >= 60.0) {
                         riskCategory = "HIGH RISK";
                         riskColor = "#ef4444";
                         riskDesc = "High vulnerability count. Prioritize remediation efforts.";
-                    } else if (riskScore >= 4.0) {
+                    } else if (riskScore >= 40.0) {
                         riskCategory = "MODERATE";
                         riskColor = "#f97316";
                         riskDesc = "Moderate security risks detected. Remediate active threats.";
-                    } else if (riskScore >= 2.0) {
+                    } else if (riskScore >= 20.0) {
                         riskCategory = "LOW RISK";
                         riskColor = "#eab308";
                         riskDesc = "Low risks identified. Scheduled maintenance recommended.";
@@ -3553,7 +3553,7 @@
 
                             ring.style.stroke = riskColor;
                             const circumference = 345.57;
-                            const offset = circumference - (riskScore / 10) * circumference;
+                            const offset = circumference - (riskScore / 100) * circumference;
                             ring.style.strokeDashoffset = String(offset);
 
                             if (numEl) numEl.textContent = riskScore.toFixed(1);

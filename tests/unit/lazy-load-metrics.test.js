@@ -15,7 +15,7 @@ describe('ProjectManager - lazyLoadProjectMetrics', () => {
           <div class="project-targets-count-val" data-project-id="123">0 targets</div>
           <div class="project-findings-count-val" data-project-id="123">0 findings</div>
           <div class="project-scans-count-val" data-project-id="123">0 scans</div>
-          <div class="project-risk-score-value" data-project-id="123">0.0 / 10</div>
+          <div class="project-risk-score-value" data-project-id="123">0.0 / 100</div>
           <div class="project-progress-fill" data-progress-project-id="123" style="width: 0%;"></div>
         </body>
       </html>
@@ -80,8 +80,8 @@ describe('ProjectManager - lazyLoadProjectMetrics', () => {
     expect(findingsEl.textContent).toBe('4 findings');
     
     // Critical: 1, High: 1, Medium: 1, Low: 1
-    // Score calculation: (1 * 10 + 1 * 7 + 1 * 4 + 1 * 1) / 100 = 22 / 100 = 0.22
-    expect(scoreEl.textContent).toBe('0.2 / 10');
+    // Score calculation: (1 * 10 + 1 * 7 + 1 * 4 + 1 * 1) / 10 = 22 / 10 = 2.2
+    expect(scoreEl.textContent).toBe('2.2 / 100');
     expect(fillEl.style.width).toBe('2%');
   });
 });
