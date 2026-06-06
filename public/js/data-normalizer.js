@@ -41,7 +41,7 @@ function normalizeUserData(userData) {
     jobTitle: userData.job_title || userData.job_tittle || '',
     
     // Optional boolean fields with defaults
-    emailVerified: userData.email_verified ?? false,
+    emailVerified: userData.email_verified ?? (userData.email_verified_at ? true : false),
     twoFactorEnabled: userData.two_factor_enabled ?? false,
     
     // Role with default
@@ -52,7 +52,12 @@ function normalizeUserData(userData) {
     lastLogin: userData.last_login || new Date().toISOString(),
     
     // Preferences object with default
-    preferences: userData.preferences || {}
+    preferences: userData.preferences || {},
+
+    // Google authentication fields
+    avatarUrl: userData.avatar_url || userData.avatarUrl || '',
+    authProvider: userData.auth_provider || userData.authProvider || 'local',
+    emailVerifiedAt: userData.email_verified_at || userData.emailVerifiedAt || null
   };
 }
 
