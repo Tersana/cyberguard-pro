@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Authenticating — CyberGuard</title>
+        <meta name="description" content="Authenticating your account with Google OAuth." />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            "cyber-dark": "#080B14",
+                            "cyber-mid": "#0F172A",
+                            "cyber-light": "#1a1033",
+                            "neon-cyan": "#A78BFA",
+                            "neon-purple": "#A78BFA",
+                        },
+                    },
+                },
+            };
+        </script>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" href="css/theme-tokens.css" />
+        <link rel="stylesheet" href="css/cyber-theme.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <style>
+            html, body {
+                font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+                background-color: var(--cg-bg-base);
+                overflow: hidden;
+            }
+            .glow-glow {
+                box-shadow: 0 0 50px rgba(167, 139, 250, 0.2);
+            }
+        </style>
+    </head>
+    <body class="flex flex-col items-center justify-center min-h-screen relative">
+        <canvas id="cyber-bg-canvas" class="absolute inset-0 z-0 pointer-events-none"></canvas>
+
+        <div class="glass-card rounded-2xl p-10 max-w-md w-full text-center relative z-10 glow-glow border border-white/10 mx-4">
+            <!-- Loader Animation -->
+            <div class="relative w-24 h-24 mx-auto mb-8">
+                <!-- Outer Ring -->
+                <div class="absolute inset-0 border-4 border-neon-cyan/20 rounded-full"></div>
+                <!-- Spinning Glow -->
+                <div class="absolute inset-0 border-4 border-t-neon-cyan border-r-neon-cyan/40 border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                <!-- Inner Shield Icon -->
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <i class="fas fa-shield-halved text-neon-cyan text-3xl animate-pulse"></i>
+                </div>
+            </div>
+
+            <h2 class="text-xl font-bold text-white mb-2 tracking-wide uppercase">Securing Connection</h2>
+            <p id="callback-status" class="text-gray-400 text-sm font-mono">Verifying OAuth token...</p>
+
+            <div class="mt-6 w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                <div class="bg-gradient-to-r from-neon-purple to-neon-cyan h-full rounded-full animate-pulse" style="width: 100%;"></div>
+            </div>
+        </div>
+
+        <!-- Toast Messages -->
+        <div id="messageContainer" class="fixed top-4 right-4 z-50 hidden">
+            <div id="messageBox" class="glass-card rounded-xl p-4 max-w-sm border border-white/10">
+                <div class="flex items-center gap-3">
+                    <div id="messageIcon" class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i id="messageIconClass"></i>
+                    </div>
+                    <div class="flex-grow">
+                        <h4 id="messageTitle" class="text-white font-semibold text-sm"></h4>
+                        <p id="messageText" class="text-gray-400 text-xs mt-0.5"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="js/api-client.js"></script>
+        <script src="js/data-normalizer.js?v=1.0.1"></script>
+        <script src="js/auth.js"></script>
+        <script src="js/animated-background.js?v=2"></script>
+        <script>
+            function showMessage(type, title, text) {
+                const container = document.getElementById("messageContainer");
+                const box = document.getElementById("messageBox");
+                const icon = document.getElementById("messageIcon");
+                const iconClass = document.getElementById("messageIconClass");
+                const titleEl = document.getElementById("messageTitle");
+                const textEl = document.getElementById("messageText");
+
+                titleEl.textContent = title;
+                textEl.textContent = text;
+
+                if (type === "success") {
+                    icon.className = "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-green-500/20 border border-green-500/30";
+                    iconClass.className = "fas fa-check text-green-400";
+                    box.className = "glass-card rounded-xl p-4 max-w-sm border border-green-500/30 bg-green-950/20";
+                } else {
+                    icon.className = "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-red-500/20 border border-red-500/30";
+                    iconClass.className = "fas fa-times text-red-400";
+                    box.className = "glass-card rounded-xl p-4 max-w-sm border border-red-500/30 bg-red-950/20";
+                }
+
+                container.classList.remove("hidden");
+
+                setTimeout(() => {
+                    container.classList.add("hidden");
+                }, 5000);
+            }
+
+            // On Load execution
+            document.addEventListener("DOMContentLoaded", () => {
+                const statusText = document.getElementById("callback-status");
+                const params = new URLSearchParams(window.location.search);
+                
+                if (params.has("error") || params.has("message")) {
+                    statusText.textContent = "Authentication failed.";
+                    statusText.classList.add("text-red-400");
+                    setTimeout(() => {
+                        window.location.href = "/login";
+                    }, 2000);
+                } else if (params.has("token")) {
+                    statusText.textContent = "Establishing secure session...";
+                } else {
+                    // Normal access without params
+                    statusText.textContent = "Redirecting...";
+                    setTimeout(() => {
+                        window.location.href = "/login";
+                    }, 1000);
+                }
+            });
+        </script>
+    </body>
+</html>

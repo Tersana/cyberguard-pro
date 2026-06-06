@@ -16,6 +16,9 @@ class AuthManager {
   }
 
   init() {
+    // Check for OAuth callback parameters first (e.g., after Google redirect)
+    this.handleOAuthCallback();
+
     // Initialize admin account on startup
     this.initializeAdminAccount();
 
@@ -331,6 +334,130 @@ class AuthManager {
     } finally {
       hideLoading();
     }
+  }
+
+  // Redirect to Google OAuth consent screen
+  async redirectToGoogle() {
+    try {
+      if (typeof showLoading === "function") {
+        showLoading("Connecting to Google...");
+      }
+      
+      // Call GET /api/auth/google/redirect (Auth Not Required)
+      const response = await this.apiClient.get("auth/google/redirect", { skipAuth: true });
+      
+      const redirectUrl = response.redirect_url || response.redirectUrl;
+      if (!redirectUrl) {
+        throw new Error("No redirect URL received from server");
+      }
+      
+      window.location.href = redirectUrl;
+    } catch (error) {
+      console.error("Google Authentication redirect error:", error);
+      if (typeof showMessage === "function") {
+        showMessage(
+          "error",
+          "Google Sign-In Failed",
+          error.message || "Failed to connect to Google. Please try again."
+        );
+      }
+    } finally {
+      if (typeof hideLoading === "function") {
+        hideLoading();
+      }
+    }
+  }
+
+  // Handle Google OAuth callback parameters on page load
+  handleOAuthCallback() {
+    try {
+      // Safe check for browser environment
+      if (typeof window === "undefined" || !window.location) {
+        return false;
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+      const error = params.get("error");
+      const message = params.get("message");
+
+      if (token) {
+        // We have a successful login redirect from the backend
+        let rawUser = null;
+        const userParam = params.get("user");
+
+        if (userParam) {
+          try {
+            rawUser = JSON.parse(decodeURIComponent(userParam));
+          } catch (e) {
+            console.error("Failed to parse user JSON from query string:", e);
+          }
+        }
+
+        // If user is not provided as an encoded JSON string, try individual fields
+        if (!rawUser) {
+          rawUser = {
+            id: params.get("id") || params.get("user_id"),
+            email: params.get("email"),
+            full_name: params.get("full_name") || params.get("name"),
+            avatar_url: params.get("avatar_url") || params.get("avatar"),
+            auth_provider: params.get("auth_provider") || "google",
+            email_verified_at: params.get("email_verified_at")
+          };
+        }
+
+        // Store the Sanctum API token
+        this.apiClient.setToken(token);
+
+        // Normalize user data
+        const normalizedUser = this.normalizeUserData(rawUser);
+
+        // Save session
+        this.saveUserSession(normalizedUser);
+
+        // Track successful login
+        if (typeof this.trackLoginAttempt === "function" && normalizedUser && normalizedUser.email) {
+          this.trackLoginAttempt(normalizedUser.email, true);
+        }
+
+        // Clean query parameters from URL bar
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // Show welcome toast and redirect to dashboard
+        if (typeof showMessage === "function") {
+          showMessage(
+            "success",
+            "Welcome back!",
+            "Redirecting to dashboard..."
+          );
+        }
+
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 1500);
+
+        return true;
+      } else if (error || message) {
+        // OAuth flow failed
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        if (typeof showMessage === "function") {
+          showMessage(
+            "error",
+            "Google Sign-In Failed",
+            message || error || "Authentication failed"
+          );
+        }
+        return true;
+      }
+    } catch (e) {
+      console.error("Error handling Google OAuth callback:", e);
+    }
+    return false;
   }
 
   // Verify 2FA code during login

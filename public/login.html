@@ -740,6 +740,7 @@
                         <div class="w-full">
                             <button
                                 type="button"
+                                id="googleLoginBtn"
                                 class="btn-social-glass w-full py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 text-sm font-medium"
                             >
                                 <svg
@@ -958,6 +959,13 @@
         <script src="js/animated-background.js?v=2"></script>
 
         <script>
+            // Google Login
+            document
+                .getElementById("googleLoginBtn")
+                .addEventListener("click", function () {
+                    authManager.redirectToGoogle();
+                });
+
             // Password toggle functionality
             document
                 .getElementById("togglePassword")
