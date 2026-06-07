@@ -30,7 +30,7 @@ class ProfileSettings {
         const fullName = user.fullName || user.name || "Mohamed Gamal";
         const jobTitle = user.jobTitle || user.job_title || user.job_tittle || "Security Engineer";
         const phoneNumber = user.phoneNumber || user.phone || "";
-        const avatar = user.avatar || localStorage.getItem("cyberguard_user_avatar") || "";
+        const avatar = user.avatar || user.avatarUrl || localStorage.getItem("cyberguard_user_avatar") || "";
 
         this.initialState = {
             fullName: fullName,
@@ -258,6 +258,7 @@ class ProfileSettings {
             } else {
                 localStorage.removeItem("cyberguard_user_avatar");
                 delete user.avatar;
+                delete user.avatarUrl;
             }
 
             // Save to localStorage
