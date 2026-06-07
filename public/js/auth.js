@@ -1068,11 +1068,55 @@ class AuthManager {
         initials = fullName.substring(0, 2).toUpperCase() || "U";
       }
       
+      const avatarUrl = this.currentUser.avatar || this.currentUser.avatarUrl || localStorage.getItem("cyberguard_user_avatar") || "";
+      
       if (userInitialsEl) {
-        userInitialsEl.textContent = initials;
+        const container = userInitialsEl.parentElement;
+        if (avatarUrl) {
+          let img = container.querySelector("img");
+          if (!img) {
+            img = document.createElement("img");
+            img.alt = "Avatar";
+            img.style.width = "100%";
+            img.style.height = "100%";
+            img.style.objectFit = "cover";
+            img.style.borderRadius = "50%";
+            container.appendChild(img);
+          }
+          img.src = avatarUrl;
+          img.style.display = "block";
+          userInitialsEl.style.display = "none";
+          container.style.overflow = "hidden";
+        } else {
+          const img = container.querySelector("img");
+          if (img) img.style.display = "none";
+          userInitialsEl.textContent = initials;
+          userInitialsEl.style.display = "block";
+        }
       }
       if (mobileUserInitialsEl) {
-        mobileUserInitialsEl.textContent = initials;
+        const container = mobileUserInitialsEl.parentElement;
+        if (avatarUrl) {
+          let img = container.querySelector("img");
+          if (!img) {
+            img = document.createElement("img");
+            img.alt = "Avatar";
+            img.style.width = "100%";
+            img.style.height = "100%";
+            img.style.objectFit = "cover";
+            img.style.borderRadius = "50%";
+            container.appendChild(img);
+          }
+          img.src = avatarUrl;
+          img.style.display = "block";
+          mobileUserInitialsEl.style.display = "none";
+          container.style.overflow = "hidden";
+        } else {
+          const img = container.querySelector("img");
+          if (img) img.style.display = "none";
+          mobileUserInitialsEl.textContent = initials;
+          mobileUserInitialsEl.style.display = "block";
+        }
       }
       if (mobileUserNameEl) {
         mobileUserNameEl.textContent = fullName;

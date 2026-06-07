@@ -324,4 +324,108 @@ describe('Avatar Flow In Settings Panel and Profile Settings', () => {
       expect(prof.isDirty).toBe(false);
     });
   });
+
+  describe('AuthManager updateUI() navbar avatar', () => {
+    let originalAPIClient;
+    let originalNormalizeUserData;
+
+    beforeEach(async () => {
+      // Setup minimal DOM for index/pricing navbar avatar
+      dom.window.document.body.innerHTML = `
+        <div class="user-avatar">
+          <span id="userInitials">JD</span>
+        </div>
+        <div class="user-avatar">
+          <span id="mobileUserInitials">JD</span>
+        </div>
+        <div id="mobileUserName">John Doe</div>
+        <div id="userName">John Doe</div>
+        <div id="userEmail">john@example.com</div>
+        <div id="user-info" class="hidden"></div>
+      `;
+
+      // Mock APIClient
+      const APIClientInstance = {
+        getToken: vi.fn().mockReturnValue(null),
+        clearToken: vi.fn(),
+        setToken: vi.fn(),
+      };
+      originalAPIClient = global.APIClient;
+      global.APIClient = vi.fn().mockImplementation(function() {
+        return APIClientInstance;
+      });
+
+      // Mock normalizeUserData
+      originalNormalizeUserData = global.normalizeUserData;
+      global.normalizeUserData = vi.fn().mockImplementation((user) => user);
+
+      // Load auth.js dynamically
+      await import('../../public/js/data-normalizer.js');
+      await import('../../public/js/auth.js');
+    });
+
+    afterEach(() => {
+      global.APIClient = originalAPIClient;
+      global.normalizeUserData = originalNormalizeUserData;
+      vi.resetModules();
+    });
+
+    it('should show avatar image and hide initials when user has avatar/avatarUrl', async () => {
+      const authManager = new global.window.AuthManager();
+      authManager.currentUser = {
+        fullName: 'Mohamed Gamal',
+        email: 'mohamed@example.com',
+        avatarUrl: 'https://lh3.googleusercontent.com/photo-spiderman'
+      };
+
+      authManager.updateUI();
+
+      // Desktop checks
+      const desktopInitials = dom.window.document.getElementById('userInitials');
+      expect(desktopInitials.style.display).toBe('none');
+
+      const desktopImg = desktopInitials.parentElement.querySelector('img');
+      expect(desktopImg).toBeTruthy();
+      expect(desktopImg.src).toBe('https://lh3.googleusercontent.com/photo-spiderman');
+      expect(desktopImg.style.display).toBe('block');
+      expect(desktopInitials.parentElement.style.overflow).toBe('hidden');
+
+      // Mobile checks
+      const mobileInitials = dom.window.document.getElementById('mobileUserInitials');
+      expect(mobileInitials.style.display).toBe('none');
+
+      const mobileImg = mobileInitials.parentElement.querySelector('img');
+      expect(mobileImg).toBeTruthy();
+      expect(mobileImg.src).toBe('https://lh3.googleusercontent.com/photo-spiderman');
+      expect(mobileImg.style.display).toBe('block');
+      expect(mobileInitials.parentElement.style.overflow).toBe('hidden');
+    });
+
+    it('should hide avatar image and show initials when user has no avatar/avatarUrl', async () => {
+      const authManager = new global.window.AuthManager();
+      authManager.currentUser = {
+        fullName: 'Mohamed Gamal',
+        email: 'mohamed@example.com'
+      };
+
+      // First run with avatar to insert image elements
+      authManager.currentUser.avatarUrl = 'https://lh3.googleusercontent.com/photo-spiderman';
+      authManager.updateUI();
+
+      // Confirm image was added
+      const desktopInitials = dom.window.document.getElementById('userInitials');
+      let img = desktopInitials.parentElement.querySelector('img');
+      expect(img.style.display).toBe('block');
+      expect(desktopInitials.style.display).toBe('none');
+
+      // Second run without avatar to trigger fallback/rollback
+      authManager.currentUser.avatarUrl = null;
+      authManager.updateUI();
+
+      expect(img.style.display).toBe('none');
+      expect(desktopInitials.style.display).toBe('block');
+      expect(desktopInitials.textContent).toBe('MG');
+    });
+  });
 });
+
