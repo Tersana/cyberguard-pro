@@ -163,11 +163,29 @@ class ProfileSettings {
 
         // Photo Remove
         if (removePhotoBtn) {
-            removePhotoBtn.addEventListener("click", () => {
+            removePhotoBtn.addEventListener("click", () => this.removePhoto());
+        }
+    }
+
+    removePhoto() {
+        if (window.CyberNotify && typeof window.CyberNotify.confirm === "function") {
+            window.CyberNotify.confirm(
+                "Are you sure you want to remove your profile photo?",
+                (confirmed) => {
+                    if (confirmed) {
+                        this.currentState.avatar = "";
+                        this.checkDirtyState();
+                        this.renderAvatarPreview();
+                    }
+                },
+                { type: "warning" }
+            );
+        } else {
+            if (confirm("Are you sure you want to remove your profile photo?")) {
                 this.currentState.avatar = "";
                 this.checkDirtyState();
                 this.renderAvatarPreview();
-            });
+            }
         }
     }
 
@@ -195,11 +213,7 @@ class ProfileSettings {
                     <span class="material-symbols-outlined" style="font-size: 1rem;">delete</span>
                     Remove
                 `;
-                removeBtn.addEventListener("click", () => {
-                    this.currentState.avatar = "";
-                    this.checkDirtyState();
-                    this.renderAvatarPreview();
-                });
+                removeBtn.addEventListener("click", () => this.removePhoto());
                 uploadRow.appendChild(removeBtn);
             } else if (!this.currentState.avatar && removeBtn) {
                 removeBtn.remove();

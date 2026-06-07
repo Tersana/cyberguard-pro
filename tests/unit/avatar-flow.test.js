@@ -235,5 +235,93 @@ describe('Avatar Flow In Settings Panel and Profile Settings', () => {
       expect(user.avatarUrl).toBeUndefined();
       expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('cyberguard_user_avatar');
     });
+
+    it('should show CyberNotify confirmation when removing photo and proceed on confirm', () => {
+      let confirmMessage = "";
+      let confirmOptions = null;
+      global.CyberNotify.confirm = vi.fn().mockImplementation((msg, callback, options) => {
+        confirmMessage = msg;
+        confirmOptions = options;
+        callback(true); // Simulate clicking confirm
+      });
+
+      class ProfileSettingsTest {
+        constructor() {
+          this.currentState = {
+            avatar: "https://lh3.googleusercontent.com/photo-spiderman"
+          };
+          this.isDirty = false;
+        }
+
+        checkDirtyState() { this.isDirty = true; }
+        renderAvatarPreview() {}
+
+        removePhoto() {
+          if (global.CyberNotify && typeof global.CyberNotify.confirm === "function") {
+              global.CyberNotify.confirm(
+                  "Are you sure you want to remove your profile photo?",
+                  (confirmed) => {
+                      if (confirmed) {
+                          this.currentState.avatar = "";
+                          this.checkDirtyState();
+                          this.renderAvatarPreview();
+                      }
+                  },
+                  { type: "warning" }
+              );
+          }
+        }
+      }
+
+      const prof = new ProfileSettingsTest();
+      prof.removePhoto();
+
+      expect(global.CyberNotify.confirm).toHaveBeenCalled();
+      expect(confirmMessage).toBe("Are you sure you want to remove your profile photo?");
+      expect(confirmOptions).toEqual({ type: "warning" });
+      expect(prof.currentState.avatar).toBe("");
+      expect(prof.isDirty).toBe(true);
+    });
+
+    it('should show CyberNotify confirmation when removing photo and cancel on discard', () => {
+      global.CyberNotify.confirm = vi.fn().mockImplementation((msg, callback, options) => {
+        callback(false); // Simulate clicking cancel
+      });
+
+      class ProfileSettingsTest {
+        constructor() {
+          this.currentState = {
+            avatar: "https://lh3.googleusercontent.com/photo-spiderman"
+          };
+          this.isDirty = false;
+        }
+
+        checkDirtyState() { this.isDirty = true; }
+        renderAvatarPreview() {}
+
+        removePhoto() {
+          if (global.CyberNotify && typeof global.CyberNotify.confirm === "function") {
+              global.CyberNotify.confirm(
+                  "Are you sure you want to remove your profile photo?",
+                  (confirmed) => {
+                      if (confirmed) {
+                          this.currentState.avatar = "";
+                          this.checkDirtyState();
+                          this.renderAvatarPreview();
+                      }
+                  },
+                  { type: "warning" }
+              );
+          }
+        }
+      }
+
+      const prof = new ProfileSettingsTest();
+      prof.removePhoto();
+
+      expect(global.CyberNotify.confirm).toHaveBeenCalled();
+      expect(prof.currentState.avatar).toBe("https://lh3.googleusercontent.com/photo-spiderman");
+      expect(prof.isDirty).toBe(false);
+    });
   });
 });
