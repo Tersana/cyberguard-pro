@@ -289,10 +289,10 @@ class SettingsPanel {
         if (nameEl) nameEl.textContent = fullName;
         if (emailEl) emailEl.textContent = user.email || "gerry.mohamed951@gmail.com";
 
-        // Handle profile image if uploaded
+        // Handle profile image if uploaded or OAuth avatar
         const avatarContainer = document.getElementById("navbar-avatar-container");
         if (avatarContainer) {
-            const avatarUrl = user.avatar || localStorage.getItem("cyberguard_user_avatar") || "";
+            const avatarUrl = user.avatar || user.avatarUrl || localStorage.getItem("cyberguard_user_avatar") || "";
             if (avatarUrl) {
                 avatarContainer.innerHTML = `<img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover">`;
             } else {
