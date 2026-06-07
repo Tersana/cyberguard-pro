@@ -166,107 +166,44 @@ describe('Google Authentication', () => {
     });
   });
 
-  describe('handleOAuthCallback()', () => {
-    test('should handle success with encoded user JSON param', () => {
-      const mockUser = {
-        id: 42,
-        email: 'john@example.com',
-        full_name: 'John Doe',
-        avatar_url: 'https://lh3.googleusercontent.com/photo',
-        auth_provider: 'google',
-        email_verified_at: '2026-06-06T10:00:00Z',
-      };
-      
-      // Simulate redirect URL with token and encoded user JSON
+  describe('handleOAuthCallback() [DEPRECATED - no-op stub]', () => {
+    // NOTE: The real OAuth callback logic has been moved to GoogleAuthHandler
+    // (google-auth-handler.js). These tests verify that the deprecated stub
+    // on AuthManager always returns false and does not process URL params.
+    // See google-auth-handler.test.js for the comprehensive callback tests.
+
+    test('should always return false (no-op)', () => {
       const urlSearchParams = new URLSearchParams({
         token: 'test-sanctum-token',
-        user: JSON.stringify(mockUser),
+        user: JSON.stringify({
+          id: 42,
+          email: 'john@example.com',
+          full_name: 'John Doe',
+        }),
       });
       
       window.location.search = '?' + urlSearchParams.toString();
 
-      // Spy on saveUserSession
-      const saveSessionSpy = vi.spyOn(window.authManager, 'saveUserSession').mockReturnValue(true);
-
       const result = window.authManager.handleOAuthCallback();
 
-      expect(result).toBe(true);
-
-      // Verify token was stored
-      expect(window.authManager.apiClient.setToken).toHaveBeenCalledWith('test-sanctum-token');
-
-      // Verify user data was normalized and saved
-      expect(mockNormalizeUserData).toHaveBeenCalled();
-      expect(saveSessionSpy).toHaveBeenCalledWith(expect.objectContaining({
-        id: 42,
-        email: 'john@example.com',
-        fullName: 'John Doe',
-        avatarUrl: 'https://lh3.googleusercontent.com/photo',
-        authProvider: 'google',
-      }));
-
-      // Verify history clean up (query params removed)
-      expect(window.history.replaceState).toHaveBeenCalledWith({}, expect.any(String), '/login');
-
-      // Verify success message
-      expect(mockShowMessage).toHaveBeenCalledWith(
-        'success',
-        'Welcome back!',
-        'Redirecting to dashboard...'
-      );
+      // Should return false — it's a no-op
+      expect(result).toBe(false);
     });
 
-    test('should handle success with individual params when user JSON is missing', () => {
-      // Simulate redirect URL with individual fields as query params
-      const urlSearchParams = new URLSearchParams({
-        token: 'another-token',
-        id: '100',
-        email: 'jane@example.com',
-        full_name: 'Jane Smith',
-        avatar_url: 'https://lh3.googleusercontent.com/jane',
-        auth_provider: 'google',
-        email_verified_at: '2026-06-06T12:00:00Z',
-      });
-      
-      window.location.search = '?' + urlSearchParams.toString();
+    test('should not call setToken even with token in URL', () => {
+      window.location.search = '?token=my-token';
 
-      const saveSessionSpy = vi.spyOn(window.authManager, 'saveUserSession').mockReturnValue(true);
+      window.authManager.handleOAuthCallback();
 
-      const result = window.authManager.handleOAuthCallback();
-
-      expect(result).toBe(true);
-      expect(window.authManager.apiClient.setToken).toHaveBeenCalledWith('another-token');
-      expect(saveSessionSpy).toHaveBeenCalledWith(expect.objectContaining({
-        id: '100',
-        email: 'jane@example.com',
-        fullName: 'Jane Smith',
-        avatarUrl: 'https://lh3.googleusercontent.com/jane',
-        authProvider: 'google',
-      }));
+      expect(window.authManager.apiClient.setToken).not.toHaveBeenCalled();
     });
 
-    test('should handle error params and display toast error', () => {
-      // Simulate error redirect from backend
-      const urlSearchParams = new URLSearchParams({
-        error: 'auth_denied',
-        message: 'Google authentication failed. Please try again.',
-      });
-      
-      window.location.search = '?' + urlSearchParams.toString();
+    test('should not show error message even with error params in URL', () => {
+      window.location.search = '?error=auth_denied&message=Test+error';
 
-      const result = window.authManager.handleOAuthCallback();
+      window.authManager.handleOAuthCallback();
 
-      expect(result).toBe(true);
-
-      // Verify error message was displayed
-      expect(mockShowMessage).toHaveBeenCalledWith(
-        'error',
-        'Google Sign-In Failed',
-        'Google authentication failed. Please try again.'
-      );
-
-      // Verify history clean up (query params removed)
-      expect(window.history.replaceState).toHaveBeenCalled();
+      expect(mockShowMessage).not.toHaveBeenCalled();
     });
 
     test('should return false when no OAuth parameters are in URL', () => {
@@ -317,6 +254,24 @@ describe('Google Authentication', () => {
       expect(normalized.avatarUrl).toBe('');
       expect(normalized.emailVerifiedAt).toBeNull();
       expect(normalized.emailVerified).toBe(false);
+    });
+  });
+
+  describe('loadUserSession()', () => {
+    test('should skip session restoration if on google-callback page', async () => {
+      // Set pathname to google-callback
+      global.location.pathname = '/google-callback';
+      window.authManager.apiClient.getToken.mockReturnValue('some-token');
+      
+      const restoreSessionSpy = vi.spyOn(window.authManager, 'restoreSession');
+      
+      const result = await window.authManager.loadUserSession();
+      
+      expect(result).toBe(false);
+      expect(restoreSessionSpy).not.toHaveBeenCalled();
+      
+      // Reset pathname
+      global.location.pathname = '/login';
     });
   });
 });

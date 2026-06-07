@@ -16,8 +16,10 @@ class AuthManager {
   }
 
   init() {
-    // Check for OAuth callback parameters first (e.g., after Google redirect)
-    this.handleOAuthCallback();
+    // NOTE: OAuth callback handling has been moved to GoogleAuthHandler
+    // (google-auth-handler.js). It only runs on the /google-callback page.
+    // Removed this.handleOAuthCallback() to prevent race conditions on
+    // every page load that caused session restore failures.
 
     // Initialize admin account on startup
     this.initializeAdminAccount();
@@ -31,6 +33,11 @@ class AuthManager {
   // Load user session from localStorage
   async loadUserSession() {
     try {
+      // Check if we are on the dedicated google-callback page to prevent auto-session restoration
+      if (typeof window !== "undefined" && window.location.pathname && window.location.pathname.includes("google-callback")) {
+        return false;
+      }
+
       // Check if JWT token exists in localStorage
       const token = this.apiClient.getToken();
 
@@ -336,30 +343,55 @@ class AuthManager {
     }
   }
 
-  // Redirect to Google OAuth consent screen
+  /**
+   * Redirect to Google OAuth consent screen.
+   * Delegates to GoogleAuthHandler (google-auth-handler.js) which provides
+   * URL validation, ad-blocker detection, and proper CyberNotify error handling.
+   *
+   * This method is kept on AuthManager for backward compatibility — login.html
+   * and signup.html call authManager.redirectToGoogle() directly.
+   *
+   * @returns {Promise<void>}
+   */
   async redirectToGoogle() {
+    // Delegate to GoogleAuthHandler if available
+    if (window.googleAuthHandler) {
+      return window.googleAuthHandler.redirectToGoogle();
+    }
+
+    // Fallback: GoogleAuthHandler not loaded — use basic implementation
+    console.warn("[Auth] GoogleAuthHandler not available, using fallback redirect.");
     try {
       if (typeof showLoading === "function") {
         showLoading("Connecting to Google...");
       }
-      
-      // Call GET /api/auth/google/redirect (Auth Not Required)
+
       const response = await this.apiClient.get("auth/google/redirect", { skipAuth: true });
-      
       const redirectUrl = response.redirect_url || response.redirectUrl;
+
       if (!redirectUrl) {
-        throw new Error("No redirect URL received from server");
+        throw new Error("No redirect URL received from server.");
       }
-      
+
+      // Basic URL validation
+      try {
+        const parsed = new URL(redirectUrl);
+        if (parsed.protocol !== "https:" || !parsed.hostname.endsWith("google.com")) {
+          throw new Error("Invalid redirect URL.");
+        }
+      } catch {
+        throw new Error("Invalid redirect URL received.");
+      }
+
       window.location.href = redirectUrl;
     } catch (error) {
       console.error("Google Authentication redirect error:", error);
-      if (typeof showMessage === "function") {
-        showMessage(
-          "error",
-          "Google Sign-In Failed",
-          error.message || "Failed to connect to Google. Please try again."
-        );
+      const message = error.message || "Failed to connect to Google. Please try again.";
+
+      if (window.CyberNotify) {
+        window.CyberNotify.alert(message, { type: "error" });
+      } else if (typeof showMessage === "function") {
+        showMessage("error", "Google Sign-In Failed", message);
       }
     } finally {
       if (typeof hideLoading === "function") {
@@ -368,95 +400,22 @@ class AuthManager {
     }
   }
 
-  // Handle Google OAuth callback parameters on page load
+  /**
+   * Handle Google OAuth callback parameters.
+   *
+   * @deprecated This method is kept for backward compatibility only.
+   * All OAuth callback handling is now done by GoogleAuthHandler
+   * (google-auth-handler.js) on the /google-callback page.
+   *
+   * This stub is a no-op on non-callback pages. On the callback page,
+   * GoogleAuthHandler.handleCallback() is invoked by the page's own
+   * inline script — this method is NOT called from init() anymore.
+   *
+   * @returns {boolean} false (no-op)
+   */
   handleOAuthCallback() {
-    try {
-      // Safe check for browser environment
-      if (typeof window === "undefined" || !window.location) {
-        return false;
-      }
-
-      const params = new URLSearchParams(window.location.search);
-      const token = params.get("token");
-      const error = params.get("error");
-      const message = params.get("message");
-
-      if (token) {
-        // We have a successful login redirect from the backend
-        let rawUser = null;
-        const userParam = params.get("user");
-
-        if (userParam) {
-          try {
-            rawUser = JSON.parse(decodeURIComponent(userParam));
-          } catch (e) {
-            console.error("Failed to parse user JSON from query string:", e);
-          }
-        }
-
-        // If user is not provided as an encoded JSON string, try individual fields
-        if (!rawUser) {
-          rawUser = {
-            id: params.get("id") || params.get("user_id"),
-            email: params.get("email"),
-            full_name: params.get("full_name") || params.get("name"),
-            avatar_url: params.get("avatar_url") || params.get("avatar"),
-            auth_provider: params.get("auth_provider") || "google",
-            email_verified_at: params.get("email_verified_at")
-          };
-        }
-
-        // Store the Sanctum API token
-        this.apiClient.setToken(token);
-
-        // Normalize user data
-        const normalizedUser = this.normalizeUserData(rawUser);
-
-        // Save session
-        this.saveUserSession(normalizedUser);
-
-        // Track successful login
-        if (typeof this.trackLoginAttempt === "function" && normalizedUser && normalizedUser.email) {
-          this.trackLoginAttempt(normalizedUser.email, true);
-        }
-
-        // Clean query parameters from URL bar
-        if (window.history && window.history.replaceState) {
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        // Show welcome toast and redirect to dashboard
-        if (typeof showMessage === "function") {
-          showMessage(
-            "success",
-            "Welcome back!",
-            "Redirecting to dashboard..."
-          );
-        }
-
-        setTimeout(() => {
-          window.location.href = "/dashboard";
-        }, 1500);
-
-        return true;
-      } else if (error || message) {
-        // OAuth flow failed
-        if (window.history && window.history.replaceState) {
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        if (typeof showMessage === "function") {
-          showMessage(
-            "error",
-            "Google Sign-In Failed",
-            message || error || "Authentication failed"
-          );
-        }
-        return true;
-      }
-    } catch (e) {
-      console.error("Error handling Google OAuth callback:", e);
-    }
+    // No-op — GoogleAuthHandler handles this on /google-callback page.
+    // Kept for backward compatibility in case external code calls it.
     return false;
   }
 

@@ -3,132 +3,552 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Authenticating — CyberGuard</title>
-        <meta name="description" content="Authenticating your account with Google OAuth." />
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script>
-            tailwind.config = {
-                theme: {
-                    extend: {
-                        colors: {
-                            "cyber-dark": "#080B14",
-                            "cyber-mid": "#0F172A",
-                            "cyber-light": "#1a1033",
-                            "neon-cyan": "#A78BFA",
-                            "neon-purple": "#A78BFA",
-                        },
-                    },
-                },
-            };
-        </script>
+        <title>Signing In — CyberGuard Pro</title>
+        <meta name="description" content="Completing Google OAuth authentication for CyberGuard Pro." />
+        <meta name="robots" content="noindex, nofollow" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
         <link rel="stylesheet" href="css/theme-tokens.css" />
         <link rel="stylesheet" href="css/cyber-theme.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
         <style>
+            /* ── Layout ─────────────────────────────────────────── */
             html, body {
-                font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+                margin: 0;
+                padding: 0;
+                font-family: var(--cg-font-sans);
                 background-color: var(--cg-bg-base);
+                color: var(--cg-text-1);
                 overflow: hidden;
+                min-height: 100vh;
             }
-            .glow-glow {
-                box-shadow: 0 0 50px rgba(167, 139, 250, 0.2);
+
+            .callback-wrapper {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                position: relative;
+            }
+
+            /* ── Glass Card ─────────────────────────────────────── */
+            .callback-card {
+                position: relative;
+                z-index: 10;
+                background: rgba(17, 24, 39, 0.7);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: var(--cg-radius-xl);
+                padding: var(--cg-space-12) var(--cg-space-8);
+                max-width: 420px;
+                width: 100%;
+                text-align: center;
+                box-shadow: 0 0 60px rgba(167, 139, 250, 0.12),
+                            var(--cg-shadow-xl);
+                margin: 0 var(--cg-space-4);
+            }
+
+            /* ── Spinner ────────────────────────────────────────── */
+            .spinner-container {
+                position: relative;
+                width: 96px;
+                height: 96px;
+                margin: 0 auto var(--cg-space-8);
+            }
+
+            .spinner-outer-ring {
+                position: absolute;
+                inset: 0;
+                border: 4px solid var(--cg-accent-muted);
+                border-radius: var(--cg-radius-full);
+            }
+
+            .spinner-glow {
+                position: absolute;
+                inset: 0;
+                border: 4px solid transparent;
+                border-top-color: var(--cg-accent);
+                border-right-color: rgba(167, 139, 250, 0.4);
+                border-radius: var(--cg-radius-full);
+                animation: spin 1s linear infinite;
+            }
+
+            .spinner-icon {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.8rem;
+                color: var(--cg-accent);
+                animation: pulse 2s ease-in-out infinite;
+            }
+
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+            }
+
+            /* ── Success Icon ───────────────────────────────────── */
+            .success-icon {
+                display: none;
+                width: 96px;
+                height: 96px;
+                margin: 0 auto var(--cg-space-8);
+                border-radius: var(--cg-radius-full);
+                background: rgba(52, 211, 153, 0.1);
+                border: 2px solid rgba(52, 211, 153, 0.3);
+                align-items: center;
+                justify-content: center;
+                font-size: 2.2rem;
+                color: var(--cg-success);
+                animation: scaleIn 0.4s ease-out;
+            }
+
+            .success-icon.visible {
+                display: flex;
+            }
+
+            @keyframes scaleIn {
+                0% { transform: scale(0.6); opacity: 0; }
+                100% { transform: scale(1); opacity: 1; }
+            }
+
+            /* ── Error Icon ─────────────────────────────────────── */
+            .error-icon {
+                display: none;
+                width: 96px;
+                height: 96px;
+                margin: 0 auto var(--cg-space-8);
+                border-radius: var(--cg-radius-full);
+                background: rgba(248, 113, 113, 0.1);
+                border: 2px solid rgba(248, 113, 113, 0.3);
+                align-items: center;
+                justify-content: center;
+                font-size: 2.2rem;
+                color: var(--cg-danger);
+                animation: scaleIn 0.4s ease-out;
+            }
+
+            .error-icon.visible {
+                display: flex;
+            }
+
+            /* ── Typography ─────────────────────────────────────── */
+            .callback-title {
+                font-size: var(--font-lg);
+                font-weight: 700;
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
+                margin: 0 0 var(--cg-space-2);
+                color: var(--cg-text-1);
+            }
+
+            .callback-status {
+                font-family: var(--cg-font-mono);
+                font-size: var(--font-sm);
+                color: var(--cg-text-2);
+                margin: 0 0 var(--cg-space-6);
+                line-height: 1.6;
+            }
+
+            .callback-status.status-success {
+                color: var(--cg-success);
+            }
+
+            .callback-status.status-error {
+                color: var(--cg-danger);
+            }
+
+            .callback-status.status-warn {
+                color: var(--cg-warning);
+            }
+
+            .welcome-name {
+                display: block;
+                font-size: var(--font-xs);
+                color: var(--cg-success);
+                font-family: var(--cg-font-mono);
+                margin-top: var(--cg-space-2);
+            }
+
+            .error-detail {
+                display: block;
+                font-size: var(--font-xs);
+                color: var(--cg-danger);
+                font-family: var(--cg-font-mono);
+                margin-top: var(--cg-space-2);
+                word-break: break-word;
+            }
+
+            /* ── Progress Bar ───────────────────────────────────── */
+            .progress-track {
+                width: 100%;
+                height: 6px;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: var(--cg-radius-full);
+                overflow: hidden;
+                margin-bottom: var(--cg-space-6);
+            }
+
+            .progress-bar {
+                height: 100%;
+                border-radius: var(--cg-radius-full);
+                background: linear-gradient(90deg, var(--cg-accent-dark), var(--cg-accent));
+                animation: progressPulse 1.5s ease-in-out infinite;
+                width: 100%;
+            }
+
+            .progress-bar.complete {
+                background: var(--cg-success);
+                animation: none;
+            }
+
+            .progress-bar.errored {
+                background: var(--cg-danger);
+                animation: none;
+                width: 100%;
+            }
+
+            @keyframes progressPulse {
+                0%, 100% { opacity: 0.6; }
+                50% { opacity: 1; }
+            }
+
+            /* ── Buttons ────────────────────────────────────────── */
+            .callback-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: var(--cg-space-2);
+                padding: var(--cg-space-2) var(--cg-space-4);
+                border-radius: var(--cg-radius-md);
+                font-family: var(--cg-font-mono);
+                font-size: var(--font-xs);
+                font-weight: 500;
+                cursor: pointer;
+                transition: all var(--cg-transition-fast);
+                border: 1px solid rgba(255, 255, 255, 0.06);
+                text-decoration: none;
+            }
+
+            .callback-btn-ghost {
+                background: rgba(255, 255, 255, 0.06);
+                color: var(--cg-text-2);
+            }
+
+            .callback-btn-ghost:hover {
+                background: rgba(255, 255, 255, 0.12);
+                color: var(--cg-text-1);
+            }
+
+            .callback-btn-primary {
+                background: var(--cg-accent-muted);
+                color: var(--cg-accent);
+                border-color: rgba(167, 139, 250, 0.2);
+            }
+
+            .callback-btn-primary:hover {
+                background: rgba(167, 139, 250, 0.25);
+            }
+
+            .btn-row {
+                display: flex;
+                gap: var(--cg-space-3);
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .hidden {
+                display: none !important;
+            }
+
+            /* ── Fallback timer ──────────────────────────────────── */
+            .fallback-section {
+                margin-top: var(--cg-space-6);
+                padding-top: var(--cg-space-4);
+                border-top: 1px solid rgba(255, 255, 255, 0.06);
+            }
+
+            .fallback-text {
+                font-size: var(--font-xs);
+                color: var(--cg-text-3);
+                margin-bottom: var(--cg-space-3);
             }
         </style>
     </head>
-    <body class="flex flex-col items-center justify-center min-h-screen relative">
-        <canvas id="cyber-bg-canvas" class="absolute inset-0 z-0 pointer-events-none"></canvas>
+    <body>
+        <canvas id="cyber-bg-canvas" style="position: absolute; inset: 0; z-index: 0; pointer-events: none;"></canvas>
 
-        <div class="glass-card rounded-2xl p-10 max-w-md w-full text-center relative z-10 glow-glow border border-white/10 mx-4">
-            <!-- Loader Animation -->
-            <div class="relative w-24 h-24 mx-auto mb-8">
-                <!-- Outer Ring -->
-                <div class="absolute inset-0 border-4 border-neon-cyan/20 rounded-full"></div>
-                <!-- Spinning Glow -->
-                <div class="absolute inset-0 border-4 border-t-neon-cyan border-r-neon-cyan/40 border-b-transparent border-l-transparent rounded-full animate-spin"></div>
-                <!-- Inner Shield Icon -->
-                <div class="absolute inset-0 flex items-center justify-center">
-                    <i class="fas fa-shield-halved text-neon-cyan text-3xl animate-pulse"></i>
+        <div class="callback-wrapper">
+            <div class="callback-card" id="callback-card">
+
+                <!-- ── Loading State ──────────────────────────── -->
+                <div id="state-loading">
+                    <div class="spinner-container">
+                        <div class="spinner-outer-ring"></div>
+                        <div class="spinner-glow"></div>
+                        <div class="spinner-icon">
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
-            <h2 class="text-xl font-bold text-white mb-2 tracking-wide uppercase">Securing Connection</h2>
-            <p id="callback-status" class="text-gray-400 text-sm font-mono">Verifying OAuth token...</p>
+                <!-- ── Success State ──────────────────────────── -->
+                <div class="success-icon" id="state-success-icon">
+                    <i class="fas fa-check"></i>
+                </div>
 
-            <div class="mt-6 w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
-                <div class="bg-gradient-to-r from-neon-purple to-neon-cyan h-full rounded-full animate-pulse" style="width: 100%;"></div>
+                <!-- ── Error State ────────────────────────────── -->
+                <div class="error-icon" id="state-error-icon">
+                    <i class="fas fa-times"></i>
+                </div>
+
+                <h1 class="callback-title" id="callback-title">Securing Connection</h1>
+                <p class="callback-status" id="callback-status">Verifying your Google account…</p>
+
+                <div class="progress-track">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+
+                <!-- ── Action Buttons ─────────────────────────── -->
+                <div class="btn-row" id="action-buttons">
+                    <button id="pause-redirect-btn" class="callback-btn callback-btn-ghost">
+                        <i class="fas fa-pause"></i> Pause Redirect
+                    </button>
+                </div>
+
+                <!-- ── Fallback (shown after 10s or on error) ── -->
+                <div class="fallback-section hidden" id="fallback-section">
+                    <p class="fallback-text">Having trouble? You can go back and try again.</p>
+                    <div class="btn-row">
+                        <a href="/login" class="callback-btn callback-btn-primary">
+                            <i class="fas fa-arrow-left"></i> Back to Login
+                        </a>
+                        <button id="retry-btn" class="callback-btn callback-btn-ghost hidden">
+                            <i class="fas fa-redo"></i> Retry
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Toast Messages -->
-        <div id="messageContainer" class="fixed top-4 right-4 z-50 hidden">
-            <div id="messageBox" class="glass-card rounded-xl p-4 max-w-sm border border-white/10">
-                <div class="flex items-center gap-3">
-                    <div id="messageIcon" class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
-                        <i id="messageIconClass"></i>
-                    </div>
-                    <div class="flex-grow">
-                        <h4 id="messageTitle" class="text-white font-semibold text-sm"></h4>
-                        <p id="messageText" class="text-gray-400 text-xs mt-0.5"></p>
-                    </div>
+        <!-- ── CyberNotify Modal (for error alerts) ──────────── -->
+        <div id="cyber-notify-modal" class="hidden" style="
+            position: fixed; inset: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--cg-overlay);
+            opacity: 0; transition: opacity var(--cg-transition-base);
+        ">
+            <div style="
+                background: var(--cg-bg-surface);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: var(--cg-radius-xl);
+                padding: var(--cg-space-8);
+                max-width: 400px; width: 90%;
+                text-align: center;
+            ">
+                <span id="cyber-notify-icon" class="material-icons" style="font-size: 2.5rem;"></span>
+                <p id="cyber-notify-message" style="color: var(--cg-text-1); margin: var(--cg-space-4) 0; font-size: var(--font-sm);"></p>
+                <div id="cyber-notify-actions" style="display: flex; gap: var(--cg-space-3); justify-content: center;">
+                    <button id="cyber-notify-confirm-btn" class="callback-btn callback-btn-primary">OK</button>
+                    <button id="cyber-notify-cancel-btn" class="callback-btn callback-btn-ghost" style="display:none;">Cancel</button>
                 </div>
             </div>
         </div>
 
+        <!-- ── Scripts ───────────────────────────────────── -->
         <script src="js/api-client.js"></script>
+        <script src="js/error-handler.js"></script>
+        <script src="js/cyber-notify.js"></script>
         <script src="js/data-normalizer.js?v=1.0.1"></script>
         <script src="js/auth.js"></script>
+        <script src="js/google-auth-handler.js"></script>
         <script src="js/animated-background.js?v=2"></script>
+
         <script>
-            function showMessage(type, title, text) {
-                const container = document.getElementById("messageContainer");
-                const box = document.getElementById("messageBox");
-                const icon = document.getElementById("messageIcon");
-                const iconClass = document.getElementById("messageIconClass");
-                const titleEl = document.getElementById("messageTitle");
-                const textEl = document.getElementById("messageText");
+            /**
+             * Google OAuth Callback Page Controller
+             *
+             * Delegates all OAuth logic to GoogleAuthHandler.
+             * This inline script only manages the page UI states:
+             *   Loading → Success (redirect) / Error (show details + fallback)
+             */
+            (function () {
+                "use strict";
 
-                titleEl.textContent = title;
-                textEl.textContent = text;
+                // ── DOM references ────────────────────────────────
+                const stateLoading    = document.getElementById("state-loading");
+                const stateSuccessIcon = document.getElementById("state-success-icon");
+                const stateErrorIcon  = document.getElementById("state-error-icon");
+                const titleEl         = document.getElementById("callback-title");
+                const statusEl        = document.getElementById("callback-status");
+                const progressBar     = document.getElementById("progress-bar");
+                const pauseBtn        = document.getElementById("pause-redirect-btn");
+                const fallbackSection = document.getElementById("fallback-section");
+                const retryBtn        = document.getElementById("retry-btn");
+                const actionButtons   = document.getElementById("action-buttons");
 
-                if (type === "success") {
-                    icon.className = "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-green-500/20 border border-green-500/30";
-                    iconClass.className = "fas fa-check text-green-400";
-                    box.className = "glass-card rounded-xl p-4 max-w-sm border border-green-500/30 bg-green-950/20";
-                } else {
-                    icon.className = "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-red-500/20 border border-red-500/30";
-                    iconClass.className = "fas fa-times text-red-400";
-                    box.className = "glass-card rounded-xl p-4 max-w-sm border border-red-500/30 bg-red-950/20";
+                let redirectTimeout = null;
+                let fallbackTimeout = null;
+                let isPaused = false;
+
+                // ── State transitions ─────────────────────────────
+
+                function showSuccess(userName) {
+                    stateLoading.style.display = "none";
+                    stateSuccessIcon.classList.add("visible");
+                    progressBar.classList.add("complete");
+                    titleEl.textContent = "Welcome Back!";
+                    statusEl.className = "callback-status status-success";
+
+                    const displayName = userName || "User";
+                    statusEl.innerHTML =
+                        "Session established successfully." +
+                        '<span class="welcome-name">Welcome, ' +
+                        _escapeHtml(displayName) + "</span>";
+
+                    // Replace pause button with dashboard link
+                    actionButtons.innerHTML =
+                        '<a href="/dashboard" class="callback-btn callback-btn-primary">' +
+                        '<i class="fas fa-gauge-high"></i> Go to Dashboard</a>';
                 }
 
-                container.classList.remove("hidden");
+                function showError(message) {
+                    stateLoading.style.display = "none";
+                    stateErrorIcon.classList.add("visible");
+                    progressBar.classList.add("errored");
+                    titleEl.textContent = "Authentication Failed";
+                    statusEl.className = "callback-status status-error";
+                    statusEl.innerHTML =
+                        "Google sign-in could not be completed." +
+                        '<span class="error-detail">' + _escapeHtml(message) + "</span>";
 
-                setTimeout(() => {
-                    container.classList.add("hidden");
-                }, 5000);
-            }
-
-            // On Load execution
-            document.addEventListener("DOMContentLoaded", () => {
-                const statusText = document.getElementById("callback-status");
-                const params = new URLSearchParams(window.location.search);
-                
-                if (params.has("error") || params.has("message")) {
-                    statusText.textContent = "Authentication failed.";
-                    statusText.classList.add("text-red-400");
-                    setTimeout(() => {
-                        window.location.href = "/login";
-                    }, 2000);
-                } else if (params.has("token")) {
-                    statusText.textContent = "Establishing secure session...";
-                } else {
-                    // Normal access without params
-                    statusText.textContent = "Redirecting...";
-                    setTimeout(() => {
-                        window.location.href = "/login";
-                    }, 1000);
+                    // Show fallback immediately on error
+                    fallbackSection.classList.remove("hidden");
+                    retryBtn.classList.remove("hidden");
+                    actionButtons.innerHTML = ""; // remove pause button
                 }
-            });
+
+                function showNoParams() {
+                    stateLoading.style.display = "none";
+                    progressBar.classList.add("errored");
+                    titleEl.textContent = "No Authentication Data";
+                    statusEl.className = "callback-status status-warn";
+                    statusEl.textContent =
+                        "No token was found in the callback URL. " +
+                        "This page should only be accessed via the Google sign-in flow.";
+
+                    fallbackSection.classList.remove("hidden");
+                    actionButtons.innerHTML = "";
+                }
+
+                // ── Helpers ───────────────────────────────────────
+
+                function _escapeHtml(str) {
+                    const div = document.createElement("div");
+                    div.textContent = str;
+                    return div.innerHTML;
+                }
+
+                function scheduleRedirect(url, delayMs) {
+                    if (isPaused) return;
+                    redirectTimeout = setTimeout(function () {
+                        window.location.href = url;
+                    }, delayMs);
+                }
+
+                function startFallbackTimer() {
+                    fallbackTimeout = setTimeout(function () {
+                        fallbackSection.classList.remove("hidden");
+                    }, 10000);
+                }
+
+                // ── Pause / Retry ─────────────────────────────────
+
+                if (pauseBtn) {
+                    pauseBtn.addEventListener("click", function () {
+                        if (redirectTimeout) {
+                            clearTimeout(redirectTimeout);
+                            redirectTimeout = null;
+                            isPaused = true;
+                            pauseBtn.innerHTML = '<i class="fas fa-pause"></i> Redirect Paused';
+                            pauseBtn.style.borderColor = "rgba(251, 191, 36, 0.3)";
+                            pauseBtn.style.color = "var(--cg-warning)";
+                            pauseBtn.style.background = "rgba(251, 191, 36, 0.1)";
+                            console.log("[OAuth Callback] Redirect paused by user.");
+                        }
+                    });
+                }
+
+                if (retryBtn) {
+                    retryBtn.addEventListener("click", function () {
+                        window.location.href = "/login";
+                    });
+                }
+
+                // ── Main flow ─────────────────────────────────────
+
+                async function processCallback() {
+                    // Start fallback timer (shows "Back to login" after 10s)
+                    startFallbackTimer();
+
+                    // Check if GoogleAuthHandler is available
+                    if (!window.googleAuthHandler) {
+                        console.error("[OAuth Callback] GoogleAuthHandler not initialized.");
+                        showError("Authentication handler failed to load. Please try again.");
+                        return;
+                    }
+
+                    // Check if URL has any relevant params
+                    var params = new URLSearchParams(window.location.search);
+                    var hasToken = params.has("token") || params.has("auth_token") || params.has("access_token");
+                    var hasError = params.has("error") || params.has("error_code") || params.has("message");
+
+                    if (!hasToken && !hasError) {
+                        showNoParams();
+                        return;
+                    }
+
+                    // Update status
+                    statusEl.textContent = "Establishing secure session…";
+
+                    // Delegate to GoogleAuthHandler
+                    try {
+                        var result = await window.googleAuthHandler.handleCallback();
+
+                        // Clear fallback timer on successful resolution
+                        if (fallbackTimeout) clearTimeout(fallbackTimeout);
+
+                        if (result.success) {
+                            var displayName =
+                                (result.user && (result.user.fullName || result.user.name || result.user.email)) ||
+                                "User";
+                            showSuccess(displayName);
+                            scheduleRedirect("/dashboard", 2000);
+                        } else {
+                            showError(result.error || "Authentication failed. Please try again.");
+                            scheduleRedirect("/login", 8000);
+                        }
+                    } catch (err) {
+                        if (fallbackTimeout) clearTimeout(fallbackTimeout);
+                        console.error("[OAuth Callback] Unexpected error:", err);
+                        showError(err.message || "An unexpected error occurred.");
+                    }
+                }
+
+                // ── Init ──────────────────────────────────────────
+                if (document.readyState === "loading") {
+                    document.addEventListener("DOMContentLoaded", processCallback);
+                } else {
+                    processCallback();
+                }
+            })();
         </script>
     </body>
 </html>
