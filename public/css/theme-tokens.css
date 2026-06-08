@@ -6,44 +6,39 @@
 
 :root {
     /* ===== Background Colors ===== */
-    --cg-bg-base: #0b0f19; /* Deep space navy — root page background */
-    --cg-bg-surface: #111827; /* Cards, modals, dropdowns */
-    --cg-bg-elevated: #1f2937; /* Hover states, secondary cards */
+    --cg-bg-base: #09090b; /* Pure near-black */
+    --cg-bg-surface: #111111; /* Cards, modals, dropdowns */
+    --cg-bg-elevated: #18181b; /* Hover states, secondary cards, inputs */
 
     /* ===== Border Colors ===== */
-    --cg-border: #1f2937; /* Default border / divider */
-    --cg-border-subtle: #374151; /* Lighter borders, focus ring backgrounds */
+    --cg-border: rgba(255, 255, 255, 0.08); /* Default border / divider */
+    --cg-border-subtle: rgba(255, 255, 255, 0.06); /* Lighter borders */
 
     /* ===== Text Colors ===== */
-    --cg-text-1: #f1f5f9; /* Primary text — headings, body */
-    --cg-text-2: #94a3b8; /* Secondary text — labels, captions */
-    --cg-text-3: #64748b; /* Muted text — disabled, timestamps */
+    --cg-text-1: #fafafa; /* Primary text — headings, body */
+    --cg-text-2: #a1a1aa; /* Secondary text — labels, captions */
+    --cg-text-3: #71717a; /* Muted text — disabled, timestamps */
 
-    /* ===== Accent Colors (Unified Violet) ===== */
-    --cg-accent: #a78bfa; /* Violet-400 — interactive elements */
-    --cg-accent-hover: #8b5cf6; /* Violet-500 — pressed / hover */
-    --cg-accent-muted: rgba(
-        167,
-        139,
-        250,
-        0.15
-    ); /* Tinted accent backgrounds */
-    --cg-accent-dark: #6d28d9; /* Violet-700 — gradient stop */
+    /* ===== Accent Colors ===== */
+    --cg-accent: #ffffff; /* Primary interactive color (white buttons) */
+    --cg-accent-hover: #e4e4e7; /* Hover / active accent */
+    --cg-accent-muted: rgba(255, 255, 255, 0.08); /* Tinted accent backgrounds */
+    --cg-accent-dark: #3b82f6; /* Action/highlight accent (blue) */
 
     /* ===== Status Colors ===== */
-    --cg-success: #34d399; /* Safe / valid / healthy */
-    --cg-success-dark: #047857; /* Emerald-700 — gradient stop */
-    --cg-warning: #fbbf24; /* Caution / medium risk */
-    --cg-warning-dark: #b45309; /* Amber-700 — gradient stop */
-    --cg-danger: #f87171; /* Critical / invalid / high risk */
-    --cg-danger-dark: #dc2626; /* Red-600 — gradient stop */
-    --cg-info: #38bdf8; /* Informational / links */
-    --cg-info-dark: #0284c7; /* Sky-600 — gradient stop */
+    --cg-success: #22c55e; /* Safe / valid / healthy */
+    --cg-success-dark: rgba(34, 197, 94, 0.2);
+    --cg-warning: #f59e0b; /* Caution / medium risk */
+    --cg-warning-dark: rgba(245, 158, 11, 0.2);
+    --cg-danger: #ef4444; /* Critical / invalid / high risk */
+    --cg-danger-dark: rgba(239, 68, 68, 0.2);
+    --cg-info: #3b82f6; /* Informational / links */
+    --cg-info-dark: rgba(59, 130, 246, 0.2);
 
     /* ===== Functional Aliases ===== */
-    --cg-focus-ring: rgba(167, 139, 250, 0.35); /* Keyboard-nav focus ring */
-    --cg-overlay: rgba(0, 0, 0, 0.6); /* Modal backdrop */
-    --cg-scrollbar: var(--cg-border-subtle); /* Custom scrollbar track */
+    --cg-focus-ring: rgba(255, 255, 255, 0.25); /* Keyboard-nav focus ring */
+    --cg-overlay: rgba(0, 0, 0, 0.8); /* Modal backdrop */
+    --cg-scrollbar: rgba(255, 255, 255, 0.1); /* Custom scrollbar track */
     --cg-disabled-opacity: 0.45; /* Disabled element opacity */
 
     /* ===== Spacing Scale (4px grid) ===== */
@@ -58,16 +53,16 @@
 
     /* ===== Border Radius ===== */
     --cg-radius-sm: 0.375rem; /*  6px — badges, pills */
-    --cg-radius-md: 0.5rem; /*  8px — buttons, inputs */
-    --cg-radius-lg: 0.75rem; /* 12px — cards, panels */
-    --cg-radius-xl: 1rem; /* 16px — modals */
+    --cg-radius-md: 0.375rem; /*  6px — buttons, inputs */
+    --cg-radius-lg: 0.5rem; /* 8px — cards, panels */
+    --cg-radius-xl: 0.75rem; /* 12px — modals */
     --cg-radius-full: 9999px; /* Circular — avatars */
 
     /* ===== Shadows ===== */
-    --cg-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --cg-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --cg-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-    --cg-shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.6);
+    --cg-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --cg-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --cg-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --cg-shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.6);
 
     /* ===== Transitions ===== */
     --cg-transition-fast: 0.15s ease;
@@ -80,17 +75,17 @@
         sans-serif;
     --cg-font-mono: "JetBrains Mono", "Courier New", monospace;
 
-    /* ===== Legacy Variable Aliases (deprecated — use --cg-* above) ===== */
+    /* ===== Legacy Variable Aliases ===== */
     --bg-base: var(--cg-bg-base);
     --bg-surface: var(--cg-bg-surface);
     --bg-card: var(--cg-bg-surface);
     --bg-card-hover: var(--cg-bg-elevated);
-    --border-subtle: var(--cg-accent-muted);
+    --border-subtle: var(--cg-border-subtle);
     --border-glow: var(--cg-focus-ring);
-    --purple-400: var(--cg-accent);
+    --purple-400: var(--cg-text-1);
     --purple-500: var(--cg-accent-hover);
-    --purple-600: var(--cg-accent-dark);
-    --cyan-400: var(--cg-info);
+    --purple-600: var(--cg-text-2);
+    --cyan-400: var(--cg-accent-dark);
 
     /* ===== Responsive Layout Tokens ===== */
     --sidebar-width: 260px;
@@ -98,7 +93,7 @@
     --content-padding: clamp(12px, 2vw, 32px);
     --card-gap: clamp(12px, 1.5vw, 24px);
 
-    /* ===== Font Sizing System (Fluid Scales) ===== */
+    /* ===== Font Sizing System ===== */
     --font-xs:   clamp(10px, 1.1vw, 12px);
     --font-sm:   clamp(12px, 1.2vw, 14px);
     --font-base: clamp(13px, 1.3vw, 16px);
@@ -124,7 +119,7 @@
    ============================================================ */
 
 .brand-cyber {
-  color: var(--cg-accent-hover, #8B5CF6);        /* purple — match existing accent color token */
+  color: var(--cg-accent-dark, #3b82f6);        /* blue — match existing accent color token */
   font-weight: inherit;
   font-size: inherit;
 }

@@ -140,7 +140,7 @@ function startCountdown(seconds) {
         </svg>
         <span>Resend Email</span>
       `;
-      resendButton.className = "w-full py-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 border border-purple-500/40 hover:border-purple-400 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 hover:text-white cursor-pointer shadow-md shadow-purple-500/5 transition-all duration-300";
+      resendButton.className = "w-full py-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 border border-blue-500/40 hover:border-blue-400 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 hover:text-white cursor-pointer shadow-md shadow-purple-500/5 transition-all duration-300";
     }
   }, 1000);
 }

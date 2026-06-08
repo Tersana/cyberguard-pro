@@ -137,7 +137,7 @@
     const critSubtext = document.getElementById("critical-findings-subtext");
     if (critSubtext) {
       critSubtext.textContent = `+${criticalThisWeek} this week`;
-      critSubtext.className = `stat-card-subtext ${criticalThisWeek > 0 ? "text-rose-400" : "text-slate-400"}`;
+      critSubtext.className = `stat-card-subtext ${criticalThisWeek > 0 ? "text-red-400" : "text-slate-400"}`;
     }
 
     const newThisWeek = recentList.filter(f => 
@@ -148,7 +148,7 @@
     const totalSubtext = document.getElementById("total-findings-subtext");
     if (totalSubtext) {
       totalSubtext.textContent = `+${newThisWeek} new`;
-      totalSubtext.className = `stat-card-subtext ${newThisWeek > 0 ? "text-blue-400" : "text-slate-400"}`;
+      totalSubtext.className = `stat-card-subtext text-slate-400`;
     }
 
     const resolvedCount = findings_summary.resolved || 0;
@@ -161,7 +161,7 @@
     const resolvedSubtext = document.getElementById("resolved-subtext");
     if (resolvedSubtext) {
       resolvedSubtext.textContent = `${resolvedPercent}% resolved`;
-      resolvedSubtext.className = `stat-card-subtext ${resolvedPercent >= 75 ? "text-emerald-400" : resolvedPercent >= 40 ? "text-amber-400" : "text-rose-400"}`;
+      resolvedSubtext.className = `stat-card-subtext text-slate-400`;
     }
 
     const targetValueEl = document.getElementById("targets-scans-value");
@@ -172,7 +172,7 @@
     if (scansSubtext) {
       const activeCount = active_scans.count ?? (active_scans.scans?.length || 0);
       scansSubtext.textContent = `${activeCount} active process`;
-      scansSubtext.className = `stat-card-subtext ${activeCount > 0 ? "text-purple-400" : "text-slate-400"}`;
+      scansSubtext.className = `stat-card-subtext ${activeCount > 0 ? "text-blue-400" : "text-slate-400"}`;
     }
   }
 
@@ -424,14 +424,14 @@
           angle: 60,
           spread: 55,
           origin: { x: 0, y: 0.9 },
-          colors: ["#a78bfa", "#34d399", "#38bdf8"]
+          colors: ["#3b82f6", "#34d399", "#38bdf8"]
         });
         confetti({
           particleCount: 50,
           angle: 120,
           spread: 55,
           origin: { x: 1, y: 0.9 },
-          colors: ["#a78bfa", "#34d399", "#38bdf8"]
+          colors: ["#3b82f6", "#34d399", "#38bdf8"]
         });
       }
     }

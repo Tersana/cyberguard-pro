@@ -517,10 +517,10 @@
                 background: rgba(255, 255, 255, 0.03);
             }
             .status-seg-btn.active {
-                background: rgba(167, 139, 250, 0.08) !important;
+                background: rgba(59, 130, 246, 0.08) !important;
                 color: var(--cg-accent) !important;
-                border-color: rgba(167, 139, 250, 0.25) !important;
-                box-shadow: 0 0 12px rgba(167, 139, 250, 0.08);
+                border-color: rgba(59, 130, 246, 0.25) !important;
+                box-shadow: 0 0 12px rgba(59, 130, 246, 0.08);
             }
 
             /* Custom Select Pills for inline Findings card edits */
@@ -664,6 +664,440 @@
                 opacity: 0;
             }
 
+
+            /* Team workspace redesign */
+            .team-workspace {
+                display: flex;
+                flex-direction: column;
+                gap: 18px;
+            }
+
+            .team-workspace.hidden {
+                display: none;
+            }
+
+            .team-hero {
+                position: relative;
+                overflow: hidden;
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 18px;
+                padding: 22px 24px;
+                border: 1px solid rgba(96, 165, 250, 0.16);
+                border-radius: 8px;
+                background:
+                    linear-gradient(135deg, rgba(15, 23, 42, 0.86), rgba(6, 8, 12, 0.94) 62%),
+                    linear-gradient(90deg, rgba(59, 130, 246, 0.1), rgba(148, 163, 184, 0.04));
+                box-shadow: 0 22px 70px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            }
+
+            .team-hero::after {
+                content: "";
+                position: absolute;
+                inset: auto 0 0;
+                height: 3px;
+                background: linear-gradient(90deg, rgba(96, 165, 250, 0.85), rgba(148, 163, 184, 0.28));
+                opacity: 0.72;
+            }
+
+            .team-hero-copy {
+                position: relative;
+                z-index: 1;
+                min-width: 0;
+            }
+
+            .team-eyebrow {
+                margin: 0 0 8px;
+                color: #60a5fa;
+                font: 700 10px/1 var(--cg-font-mono);
+                letter-spacing: 0.16em;
+                text-transform: uppercase;
+            }
+
+            .team-title {
+                margin: 0;
+                color: #fff;
+                font-size: clamp(24px, 2.8vw, 34px);
+                line-height: 1;
+                font-weight: 800;
+                letter-spacing: 0;
+            }
+
+            .team-subtitle {
+                margin: 8px 0 0;
+                color: #94a3b8;
+                font-size: 13px;
+                line-height: 1.6;
+                max-width: 620px;
+            }
+
+            .team-hero #open-invite-btn {
+                position: relative;
+                z-index: 1;
+                border-radius: 7px;
+                min-height: 42px;
+                white-space: nowrap;
+            }
+
+            .team-stats-grid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            .team-stat-card {
+                position: relative;
+                overflow: hidden;
+                min-height: 118px;
+                padding: 18px;
+                border-radius: 8px !important;
+                border-color: rgba(148, 163, 184, 0.13) !important;
+                background: linear-gradient(180deg, rgba(15, 23, 42, 0.72), rgba(8, 10, 14, 0.92)) !important;
+                text-align: left !important;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+            }
+
+            .team-stat-card::before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                background: #3b82f6;
+                opacity: 0.9;
+            }
+
+            .team-stat-owner::before,
+            .team-stat-editor::before,
+            .team-stat-viewer::before { background: #3b82f6; }
+
+            .team-stat-card > div {
+                justify-content: flex-start !important;
+                margin-bottom: 12px !important;
+            }
+
+            .team-stat-card p:first-of-type {
+                font-size: 28px !important;
+                line-height: 1;
+            }
+
+            .team-stat-card p:last-of-type {
+                color: #94a3b8 !important;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+            }
+
+            .team-stat-card svg,
+            .team-stat-card [class*="text-[#"],
+            .team-stat-card [class*="text-[var(--cg-accent)]"] {
+                color: #8aa0ba !important;
+                stroke: currentColor;
+            }
+
+            .team-stat-card p:first-of-type,
+            .team-stat-card [id^="team-stat-"] {
+                color: #f8fafc !important;
+            }
+
+            .team-invite-panel {
+                border-radius: 8px !important;
+                background:
+                    linear-gradient(135deg, rgba(37, 99, 235, 0.12), transparent 40%),
+                    rgba(8, 10, 14, 0.94) !important;
+                border-color: rgba(96, 165, 250, 0.22) !important;
+            }
+
+            .team-member-list {
+                display: grid;
+                gap: 10px;
+            }
+
+            .team-member-row {
+                position: relative;
+                overflow: hidden;
+                min-height: 72px;
+                padding: 14px 16px !important;
+                border-radius: 8px !important;
+                border-color: rgba(148, 163, 184, 0.13) !important;
+                background: rgba(9, 12, 17, 0.9) !important;
+                transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+            }
+
+            .team-member-row::before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 14px;
+                bottom: 14px;
+                width: 2px;
+                background: rgba(96, 165, 250, 0.74);
+                opacity: 0.7;
+            }
+
+            .team-member-row:hover {
+                transform: translateY(-1px);
+                border-color: rgba(96, 165, 250, 0.28) !important;
+                background: rgba(12, 18, 27, 0.95) !important;
+            }
+
+            .team-member-row .cyber-avatar-sm {
+                border: 1px solid rgba(96, 165, 250, 0.26);
+                background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(15, 23, 42, 0.86));
+                box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.06);
+            }
+
+            #tab-team [class*="text-[#A78BFA]"],
+            #tab-team [class*="text-[#38BDF8]"],
+            #tab-team [class*="text-[#FBBF24]"],
+            #tab-team [class*="text-[var(--cg-accent)]"] {
+                color: #93a4b8 !important;
+            }
+
+            #tab-team [class*="bg-[rgba(167,139,250"],
+            #tab-team [class*="bg-[rgba(56,189,248"],
+            #tab-team [class*="bg-[rgba(251,191,36"] {
+                background: rgba(59, 130, 246, 0.1) !important;
+            }
+
+            #tab-team [class*="border-[rgba(167,139,250"],
+            #tab-team [class*="border-[rgba(56,189,248"],
+            #tab-team [class*="border-[rgba(251,191,36"] {
+                border-color: rgba(96, 165, 250, 0.22) !important;
+            }
+
+            #tab-team .team-member-row span[class*="rounded-full"],
+            #tab-team .team-pending-card span[class*="rounded"] {
+                color: #bfdbfe !important;
+                background: rgba(59, 130, 246, 0.1) !important;
+                border-color: rgba(96, 165, 250, 0.2) !important;
+            }
+
+            #tab-team #team-stats-bar [id^="team-stat-"] {
+                color: #f8fafc !important;
+            }
+
+            .team-permissions-card,
+            .team-pending-card {
+                border-radius: 8px !important;
+                border-color: rgba(148, 163, 184, 0.13) !important;
+                background: rgba(8, 10, 14, 0.92) !important;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+            }
+
+            .team-permissions-card > div:first-child,
+            .team-pending-card > div:first-child {
+                background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(9, 13, 19, 0.94)) !important;
+            }
+
+            .team-permissions-card table,
+            .team-pending-card table {
+                border-collapse: separate;
+                border-spacing: 0;
+            }
+
+            .team-permissions-card th,
+            .team-pending-card th {
+                background: rgba(2, 6, 23, 0.34);
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                font-size: 10px;
+                color: #8aa0ba !important;
+            }
+
+            .team-permissions-card th,
+            .team-permissions-card th svg {
+                color: #9aa9bb !important;
+                stroke: currentColor;
+            }
+
+            .team-permissions-card .perm-check {
+                color: #bfdbfe !important;
+                background: rgba(59, 130, 246, 0.14) !important;
+            }
+
+            .team-permissions-card .perm-cross {
+                color: #64748b !important;
+                background: rgba(100, 116, 139, 0.1) !important;
+            }
+
+            .team-permissions-card tbody tr:hover,
+            .team-pending-card tbody tr:hover {
+                background: rgba(59, 130, 246, 0.055) !important;
+            }
+
+            .team-pending-card input,
+            .team-pending-card select {
+                border-radius: 7px !important;
+                background: rgba(2, 6, 23, 0.65) !important;
+            }
+
+            @media (max-width: 900px) {
+                .team-stats-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+                .team-hero {
+                    flex-direction: column;
+                }
+            }
+
+            @media (max-width: 560px) {
+                .team-stats-grid {
+                    grid-template-columns: 1fr;
+                }
+                .team-hero {
+                    padding: 18px;
+                }
+            }
+
+            /* --- Overview Custom Styles --- */
+            .projects-stat-overview {
+                min-height: 5.5rem;
+                padding: 1.25rem 1.5rem;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 10px;
+                background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), transparent), rgba(255, 255, 255, 0.025);
+                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                cursor: pointer;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+            .projects-stat-overview:hover {
+                border-color: rgba(59, 130, 246, 0.4);
+                transform: translateY(-2px);
+                box-shadow: 0 10px 24px rgba(59, 130, 246, 0.12);
+            }
+            .ov-stat-icon {
+                color: var(--cg-info);
+            }
+            .overview-info-card {
+                background: linear-gradient(180deg, rgba(15, 23, 42, 0.6), rgba(8, 10, 14, 0.86)) !important;
+                border: 1px solid rgba(255, 255, 255, 0.05) !important;
+                border-radius: 10px !important;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
+                transition: all 0.25s ease;
+            }
+            .overview-info-card:hover {
+                border-color: rgba(255, 255, 255, 0.12) !important;
+                transform: translateY(-1px);
+            }
+
+            /* --- Targets Cards Upgrades --- */
+            .target-card-item {
+                position: relative;
+                background: linear-gradient(180deg, rgba(15, 23, 42, 0.62), rgba(8, 10, 14, 0.94)) !important;
+                border: 1px solid rgba(255, 255, 255, 0.05) !important;
+                border-radius: 12px !important;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), var(--cg-shadow-md) !important;
+                transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+                padding: 1.5rem !important;
+            }
+            .target-card-item:hover {
+                border-color: rgba(96, 165, 250, 0.25) !important;
+                transform: translateY(-2px);
+                box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(96, 165, 250, 0.08) !important;
+            }
+            .target-avatar {
+                display: grid;
+                place-items: center;
+                width: 2.75rem;
+                height: 2.75rem;
+                border-radius: 10px;
+                font-family: var(--cg-font-mono);
+                font-size: 0.9rem;
+                font-weight: 900;
+                flex-shrink: 0;
+            }
+            .target-avatar-domain,
+            .target-avatar-ip,
+            .target-avatar-network {
+                border: 1px solid rgba(56, 189, 248, 0.34);
+                background: rgba(56, 189, 248, 0.11);
+                color: #bfdbfe;
+                box-shadow: inset 0 0 18px rgba(56, 189, 248, 0.06);
+            }
+    
+            .target-risk-panel {
+                margin-top: 1rem;
+                padding: 0.85rem;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 10px;
+                background: rgba(0, 0, 0, 0.2);
+            }
+            .target-risk-topline {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 0.6rem;
+                color: var(--cg-text-3);
+                font-size: 0.72rem;
+                font-weight: 800;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+            }
+            .target-risk-level {
+                color: var(--cg-text-2);
+            }
+            .target-progress-track {
+                height: 0.42rem;
+                border-radius: 999px;
+                background: rgba(255, 255, 255, 0.06);
+                overflow: hidden;
+                position: relative;
+            }
+            .target-progress-fill {
+                height: 100%;
+                border-radius: 999px;
+                transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .target-risk-score-value {
+                display: inline-block;
+                margin-top: 0.5rem;
+                font-size: 11px;
+                font-weight: 700;
+                padding: 2px 8px;
+                border-radius: 6px;
+                font-family: var(--cg-font-mono);
+            }
+
+            /* --- Findings Tab Redesign --- */
+            .findings-stat-card {
+                flex: 1;
+                min-width: 110px;
+                padding: 1rem;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 10px;
+                background: linear-gradient(135deg, rgba(59, 130, 246, 0.06), transparent), rgba(255, 255, 255, 0.025);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                cursor: default;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            .findings-stat-card:hover {
+                border-color: rgba(255, 255, 255, 0.15);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            }
+            .findings-stat-card.critical:hover { box-shadow: 0 8px 24px rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.2); }
+            .findings-stat-card.high:hover     { box-shadow: 0 8px 24px rgba(249, 115, 22, 0.12); border-color: rgba(249, 115, 22, 0.2); }
+            .findings-stat-card.medium:hover   { box-shadow: 0 8px 24px rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.2); }
+            .findings-stat-card.low:hover      { box-shadow: 0 8px 24px rgba(14, 165, 233, 0.12); border-color: rgba(14, 165, 233, 0.2); }
+            .findings-stat-card.info:hover     { box-shadow: 0 8px 24px rgba(148, 163, 184, 0.12); border-color: rgba(148, 163, 184, 0.2); }
+        
+            .findings-stat-card.critical { border-bottom: 2.5px solid var(--cg-danger); }
+            .findings-stat-card.high     { border-bottom: 2.5px solid #F97316; }
+            .findings-stat-card.medium   { border-bottom: 2.5px solid var(--cg-warning); }
+            .findings-stat-card.low      { border-bottom: 2.5px solid var(--cg-info); }
+            .findings-stat-card.info     { border-bottom: 2.5px solid var(--cg-text-3); }
+
+            .findings-stat-card.critical .stat-num { color: var(--cg-danger); text-shadow: 0 0 10px rgba(239, 68, 68, 0.15); }
+            .findings-stat-card.high     .stat-num { color: #F97316; text-shadow: 0 0 10px rgba(249, 115, 22, 0.15); }
+            .findings-stat-card.medium   .stat-num { color: var(--cg-warning); text-shadow: 0 0 10px rgba(245, 158, 11, 0.15); }
+            .findings-stat-card.low      .stat-num { color: var(--cg-info); text-shadow: 0 0 10px rgba(14, 165, 233, 0.15); }
+            .findings-stat-card.info     .stat-num { color: var(--cg-text-2); }
 
         </style>
         <!-- Third-party Libraries (GSAP) -->
@@ -967,15 +1401,15 @@
                         </div>
                         <!-- Role & Team & ID -->
                         <div class="grid grid-cols-2 gap-4 md:min-w-[200px]">
-                            <div class="cyber-card p-4 text-center">
+                            <div class="overview-info-card p-4 text-center">
                                 <p id="ov-team-size" class="text-3xl font-bold text-[var(--cg-accent)] font-mono">—</p>
                                 <p class="text-xs text-slate-400 mt-1">Team Members</p>
                             </div>
-                            <div class="cyber-card p-4 text-center">
+                            <div class="overview-info-card p-4 text-center">
                                 <p id="ov-role-badge" class="text-sm font-bold text-white mt-1">—</p>
                                 <p class="text-xs text-slate-400 mt-1">Your Role</p>
                             </div>
-                            <div class="cyber-card p-4 text-center col-span-2">
+                            <div class="overview-info-card p-4 text-center col-span-2">
                                 <p id="ov-project-id" class="text-xs font-mono text-[var(--cg-info)] truncate">—</p>
                                 <p class="text-xs text-slate-400 mt-1">Project ID</p>
                             </div>
@@ -1203,7 +1637,7 @@
                 <!-- === SECTION: QUICK STATS ROW === -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="ov-quick-stats">
                     <!-- Targets Card -->
-                    <div class="cyber-card p-4 cursor-pointer hover:border-[rgba(167,139,250,0.4)] transition-all"
+                    <div class="projects-stat-overview"
                          onclick="switchDetailTab('targets')" title="Go to Targets tab">
                         <div class="flex items-center gap-3 mb-2">
                             <div class="ov-stat-icon">
@@ -1218,7 +1652,7 @@
                         <p id="ov-stat-targets" class="text-2xl font-bold text-white font-mono">—</p>
                     </div>
                     <!-- Findings Card -->
-                    <div class="cyber-card p-4 cursor-pointer hover:border-[rgba(167,139,250,0.4)] transition-all"
+                    <div class="projects-stat-overview"
                          onclick="switchDetailTab('findings')" title="Go to Findings tab">
                         <div class="flex items-center gap-3 mb-2">
                             <div class="ov-stat-icon">
@@ -1232,7 +1666,7 @@
                         <p id="ov-stat-findings" class="text-2xl font-bold text-white font-mono">—</p>
                     </div>
                     <!-- Scans Card -->
-                    <div class="cyber-card p-4 cursor-pointer hover:border-[rgba(167,139,250,0.4)] transition-all"
+                    <div class="projects-stat-overview"
                          onclick="switchDetailTab('scans')" title="Go to Scans tab">
                         <div class="flex items-center gap-3 mb-2">
                             <div class="ov-stat-icon">
@@ -1247,7 +1681,7 @@
                         <p id="ov-stat-scans" class="text-2xl font-bold text-white font-mono">—</p>
                     </div>
                     <!-- Days Left Card -->
-                    <div class="cyber-card p-4 cursor-pointer hover:border-[rgba(167,139,250,0.4)] transition-all" id="ov-stat-days-card">
+                    <div class="projects-stat-overview" id="ov-stat-days-card">
                         <div class="flex items-center gap-3 mb-2">
                             <div class="ov-stat-icon">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1324,10 +1758,14 @@
             </div>
 
             <!-- ── Team Tab ────────────────────────────────────────────────────────── -->
-            <div id="tab-team" class="hidden space-y-4">
+            <div id="tab-team" class="hidden team-workspace">
                 <!-- Header row -->
-                <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-bold text-white">Team Members</h2>
+                <div class="team-hero">
+                    <div class="team-hero-copy">
+                        <p class="team-eyebrow">Access Control</p>
+                        <h2 class="team-title">Team Members</h2>
+                        <p class="team-subtitle">Manage who can view, edit, scan, invite collaborators, and control project settings.</p>
+                    </div>
                     <button
                         id="open-invite-btn"
                         class="cyber-btn-primary px-4 py-2 rounded-lg text-sm font-semibold hidden flex items-center gap-2"
@@ -1350,46 +1788,52 @@
                 </div>
 
                 <!-- === SECTION: TEAM SUMMARY STATS === -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="team-stats-bar">
+                <div class="team-stats-grid" id="team-stats-bar">
                     <!-- Total Members -->
-                    <div class="cyber-card p-4 text-center">
+                    <div class="cyber-card p-4 text-center team-stat-card team-stat-total">
                         <div class="flex items-center justify-center gap-2 mb-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--cg-accent)]">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <!-- Total Members: professional group/team icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--cg-accent)]">
                                 <circle cx="9" cy="7" r="4"/>
+                                <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
+                                <path d="M17 11a3 3 0 0 0 0-6"/>
                                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                             </svg>
                         </div>
                         <p id="team-stat-total" class="text-2xl font-bold text-white font-mono">—</p>
                         <p class="text-xs text-slate-500 mt-0.5">Total Members</p>
                     </div>
                     <!-- Owners -->
-                    <div class="cyber-card p-4 text-center">
+                    <div class="cyber-card p-4 text-center team-stat-card team-stat-owner">
                         <div class="flex items-center justify-center gap-2 mb-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[#A78BFA]">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            <!-- Owner: crown icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#A78BFA]">
+                                <path d="M2 20h20"/>
+                                <path d="M4 20L3 11l5 4.5L12 5l4 10.5L21 11l-1 9"/>
                             </svg>
                         </div>
                         <p id="team-stat-owners" class="text-2xl font-bold text-[#A78BFA] font-mono">1</p>
                         <p class="text-xs text-slate-500 mt-0.5">Owner</p>
                     </div>
                     <!-- Editors -->
-                    <div class="cyber-card p-4 text-center">
+                    <div class="cyber-card p-4 text-center team-stat-card team-stat-editor">
                         <div class="flex items-center justify-center gap-2 mb-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[#38BDF8]">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            <!-- Editors: clean pen-nib / edit icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[#38BDF8]">
+                                <path d="M12 20h9"/>
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                                <path d="M15 5l3 3"/>
                             </svg>
                         </div>
                         <p id="team-stat-editors" class="text-2xl font-bold text-[#38BDF8] font-mono">—</p>
                         <p class="text-xs text-slate-500 mt-0.5">Editors</p>
                     </div>
                     <!-- Viewers -->
-                    <div class="cyber-card p-4 text-center">
+                    <div class="cyber-card p-4 text-center team-stat-card team-stat-viewer">
                         <div class="flex items-center justify-center gap-2 mb-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[#FBBF24]">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <!-- Viewers: binoculars / observe icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[#FBBF24]">
+                                <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/>
                                 <circle cx="12" cy="12" r="3"/>
                             </svg>
                         </div>
@@ -1402,7 +1846,7 @@
                 <!-- Invite Panel (inline, slides in) -->
                 <div
                     id="invite-panel"
-                    class="hidden cyber-card p-5 border-[var(--cg-accent)]/30 space-y-4"
+                    class="hidden cyber-card p-5 border-[var(--cg-accent)]/30 space-y-4 team-invite-panel"
                 >
                     <h3 class="text-sm font-bold text-white">
                         Generate Invite Link
@@ -1530,7 +1974,7 @@
                 </div>
 
                 <!-- Team list -->
-                <div id="team-list" class="space-y-2">
+                <div id="team-list" class="team-member-list">
                     <!-- Shimmer placeholders -->
                     <div class="shimmer h-14 rounded-xl"></div>
                     <div class="shimmer h-14 rounded-xl"></div>
@@ -1538,7 +1982,7 @@
 
 
                 <!-- === SECTION: ROLES & PERMISSIONS TABLE === -->
-                <div class="cyber-card overflow-hidden">
+                <div class="cyber-card overflow-hidden team-permissions-card">
                     <div class="px-5 py-4 border-b border-[var(--cg-border)] flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--cg-accent)]">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -1617,7 +2061,7 @@
                 <!-- === END SECTION: ROLES & PERMISSIONS TABLE === -->
 
                 <!-- === SECTION: PENDING INVITATIONS TABLE === -->
-                <div id="pending-invitations-container" class="cyber-card overflow-hidden hidden mt-4">
+                <div id="pending-invitations-container" class="cyber-card overflow-hidden hidden mt-4 team-pending-card">
                     <div class="px-5 py-4 border-b border-[var(--cg-border)] flex items-center justify-between flex-wrap gap-4 bg-slate-950/20">
                         <div class="flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--cg-accent)]">
@@ -1628,7 +2072,7 @@
                             </svg>
                             <h3 class="text-sm font-bold text-white flex items-center gap-2">
                                 <span>Pending Invitations</span>
-                                <span id="pending-invitations-count" class="tab-badge !bg-[var(--cg-accent)] !ml-1">0</span>
+                                <span id="pending-invitations-count" style="width: 20px; height: 20px; min-width: 20px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--cg-radius-full); background: var(--cg-accent); color: var(--cg-bg-base); margin-left: 6px;">0</span>
                             </h3>
                         </div>
                         <div class="flex items-center gap-3 flex-wrap">
@@ -1941,14 +2385,6 @@
                                 Discovered Endpoints
                             </button>
                         </div>
-                        
-                        <div class="text-[10px] uppercase font-bold tracking-wider text-slate-500 bg-white/5 border border-white/5 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 select-none shadow-sm max-w-fit sm:self-center">
-                            <span class="relative flex h-2 w-2">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                            </span>
-                            Active Target Assessment
-                        </div>
                     </div>
 
                     <!-- Vulnerabilities View -->
@@ -2013,27 +2449,27 @@
 
                         <!-- Stats Bar -->
                         <div class="findings-stats-bar">
-                            <div class="finding-stat">
+                            <div class="findings-stat-card">
                                 <span class="stat-num" id="stat-total">0</span>
                                 <span class="stat-lbl">Total</span>
                             </div>
-                            <div class="finding-stat critical">
+                            <div class="findings-stat-card critical">
                                 <span class="stat-num" id="stat-critical">0</span>
                                 <span class="stat-lbl">Critical</span>
                             </div>
-                            <div class="finding-stat high">
+                            <div class="findings-stat-card high">
                                 <span class="stat-num" id="stat-high">0</span>
                                 <span class="stat-lbl">High</span>
                             </div>
-                            <div class="finding-stat medium">
+                            <div class="findings-stat-card medium">
                                 <span class="stat-num" id="stat-medium">0</span>
                                 <span class="stat-lbl">Medium</span>
                             </div>
-                            <div class="finding-stat low">
+                            <div class="findings-stat-card low">
                                 <span class="stat-num" id="stat-low">0</span>
                                 <span class="stat-lbl">Low</span>
                             </div>
-                            <div class="finding-stat info">
+                            <div class="findings-stat-card info">
                                 <span class="stat-num" id="stat-info">0</span>
                                 <span class="stat-lbl">Info</span>
                             </div>
@@ -2926,15 +3362,15 @@
                 // Status badge
                 const STATUS = {
                     active: {
-                        cls: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)]  border-[rgba(167,139,250,0.3)]",
+                        cls: "text-blue-400 bg-blue-500/10 border-blue-500/20",
                         label: "Active",
                     },
                     completed: {
-                        cls: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)]  border-[rgba(167,139,250,0.3)]",
+                        cls: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
                         label: "Completed",
                     },
                     archived: {
-                        cls: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)]  border-[rgba(167,139,250,0.3)]",
+                        cls: "text-zinc-400 bg-zinc-500/10 border-zinc-500/20",
                         label: "Archived",
                     },
                 };
@@ -3305,7 +3741,7 @@
                     grade = "B";
                     color = "#38bdf8"; // blue
                     hlabel = "Good";
-                    shadowGlow = "drop-shadow(0 0 10px rgba(56, 189, 248, 0.4))";
+                    shadowGlow = "none";
                 } else if (score >= 65) {
                     grade = "C";
                     color = "#eab308"; // yellow
@@ -3879,7 +4315,7 @@
                     : jobTitle || email || "";
 
                 return `
-    <div class="cyber-card p-3 flex items-center gap-3">
+    <div class="cyber-card p-3 flex items-center gap-3 team-member-row">
       <div class="relative flex-shrink-0">
         <div class="cyber-avatar-sm flex items-center justify-center">
           <span class="text-xs font-bold text-white">${initials}</span>
@@ -4717,26 +5153,40 @@
 
             function updateTargetRiskBadge(targetId, riskScore) {
                 const badge = document.getElementById(`target-risk-badge-${targetId}`);
+                const fillBar = document.getElementById(`target-progress-fill-${targetId}`);
+                const cardWrapper = document.querySelector(`[data-target-wrapper="${targetId}"]`);
                 if (!badge) return;
 
-                let riskScoreCls = "";
                 let riskScoreLabel = "";
+                let scoreColorHex = "";
                 if (riskScore <= 30) {
-                    riskScoreCls = "text-[#34D399] bg-[#34D399]/10 border-[#34D399]/20";
-                    riskScoreLabel = "Low";
+                    riskScoreLabel = "Controlled";
+                    scoreColorHex = "#34D399";
                 } else if (riskScore <= 60) {
-                    riskScoreCls = "text-[#FBBF24] bg-[#FBBF24]/10 border-[#FBBF24]/20";
                     riskScoreLabel = "Medium";
+                    scoreColorHex = "#FBBF24";
                 } else if (riskScore <= 80) {
-                    riskScoreCls = "text-[#F97316] bg-[#F97316]/10 border-[#F97316]/20";
-                    riskScoreLabel = "High";
+                    riskScoreLabel = "Elevated";
+                    scoreColorHex = "#F97316";
                 } else {
-                    riskScoreCls = "text-[#F87171] bg-[#F87171]/10 border-[#F87171]/20";
                     riskScoreLabel = "Critical";
+                    scoreColorHex = "#F87171";
                 }
 
-                badge.className = `text-[8px] px-1.5 py-0.5 rounded border font-black uppercase tracking-wider ${riskScoreCls}`;
-                badge.textContent = `Risk: ${riskScore} (${riskScoreLabel})`;
+                badge.style.color = scoreColorHex;
+                badge.style.background = `${scoreColorHex}15`;
+                badge.style.borderColor = `${scoreColorHex}30`;
+                badge.textContent = `${Number(riskScore).toFixed(1)} / 100`;
+
+                if (fillBar) {
+                    fillBar.style.width = `${riskScore}%`;
+                    fillBar.style.background = scoreColorHex;
+                }
+
+                if (cardWrapper) {
+                    const levelLabel = cardWrapper.querySelector('.target-risk-level');
+                    if (levelLabel) levelLabel.textContent = riskScoreLabel;
+                }
             }
 
             function renderTargetRow(target) {
@@ -4748,47 +5198,30 @@
                 const valTypeLabel = type === "domain" ? "HOST" : type === "ip" ? "IP" : "CIDR";
 
                 const riskScore = target.risk_score != null ? Number(target.risk_score) : 0;
-                let riskScoreCls = "";
                 let riskScoreLabel = "";
+                let scoreColorHex = "";
                 if (riskScore <= 30) {
-                    riskScoreCls = "text-[#34D399] bg-[#34D399]/10 border-[#34D399]/20";
-                    riskScoreLabel = "Low";
+                    riskScoreLabel = "Controlled";
+                    scoreColorHex = "#34D399";
                 } else if (riskScore <= 60) {
-                    riskScoreCls = "text-[#FBBF24] bg-[#FBBF24]/10 border-[#FBBF24]/20";
                     riskScoreLabel = "Medium";
+                    scoreColorHex = "#FBBF24";
                 } else if (riskScore <= 80) {
-                    riskScoreCls = "text-[#F97316] bg-[#F97316]/10 border-[#F97316]/20";
-                    riskScoreLabel = "High";
+                    riskScoreLabel = "Elevated";
+                    scoreColorHex = "#F97316";
                 } else {
-                    riskScoreCls = "text-[#F87171] bg-[#F87171]/10 border-[#F87171]/20";
                     riskScoreLabel = "Critical";
+                    scoreColorHex = "#F87171";
                 }
-                const riskBadge = `<span id="target-risk-badge-${id}" class="text-[8px] px-1.5 py-0.5 rounded border font-black uppercase tracking-wider ${riskScoreCls}">Risk: ${riskScore} (${riskScoreLabel})</span>`;
 
                 const TYPE_BADGE = {
                     domain: "text-[#38BDF8] bg-[rgba(56,189,248,0.12)] border-[rgba(56,189,248,0.25)]",
-                    ip: "text-[#C084FC] bg-[rgba(192,132,252,0.12)] border-[rgba(192,132,252,0.25)]",
-                    network: "text-[#F59E0B] bg-[rgba(245,158,11,0.12)] border-[rgba(245,158,11,0.25)]",
+                    ip: "text-[#38BDF8] bg-[rgba(56,189,248,0.12)] border-[rgba(56,189,248,0.25)]",
+                    network: "text-[#38BDF8] bg-[rgba(56,189,248,0.12)] border-[rgba(56,189,248,0.25)]",
                 };
                 const typeBadgeCls = TYPE_BADGE[type] || TYPE_BADGE.domain;
-
-                // Icons for target types
-                const TYPE_ICONS = {
-                    domain: `<svg class="w-5 h-5 text-[#38BDF8] flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-.778.099-1.533.284-2.253" />
-                    </svg>`,
-                    ip: `<svg class="w-5 h-5 text-[#C084FC] flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
-                    </svg>`,
-                    network: `<svg class="w-5 h-5 text-[#F59E0B] flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                        <rect x="16" y="16" width="6" height="6" rx="1" />
-                        <rect x="2" y="16" width="6" height="6" rx="1" />
-                        <rect x="9" y="2" width="6" height="6" rx="1" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 16v-2a2 2 0 012-2h10a2 2 0 012 2v2" />
-                    </svg>`
-                };
-                const iconSvg = TYPE_ICONS[type] || TYPE_ICONS.domain;
+                
+                const initials = type === "domain" ? "D" : type === "ip" ? "I" : "N";
 
                 const editDeleteBtns = canEdit
                     ? `
@@ -4846,99 +5279,95 @@
                     </button>`;
 
                 return `
-                    <div class="target-row-card group target-card-type-${type} rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-5 relative overflow-hidden" data-target-wrapper="${id}" data-target-id="${id}">
-                        <!-- Left Section: Details & Telemetry Badges -->
-                        <div class="flex-1 min-w-0 flex items-start gap-4">
-                            <!-- Glowing visual category icon container -->
-                            <div class="flex-shrink-0 w-11 h-11 rounded-xl bg-slate-950/45 border border-white/5 flex items-center justify-center group-hover:border-violet-500/30 transition-all duration-300">
-                                    ${iconSvg}
-                            </div>
-                            <div class="min-w-0 flex-1 space-y-2.5">
-                                <!-- Row 1: Target Label, Type, Telemetry, and Risk Badge -->
-                                <div class="flex items-center gap-2.5 flex-wrap">
-                                    <h3 class="text-sm font-extrabold text-white tracking-tight truncate max-w-[200px]" title="${label}">${label}</h3>
-                                    
-                                    <!-- Type Badge -->
-                                    <span class="text-[8px] px-1.5 py-0.5 rounded border font-black uppercase tracking-wider flex-shrink-0 ${typeBadgeCls}">${cap(type)}</span>
-                                    
-                                    <!-- Telemetry Status Pulse -->
-                                    <div class="flex items-center justify-center bg-emerald-500/10 border border-emerald-500/25 px-1.5 py-1 rounded flex-shrink-0 text-emerald-400" title="Active Telemetry">
-                                        <span class="relative flex h-1.5 w-1.5">
-                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-emerald-400"></span>
-                                            <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                                        </span>
+                    <div class="target-card-item target-card-type-${type}" data-target-wrapper="${id}" data-target-id="${id}">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <!-- Left Section: Avatar, Label, Value -->
+                            <div class="flex items-start gap-4 flex-1 min-w-0">
+                                <div class="target-avatar target-avatar-${type}">${initials}</div>
+                                <div class="min-w-0 flex-1 space-y-2">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <h3 class="text-sm font-extrabold text-white truncate max-w-[200px]" title="${label}">${label}</h3>
+                                        <span class="text-[8px] px-1.5 py-0.5 rounded border font-black uppercase tracking-wider flex-shrink-0 ${typeBadgeCls}">${cap(type)}</span>
+                                        
                                     </div>
-
-                                    <!-- Risk Assessment Badge -->
-                                    ${riskBadge}
+                                    <div class="flex items-center gap-2 text-[11px] text-slate-400 font-mono bg-black/40 px-2.5 py-1 rounded-lg border border-white/5 max-w-fit shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] min-w-0">
+                                        <span class="text-[8px] font-black text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20 uppercase tracking-widest select-none flex-shrink-0">${valTypeLabel}</span>
+                                        <span class="text-slate-300 truncate select-all max-w-[220px] md:max-w-[340px] xl:max-w-[450px] scrollbar-none">${value}</span>
+                                        <button onclick="copyToClipboard('${value}', this); event.stopPropagation();" class="text-slate-500 hover:text-white p-0.5 rounded transition-colors flex-shrink-0" title="Copy to clipboard">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-1.5a2.251 2.251 0 0 0-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 0 0-9-9Z"/>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
+                            </div>
+                            <!-- Right Section: Actions -->
+                            <div class="flex items-center gap-2.5 flex-shrink-0 flex-wrap md:flex-nowrap justify-end">
+                                ${scanBtn}
+                                ${historyBtn}
+                                <div class="hidden md:block w-px h-6 bg-white/5 mx-0.5 flex-shrink-0"></div>
+                                <div class="flex items-center gap-1 flex-shrink-0">
+                                    ${editDeleteBtns}
+                                </div>
+                            </div>
+                        </div>
 
-                                <!-- Row 2: Monospace Target Value with copy button -->
-                                <div class="flex items-center gap-2 text-[11px] text-slate-400 font-mono bg-black/40 px-2.5 py-1 rounded-lg border border-white/5 max-w-fit shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] min-w-0">
-                                    <span class="text-[8px] font-black text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded border border-violet-500/20 uppercase tracking-widest select-none flex-shrink-0">${valTypeLabel}</span>
-                                    <span class="text-slate-300 truncate select-all max-w-[220px] md:max-w-[340px] xl:max-w-[450px] scrollbar-none">${value}</span>
-                                    <button onclick="copyToClipboard('${value}', this); event.stopPropagation();" class="text-slate-500 hover:text-white p-0.5 rounded transition-colors flex-shrink-0" title="Copy to clipboard">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-1.5a2.251 2.251 0 0 0-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 0 0-9-9Z"/>
+                        <!-- Risk Posture Progress Bar Section (matches project cards) -->
+                        <div class="target-risk-panel">
+                            <div class="target-risk-topline">
+                                <span>Risk posture</span>
+                                <span class="target-risk-level">${riskScoreLabel}</span>
+                            </div>
+                            <div class="target-progress-track">
+                                <div class="target-progress-fill" id="target-progress-fill-${id}" style="width: ${riskScore}%; background: ${scoreColorHex};"></div>
+                            </div>
+                            <span id="target-risk-badge-${id}" class="target-risk-score-value" style="color: ${scoreColorHex}; background: ${scoreColorHex}15; border: 1px solid ${scoreColorHex}30">${riskScore.toFixed(1)} / 100</span>
+                        </div>
+
+                        <!-- Dropdown sliding console drawer for history scans logs -->
+                        <div id="target-history-drawer-${id}" class="target-history-drawer max-h-0 opacity-0 overflow-hidden border-t border-white/0">
+                            <div class="pt-4 pb-1">
+                                <div class="flex items-center justify-between mb-3.5">
+                                    <div class="flex items-center gap-2 text-xs font-extrabold text-slate-300">
+                                        <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                                         </svg>
+                                        Scan Run Telemetry Logs — ${label}
+                                    </div>
+                                    <button onclick="toggleTargetScanHistory('${id}')" class="text-slate-400 hover:text-white text-xs px-2.5 py-1.5 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-200 flex items-center gap-1.5">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                                        </svg>
+                                        Close Log
                                     </button>
                                 </div>
-                            </div>
-                        </div>
-
-                        <!-- Right Section: Action Controls Suite -->
-                        <div class="flex items-center gap-2.5 flex-shrink-0 flex-wrap md:flex-nowrap">
-                            ${scanBtn}
-                            ${historyBtn}
-                            <div class="hidden md:block w-px h-6 bg-white/5 mx-0.5 flex-shrink-0"></div>
-                            <div class="flex items-center gap-1 flex-shrink-0">
-                                ${editDeleteBtns}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Dropdown sliding console drawer for history scans logs -->
-                    <div id="target-history-drawer-${id}" class="target-history-drawer max-h-0 opacity-0 overflow-hidden border-t border-white/0">
-                        <div class="pt-4 pb-1">
-                            <div class="flex items-center justify-between mb-3.5">
-                                <div class="flex items-center gap-2 text-xs font-extrabold text-slate-300">
-                                    <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                                    </svg>
-                                    Scan Run Telemetry Logs — ${label}
-                                </div>
-                                <button onclick="toggleTargetScanHistory('${id}')" class="text-slate-400 hover:text-white text-xs px-2.5 py-1.5 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-200 flex items-center gap-1.5">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
-                                    </svg>
-                                    Close Log
-                                </button>
-                            </div>
-                            <!-- Telemetry Scans Table -->
-                            <div class="bg-black/45 border border-white/5 rounded-xl overflow-hidden shadow-inner">
-                                <div class="overflow-x-auto scrollbar-none">
-                                    <table class="w-full text-left text-xs border-collapse">
-                                        <thead>
-                                            <tr class="bg-slate-950/60 border-b border-white/5 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                                <th class="py-3 px-4">Scan Run ID</th>
-                                                <th class="py-3 px-4">Scanner Engines Status</th>
-                                                <th class="py-3 px-4">Execution Timestamp</th>
-                                                <th class="py-3 px-4 text-right">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="target-history-body-${id}">
-                                            <tr>
-                                                <td colspan="4" class="py-6 px-4 text-center text-slate-500">
-                                                    Click 'Scan History' to establish connection...
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                <!-- Telemetry Scans Table -->
+                                <div class="bg-slate-950/40 border border-white/5 rounded-xl overflow-hidden shadow-inner mt-2">
+                                    <div class="overflow-x-auto scrollbar-none">
+                                        <table class="w-full text-left text-xs border-collapse">
+                                            <thead>
+                                                <tr class="bg-slate-950/60 border-b border-white/5 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                                    <th class="py-3 px-4">Scan Run ID</th>
+                                                    <th class="py-3 px-4">Scanner Engines Status</th>
+                                                    <th class="py-3 px-4">Execution Timestamp</th>
+                                                    <th class="py-3 px-4 text-right">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="target-history-body-${id}">
+                                                <tr>
+                                                    <td colspan="4" class="py-6 px-4 text-center text-slate-500">
+                                                        Click 'Scan History' to establish connection...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>`;
             }
+
 
             // ─── Add Target Modal ─────────────────────────────────────────────────────────────────
 

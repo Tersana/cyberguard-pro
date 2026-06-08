@@ -44,8 +44,7 @@
                 max-width: 420px;
                 width: 100%;
                 text-align: center;
-                box-shadow: 0 0 60px rgba(167, 139, 250, 0.12),
-                            var(--cg-shadow-xl);
+                box-shadow: var(--cg-shadow-xl);
                 margin: 0 var(--cg-space-4);
             }
 
@@ -69,7 +68,7 @@
                 inset: 0;
                 border: 4px solid transparent;
                 border-top-color: var(--cg-accent);
-                border-right-color: rgba(167, 139, 250, 0.4);
+                border-right-color: rgba(59, 130, 246, 0.4);
                 border-radius: var(--cg-radius-full);
                 animation: spin 1s linear infinite;
             }
@@ -250,11 +249,11 @@
             .callback-btn-primary {
                 background: var(--cg-accent-muted);
                 color: var(--cg-accent);
-                border-color: rgba(167, 139, 250, 0.2);
+                border-color: rgba(59, 130, 246, 0.2);
             }
 
             .callback-btn-primary:hover {
-                background: rgba(167, 139, 250, 0.25);
+                background: rgba(59, 130, 246, 0.25);
             }
 
             .btn-row {
@@ -408,15 +407,10 @@
                     statusEl.className = "callback-status status-success";
 
                     const displayName = userName || "User";
-                    statusEl.innerHTML =
-                        "Session established successfully." +
-                        '<span class="welcome-name">Welcome, ' +
-                        _escapeHtml(displayName) + "</span>";
+                    statusEl.innerHTML = `Session established successfully.<span class="welcome-name">Welcome, ${_escapeHtml(displayName)}</span>`;
 
                     // Replace pause button with dashboard link
-                    actionButtons.innerHTML =
-                        '<a href="/dashboard" class="callback-btn callback-btn-primary">' +
-                        '<i class="fas fa-gauge-high"></i> Go to Dashboard</a>';
+                    actionButtons.innerHTML = `<a href="/dashboard" class="callback-btn callback-btn-primary"><i class="fas fa-gauge-high"></i> Go to Dashboard</a>`;
                 }
 
                 function showError(message) {
@@ -425,9 +419,7 @@
                     progressBar.classList.add("errored");
                     titleEl.textContent = "Authentication Failed";
                     statusEl.className = "callback-status status-error";
-                    statusEl.innerHTML =
-                        "Google sign-in could not be completed." +
-                        '<span class="error-detail">' + _escapeHtml(message) + "</span>";
+                    statusEl.innerHTML = `Google sign-in could not be completed.<span class="error-detail">${_escapeHtml(message)}</span>`;
 
                     // Show fallback immediately on error
                     fallbackSection.classList.remove("hidden");

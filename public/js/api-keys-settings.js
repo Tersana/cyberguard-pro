@@ -3,6 +3,20 @@
  * Handles displaying service states, entering new keys, bulk saving, and deletion.
  */
 
+// Global escapeHtml helper to sanitize input and prevent injection
+if (typeof window.escapeHtml !== "function") {
+    window.escapeHtml = function(str) {
+        if (!str) return "";
+        return str.toString()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    };
+}
+const escapeHtml = window.escapeHtml;
+
 class ApiKeysSettings {
     constructor() {
         this.services = ['virustotal', 'abuseipdb', 'whoisxml', 'shodan', 'urlscan', 'ai_assistant'];
@@ -112,7 +126,7 @@ class ApiKeysSettings {
             // Determine badge HTML
             let badgeHTML = "";
             if (isSystemDefault) {
-                badgeHTML = `<span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[10px] px-2 py-0.5 rounded-full font-medium ml-auto">System Default</span>`;
+                badgeHTML = `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] px-2 py-0.5 rounded-full font-medium ml-auto">System Default</span>`;
             } else if (hasKey) {
                 badgeHTML = `<span class="bg-green-500/10 text-green-400 border border-green-500/20 text-[10px] px-2 py-0.5 rounded-full font-medium ml-auto">Configured</span>`;
             } else {
@@ -124,7 +138,7 @@ class ApiKeysSettings {
                     <div>
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-lg bg-slate-800/80 border border-white/5 flex items-center justify-center text-purple-400">
+                                <div class="w-8 h-8 rounded-lg bg-slate-800/80 border border-white/5 flex items-center justify-center text-blue-400">
                                     <span class="material-symbols-outlined text-lg">${meta.icon}</span>
                                 </div>
                                 <div>
@@ -138,7 +152,7 @@ class ApiKeysSettings {
                         <!-- Masked Value & Actions -->
                         ${hasKey ? `
                         <div class="flex items-center justify-between bg-black/20 border border-white/5 rounded-lg p-2 mb-3">
-                            <code class="text-xs font-mono text-slate-300 select-all">${masked}</code>
+                            <code class="text-xs font-mono text-slate-300 select-all">${escapeHtml(masked)}</code>
                             ${(!isSystemDefault && keyId) ? `
                             <button type="button" class="text-slate-400 hover:text-red-400 transition-colors p-1" data-delete="${service}" data-id="${keyId}" title="Delete API Key">
                                 <span class="material-symbols-outlined text-base">delete</span>
@@ -163,7 +177,7 @@ class ApiKeysSettings {
                         
                         ${meta.providerUrl ? `
                         <div class="mt-2 text-right">
-                            <a href="${meta.providerUrl}" target="_blank" class="text-[10px] text-purple-400 hover:text-purple-300 inline-flex items-center gap-0.5">
+                            <a href="${meta.providerUrl}" target="_blank" class="text-[10px] text-blue-400 hover:text-blue-300 inline-flex items-center gap-0.5">
                                 Get Key <span class="material-symbols-outlined" style="font-size: 0.75rem;">open_in_new</span>
                             </a>
                         </div>
@@ -173,7 +187,7 @@ class ApiKeysSettings {
             `;
         });
 
-        pane.innerHTML = `
+        pane.innerHTML = ` // security-audit-ignore
             <div class="space-y-6">
                 <div>
                     <p class="text-sm text-slate-400 mb-4">

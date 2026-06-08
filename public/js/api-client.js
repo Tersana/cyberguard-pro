@@ -333,6 +333,16 @@ class APIClient {
  * Cyber-themed loading states for async operations
  */
 
+function _escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 /**
  * Show full-screen loading overlay
  * @param {string} message - Optional loading message to display
@@ -347,7 +357,7 @@ function showLoading(message = "Loading...") {
     overlay.className = "cyber-loading-overlay";
     overlay.innerHTML = `
       <div class="cyber-spinner-lg"></div>
-      <div class="cyber-loading-text" id="cyber-loading-message">${message}</div>
+      <div class="cyber-loading-text" id="cyber-loading-message">${_escapeHtml(message)}</div>
     `;
     document.body.appendChild(overlay);
   } else {
@@ -396,7 +406,7 @@ function showInlineLoading(element, message = "Loading") {
   element.innerHTML = `
     <span class="cyber-loading-inline">
       <span class="cyber-spinner-sm"></span>
-      <span class="cyber-loading-dots">${message}</span>
+      <span class="cyber-loading-dots">${_escapeHtml(message)}</span>
     </span>
   `;
 }
@@ -428,9 +438,9 @@ function hideInlineLoading(element) {
  */
 function showContainerLoading(container, message = "Loading...") {
   const element =
-    typeof container === "string"
-      ? document.querySelector(container)
-      : container;
+      typeof container === "string"
+          ? document.querySelector(container)
+          : container;
 
   if (!element) return;
 
@@ -441,7 +451,7 @@ function showContainerLoading(container, message = "Loading...") {
   element.innerHTML = `
     <div class="flex flex-col items-center justify-center py-12">
       <div class="cyber-spinner"></div>
-      <div class="cyber-loading-text">${message}</div>
+      <div class="cyber-loading-text">${_escapeHtml(message)}</div>
     </div>
   `;
 }

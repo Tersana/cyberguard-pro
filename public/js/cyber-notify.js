@@ -54,7 +54,7 @@ const CyberNotify = {
       inputEl = document.createElement("input");
       inputEl.id = "cyber-notify-input";
       inputEl.type = "text";
-      inputEl.className = "w-full bg-slate-950/80 border border-white/15 focus:border-purple-500/80 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none mt-1 mb-5 transition-colors font-sans text-center shadow-inner shadow-black/40";
+      inputEl.className = "w-full bg-slate-950/80 border border-white/15 focus:border-blue-500/80 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none mt-1 mb-5 transition-colors font-sans text-center shadow-inner shadow-black/40";
       const actions = document.getElementById("cyber-notify-actions");
       if (actions) {
         actions.parentNode.insertBefore(inputEl, actions);

@@ -10817,17 +10817,120 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize SelectAllToggle
   SelectAllToggle.init();
 
+  // ---- Helper functions for Web Security Scan global state ----
+  function setWebSecurityScanRunningState(isRunning) {
+    const runBtn = document.getElementById("run-analysis-btn");
+    const stopBtn = document.getElementById("stop-analysis-btn");
+    const clearBtn = document.getElementById("wa-clear-all-btn");
+
+    if (isRunning) {
+      if (runBtn) {
+        runBtn.classList.add("hidden");
+      }
+      if (stopBtn) {
+        stopBtn.classList.remove("hidden");
+        stopBtn.disabled = false;
+        stopBtn.textContent = "Stop Scan";
+      }
+      if (clearBtn) {
+        clearBtn.disabled = true;
+        clearBtn.classList.add("button-disabled");
+      }
+    } else {
+      if (runBtn) {
+        runBtn.classList.remove("hidden");
+        runBtn.disabled = false;
+        runBtn.classList.remove("button-disabled");
+      }
+      if (stopBtn) {
+        stopBtn.classList.add("hidden");
+      }
+      if (clearBtn) {
+        clearBtn.disabled = false;
+        clearBtn.classList.remove("button-disabled");
+      }
+    }
+
+    // Synchronize modal if open
+    const modal = document.getElementById("wa-auditor-modal");
+    if (modal && !modal.classList.contains("hidden")) {
+      const modalRunBtn = document.getElementById("wa-modal-run-btn");
+      const modalStopBtn = document.getElementById("wa-modal-stop-btn");
+      const modalTargetInput = document.getElementById("wa-modal-target-input");
+      const statusLight = document.getElementById("wa-modal-status-light");
+
+      if (isRunning) {
+        if (modalRunBtn) modalRunBtn.classList.add("hidden");
+        if (modalStopBtn) {
+          modalStopBtn.classList.remove("hidden");
+          modalStopBtn.disabled = false;
+          modalStopBtn.textContent = "Stop";
+        }
+        if (modalTargetInput) modalTargetInput.disabled = true;
+        if (statusLight) {
+          statusLight.className = "cyber-modal-status-light blinking running";
+        }
+      } else {
+        if (modalRunBtn) {
+          modalRunBtn.classList.remove("hidden");
+          modalRunBtn.disabled = false;
+          modalRunBtn.classList.remove("button-disabled");
+        }
+        if (modalStopBtn) {
+          modalStopBtn.classList.add("hidden");
+        }
+        if (modalTargetInput) modalTargetInput.disabled = false;
+      }
+    }
+  }
+
+  function requestStopScan() {
+    shouldStopScan = true;
+    
+    // Update dashboard stop button
+    const stopBtn = document.getElementById("stop-analysis-btn");
+    if (stopBtn) {
+      stopBtn.disabled = true;
+      stopBtn.textContent = "Stopping...";
+    }
+
+    // Update modal stop button
+    const modalStopBtn = document.getElementById("wa-modal-stop-btn");
+    if (modalStopBtn) {
+      modalStopBtn.disabled = true;
+      modalStopBtn.textContent = "Stopping...";
+    }
+
+    // Append warning log to both terminals
+    const mainLog = document.getElementById("wa-link-log");
+    const modalTerminal = document.getElementById("wa-modal-terminal");
+    const time = new Date().toLocaleTimeString('en', { hour12: false });
+    const logLine = `
+      <div class="wa-log-line">
+        <span class="wa-log-time">${time}</span>
+        <span class="wa-log-warn font-bold">[WARN]</span>
+        <span style="color:var(--cg-text-2)">Scan stop requested by user...</span>
+      </div>`;
+
+    if (mainLog) {
+      mainLog.innerHTML += logLine;
+      mainLog.scrollTop = mainLog.scrollHeight;
+    }
+    if (modalTerminal) {
+      modalTerminal.innerHTML += logLine;
+      modalTerminal.scrollTop = modalTerminal.scrollHeight;
+    }
+  }
+
   // ---- Wire new UI buttons ----
 
   // Run Analysis button (Web tab) — runs all web security tools
   const runAnalysisBtn = document.getElementById("run-analysis-btn");
+  const stopAnalysisBtn = document.getElementById("stop-analysis-btn");
+
   if (runAnalysisBtn) {
     runAnalysisBtn.addEventListener("click", async () => {
       const url = document.getElementById("target-url")?.value?.trim();
-
-      // Disable button during scan
-      runAnalysisBtn.disabled = true;
-      runAnalysisBtn.classList.add("button-disabled");
 
       // Reset stop flag
       shouldStopScan = false;
@@ -10839,25 +10942,45 @@ document.addEventListener("DOMContentLoaded", () => {
       // Update Summary Bar when scan starts (show target, reset time)
       updateSummaryBar(resultsData.length, "--", currentScanTarget);
 
-      // Execute selective web security scan via ExecutionController
-      await ExecutionController.executeWebSecurityScan(url);
+      // Set running state globally
+      setWebSecurityScanRunningState(true);
 
-      // Track scan end time and update Summary Bar with duration
-      scanEndTime = Date.now();
-      const metrics = calculateSummaryMetrics(
-        resultsData,
-        scanStartTime,
-        scanEndTime,
-      );
-      updateSummaryBar(
-        metrics.totalIssues,
-        metrics.timeTaken,
-        currentScanTarget,
-      );
+      try {
+        // Execute selective web security scan via ExecutionController
+        await ExecutionController.executeWebSecurityScan(url);
+        window.WebAuditing?.saveCurrentScanToHistory(url);
+      } catch (error) {
+        console.error("Web Security Scan failed:", error);
+      } finally {
+        // Track scan end time and update Summary Bar with duration
+        scanEndTime = Date.now();
+        const metrics = calculateSummaryMetrics(
+          resultsData,
+          scanStartTime,
+          scanEndTime,
+        );
+        updateSummaryBar(
+          metrics.totalIssues,
+          metrics.timeTaken,
+          currentScanTarget,
+        );
 
-      // Re-enable button after scan
-      runAnalysisBtn.disabled = false;
-      runAnalysisBtn.classList.remove("button-disabled");
+        // Clear running state globally
+        setWebSecurityScanRunningState(false);
+      }
+    });
+  }
+
+  if (stopAnalysisBtn) {
+    stopAnalysisBtn.addEventListener("click", () => {
+      requestStopScan();
+    });
+  }
+
+  const waClearHistoryBtn = document.getElementById("wa-clear-history-btn");
+  if (waClearHistoryBtn) {
+    waClearHistoryBtn.addEventListener("click", () => {
+      window.WebAuditing?.clearScanHistory();
     });
   }
 
@@ -10897,6 +11020,156 @@ document.addEventListener("DOMContentLoaded", () => {
     
     init() {
       this.switchTool('headers', false); // default tool
+      
+      // Load scan history from localStorage
+      try {
+        const stored = localStorage.getItem('wa_scan_history');
+        if (stored) {
+          this.scanHistory = JSON.parse(stored);
+        } else {
+          this.scanHistory = [];
+        }
+      } catch(e) {
+        this.scanHistory = [];
+      }
+      this.renderScanHistoryList();
+    },
+
+    scanHistory: [],
+
+    saveCurrentScanToHistory(target) {
+      if (!target) return;
+      
+      const hasAnyResults = this.headersResults || 
+                            this.linksResults || 
+                            this.emailResults || 
+                            (typeof resultsData !== 'undefined' && resultsData.length > 0);
+      if (!hasAnyResults) return;
+
+      const toolStates = {};
+      const tools = ['headers', 'links', 'email', 'ssl', 'phishing', 'dns-spoof'];
+      tools.forEach(toolId => {
+        const el = document.getElementById(`wa-tool-status-${toolId}`);
+        let status = 'idle';
+        if (el) {
+          if (el.classList.contains('wa-status-done') || el.classList.contains('done')) status = 'done';
+          else if (el.classList.contains('wa-status-running') || el.classList.contains('running')) status = 'running';
+          else if (el.classList.contains('wa-status-error') || el.classList.contains('error')) status = 'error';
+        }
+        toolStates[toolId] = status;
+      });
+
+      const historyItem = {
+        id: 'scan_' + Date.now(),
+        target: target,
+        timestamp: new Date().toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        toolStates: toolStates,
+        headersResults: this.headersResults ? JSON.parse(JSON.stringify(this.headersResults)) : null,
+        linksResults: this.linksResults ? JSON.parse(JSON.stringify(this.linksResults)) : null,
+        emailResults: this.emailResults ? JSON.parse(JSON.stringify(this.emailResults)) : null,
+        resultsData: [...resultsData]
+      };
+
+      this.scanHistory = this.scanHistory || [];
+      this.scanHistory.unshift(historyItem);
+      
+      if (this.scanHistory.length > 10) {
+        this.scanHistory.pop();
+      }
+
+      try {
+        localStorage.setItem('wa_scan_history', JSON.stringify(this.scanHistory));
+      } catch(e) {
+        console.error('Failed to save scan history to localStorage:', e);
+      }
+
+      this.renderScanHistoryList();
+    },
+
+    loadScanFromHistory(scanId) {
+      const item = this.scanHistory.find(h => h.id === scanId);
+      if (!item) return;
+
+      const input = document.getElementById("target-url");
+      if (input) input.value = item.target;
+
+      this.headersResults = item.headersResults;
+      this.linksResults = item.linksResults;
+      this.emailResults = item.emailResults;
+
+      resultsData = [...item.resultsData];
+
+      Object.entries(item.toolStates).forEach(([toolId, status]) => {
+        let badge = '';
+        if (status === 'done') {
+          if (toolId === 'headers' && item.headersResults) {
+            const missingCount = item.headersResults.results.filter(r => r.result.status === 'missing').length;
+            badge = missingCount === 0 ? 'A+' : `${missingCount} issues`;
+          } else if (toolId === 'links' && item.linksResults) {
+            const bad = item.linksResults.results.broken.length + item.linksResults.results.mixed.length;
+            badge = bad === 0 ? 'Clean' : `${bad} alerts`;
+          } else if (toolId === 'email' && item.emailResults) {
+            const checks = item.emailResults.checks || [];
+            const missingCount = checks.filter(c => c.status === 'missing').length;
+            badge = `${missingCount} issues`;
+          } else {
+            badge = 'Complete';
+          }
+        }
+        this.setToolStatus(toolId, status, badge);
+      });
+
+      const items = document.querySelectorAll(".wa-history-item");
+      items.forEach(el => {
+        el.classList.toggle("active", el.dataset.scanId === scanId);
+      });
+
+      this.renderCurrentToolView();
+      updateResultsStats();
+      _dispatchRiskGaugeUpdate();
+
+      CyberNotify.alert(`Loaded scan results for ${item.target}`, { type: 'success' });
+    },
+
+    clearScanHistory() {
+      this.scanHistory = [];
+      try {
+        localStorage.removeItem('wa_scan_history');
+      } catch(e) {
+        console.error(e);
+      }
+      this.renderScanHistoryList();
+      CyberNotify.alert("Scan history cleared", { type: 'success' });
+    },
+
+    renderScanHistoryList() {
+      const listEl = document.getElementById("wa-history-list");
+      if (!listEl) return;
+
+      if (!this.scanHistory || this.scanHistory.length === 0) {
+        listEl.innerHTML = `
+          <div class="text-xs text-slate-400 text-center py-4" id="wa-history-empty">
+            No history available
+          </div>`;
+        return;
+      }
+
+      listEl.innerHTML = this.scanHistory.map(item => {
+        const displayTarget = item.target.replace(/^https?:\/\//, '').replace(/\/$/, '');
+        return `
+          <div class="wa-history-item flex items-center justify-between p-2 rounded-lg cursor-pointer hover:bg-white/5 transition border border-transparent" 
+               data-scan-id="${item.id}"
+               onclick="window.WebAuditing.loadScanFromHistory('${item.id}')">
+            <div class="flex-grow min-width-0 pr-2">
+              <div class="text-xs font-semibold text-slate-200 truncate font-mono">${escapeHtml(displayTarget)}</div>
+              <div class="text-[10px] text-slate-400 mt-0.5">${item.timestamp}</div>
+            </div>
+            <svg class="w-3.5 h-3.5 text-slate-500 hover:text-white shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+            </svg>
+          </div>
+        `;
+      }).join("");
     },
 
     updateAuditorFilterControls(toolId) {
@@ -12015,22 +12288,33 @@ document.addEventListener("DOMContentLoaded", () => {
         
         const results = { broken: [], mixed: [], ok: [], redirects: [] };
         const logEl = document.getElementById('wa-link-log');
+        const modalLogEl = document.getElementById('wa-modal-terminal');
         
         for (let i = 0; i < validResources.length; i++) {
+          if (shouldStopScan) {
+            this.appendLog(logEl, 'CANCELLED', 'Scan stopped by user', 'warn');
+            this.appendLog(modalLogEl, 'CANCELLED', 'Scan stopped by user', 'warn');
+            break;
+          }
           const res = validResources[i];
           
           // Update progress
           const pct = Math.round((i / validResources.length) * 100);
           const fill = document.getElementById('wa-link-progress');
           if (fill) fill.style.width = pct + '%';
-          
           const countEl = document.getElementById('wa-link-count');
           if (countEl) countEl.textContent = `Checking ${i+1}/${validResources.length} resources...`;
+          
+          const modalFill = document.getElementById('wa-modal-link-progress');
+          if (modalFill) modalFill.style.width = pct + '%';
+          const modalCountEl = document.getElementById('wa-modal-link-count');
+          if (modalCountEl) modalCountEl.textContent = `Checking ${i+1}/${validResources.length} resources...`;
           
           // Check mixed content
           if (isHttps && res.url.startsWith('http:')) {
             results.mixed.push(res);
             this.appendLog(logEl, 'MIXED CONTENT', res.url, 'warn');
+            this.appendLog(modalLogEl, 'MIXED CONTENT', res.url, 'warn');
             continue;
           }
           
@@ -12045,17 +12329,21 @@ document.addEventListener("DOMContentLoaded", () => {
             if (status >= 400) {
               results.broken.push({ ...res, status });
               this.appendLog(logEl, `${status} BROKEN`, res.url, 'fail');
+              this.appendLog(modalLogEl, `${status} BROKEN`, res.url, 'fail');
             } else if (status >= 300 && status < 400) {
               results.redirects.push({ ...res, status });
               this.appendLog(logEl, `${status} REDIRECT`, res.url, 'warn');
+              this.appendLog(modalLogEl, `${status} REDIRECT`, res.url, 'warn');
             } else {
               results.ok.push({ ...res, status });
               this.appendLog(logEl, '200 OK', res.url, 'ok');
+              this.appendLog(modalLogEl, '200 OK', res.url, 'ok');
             }
           } catch (e) {
             // Mark as error / unreachable
             results.broken.push({ ...res, status: 'Error' });
             this.appendLog(logEl, 'ERROR UNREACHABLE', res.url, 'fail');
+            this.appendLog(modalLogEl, 'ERROR UNREACHABLE', res.url, 'fail');
           }
 
           // Small delay to make visual updates visible
@@ -12066,6 +12354,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (fill) fill.style.width = '100%';
         const countEl = document.getElementById('wa-link-count');
         if (countEl) countEl.textContent = 'Scan complete';
+
+        const modalFill = document.getElementById('wa-modal-link-progress');
+        if (modalFill) modalFill.style.width = '100%';
+        const modalCountEl = document.getElementById('wa-modal-link-count');
+        if (modalCountEl) modalCountEl.textContent = 'Scan complete';
         
         this.linksResults = { results, total: validResources.length, target };
         this.renderLinksResults(results, validResources.length, target);
@@ -12099,97 +12392,116 @@ document.addEventListener("DOMContentLoaded", () => {
     },
 
     renderLinksProgress(target) {
-      const bodyEl = document.getElementById('wa-results-body');
-      if (!bodyEl) return;
+      const mainBodyEl = document.getElementById('wa-results-body');
+      if (mainBodyEl) {
+        mainBodyEl.innerHTML = `
+          <div style="margin-bottom:16px">
+            <div style="font-size:13px;color:var(--cg-text-2);margin-bottom:8px">
+              Auditing URL resources: <span style="font-family:var(--cg-font-mono);color:var(--cg-text-1)">${target}</span>
+            </div>
+            <div class="wa-progress-bar">
+              <div class="wa-progress-fill" id="wa-link-progress" style="width:0%"></div>
+            </div>
+            <div id="wa-link-count" style="font-size:12px;color:var(--cg-text-2);margin-top:4px">
+              Initializing DOM parser...
+            </div>
+          </div>
+          <div class="wa-terminal" id="wa-link-log"></div>`;
+      }
 
-      bodyEl.innerHTML = `
-        <div style="margin-bottom:16px">
-          <div style="font-size:13px;color:var(--cg-text-2);margin-bottom:8px">
-            Auditing URL resources: <span style="font-family:var(--cg-font-mono);color:var(--cg-text-1)">${target}</span>
-          </div>
-          <div class="wa-progress-bar">
-            <div class="wa-progress-fill" id="wa-link-progress" style="width:0%"></div>
-          </div>
-          <div id="wa-link-count" style="font-size:12px;color:var(--cg-text-2);margin-top:4px">
-            Initializing DOM parser...
-          </div>
-        </div>
-        <div class="wa-terminal" id="wa-link-log"></div>`;
+      const modal = document.getElementById("wa-auditor-modal");
+      if (modal && !modal.classList.contains("hidden")) {
+        const modalResultsPane = document.getElementById("wa-modal-results-pane");
+        if (modalResultsPane) {
+          modalResultsPane.innerHTML = `
+            <div style="margin-bottom:16px">
+              <div style="font-size:13px;color:var(--cg-text-2);margin-bottom:8px">
+                Auditing URL resources: <span style="font-family:var(--cg-font-mono);color:var(--cg-text-1)">${target}</span>
+              </div>
+              <div class="wa-progress-bar">
+                <div class="wa-progress-fill" id="wa-modal-link-progress" style="width:0%"></div>
+              </div>
+              <div id="wa-modal-link-count" style="font-size:12px;color:var(--cg-text-2);margin-top:4px">
+                Initializing DOM parser...
+              </div>
+            </div>`;
+        }
+      }
     },
 
     renderLinksResults(results, total, target) {
       const bodyEl = document.getElementById('wa-results-body');
-      if (!bodyEl) return;
+      if (bodyEl) {
+        const allResources = [];
+        results.broken.forEach(r => allResources.push({ ...r, category: 'broken', statusText: `Broken (${r.status})`, statusClass: 'wa-status-missing' }));
+        results.mixed.forEach(r => allResources.push({ ...r, category: 'mixed', statusText: 'Insecure HTTPS', statusClass: 'wa-status-misconfigured' }));
+        results.ok.forEach(r => {
+          if (r.type === 'Script') {
+            allResources.push({ ...r, category: 'scripts', statusText: 'Script', statusClass: 'wa-status-present' });
+          } else if (r.type === 'Image') {
+            allResources.push({ ...r, category: 'images', statusText: 'Image', statusClass: 'wa-status-present' });
+          } else {
+            allResources.push({ ...r, category: 'ok', statusText: r.type || 'Resource', statusClass: 'wa-status-present' });
+          }
+        });
+        results.redirects.forEach(r => {
+          if (r.type === 'Script') {
+            allResources.push({ ...r, category: 'scripts', statusText: `Redirect (${r.status})`, statusClass: 'wa-status-present' });
+          } else if (r.type === 'Image') {
+            allResources.push({ ...r, category: 'images', statusText: `Redirect (${r.status})`, statusClass: 'wa-status-present' });
+          } else {
+            allResources.push({ ...r, category: 'redirects', statusText: `Redirect (${r.status})`, statusClass: 'wa-status-present' });
+          }
+        });
 
-      const allResources = [];
-      results.broken.forEach(r => allResources.push({ ...r, category: 'broken', statusText: `Broken (${r.status})`, statusClass: 'wa-status-missing' }));
-      results.mixed.forEach(r => allResources.push({ ...r, category: 'mixed', statusText: 'Insecure HTTPS', statusClass: 'wa-status-misconfigured' }));
-      results.ok.forEach(r => {
-        if (r.type === 'Script') {
-          allResources.push({ ...r, category: 'scripts', statusText: 'Script', statusClass: 'wa-status-present' });
-        } else if (r.type === 'Image') {
-          allResources.push({ ...r, category: 'images', statusText: 'Image', statusClass: 'wa-status-present' });
-        } else {
-          allResources.push({ ...r, category: 'ok', statusText: r.type || 'Resource', statusClass: 'wa-status-present' });
-        }
-      });
-      results.redirects.forEach(r => {
-        if (r.type === 'Script') {
-          allResources.push({ ...r, category: 'scripts', statusText: `Redirect (${r.status})`, statusClass: 'wa-status-present' });
-        } else if (r.type === 'Image') {
-          allResources.push({ ...r, category: 'images', statusText: `Redirect (${r.status})`, statusClass: 'wa-status-present' });
-        } else {
-          allResources.push({ ...r, category: 'redirects', statusText: `Redirect (${r.status})`, statusClass: 'wa-status-present' });
-        }
-      });
-
-      bodyEl.innerHTML = `
-        <div style="margin-bottom:16px">
-          <div style="font-size:13px;color:var(--cg-text-2);margin-bottom:8px">
-            Target audited: <span style="font-family:var(--cg-font-mono);color:var(--cg-text-1)">${target}</span>
-          </div>
-          <div class="wa-progress-bar">
-            <div class="wa-progress-fill" style="width:100%"></div>
-          </div>
-          <div style="font-size:12px;color:var(--cg-success);margin-top:4px;font-weight:600">
-            Scan completed successfully
-          </div>
-        </div>
-
-        <div class="wa-terminal" style="height: 220px;" id="wa-link-log">
-          ${document.getElementById('wa-link-log')?.innerHTML || '<div class="wa-log-line"><span class="wa-log-ok">[OK]</span> Scan finished.</div>'}
-        </div>
-
-        <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div style="padding:16px;background:var(--cg-bg-surface);border-radius:8px;border:1px solid var(--cg-border)">
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--cg-text-3);margin-bottom:10px">
-              Resource Audit Breakdown
+        bodyEl.innerHTML = `
+          <div style="margin-bottom:16px">
+            <div style="font-size:13px;color:var(--cg-text-2);margin-bottom:8px">
+              Target audited: <span style="font-family:var(--cg-font-mono);color:var(--cg-text-1)">${target}</span>
             </div>
-            <div style="max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;" id="wa-links-findings-list">
-              ${allResources.length === 0 
-                ? '<div style="color:var(--cg-success);font-size:13px;font-weight:500;padding:12px;text-align:center">No resources detected.</div>'
-                : allResources.map(r => `
-                    <div class="wa-link-resource-row" data-category="${r.category}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;padding:8px 12px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02);border-radius:6px;word-break:break-all">
-                      <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0">
-                        <span style="font-weight:600;color:var(--cg-text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.url)}</span>
-                        <span style="font-size:10px;color:var(--cg-text-3)">${r.type}</span>
-                      </div>
-                      <span class="wa-header-status ${r.statusClass}" style="flex-shrink:0">${r.statusText}</span>
-                    </div>`).join('')}
+            <div class="wa-progress-bar">
+              <div class="wa-progress-fill" style="width:100%"></div>
+            </div>
+            <div style="font-size:12px;color:var(--cg-success);margin-top:4px;font-weight:600">
+              Scan completed successfully
             </div>
           </div>
-          <div style="padding:16px;background:var(--cg-bg-surface);border-radius:8px;border:1px solid var(--cg-border)">
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--cg-text-3);margin-bottom:10px">
-              Scan Summary
-            </div>
-            <div style="font-size:13px;display:flex;flex-direction:column;gap:6px">
-              <span>Total resources checked: <strong style="color:var(--cg-text-1)">${total}</strong></span>
-              <span style="color:var(--cg-success);font-weight:600">OK: ${results.ok.length}</span>
-              <span style="color:var(--cg-danger);font-weight:600">Broken/Unreachable: ${results.broken.length}</span>
-              <span style="color:var(--cg-warning);font-weight:600">Mixed Content Heuristics: ${results.mixed.length}</span>
-            </div>
+
+          <div class="wa-terminal" style="height: 220px;" id="wa-link-log">
+            ${document.getElementById('wa-link-log')?.innerHTML || '<div class="wa-log-line"><span class="wa-log-ok">[OK]</span> Scan finished.</div>'}
           </div>
-        </div>`;
+
+          <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div style="padding:16px;background:var(--cg-bg-surface);border-radius:8px;border:1px solid var(--cg-border)">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--cg-text-3);margin-bottom:10px">
+                Resource Audit Breakdown
+              </div>
+              <div style="max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;" id="wa-links-findings-list">
+                ${allResources.length === 0 
+                  ? '<div style="color:var(--cg-success);font-size:13px;font-weight:500;padding:12px;text-align:center">No resources detected.</div>'
+                  : allResources.map(r => `
+                      <div class="wa-link-resource-row" data-category="${r.category}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;padding:8px 12px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02);border-radius:6px;word-break:break-all">
+                        <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0">
+                          <span style="font-weight:600;color:var(--cg-text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.url)}</span>
+                          <span style="font-size:10px;color:var(--cg-text-3)">${r.type}</span>
+                        </div>
+                        <span class="wa-header-status ${r.statusClass}" style="flex-shrink:0">${r.statusText}</span>
+                      </div>`).join('')}
+              </div>
+            </div>
+            <div style="padding:16px;background:var(--cg-bg-surface);border-radius:8px;border:1px solid var(--cg-border)">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--cg-text-3);margin-bottom:10px">
+                Scan Summary
+              </div>
+              <div style="font-size:13px;display:flex;flex-direction:column;gap:6px">
+                <span>Total resources checked: <strong style="color:var(--cg-text-1)">${total}</strong></span>
+                <span style="color:var(--cg-success);font-weight:600">OK: ${results.ok.length}</span>
+                <span style="color:var(--cg-danger);font-weight:600">Broken/Unreachable: ${results.broken.length}</span>
+                <span style="color:var(--cg-warning);font-weight:600">Mixed Content Heuristics: ${results.mixed.length}</span>
+              </div>
+            </div>
+          </div>`;
+      }
 
       this.applyAuditorFilters();
 
@@ -12556,12 +12868,27 @@ document.addEventListener("DOMContentLoaded", () => {
     },
 
     async runAll() {
-      // Run the 3 new tools sequentially
-      await this.runHeadersAnalysis();
-      this.switchTool('links');
-      await this.runLinkChecker();
-      this.switchTool('email');
-      await this.runEmailSecurityAnalysis();
+      const runBtn = document.getElementById("run-analysis-btn");
+      if (runBtn) {
+        runBtn.click();
+      } else {
+        // Fallback if button is not present
+        const url = document.getElementById("target-url")?.value?.trim();
+        if (!url) return;
+        shouldStopScan = false;
+        setWebSecurityScanRunningState(true);
+        try {
+          await this.runHeadersAnalysis();
+          if (shouldStopScan) return;
+          this.switchTool('links');
+          await this.runLinkChecker();
+          if (shouldStopScan) return;
+          this.switchTool('email');
+          await this.runEmailSecurityAnalysis();
+        } finally {
+          setWebSecurityScanRunningState(false);
+        }
+      }
     },
 
     copyResults() {
@@ -12647,6 +12974,52 @@ document.addEventListener("DOMContentLoaded", () => {
       // Bind actions & listeners
       this.bindModalListeners(toolId);
 
+      // Check if a scan is currently running on the main page
+      const mainRunBtn = document.getElementById("run-analysis-btn");
+      const isScanRunning = mainRunBtn && (mainRunBtn.classList.contains("hidden") || mainRunBtn.disabled);
+      if (isScanRunning) {
+        const modalRunBtn = document.getElementById("wa-modal-run-btn");
+        const modalStopBtn = document.getElementById("wa-modal-stop-btn");
+        const modalTargetInput = document.getElementById("wa-modal-target-input");
+        
+        if (modalRunBtn) modalRunBtn.classList.add("hidden");
+        if (modalStopBtn) {
+          modalStopBtn.classList.remove("hidden");
+          modalStopBtn.disabled = shouldStopScan;
+          modalStopBtn.textContent = shouldStopScan ? "Stopping..." : "Stop";
+        }
+        if (modalTargetInput) modalTargetInput.disabled = true;
+        if (statusLight) {
+          statusLight.className = "cyber-modal-status-light blinking running";
+        }
+
+        // Initialize progress bar in the modal if links check is running
+        if (toolId === 'links') {
+          const modalResultsPane = document.getElementById("wa-modal-results-pane");
+          if (modalResultsPane) {
+            modalResultsPane.innerHTML = `
+              <div style="margin-bottom:16px">
+                <div style="font-size:13px;color:var(--cg-text-2);margin-bottom:8px">
+                  Auditing URL resources: <span style="font-family:var(--cg-font-mono);color:var(--cg-text-1)">${escapeHtml(currentTarget)}</span>
+                </div>
+                <div class="wa-progress-bar">
+                  <div class="wa-progress-fill" id="wa-modal-link-progress" style="width:0%"></div>
+                </div>
+                <div id="wa-modal-link-count" style="font-size:12px;color:var(--cg-text-2);margin-top:4px">
+                  Initializing DOM parser...
+                </div>
+              </div>`;
+          }
+          // Copy main link log to modal terminal
+          const mainLog = document.getElementById('wa-link-log');
+          const modalTerminal = document.getElementById('wa-modal-terminal');
+          if (mainLog && modalTerminal) {
+            modalTerminal.innerHTML = mainLog.innerHTML;
+            modalTerminal.scrollTop = modalTerminal.scrollHeight;
+          }
+        }
+      }
+
       // Render cached results if available
       this.renderModalResults(toolId);
     },
@@ -12685,8 +13058,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 <input type="url" id="wa-modal-target-input" class="cyber-input w-full px-3 py-1.5 text-xs rounded-lg mt-1 font-mono" value="${escapeHtml(target)}" placeholder="https://example.com" spellcheck="false" autocomplete="off">
               </div>
               <button id="wa-modal-run-btn" class="cyber-btn-primary py-2 px-4 rounded-lg text-xs font-semibold shrink-0 mt-4 flex items-center gap-1.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 ${runLabel}
+              </button>
+              <button id="wa-modal-stop-btn" class="cyber-btn-danger py-2 px-4 rounded-lg text-xs font-semibold shrink-0 mt-4 flex items-center gap-1.5 hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
+                Stop
               </button>
             </div>
             
@@ -12720,6 +13097,14 @@ document.addEventListener("DOMContentLoaded", () => {
         closeBtn.onclick = () => this.closeAuditorModal();
       }
 
+      // Stop button handler
+      const stopBtn = document.getElementById("wa-modal-stop-btn");
+      if (stopBtn) {
+        stopBtn.onclick = () => {
+          requestStopScan();
+        };
+      }
+
       // Run button handler
       const runBtn = document.getElementById("wa-modal-run-btn");
       if (runBtn) {
@@ -12731,20 +13116,12 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
           }
 
-          // Disable run button and target input during execution
-          runBtn.disabled = true;
-          runBtn.classList.add("button-disabled");
-          if (targetInput) targetInput.disabled = true;
-
           // Sync URL to main input
           const mainInput = document.getElementById("target-url");
           if (mainInput) mainInput.value = url;
 
-          // Set status light to running
-          const statusLight = document.getElementById("wa-modal-status-light");
-          if (statusLight) {
-            statusLight.className = "cyber-modal-status-light blinking running";
-          }
+          // Set running state globally
+          setWebSecurityScanRunningState(true);
 
           // Isolate SelectionManager selections to ONLY this current tool card
           const tab = document.getElementById("web-security");
@@ -12785,15 +13162,18 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             await ExecutionController.executeWebSecurityScan(url);
+            window.WebAuditing?.saveCurrentScanToHistory(url);
 
             scanEndTime = Date.now();
             
             // Set status light to success
+            const statusLight = document.getElementById("wa-modal-status-light");
             if (statusLight) {
               statusLight.className = "cyber-modal-status-light success";
             }
           } catch(e) {
             console.error("Selective workspace scan failed:", e);
+            const statusLight = document.getElementById("wa-modal-status-light");
             if (statusLight) {
               statusLight.className = "cyber-modal-status-light error";
             }
@@ -12807,10 +13187,8 @@ document.addEventListener("DOMContentLoaded", () => {
               `;
             }
           } finally {
-            // Re-enable target input and run button
-            runBtn.disabled = false;
-            runBtn.classList.remove("button-disabled");
-            if (targetInput) targetInput.disabled = false;
+            // Clear running state globally
+            setWebSecurityScanRunningState(false);
             
             // Render modal results inside results pane immediately
             this.renderModalResults(toolId);

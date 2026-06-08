@@ -54,8 +54,8 @@ class ProfileSettings {
                 <div class="settings-avatar-section">
                     <div class="settings-avatar-big" id="profile-avatar-display">
                         ${this.currentState.avatar 
-                            ? `<img src="${this.currentState.avatar}" alt="Avatar Preview" id="profile-avatar-img">`
-                            : `<span id="profile-avatar-initials">${initials}</span>`
+                            ? `<img src="${escapeHtml(this.currentState.avatar)}" alt="Avatar Preview" id="profile-avatar-img">`
+                            : `<span id="profile-avatar-initials">${escapeHtml(initials)}</span>`
                         }
                     </div>
                     <div class="settings-avatar-actions">
@@ -84,7 +84,7 @@ class ProfileSettings {
                 <div class="settings-form-group">
                     <label for="profile-name">Display Name <span class="required">*</span></label>
                     <div class="input-wrapper">
-                        <input type="text" id="profile-name" class="cyber-input p-3 rounded-lg text-sm" value="${this.currentState.fullName}" required autocomplete="name">
+                        <input type="text" id="profile-name" class="cyber-input p-3 rounded-lg text-sm" value="${escapeHtml(this.currentState.fullName)}" required autocomplete="name">
                     </div>
                 </div>
 
@@ -92,7 +92,7 @@ class ProfileSettings {
                 <div class="settings-form-group">
                     <label for="profile-role">Job Title / Role</label>
                     <div class="input-wrapper">
-                        <input type="text" id="profile-role" class="cyber-input p-3 rounded-lg text-sm" value="${this.currentState.jobTitle}" autocomplete="organization-title">
+                        <input type="text" id="profile-role" class="cyber-input p-3 rounded-lg text-sm" value="${escapeHtml(this.currentState.jobTitle)}" autocomplete="organization-title">
                     </div>
                 </div>
 
@@ -100,7 +100,7 @@ class ProfileSettings {
                 <div class="settings-form-group">
                     <label for="profile-phone">Phone Number</label>
                     <div class="input-wrapper">
-                        <input type="tel" id="profile-phone" class="cyber-input p-3 rounded-lg text-sm" value="${this.currentState.phoneNumber}" autocomplete="tel" placeholder="+1 (555) 000-0000">
+                        <input type="tel" id="profile-phone" class="cyber-input p-3 rounded-lg text-sm" value="${escapeHtml(this.currentState.phoneNumber)}" autocomplete="tel" placeholder="+1 (555) 000-0000">
                     </div>
                 </div>
             </form>
@@ -194,10 +194,10 @@ class ProfileSettings {
         if (!container) return;
 
         if (this.currentState.avatar) {
-            container.innerHTML = `<img src="${this.currentState.avatar}" alt="Avatar Preview" id="profile-avatar-img">`;
+            container.innerHTML = `<img src="${escapeHtml(this.currentState.avatar)}" alt="Avatar Preview" id="profile-avatar-img">`;
         } else {
             const initials = this.getInitials(this.currentState.fullName);
-            container.innerHTML = `<span id="profile-avatar-initials">${initials}</span>`;
+            container.innerHTML = `<span id="profile-avatar-initials">${escapeHtml(initials)}</span>`;
         }
 
         // Re-setup remove button visibility dynamically

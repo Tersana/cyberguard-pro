@@ -50,7 +50,7 @@
 .settings-sidebar {
     width: 240px;
     border-right: 1px solid var(--cg-border);
-    background-color: rgba(17, 24, 39, 0.4);
+    background-color: #0a0a0a;
     display: flex;
     flex-col: column;
     flex-direction: column;
@@ -107,9 +107,9 @@
 }
 
 .settings-nav-item.active {
-    color: var(--cg-accent);
-    background-color: var(--cg-accent-muted);
-    border-left: 3px solid var(--cg-accent);
+    color: var(--cg-text-1);
+    background-color: var(--cg-bg-elevated);
+    border-left: 3px solid var(--cg-accent-dark);
 }
 
 .settings-nav-item .material-symbols-outlined,
@@ -243,7 +243,7 @@
 
 /* General Layout Cards */
 .settings-section-card {
-    background-color: rgba(30, 41, 59, 0.2);
+    background-color: var(--cg-bg-surface);
     border: 1px solid var(--cg-border);
     border-radius: var(--cg-radius-lg);
     padding: var(--cg-space-6);
@@ -272,7 +272,7 @@
     width: 80px;
     height: 80px;
     border-radius: var(--cg-radius-full);
-    background-color: var(--cg-accent-dark);
+    background-color: #27272a;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -340,7 +340,7 @@
     gap: var(--cg-space-2);
     margin-top: var(--cg-space-3);
     padding: var(--cg-space-3);
-    background-color: rgba(17, 24, 39, 0.3);
+    background-color: rgba(0, 0, 0, 0.2);
     border-radius: var(--cg-radius-md);
     border: 1px solid var(--cg-border);
 }
@@ -363,7 +363,7 @@
 
 /* Backup codes card */
 .settings-backup-codes-box {
-    background-color: rgba(17, 24, 39, 0.4);
+    background-color: rgba(0, 0, 0, 0.2);
     border: 1px solid var(--cg-border);
     border-radius: var(--cg-radius-md);
     padding: var(--cg-space-4);
@@ -402,7 +402,7 @@
     align-items: center;
     gap: var(--cg-space-4);
     padding: var(--cg-space-3) var(--cg-space-4);
-    background-color: rgba(31, 41, 55, 0.2);
+    background-color: rgba(255, 255, 255, 0.02);
     border: 1px solid var(--cg-border);
     border-radius: var(--cg-radius-md);
 }
@@ -432,8 +432,8 @@
 
 /* Danger Zone Card */
 .settings-danger-card {
-    border: 1px solid rgba(248, 113, 113, 0.3);
-    background-color: rgba(248, 113, 113, 0.03);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    background-color: rgba(239, 68, 68, 0.02);
     border-radius: var(--cg-radius-lg);
     padding: var(--cg-space-6);
 }
@@ -459,7 +459,7 @@
     align-items: center;
     justify-content: space-between;
     padding: var(--cg-space-4) 0;
-    border-bottom: 1px solid rgba(248, 113, 113, 0.1);
+    border-bottom: 1px solid rgba(239, 68, 68, 0.1);
 }
 
 .settings-danger-action-row:last-child {
@@ -708,7 +708,7 @@
 
     .settings-nav-item.active {
         border-left: none;
-        border-bottom: 3px solid var(--cg-accent);
+        border-bottom: 3px solid var(--cg-accent-dark);
     }
 
     .settings-content-body {

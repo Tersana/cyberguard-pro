@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // ===========================
 // Feature Card Tilt Effect
 // ===========================
-document.querySelectorAll(".feature-card").forEach((card) => {
+document.querySelectorAll(".feature-card[data-tilt='true']").forEach((card) => {
   let rect = null;
 
   card.addEventListener("mouseenter", () => {
@@ -265,8 +265,8 @@ document
   let particleCount = getParticleCount();
 
   const colors = [
-    "rgba(167, 139, 250, 0.4)", // var(--cg-accent) translucent
-    "rgba(139, 92, 246, 0.3)",  // var(--cg-accent-hover) translucent
+    "rgba(59, 130, 246, 0.4)", // var(--cg-accent) translucent
+    "rgba(59, 130, 246, 0.3)",  // var(--cg-accent-hover) translucent
     "rgba(6, 182, 212, 0.3)",   // var(--cg-cyan) translucent
   ];
 
@@ -361,7 +361,7 @@ document
         if (distSq < mouse.radiusSq) {
           const dist = Math.sqrt(distSq);
           const opacity = (1 - dist / mouse.radius) * 0.15;
-          ctx.strokeStyle = `rgba(167, 139, 250, ${opacity})`;
+          ctx.strokeStyle = `rgba(59, 130, 246, ${opacity})`;
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(mouse.x, mouse.y);
@@ -379,7 +379,7 @@ document
         if (distSq < maxDistanceSq) {
           const dist = Math.sqrt(distSq);
           const opacity = (1 - dist / maxDistance) * 0.18;
-          ctx.strokeStyle = `rgba(167, 139, 250, ${opacity})`;
+          ctx.strokeStyle = `rgba(59, 130, 246, ${opacity})`;
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
@@ -644,7 +644,7 @@ document.addEventListener("DOMContentLoaded", () => {
       tagText = 'VULN';
     }
 
-    line.innerHTML = `
+    line.innerHTML = ` // security-audit-ignore
       <span class="term-tag ${tagClass}">${tagText}</span>
       <span class="term-text">${log.text}</span>
     `;
@@ -691,9 +691,9 @@ document.addEventListener("DOMContentLoaded", () => {
     { from: nodes.api, to: nodes.gw,   color: '#3b82f6' },
     { from: nodes.gw,  to: nodes.db,   color: '#a855f7' },
     { from: nodes.db,  to: nodes.auth, color: '#10b981' },
-    { from: nodes.auth,to: nodes.api,  color: '#8b5cf6' },
-    { from: nodes.api, to: nodes.db,   color: '#6366f1' },
-    { from: nodes.gw,  to: nodes.auth, color: '#6366f1' }
+    { from: nodes.auth,to: nodes.api,  color: '#3b82f6' },
+    { from: nodes.api, to: nodes.db,   color: '#3b82f6' },
+    { from: nodes.gw,  to: nodes.auth, color: '#3b82f6' }
   ];
 
   class Comet {
@@ -788,7 +788,7 @@ document.addEventListener("DOMContentLoaded", () => {
       theme: "translucent",
       content: `
         <div class="p-2 max-w-[220px] text-xs leading-relaxed font-sans text-left">
-          <div class="font-extrabold uppercase text-purple-400 tracking-wide mb-1">Proxy Guard</div>
+          <div class="font-extrabold uppercase text-blue-400 tracking-wide mb-1">Proxy Guard</div>
           <p class="text-slate-300">Monitors outbound reconnaissance queries. Isolates backend engines and proxies OWASP ZAP endpoints to prevent raw exposure.</p>
         </div>
       `,
@@ -816,7 +816,7 @@ document.addEventListener("DOMContentLoaded", () => {
       theme: "translucent",
       content: `
         <div class="p-2 max-w-[220px] text-xs leading-relaxed font-sans text-left">
-          <div class="font-extrabold uppercase text-purple-300 tracking-wide mb-1">Vault Core</div>
+          <div class="font-extrabold uppercase text-blue-300 tracking-wide mb-1">Vault Core</div>
           <p class="text-slate-300">Encrypted relational database storing scanned telemetry, project access control scopes, and credentials vaulting.</p>
         </div>
       `,

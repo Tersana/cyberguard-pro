@@ -808,43 +808,62 @@ class AuthManager {
   }
 
   // Logout with API - Backend integration
-  async logoutWithAPI() {
-    // Capture email before clearing state
-    const userEmail = this.currentUser?.email || "unknown";
+  logoutWithAPI() {
+    const performActualLogout = async () => {
+      // Capture email before clearing state
+      const userEmail = this.currentUser?.email || "unknown";
 
-    try {
-      // Send logout request to backend
-      await this.apiClient.post("auth/logout");
-    } catch (error) {
-      console.error("Logout API error:", error);
-      // Continue with local cleanup even if API call fails
-    } finally {
-      // Clear JWT token
-      this.apiClient.clearToken();
+      try {
+        // Send logout request to backend
+        await this.apiClient.post("auth/logout");
+      } catch (error) {
+        console.error("Logout API error:", error);
+        // Continue with local cleanup even if API call fails
+      } finally {
+        // Clear JWT token
+        this.apiClient.clearToken();
 
-      // Clear core session data
-      localStorage.removeItem("cyberguard_user");
-      localStorage.removeItem("cyberguard_session");
+        // Clear core session data
+        localStorage.removeItem("cyberguard_user");
+        localStorage.removeItem("cyberguard_session");
 
-      // Clear all 2FA-related state to prevent ghost prompts on next login
-      localStorage.removeItem("requires_2fa");
-      localStorage.removeItem("cyberguard_2fa_pending");
-      localStorage.removeItem("cyberguard_2fa_secret");
-      sessionStorage.removeItem("requires_2fa");
-      sessionStorage.removeItem("pending_2fa_verification");
-      sessionStorage.removeItem("2fa_session_token");
-      sessionStorage.removeItem("cyberguard_2fa_pending");
+        // Clear all 2FA-related state to prevent ghost prompts on next login
+        localStorage.removeItem("requires_2fa");
+        localStorage.removeItem("cyberguard_2fa_pending");
+        localStorage.removeItem("cyberguard_2fa_secret");
+        sessionStorage.removeItem("requires_2fa");
+        sessionStorage.removeItem("pending_2fa_verification");
+        sessionStorage.removeItem("2fa_session_token");
+        sessionStorage.removeItem("cyberguard_2fa_pending");
 
-      // Clear welcome popup flag so it reappears on next login
-      localStorage.removeItem("cyberguard_welcome_shown");
+        // Clear welcome popup flag so it reappears on next login
+        localStorage.removeItem("cyberguard_welcome_shown");
+        sessionStorage.removeItem("cyberguard_welcome_shown");
 
-      this.currentUser = null;
+        this.currentUser = null;
 
-      // Track logout (using captured email)
-      this.trackLogout(userEmail);
+        // Track logout (using captured email)
+        this.trackLogout(userEmail);
 
-      // Redirect to login page
-      window.location.href = "/login";
+        // Redirect to login page
+        window.location.href = "/login";
+      }
+    };
+
+    if (window.CyberNotify && typeof window.CyberNotify.confirm === "function") {
+      window.CyberNotify.confirm(
+        "Are you sure you want to log out?",
+        (confirmed) => {
+          if (confirmed) {
+            performActualLogout();
+          }
+        },
+        { type: "warning" }
+      );
+    } else {
+      if (confirm("Are you sure you want to log out?")) {
+        performActualLogout();
+      }
     }
   }
 
@@ -970,6 +989,7 @@ class AuthManager {
 
       // Clear welcome popup flag so it reappears on next login
       localStorage.removeItem("cyberguard_welcome_shown");
+      sessionStorage.removeItem("cyberguard_welcome_shown");
 
       this.currentUser = null;
 

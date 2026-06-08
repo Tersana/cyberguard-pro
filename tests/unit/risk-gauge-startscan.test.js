@@ -111,8 +111,8 @@ describe('RiskGauge.startScan', () => {
     window.RiskGauge.startScan();
 
     // Assert
-    expect(arc.getAttribute('stroke')).toBe('#A78BFA'); // violet accent
+    expect(arc.getAttribute('stroke')).toBe('#3b82f6'); // blue accent
     // JSDOM converts hex colors to rgb format
-    expect(label.style.color).toBe('rgb(167, 139, 250)'); // violet accent (#A78BFA)
+    expect(label.style.color).toBe('rgb(59, 130, 246)'); // blue accent (#3b82f6)
   });
 });

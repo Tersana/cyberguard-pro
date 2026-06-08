@@ -1,7 +1,17 @@
-/**
- * CyberGuard Pro — Main Settings Panel Controller
- * Handles modal display, tab navigation, dirty state coordination, focus traps, and initials sync.
- */
+(() => {
+// Global HTML escaping utility to prevent XSS issues in dynamic DOM insertions
+function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+if (typeof window.escapeHtml !== "function") {
+    window.escapeHtml = escapeHtml;
+}
 
 class SettingsPanel {
     constructor() {
@@ -294,9 +304,9 @@ class SettingsPanel {
         if (avatarContainer) {
             const avatarUrl = user.avatar || user.avatarUrl || localStorage.getItem("cyberguard_user_avatar") || "";
             if (avatarUrl) {
-                avatarContainer.innerHTML = `<img src="${avatarUrl}" alt="Avatar" class="w-full h-full object-cover">`;
+                avatarContainer.innerHTML = `<img src="${escapeHtml(avatarUrl)}" alt="Avatar" class="w-full h-full object-cover">`;
             } else {
-                avatarContainer.innerHTML = `<span class="text-xs font-bold text-white" id="navbarUserInitials">${initials}</span>`;
+                avatarContainer.innerHTML = `<span class="text-xs font-bold text-white" id="navbarUserInitials">${escapeHtml(initials)}</span>`;
             }
         }
     }
@@ -345,7 +355,13 @@ class SettingsPanel {
 }
 
 // Bind and initialize on load
-document.addEventListener("DOMContentLoaded", () => {
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+        window.SettingsPanel = new SettingsPanel();
+        window.SettingsPanel.init();
+    });
+} else {
     window.SettingsPanel = new SettingsPanel();
     window.SettingsPanel.init();
-});
+}
+})();
