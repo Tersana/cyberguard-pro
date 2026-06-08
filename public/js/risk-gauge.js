@@ -37,8 +37,8 @@
    * @returns {string} Resolved token value or fallback
    * 
    * @example
-   * const accentColor = getCSSVar('--cg-accent', '#A78BFA');
-   * // Returns: '#A78BFA' (from CSS) or fallback if not found
+   * const accentColor = getCSSVar('--cg-accent', '#3b82f6');
+   * // Returns: '#3b82f6' (from CSS) or fallback if not found
    */
   function getCSSVar(name, fallback) {
     try {
@@ -66,7 +66,7 @@
         success:  getCSSVar('--cg-success', '#34D399'),
         warning:  getCSSVar('--cg-warning', '#FBBF24'),
         danger:   getCSSVar('--cg-danger',  '#F87171'),
-        accent:   getCSSVar('--cg-accent',  '#A78BFA'),
+        accent:   getCSSVar('--cg-accent',  '#3b82f6'),
         info:     getCSSVar('--cg-info',    '#38BDF8'),
         muted:    getCSSVar('--cg-text-3',  '#64748B'),
       };
@@ -131,7 +131,7 @@
     return {
       label: "SCANNING...",
       color: c.accent,
-      glow: `0 0 18px ${c.accent}B3, 0 0 40px ${c.accent}4D`,
+      glow: "none",
       textColor: c.accent,
       iconColor: c.accent,
     };
@@ -569,8 +569,8 @@
     style.id = "risk-gauge-styles";
     style.textContent = `
       @keyframes riskCardPulse {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0); }
-        50%       { box-shadow: 0 0 0 6px rgba(139,92,246,0.25), 0 0 24px rgba(139,92,246,0.15); }
+        0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        50%       { box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1); }
       }
       .risk-scanning {
         animation: riskCardPulse 1.4s ease-in-out infinite;

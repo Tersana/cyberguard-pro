@@ -122,7 +122,6 @@
         }
         .hero-btn:hover {
             background: linear-gradient(135deg, var(--cg-accent), var(--cg-accent-hover));
-            box-shadow: 0 0 24px var(--cg-accent-hover);
             transform: translateX(2px);
         }
         .hero-btn svg {
@@ -209,11 +208,7 @@
         }
         .shield-ring.success-ring {
             border: 3px solid var(--cg-info);
-            box-shadow:
-                0 0 20px rgba(56, 189, 248, 0.35),
-                0 0 50px rgba(56, 189, 248, 0.12),
-                inset 0 0 20px rgba(56, 189, 248, 0.05);
-            animation: pulseRingCyan 3s ease-in-out infinite;
+            box-shadow: none;
         }
         .shield-ring.failure-ring {
             border: 3px solid #f97316;
@@ -231,8 +226,8 @@
         .shield-ring.failure-ring svg { color: #f97316; }
 
         @keyframes pulseRingCyan {
-            0%, 100% { box-shadow: 0 0 20px rgba(56,189,248,0.35), 0 0 50px rgba(56,189,248,0.12), inset 0 0 20px rgba(56,189,248,0.05); }
-            50%       { box-shadow: 0 0 32px rgba(56,189,248,0.55), 0 0 80px rgba(56,189,248,0.20), inset 0 0 24px rgba(56,189,248,0.08); }
+            0%, 100% { box-shadow: none; }
+            50%       { box-shadow: none; }
         }
         @keyframes pulseRingOrange {
             0%, 100% { box-shadow: 0 0 20px rgba(249,115,22,0.40), 0 0 50px rgba(249,115,22,0.15), inset 0 0 20px rgba(249,115,22,0.05); }
@@ -334,12 +329,12 @@
                 >
                     <defs>
                         <linearGradient id="cyber-grad-paymob" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#6d28d9" />
-                            <stop offset="50%" stop-color="#a855f7" />
-                            <stop offset="100%" stop-color="#22d3ee" />
+                            <stop offset="0%" stop-color="#1d4ed8" />
+                            <stop offset="50%" stop-color="#3b82f6" />
+                            <stop offset="100%" stop-color="#60a5fa" />
                         </linearGradient>
                         <filter id="neon-glow-paymob" x="-20%" y="-20%" width="140%" height="140%">
-                            <feGaussianBlur stdDeviation="1.2" result="blur" />
+                            <feGaussianBlur stdDeviation="0" result="blur" />
                             <feMerge>
                                 <feMergeNode in="blur" />
                                 <feMergeNode in="SourceGraphic" />
@@ -380,10 +375,10 @@
                         stroke-width="1.2"
                         opacity="0.8"
                     />
-                    <circle cx="7.5" cy="10" r="1.2" fill="#22d3ee" />
-                    <circle cx="24.5" cy="10" r="1.2" fill="#6d28d9" />
-                    <circle cx="7.5" cy="18" r="1.2" fill="#6d28d9" />
-                    <circle cx="24.5" cy="18" r="1.2" fill="#22d3ee" />
+                    <circle cx="7.5" cy="10" r="1.2" fill="#60a5fa" />
+                    <circle cx="24.5" cy="10" r="1.2" fill="#1d4ed8" />
+                    <circle cx="7.5" cy="18" r="1.2" fill="#1d4ed8" />
+                    <circle cx="24.5" cy="18" r="1.2" fill="#60a5fa" />
                 </svg>
                 <span class="brand-name"><span class="brand-cyber">Cyber</span><span class="brand-guard">Guard</span></span>
             </a>
@@ -509,6 +504,16 @@
             const brand    = (params.get('source_data.sub_type') || 'CARD').toUpperCase();
             const last4    = params.get('source_data.pan') || '****';
 
+            function escapeHtml(t) {
+                if (!t) return '';
+                return String(t)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
             // ── Populate transaction data (shared between states) ──
             document.getElementById('txn-id').textContent        = txnId;
             document.getElementById('amount').textContent        = `${amount} ${currency}`;
@@ -548,7 +553,7 @@
                             const planName = sub.plan
                                 ? (sub.plan.charAt(0).toUpperCase() + sub.plan.slice(1))
                                 : 'Your';
-                            msg.innerHTML = `<span class="activation-plan">✓ ${planName} plan activated!</span>`;
+                            msg.innerHTML = `<span class="activation-plan">✓ ${escapeHtml(planName)} plan activated!</span>`;
                         } else {
                             // Max attempts reached — still activated most likely, just slow
                             spinner.style.display = 'none';

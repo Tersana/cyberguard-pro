@@ -32,6 +32,7 @@ class ProjectManager {
     this.ownedProjects = []; // owned[]
     this.collaboratingProjects = []; // collaborating[]
     this.currentProjectsTab = "owned";
+    this.projectMetricCache = new Map();
   }
 
   // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -530,6 +531,15 @@ class ProjectManager {
 
       // Lazy load actual metrics (targets, findings, scans) from right API endpoints
       const allProjects = [...owned, ...collaborating];
+      this.projectMetricCache.clear();
+      allProjects.forEach((p) => {
+        this.projectMetricCache.set(String(p.id), {
+          targets: Number(p.targets_count ?? 0),
+          findings: Number(p.findings_count ?? 0),
+          scans: Number(p.scans_count ?? 0),
+        });
+      });
+      this._updateProjectsWorkspaceSummary(allProjects.length);
       allProjects.forEach((p) => this.lazyLoadProjectMetrics(p.id));
 
       // Dispatch custom event for project changes
@@ -544,6 +554,28 @@ class ProjectManager {
         });
       }
     }
+  }
+
+  _updateProjectsWorkspaceSummary(projectCount = this.projects.length) {
+    const totals = Array.from(this.projectMetricCache.values()).reduce(
+      (acc, item) => {
+        acc.targets += Number(item.targets || 0);
+        acc.findings += Number(item.findings || 0);
+        acc.scans += Number(item.scans || 0);
+        return acc;
+      },
+      { targets: 0, findings: 0, scans: 0 },
+    );
+
+    const setText = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String(value);
+    };
+
+    setText("projects-total-count", projectCount);
+    setText("projects-total-targets", totals.targets);
+    setText("projects-total-findings", totals.findings);
+    setText("projects-total-scans", totals.scans);
   }
 
   /**
@@ -569,7 +601,12 @@ class ProjectManager {
       const targetsEls = document.querySelectorAll(`.project-targets-count-val[data-project-id="${projectId}"]`);
       console.log(`[ProjectManager] Found ${targetsEls.length} targetsEls for ${projectId}. Updating to: ${targets.length}`);
       targetsEls.forEach(el => {
-        el.textContent = `${targets.length} target${targets.length !== 1 ? "s" : ""}`;
+        const txt = el.textContent || "";
+        if (txt.includes("target")) {
+          el.textContent = `${targets.length} ${targets.length === 1 ? 'target' : 'targets'}`;
+        } else {
+          el.textContent = `${targets.length}`;
+        }
       });
 
       // 2. Fetch correct scans count
@@ -587,7 +624,12 @@ class ProjectManager {
       const scansEls = document.querySelectorAll(`.project-scans-count-val[data-project-id="${projectId}"]`);
       console.log(`[ProjectManager] Found ${scansEls.length} scansEls for ${projectId}. Updating to: ${scans.length}`);
       scansEls.forEach(el => {
-        el.textContent = `${scans.length} scan${scans.length !== 1 ? "s" : ""}`;
+        const txt = el.textContent || "";
+        if (txt.includes("scan")) {
+          el.textContent = `${scans.length} ${scans.length === 1 ? 'scan' : 'scans'}`;
+        } else {
+          el.textContent = `${scans.length}`;
+        }
       });
 
       // 3. Fetch correct findings count for the project in a paginated loop
@@ -644,7 +686,12 @@ class ProjectManager {
       const findingsEls = document.querySelectorAll(`.project-findings-count-val[data-project-id="${projectId}"]`);
       console.log(`[ProjectManager] Found ${findingsEls.length} findingsEls for ${projectId}. Updating to: ${allFindings.length}`);
       findingsEls.forEach(el => {
-        el.textContent = `${allFindings.length} finding${allFindings.length !== 1 ? "s" : ""}`;
+        const txt = el.textContent || "";
+        if (txt.includes("finding")) {
+          el.textContent = `${allFindings.length} ${allFindings.length === 1 ? 'finding' : 'findings'}`;
+        } else {
+          el.textContent = `${allFindings.length}`;
+        }
       });
 
       // 4. Calculate Risk Score dynamically using exact details page metrics formula
@@ -697,6 +744,13 @@ class ProjectManager {
         el.style.width = `${fillWidth}%`;
         el.style.background = scoreColor;
       });
+
+      this.projectMetricCache.set(String(projectId), {
+        targets: targets.length,
+        findings: allFindings.length,
+        scans: scans.length,
+      });
+      this._updateProjectsWorkspaceSummary(this.projects.length);
     } catch (error) {
       console.error(`[ProjectManager] Failed to lazy load metrics for project ${projectId}:`, error);
     }
@@ -740,15 +794,15 @@ class ProjectManager {
     // Status badge
     const STATUS = {
       active: {
-        cls: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)]  border-[rgba(167,139,250,0.3)]",
+        cls: "text-blue-400 bg-blue-500/10 border-blue-500/20",
         label: "Active",
       },
       completed: {
-        cls: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)]  border-[rgba(167,139,250,0.3)]",
+        cls: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
         label: "Completed",
       },
       archived: {
-        cls: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)]  border-[rgba(167,139,250,0.3)]",
+        cls: "text-zinc-400 bg-zinc-500/10 border-zinc-500/20",
         label: "Archived",
       },
     };
@@ -758,19 +812,19 @@ class ProjectManager {
     // Role badge
     const ROLE = {
       owner: {
-        cls: "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border-[rgba(167,139,250,0.3)]",
+        cls: "text-zinc-300 bg-zinc-500/10 border-zinc-500/20",
         label: "Owner",
       },
       editor: {
-        cls: "text-[#38BDF8] bg-[rgba(56,189,248,0.15)]  border-[rgba(56,189,248,0.3)]",
+        cls: "text-sky-400 bg-sky-500/10 border-sky-500/20",
         label: "Editor",
       },
       viewer: {
-        cls: "text-[#FBBF24] bg-[rgba(251,191,36,0.15)]  border-[rgba(251,191,36,0.3)]",
+        cls: "text-amber-400 bg-amber-500/10 border-amber-500/20",
         label: "Viewer",
       },
       member: {
-        cls: "text-[#34D399] bg-[rgba(52,211,153,0.15)]  border-[rgba(52,211,153,0.3)]",
+        cls: "text-zinc-400 bg-zinc-500/10 border-zinc-500/20",
         label: "Member",
       },
     };
@@ -786,10 +840,10 @@ class ProjectManager {
     const dateRow =
       startStr || endStr
         ? `
-      <div class="flex items-center gap-3 text-xs text-slate-500 mb-3">
+      <span class="project-date-range">
         ${
           startStr
-            ? `<span class="flex items-center gap-1">
+            ? `<span>
           <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
           </svg>${startStr}</span>`
@@ -797,7 +851,7 @@ class ProjectManager {
         }
         ${startStr && endStr ? '<span class="text-slate-600">→</span>' : ""}
         ${endStr ? `<span>${endStr}</span>` : ""}
-      </div>`
+      </span>`
         : "";
 
     // === RISK SCORE calculation ===
@@ -827,7 +881,7 @@ class ProjectManager {
     const metadataRow = `
       <div class="flex items-center gap-4 text-xs text-slate-400 mb-3.5 font-semibold">
         <span class="flex items-center gap-1.5" title="Targets inside project">
-          <svg class="w-3.5 h-3.5 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="w-3.5 h-3.5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/>
             <circle cx="12" cy="12" r="6"/>
             <circle cx="12" cy="12" r="2"/>
@@ -835,14 +889,14 @@ class ProjectManager {
           <span class="project-targets-count-val" data-project-id="${project.id}">${targetsCount} targets</span>
         </span>
         <span class="flex items-center gap-1.5" title="Total findings">
-          <svg class="w-3.5 h-3.5 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="w-3.5 h-3.5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect width="8" height="14" x="8" y="6" rx="4"/>
             <path d="m19 7-3 2M5 7l3 2M19 19l-3-2M5 19l3-2M20 13h-4M4 13h4M10 4l1-2M14 4l-1-2"/>
           </svg>
           <span class="project-findings-count-val" data-project-id="${project.id}">${findingsCount} findings</span>
         </span>
         <span class="flex items-center gap-1.5" title="Total scans done">
-          <svg class="w-3.5 h-3.5 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="w-3.5 h-3.5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             <path d="m9 12 2 2 4-4"/>
           </svg>
@@ -882,39 +936,72 @@ class ProjectManager {
       : "";
 
     const detailUrl = `/project-detail?id=${this.escapeAttr(String(project.id))}${isOwner ? "&owned=true" : ""}`;
+    const projectInitials = String(project.name || "CG")
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase();
+    const riskLevelLabel =
+      riskScore > 70.0 ? "Critical" : riskScore > 30.0 ? "Elevated" : "Controlled";
 
     return `
-      <div class="cyber-card p-5 hover:border-[rgba(167,139,250,0.4)] transition-all group project-card-item"
+      <div class="project-card-item"
            data-project-id="${this.escapeAttr(String(project.id))}"
            data-project-name="${this.escapeAttr(project.name)}"
            data-project-status="${this.escapeAttr(project.status || 'active')}"
            data-project-created="${this.escapeAttr(project.created_at || '')}">
-        <div class="flex items-start justify-between mb-3">
-          <div class="flex-1 min-w-0 mr-3">
-            <h3 class="text-base font-bold text-white mb-1 truncate">${this.escapeHtml(project.name)}</h3>
-            <p class="text-xs text-slate-400 line-clamp-2">${this.escapeHtml(project.description || "No description")}</p>
-          </div>
-          <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
-            <span class="text-xs px-2 py-0.5 rounded-full border font-semibold ${statusCls}">${statusLabel}</span>
-            <span class="text-xs px-2 py-0.5 rounded-full border font-semibold ${roleCls}">${roleLabel}</span>
+        <div class="project-card-head">
+          <div class="project-avatar" aria-hidden="true">${this.escapeHtml(projectInitials || "CG")}</div>
+          <div class="project-title-block">
+            <div class="project-title-row">
+              <h3>${this.escapeHtml(project.name)}</h3>
+              <span class="project-status-pill ${statusCls}">${statusLabel}</span>
+            </div>
+            <p>${this.escapeHtml(project.description || "No description")}</p>
           </div>
         </div>
-        ${dateRow}
-        ${metadataRow}
-        ${riskScoreBar}
-        <div class="flex items-center justify-between pt-3 border-t border-white/5">
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-slate-500">Created ${this.formatDate(project.created_at)}</span>
+
+        <div class="project-card-meta">
+          <span class="project-role-pill ${roleCls}">${roleLabel}</span>
+          ${dateRow || `<span class="project-date-muted">No assessment window</span>`}
+        </div>
+
+        <div class="project-metric-grid">
+          <div class="project-metric" title="Targets inside project">
+            <span class="project-metric-label">Targets</span>
+            <strong class="project-targets-count-val" data-project-id="${project.id}">${targetsCount}</strong>
           </div>
-          <div class="flex items-center gap-1">
-            <a href="${detailUrl}"
-               class="cyber-btn-ghost text-xs px-2 py-1.5 rounded flex items-center gap-1"
-               title="View project">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.641 0-8.573-3.007-9.964-7.178Z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+          <div class="project-metric" title="Total findings">
+            <span class="project-metric-label">Findings</span>
+            <strong class="project-findings-count-val" data-project-id="${project.id}">${findingsCount}</strong>
+          </div>
+          <div class="project-metric" title="Total scans done">
+            <span class="project-metric-label">Scans</span>
+            <strong class="project-scans-count-val" data-project-id="${project.id}">${scansCount}</strong>
+          </div>
+        </div>
+
+        <div class="project-risk-panel">
+          <div class="project-risk-topline">
+            <span>Risk posture</span>
+            <span class="project-risk-level">${riskLevelLabel}</span>
+          </div>
+          <div class="project-progress-track">
+            <div class="project-progress-fill" data-progress-project-id="${project.id}" style="width: ${fillWidth}%; background: ${scoreColor};"></div>
+          </div>
+          <span class="project-risk-score-value" data-project-id="${project.id}" style="color: ${scoreColor}; background: ${scoreColor}15; border-color: ${scoreColor}30">${riskScoreStr} / 100</span>
+        </div>
+
+        <div class="project-card-footer">
+          <span class="project-created">Created ${this.formatDate(project.created_at)}</span>
+          <div class="project-actions">
+            <a href="${detailUrl}" class="project-action primary" title="Open project">
+              Open
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5H19.5V10.5M19.5 4.5 10 14M6 6h5M6 18h12" />
               </svg>
-              <span class="hidden group-hover:inline">View</span>
             </a>
             ${ownerBtns}
           </div>
@@ -1351,11 +1438,11 @@ class ProjectManager {
 
     const ROLE_BADGE = {
       owner:
-        "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border-[rgba(167,139,250,0.3)]",
+        "text-zinc-300 bg-zinc-500/10 border-zinc-500/20",
       editor:
-        "text-[#38BDF8] bg-[rgba(56,189,248,0.15)]  border-[rgba(56,189,248,0.3)]",
+        "text-sky-400 bg-sky-500/10 border-sky-500/20",
       viewer:
-        "text-[#FBBF24] bg-[rgba(251,191,36,0.15)]  border-[rgba(251,191,36,0.3)]",
+        "text-amber-400 bg-amber-500/10 border-amber-500/20",
     };
     const roleBadgeCls = ROLE_BADGE[role] || ROLE_BADGE.viewer;
 

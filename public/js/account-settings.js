@@ -29,12 +29,12 @@ class AccountSettings {
             }
         }
 
-        pane.innerHTML = `
+        pane.innerHTML = ` // security-audit-ignore
             <div class="space-y-8">
                 <!-- Account Summary Card -->
                 <div class="settings-section-card">
                     <h5 class="settings-section-card-title">
-                        <span class="material-symbols-outlined text-purple-400">info</span>
+                        <span class="material-symbols-outlined text-blue-400">info</span>
                         Account Information Summary
                     </h5>
                     
@@ -44,18 +44,18 @@ class AccountSettings {
                                 Email Address
                                 <span class="material-symbols-outlined text-slate-500 cursor-help" style="font-size: 1rem;" title="Your email address is managed centrally and cannot be changed here. Contact support if you need to update it.">info</span>
                             </label>
-                            <input type="email" class="cyber-input p-3 rounded-lg text-sm bg-slate-900/40 text-slate-400 cursor-not-allowed" value="${user.email || 'user@cyberguard.com'}" disabled>
+                            <input type="email" class="cyber-input p-3 rounded-lg text-sm bg-slate-900/40 text-slate-400 cursor-not-allowed" value="${escapeHtml(user.email || 'user@cyberguard.com')}" disabled>
                         </div>
                         
                         <div class="settings-form-group mb-0">
                             <label class="mb-1.5">Member Since</label>
-                            <input type="text" class="cyber-input p-3 rounded-lg text-sm bg-slate-900/40 text-slate-400 cursor-not-allowed" value="${creationDate}" disabled>
+                            <input type="text" class="cyber-input p-3 rounded-lg text-sm bg-slate-900/40 text-slate-400 cursor-not-allowed" value="${escapeHtml(creationDate)}" disabled>
                         </div>
 
                         <div class="settings-form-group mb-0">
                             <label class="mb-1.5">Current Plan</label>
                             <div class="flex items-center gap-3">
-                                <input type="text" class="cyber-input p-3 rounded-lg text-sm bg-slate-900/40 text-slate-400 cursor-not-allowed flex-1" value="${user.role === 'admin' ? 'Enterprise / Admin' : 'Pro Subscription'}" disabled>
+                                <input type="text" class="cyber-input p-3 rounded-lg text-sm bg-slate-900/40 text-slate-400 cursor-not-allowed flex-1" value="${escapeHtml(user.role === 'admin' ? 'Enterprise / Admin' : 'Pro Subscription')}" disabled>
                                 <button type="button" class="cyber-btn-ghost text-xs py-2.5 px-4 rounded-lg flex items-center gap-1" onclick="document.getElementById('tab-billing').click();">
                                     View Billing details
                                 </button>

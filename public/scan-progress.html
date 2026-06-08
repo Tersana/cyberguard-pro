@@ -7,6 +7,31 @@
         <meta name="description" content="Live scan progress — terminal output, real-time findings, and scan controls for CyberGuard security scans." />
 
         <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            "neon-cyan": "#60a5fa",
+                            "neon-purple": "#3b82f6",
+                            purple: {
+                                50: "#eff6ff",
+                                100: "#dbeafe",
+                                200: "#bfdbfe",
+                                300: "#93c5fd",
+                                400: "#60a5fa",
+                                500: "#3b82f6",
+                                600: "#2563eb",
+                                700: "#1d4ed8",
+                                800: "#1e40af",
+                                900: "#1e3a8a",
+                                950: "#172554"
+                            }
+                        }
+                    }
+                }
+            };
+        </script>
         <link
             href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
             rel="stylesheet"
@@ -84,7 +109,7 @@
                 font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
                 padding: 2px 8px; border-radius: 20px;
                 background: var(--cg-accent-muted);
-                border: 1px solid rgba(167, 139, 250, 0.25);
+                border: 1px solid rgba(59, 130, 246, 0.25);
                 color: var(--cg-accent);
                 font-family: var(--cg-font-mono);
             }
@@ -253,7 +278,7 @@
             .sp-tl-error    { color: var(--cg-danger); }
             .sp-tl-warn     { color: var(--cg-warning); }
             .sp-tl-info     { color: var(--cg-info); }
-            .sp-tl-live     { color: #a78bfa; }
+            .sp-tl-live     { color: #3b82f6; }
 
             /* ── Findings Table ──────────────────────────────────────── */
             .sp-findings-wrap {
@@ -368,9 +393,9 @@
             .shimmer {
                 background: linear-gradient(
                     90deg,
-                    rgba(167,139,250,0.04) 25%,
-                    rgba(167,139,250,0.10) 50%,
-                    rgba(167,139,250,0.04) 75%
+                    rgba(59, 130, 246,0.04) 25%,
+                    rgba(59, 130, 246,0.10) 50%,
+                    rgba(59, 130, 246,0.04) 75%
                 );
                 background-size: 200% 100%;
                 animation: sp-shimmer 1.6s infinite;
@@ -409,6 +434,256 @@
                 transition: color 0.15s;
             }
             .sp-text-btn:hover { color: var(--cg-text-1); }
+
+            /* Modern operations-console pass */
+            .sp-page {
+                background:
+                    linear-gradient(rgba(59, 130, 246, 0.035) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+                    radial-gradient(circle at 50% -20%, rgba(20, 184, 166, 0.11), transparent 34%),
+                    #08090b;
+                background-size: 44px 44px, 44px 44px, auto, auto;
+                color: var(--cg-text-1);
+            }
+
+            .sp-page .cyber-header {
+                position: sticky;
+                top: 0;
+                backdrop-filter: blur(18px);
+                background: rgba(9, 10, 13, 0.84);
+                box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03), 0 18px 45px rgba(0, 0, 0, 0.28);
+            }
+
+            .sp-content {
+                max-width: 1380px;
+                padding: 26px 24px 54px;
+                gap: 18px;
+            }
+
+            .sp-header-card {
+                position: relative;
+                overflow: hidden;
+                border-radius: 8px;
+                border-color: rgba(96, 165, 250, 0.18);
+                background:
+                    linear-gradient(135deg, rgba(15, 23, 42, 0.86), rgba(5, 7, 10, 0.94) 58%),
+                    linear-gradient(90deg, rgba(59, 130, 246, 0.13), rgba(20, 184, 166, 0.08));
+                box-shadow: 0 28px 80px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+                min-height: 154px;
+                padding: 26px 28px;
+            }
+
+            .sp-header-card::before {
+                content: "SCAN JOB";
+                position: absolute;
+                top: 18px;
+                right: 24px;
+                color: rgba(148, 163, 184, 0.16);
+                font-family: var(--cg-font-mono);
+                font-size: 42px;
+                font-weight: 800;
+                letter-spacing: 0.14em;
+                pointer-events: none;
+            }
+
+            .sp-header-card::after {
+                content: "";
+                position: absolute;
+                inset: auto 0 0;
+                height: 3px;
+                background: linear-gradient(90deg, #3b82f6, #14b8a6, #22c55e);
+                opacity: 0.8;
+            }
+
+            .sp-header-left,
+            .sp-header-right {
+                position: relative;
+                z-index: 1;
+            }
+
+            .sp-target-name {
+                font-size: clamp(24px, 3vw, 38px);
+                line-height: 1;
+                letter-spacing: 0;
+                margin-bottom: 14px;
+            }
+
+            .sp-scan-meta {
+                gap: 12px;
+                margin-bottom: 18px;
+            }
+
+            .sp-meta-chip {
+                min-height: 30px;
+                padding: 6px 9px;
+                border: 1px solid rgba(148, 163, 184, 0.12);
+                background: rgba(2, 6, 23, 0.46);
+                border-radius: 7px;
+                color: #94a3b8;
+            }
+
+            .sp-driver-chip {
+                border-radius: 6px;
+                padding: 5px 10px;
+                background: rgba(37, 99, 235, 0.14);
+                border-color: rgba(96, 165, 250, 0.28);
+                color: #bfdbfe;
+                text-transform: uppercase;
+            }
+
+            .sp-status-badge {
+                border-radius: 999px;
+                padding: 8px 18px;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            }
+
+            .sp-ws-indicator {
+                border-radius: 7px;
+                background: rgba(2, 6, 23, 0.6);
+            }
+
+            .sp-control-bar {
+                justify-content: space-between;
+                border-radius: 8px !important;
+                border: 1px solid rgba(148, 163, 184, 0.13) !important;
+                background: rgba(11, 15, 21, 0.78) !important;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            }
+
+            .sp-control-bar::before {
+                content: "CONTROL CHANNEL";
+                font-family: var(--cg-font-mono);
+                font-size: 10px;
+                letter-spacing: 0.16em;
+                color: #64748b;
+                margin-right: auto;
+            }
+
+            .sp-main-grid {
+                grid-template-columns: minmax(0, 1.12fr) minmax(420px, 0.88fr);
+                gap: 18px;
+                align-items: stretch;
+            }
+
+            .sp-panel {
+                border-radius: 8px;
+                border-color: rgba(148, 163, 184, 0.13);
+                background: rgba(8, 10, 14, 0.9);
+                box-shadow: 0 22px 65px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+            }
+
+            .sp-panel-header {
+                min-height: 44px;
+                background: linear-gradient(90deg, rgba(17, 24, 39, 0.92), rgba(10, 14, 20, 0.94));
+                border-bottom-color: rgba(148, 163, 184, 0.13);
+            }
+
+            .sp-panel-title {
+                color: #cbd5e1;
+            }
+
+            .sp-panel:first-child .sp-panel-title::after {
+                content: "LIVE";
+                margin-left: 8px;
+                padding: 2px 6px;
+                border-radius: 999px;
+                color: #22c55e;
+                background: rgba(34, 197, 94, 0.1);
+                border: 1px solid rgba(34, 197, 94, 0.18);
+                font-size: 9px;
+                letter-spacing: 0.08em;
+            }
+
+            .sp-terminal-wrap,
+            .sp-findings-wrap {
+                min-height: 470px;
+                max-height: 58vh;
+            }
+
+            #sp-terminal {
+                position: relative;
+                min-height: 470px;
+                max-height: 58vh;
+                color: #67e8f9;
+                background:
+                    linear-gradient(rgba(255, 255, 255, 0.018) 50%, transparent 50%),
+                    radial-gradient(circle at 50% 0, rgba(59, 130, 246, 0.12), transparent 36%),
+                    #020409;
+                background-size: 100% 4px, auto, auto;
+                border-left: 1px solid rgba(96, 165, 250, 0.14);
+            }
+
+            .sp-terminal-line {
+                text-shadow: 0 0 10px rgba(59, 130, 246, 0.22);
+            }
+
+            .sp-tl-default { color: #38bdf8; }
+            .sp-tl-system { color: #94a3b8; }
+            .sp-tl-live { color: #60a5fa; }
+
+            .sp-findings-table {
+                table-layout: fixed;
+            }
+
+            .sp-th {
+                position: sticky;
+                top: 0;
+                z-index: 1;
+                background: rgba(15, 23, 42, 0.98);
+            }
+
+            .sp-td {
+                padding: 13px 12px;
+                border-bottom-color: rgba(148, 163, 184, 0.1);
+            }
+
+            .sp-table-row:hover {
+                background: rgba(59, 130, 246, 0.055);
+            }
+
+            .sp-table-empty {
+                height: 220px;
+                color: #64748b;
+                background: linear-gradient(135deg, rgba(59, 130, 246, 0.035), transparent 46%);
+            }
+
+            .sp-metadata-panel {
+                border-radius: 8px;
+                border-color: rgba(96, 165, 250, 0.16);
+                background: rgba(8, 11, 16, 0.86);
+            }
+
+            .sp-meta-item {
+                padding: 10px;
+                border: 1px solid rgba(148, 163, 184, 0.1);
+                border-radius: 7px;
+                background: rgba(15, 23, 42, 0.36);
+            }
+
+            @media (max-width: 980px) {
+                .sp-main-grid {
+                    grid-template-columns: 1fr;
+                }
+                .sp-header-card::before {
+                    font-size: 30px;
+                }
+            }
+
+            @media (max-width: 640px) {
+                .sp-content {
+                    padding: 18px 12px 34px;
+                }
+                .sp-header-card {
+                    padding: 20px;
+                }
+                .sp-header-right {
+                    align-items: flex-start;
+                }
+                .sp-control-bar::before {
+                    width: 100%;
+                    margin-bottom: 4px;
+                }
+            }
         </style>
     </head>
     <body class="sp-page">

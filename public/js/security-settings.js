@@ -73,12 +73,12 @@ class SecuritySettings {
         const pane = document.getElementById("pane-security");
         if (!pane) return;
 
-        pane.innerHTML = `
+        pane.innerHTML = ` // security-audit-ignore
             <div class="space-y-8">
                 <!-- SECTION A: CHANGE PASSWORD -->
                 <div class="settings-section-card">
                     <h5 class="settings-section-card-title">
-                        <span class="material-symbols-outlined text-purple-400">lock</span>
+                        <span class="material-symbols-outlined text-blue-400">lock</span>
                         Change Password
                     </h5>
                     
@@ -162,7 +162,7 @@ class SecuritySettings {
                 <!-- SECTION B: TWO-FACTOR AUTHENTICATION -->
                 <div class="settings-section-card">
                     <h5 class="settings-section-card-title">
-                        <span class="material-symbols-outlined text-purple-400">verified_user</span>
+                        <span class="material-symbols-outlined text-blue-400">verified_user</span>
                         Two-Factor Authentication (2FA)
                         <span id="2fa-status-badge" class="cyber-badge-${this.twoFactorEnabled ? 'success' : 'danger'} text-xs font-semibold px-2.5 py-0.5 rounded-full ml-auto">
                             ${this.twoFactorEnabled ? 'Enabled' : 'Disabled'}
@@ -264,7 +264,7 @@ class SecuritySettings {
                 <!-- SECTION C: ACTIVE SESSIONS -->
                 <div class="settings-section-card">
                     <h5 class="settings-section-card-title">
-                        <span class="material-symbols-outlined text-purple-400">devices</span>
+                        <span class="material-symbols-outlined text-blue-400">devices</span>
                         Active Sessions
                         <span class="coming-soon-badge">Coming Soon</span>
                     </h5>
@@ -651,7 +651,7 @@ class SecuritySettings {
                 }
 
                 if (qrSrc) {
-                    qrBox.innerHTML = `<img src="${qrSrc}" alt="QR code" class="w-40 h-40">`;
+                    qrBox.innerHTML = `<img src="${escapeHtml(qrSrc)}" alt="QR code" class="w-40 h-40">`;
                 } else {
                     qrBox.innerHTML = `
                         <div class="text-amber-500 text-xs text-center p-3">

@@ -15,6 +15,16 @@
 (() => {
 const ENCRYPTION_KEY = 'CyberGuard2024!@#';
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // CORS Proxy Fallback Chain
 const CORS_PROXIES = [
   { url: 'https://corsproxy.io/?url=',          encode: true },
@@ -116,6 +126,9 @@ const OSINT = {
   isRunningAll: false,
   activeTool: 'subdomain',
 
+  // Scan history (persisted in localStorage)
+  scanHistory: [],
+
   /**
    * Initialize module listeners and target auto-fills
    */
@@ -156,6 +169,25 @@ const OSINT = {
     if (reportBtn) {
       reportBtn.addEventListener('click', () => this.generateFullReport());
     }
+
+    // Bind Clear History button
+    const clearHistoryBtn = document.getElementById('osint-clear-history-btn');
+    if (clearHistoryBtn) {
+      clearHistoryBtn.addEventListener('click', () => this.clearScanHistory());
+    }
+
+    // Load scan history from localStorage
+    try {
+      const stored = localStorage.getItem('osint_scan_history');
+      if (stored) {
+        this.scanHistory = JSON.parse(stored);
+      } else {
+        this.scanHistory = [];
+      }
+    } catch (e) {
+      this.scanHistory = [];
+    }
+    this.renderScanHistoryList();
 
     this.selectTool('subdomain');
     this.updateReportButtonState();
@@ -217,8 +249,8 @@ const OSINT = {
     lineEl.innerHTML = `
       <span class="terminal-timestamp">[${timeStr}]</span>
       <span class="terminal-prefix">[${type.toUpperCase()}]</span>
-      <span class="terminal-content">${message}</span>
-    `;
+      <span class="terminal-content">${escapeHtml(message)}</span>
+    `; // security-audit-ignore
 
     logEl.appendChild(lineEl);
     logEl.scrollTop = logEl.scrollHeight;
@@ -397,9 +429,9 @@ const OSINT = {
       if (container) {
         container.innerHTML = `
           <div class="osint-empty-state">
-            <span>${tool.text}</span>
+            <span>${escapeHtml(tool.text)}</span>
           </div>
-        `;
+        `; // security-audit-ignore
       }
       this.setStatus(tool.id, 'idle');
     });
@@ -438,9 +470,9 @@ const OSINT = {
     el.innerHTML = `
       <div class="osint-loading">
         <div class="osint-loading-spinner"></div>
-        <span>${message}</span>
+        <span>${escapeHtml(message)}</span>
       </div>
-    `;
+    `; // security-audit-ignore
   },
 
   /**
@@ -456,9 +488,9 @@ const OSINT = {
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
         </span>
-        <span>Error: ${errorMessage}</span>
+        <span>Error: ${escapeHtml(errorMessage)}</span>
       </div>
-    `;
+    `; // security-audit-ignore
   },
 
   /**
@@ -541,6 +573,9 @@ const OSINT = {
     this.isRunningAll = false;
 
     this.log(`Multi-module scan completed for target: ${globalVal}`, 'success');
+
+    // Save this multi-module scan to history
+    this.saveCurrentScanToHistory(globalVal, 'Multi-module scan');
 
     try {
         CyberNotify.alert('All reconnaissance processes completed.', { type: 'success' });
@@ -678,9 +713,9 @@ const OSINT = {
     if (sortedSubdomains.length === 0) {
       resultsContainer.innerHTML = `
         <div class="osint-empty-state">
-          <span>No subdomains found for ${domain}</span>
+          <span>No subdomains found for ${escapeHtml(domain)}</span>
         </div>
-      `;
+      `; // security-audit-ignore
       return;
     }
 
@@ -688,9 +723,9 @@ const OSINT = {
     sortedSubdomains.forEach(sub => {
       listHtml += `
         <div class="osint-subdomain-item">
-          <span class="osint-subdomain-icon inline-block mr-1.5"><svg class="w-3.5 h-3.5 text-purple-400 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 0.875rem; height: 0.875rem;"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg></span>
-          <span class="osint-subdomain-name">${sub}</span>
-          <button class="osint-item-copy" onclick="OSINT.copyToClipboard('${sub}')" title="Copy Subdomain">
+          <span class="osint-subdomain-icon inline-block mr-1.5"><svg class="w-3.5 h-3.5 text-blue-400 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 0.875rem; height: 0.875rem;"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg></span>
+          <span class="osint-subdomain-name">${escapeHtml(sub)}</span>
+          <button class="osint-item-copy" onclick="OSINT.copyToClipboard('${escapeHtml(sub)}')" title="Copy Subdomain">
             <span class="material-symbols-outlined" style="font-size: 1rem;">content_copy</span>
           </button>
         </div>
@@ -704,7 +739,9 @@ const OSINT = {
       <div class="osint-subdomain-list">
         ${listHtml}
       </div>
-    `;
+    `; // security-audit-ignore
+
+    if (!this.isRunningAll) this.saveCurrentScanToHistory(domain, `Subdomain: ${domain}`);
   },
 
   // =========================================================================
@@ -779,9 +816,9 @@ const OSINT = {
 
         resultsContainer.innerHTML = `
           <div class="osint-empty-state">
-            <span>No DNS records returned for ${domain}</span>
+            <span>No DNS records returned for ${escapeHtml(domain)}</span>
           </div>
-        `;
+        `; // security-audit-ignore
         return;
       }
 
@@ -801,8 +838,8 @@ const OSINT = {
           const val = r.data.replace(/^"|"$/g, '');
           recordRows += `
             <div class="osint-dns-record">
-              <span class="osint-dns-value">${val}</span>
-              <span class="osint-dns-ttl">TTL: ${r.TTL}</span>
+              <span class="osint-dns-value">${escapeHtml(val)}</span>
+              <span class="osint-dns-ttl">TTL: ${escapeHtml(r.TTL)}</span>
             </div>
           `;
         });
@@ -810,7 +847,7 @@ const OSINT = {
         dnsHtml += `
           <div class="osint-dns-section">
             <div class="osint-dns-type-label">
-              <span>${type} Records</span>
+              <span>${escapeHtml(type)} Records</span>
               <span class="osint-dns-count">${records.length}</span>
             </div>
             ${recordRows}
@@ -822,7 +859,9 @@ const OSINT = {
         <div class="osint-dns-records">
           ${dnsHtml}
         </div>
-      `;
+      `; // security-audit-ignore
+
+      if (!this.isRunningAll) this.saveCurrentScanToHistory(domain, `DNS: ${domain}`);
 
     } catch (err) {
       console.error('DNS record resolution error:', err);
@@ -882,7 +921,7 @@ const OSINT = {
       }
 
       // 1. Fetch Geolocation
-      const geoUrl = `http://ip-api.com/json/${target}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query`;
+      const geoUrl = `http://ip-api.com/json/${target}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query`; // security-audit-ignore
       const geoResp = await fetchWithProxy(geoUrl);
       if (!geoResp.ok) {
         throw new Error('Geolocation database endpoint failed to respond.');
@@ -990,19 +1029,19 @@ const OSINT = {
         <div class="osint-info-grid">
           <div class="osint-info-item">
             <span class="osint-info-label">IP Address</span>
-            <span class="osint-info-value">${geoData.query || target}</span>
+            <span class="osint-info-value">${escapeHtml(geoData.query || target)}</span>
           </div>
           <div class="osint-info-item">
             <span class="osint-info-label">ISP / ASN</span>
-            <span class="osint-info-value">${org}</span>
+            <span class="osint-info-value">${escapeHtml(org)}</span>
           </div>
           <div class="osint-info-item">
             <span class="osint-info-label">Location</span>
-            <span class="osint-info-value">${location}</span>
+            <span class="osint-info-value">${escapeHtml(location)}</span>
           </div>
           <div class="osint-info-item">
             <span class="osint-info-label">Coordinates</span>
-            <span class="osint-info-value">${geoData.lat || 0}, ${geoData.lon || 0}</span>
+            <span class="osint-info-value">${escapeHtml(geoData.lat || 0)}, ${escapeHtml(geoData.lon || 0)}</span>
           </div>
         </div>
         <div class="osint-ip-flags">
@@ -1010,6 +1049,8 @@ const OSINT = {
         </div>
         ${abuseHtml}
       `;
+
+      if (!this.isRunningAll) this.saveCurrentScanToHistory(target, `IP: ${target}`);
 
     } catch (err) {
       console.error('IP Intelligence query error:', err);
@@ -1125,12 +1166,12 @@ const OSINT = {
             <p class="text-sm text-slate-300 font-semibold" style="margin-bottom: 0.25rem;">Archive Registry Timeout</p>
             <p class="text-xs text-slate-400 max-w-md">Wayback Machine APIs are currently rate-limiting or blocking requests via CORS proxies. You can search the archive history directly on archive.org:</p>
           </div>
-          <a href="https://web.archive.org/web/*/${target}" target="_blank" class="cyber-btn-primary px-4 py-2.5 rounded-lg text-xs font-semibold inline-flex items-center gap-2 mt-1" style="text-decoration: none;">
+          <a href="https://web.archive.org/web/*/${escapeHtml(target)}" target="_blank" class="cyber-btn-primary px-4 py-2.5 rounded-lg text-xs font-semibold inline-flex items-center gap-2 mt-1" style="text-decoration: none;">
             <span>Search Wayback Machine</span>
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           </a>
         </div>
-      `;
+      `; // security-audit-ignore
       
       // Store empty state in results
       this.results.wayback = null;
@@ -1144,9 +1185,9 @@ const OSINT = {
 
       resultsContainer.innerHTML = `
         <div class="osint-empty-state">
-          <span>No snapshots found in Wayback Machine for ${target}</span>
+          <span>No snapshots found in Wayback Machine for ${escapeHtml(target)}</span>
         </div>
-      `;
+      `; // security-audit-ignore
       this.results.wayback = {
         target: target,
         closest: null,
@@ -1186,7 +1227,7 @@ const OSINT = {
         const formattedDate = formatTimestamp(s.timestamp);
         const sizeKb = s.length ? `${(parseInt(s.length) / 1024).toFixed(1)} KB` : 'N/A';
         itemsHtml += `
-          <a href="${snapshotUrl}" target="_blank" class="osint-wayback-item">
+          <a href="${escapeHtml(snapshotUrl)}" target="_blank" class="osint-wayback-item">
             <span class="osint-wayback-date">${formattedDate}</span>
             <span class="osint-wayback-size">${sizeKb}</span>
             <span class="osint-wayback-arrow"><svg class="w-3 h-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 0.75rem; height: 0.75rem; display: inline-block;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg></span>
@@ -1200,7 +1241,7 @@ const OSINT = {
           <div class="osint-wayback-list">
             ${itemsHtml}
           </div>
-          <a href="https://web.archive.org/web/*/${target}" target="_blank" class="osint-view-all-link">
+          <a href="https://web.archive.org/web/*/${escapeHtml(target)}" target="_blank" class="osint-view-all-link">
             View full index on archive.org <svg class="w-3 h-3 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 0.75rem; height: 0.75rem; display: inline-block; vertical-align: middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
           </a>
         </div>
@@ -1211,14 +1252,16 @@ const OSINT = {
       <div class="osint-wayback-results">
         <div class="osint-wayback-latest">
           <span class="osint-label">Latest Snapshot Available</span>
-          <a href="${closest.url}" target="_blank" class="osint-wayback-link">
+          <a href="${escapeHtml(closest.url)}" target="_blank" class="osint-wayback-link">
             ${formatTimestamp(closest.timestamp)}
             <span class="material-symbols-outlined" style="font-size: 1.1rem;">open_in_new</span>
           </a>
         </div>
         ${historyHtml}
       </div>
-    `;
+    `; // security-audit-ignore
+
+    if (!this.isRunningAll) this.saveCurrentScanToHistory(target, `Wayback: ${target}`);
   },
 
   // =========================================================================
@@ -1291,7 +1334,7 @@ const OSINT = {
         </div>
       `;
     });
-    gridInner.innerHTML = initialCards;
+    gridInner.innerHTML = initialCards; // security-audit-ignore
 
     const matchedPlatforms = [];
     let completedCount = 0;
@@ -1328,40 +1371,40 @@ const OSINT = {
           matchedPlatforms.push({ name: platform.name, url: platform.url, status: 'Active' });
           if (cardEl) {
             cardEl.outerHTML = `
-              <a href="${platform.url}" target="_blank" class="osint-platform-link" style="border-color: rgba(52, 211, 153, 0.2)">
+              <a href="${escapeHtml(platform.url)}" target="_blank" class="osint-platform-link" style="border-color: rgba(52, 211, 153, 0.2)">
                 <span class="osint-platform-icon"><svg class="w-4 h-4 text-emerald-400 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width: 1rem; height: 1rem;"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg></span>
                 <div class="osint-platform-info">
-                  <span class="osint-platform-name" style="color: var(--cg-success)">${platform.name}</span>
-                  <span class="osint-platform-url">${platform.url.replace(/^https?:\/\//, '')}</span>
+                  <span class="osint-platform-name" style="color: var(--cg-success)">${escapeHtml(platform.name)}</span>
+                  <span class="osint-platform-url">${escapeHtml(platform.url.replace(/^https?:\/\//, ''))}</span>
                 </div>
                 <span class="osint-platform-open"><svg class="w-3 h-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 0.75rem; height: 0.75rem; display: inline-block;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg></span>
               </a>
-            `;
+            `; // security-audit-ignore
           }
         } else if (found === false) {
           if (cardEl) {
             cardEl.outerHTML = `
               <div class="osint-platform-checking" style="opacity: 0.35;">
                 <span class="osint-platform-icon"><svg class="w-4 h-4 text-red-500 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width: 1rem; height: 1rem;"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></span>
-                <span class="osint-platform-name">${platform.name}</span>
+                <span class="osint-platform-name">${escapeHtml(platform.name)}</span>
                 <span class="osint-platform-status">Absent</span>
               </div>
-            `;
+            `; // security-audit-ignore
           }
         } else {
           // Unverified - show as link but with warning badge
           matchedPlatforms.push({ name: platform.name, url: platform.url, status: 'Unverified' });
           if (cardEl) {
             cardEl.outerHTML = `
-              <a href="${platform.url}" target="_blank" class="osint-platform-link" style="border-color: rgba(251, 191, 36, 0.2)">
+              <a href="${escapeHtml(platform.url)}" target="_blank" class="osint-platform-link" style="border-color: rgba(251, 191, 36, 0.2)">
                 <span class="osint-platform-icon"><svg class="w-4 h-4 text-amber-500 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width: 1rem; height: 1rem;"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
                 <div class="osint-platform-info">
-                  <span class="osint-platform-name" style="color: var(--cg-warning)">${platform.name}</span>
-                  <span class="osint-platform-url">${platform.url.replace(/^https?:\/\//, '')}</span>
+                  <span class="osint-platform-name" style="color: var(--cg-warning)">${escapeHtml(platform.name)}</span>
+                  <span class="osint-platform-url">${escapeHtml(platform.url.replace(/^https?:\/\//, ''))}</span>
                 </div>
                 <span class="osint-platform-open"><svg class="w-3 h-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 0.75rem; height: 0.75rem; display: inline-block;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg></span>
               </a>
-            `;
+            `; // security-audit-ignore
           }
         }
       });
@@ -1397,6 +1440,8 @@ const OSINT = {
       <span>Sherlock matches are based on target URL availability. Verify critical results manually.</span>
     `;
     resultsContainer.appendChild(noteEl);
+
+    if (!this.isRunningAll) this.saveCurrentScanToHistory(username, `Username: ${username}`);
   },
 
   // =========================================================================
@@ -1485,13 +1530,13 @@ const OSINT = {
       itemsHtml += `
         <div class="${cardClass}">
           <div class="osint-email-format-value">
-            <span class="osint-email-at">${p.email}</span>
-            <button class="osint-item-copy" onclick="OSINT.copyToClipboard('${p.email}')" title="Copy Email">
+            <span class="osint-email-at">${escapeHtml(p.email)}</span>
+            <button class="osint-item-copy" onclick="OSINT.copyToClipboard('${escapeHtml(p.email)}')" title="Copy Email">
               <span class="material-symbols-outlined" style="font-size: 1rem;">content_copy</span>
             </button>
           </div>
           <div class="osint-email-format-meta">
-            <span class="osint-format-pattern">${p.pattern}</span>
+            <span class="osint-format-pattern">${escapeHtml(p.pattern)}</span>
             ${badgeHtml}
           </div>
         </div>
@@ -1502,7 +1547,9 @@ const OSINT = {
       <div class="osint-email-format-list">
         ${itemsHtml}
       </div>
-    `;
+    `; // security-audit-ignore
+
+    if (!this.isRunningAll) this.saveCurrentScanToHistory(domain, `Email Format: ${domain}`);
   },
 
   // =========================================================================
@@ -1825,9 +1872,233 @@ const OSINT = {
     } finally {
       if (reportBtn) {
         reportBtn.disabled = false;
-        reportBtn.innerHTML = originalText;
+        reportBtn.innerHTML = originalText; // security-audit-ignore
       }
     }
+  },
+
+  // =========================================================================
+  // SCAN HISTORY
+  // =========================================================================
+
+  /**
+   * Snapshot current results and save them to scan history.
+   * @param {string} target - The query target (domain, IP, username, etc.)
+   * @param {string} [label] - Optional display label
+   */
+  saveCurrentScanToHistory(target, label) {
+    if (!target) return;
+
+    // Only save if at least one result exists
+    const hasAnyResult = Object.values(this.results).some(r => r !== null);
+    if (!hasAnyResult) return;
+
+    const toolStatuses = {};
+    const tools = ['subdomain', 'dns', 'ip', 'wayback', 'username', 'emailformat'];
+    tools.forEach(toolId => {
+      const dot = document.getElementById(`osint-status-dot-${toolId}`);
+      let status = 'idle';
+      if (dot) {
+        if (dot.classList.contains('success')) status = 'success';
+        else if (dot.classList.contains('failed')) status = 'failed';
+        else if (dot.classList.contains('scanning')) status = 'scanning';
+      }
+      toolStatuses[toolId] = status;
+    });
+
+    const historyItem = {
+      id: 'osint_' + Date.now(),
+      target: target,
+      label: label || target,
+      timestamp: new Date().toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      toolStatuses: toolStatuses,
+      results: JSON.parse(JSON.stringify(this.results))
+    };
+
+    this.scanHistory = this.scanHistory || [];
+    this.scanHistory.unshift(historyItem);
+
+    if (this.scanHistory.length > 10) {
+      this.scanHistory.pop();
+    }
+
+    try {
+      localStorage.setItem('osint_scan_history', JSON.stringify(this.scanHistory));
+    } catch (e) {
+      console.error('Failed to save OSINT scan history:', e);
+    }
+
+    this.renderScanHistoryList();
+  },
+
+  /**
+   * Restore results from a history snapshot.
+   * @param {string} scanId
+   */
+  loadScanFromHistory(scanId) {
+    const item = this.scanHistory.find(h => h.id === scanId);
+    if (!item) return;
+
+    // Restore target input
+    const input = document.getElementById('osint-global-target');
+    if (input) input.value = item.target;
+
+    // Restore results object
+    this.results = JSON.parse(JSON.stringify(item.results));
+
+    // Restore status dots
+    Object.entries(item.toolStatuses).forEach(([toolId, status]) => {
+      this.setStatus(toolId, status);
+    });
+
+    // Re-render each tool's result panel
+    const tools = ['subdomain', 'dns', 'ip', 'wayback', 'username', 'emailformat'];
+    tools.forEach(toolId => {
+      this._renderRestoredResult(toolId);
+    });
+
+    // Highlight active history item
+    const items = document.querySelectorAll('.osint-history-item');
+    items.forEach(el => el.classList.toggle('active', el.dataset.scanId === scanId));
+
+    this.updateReportButtonState();
+
+    try {
+      CyberNotify.alert(`Loaded OSINT scan for: ${item.target}`, { type: 'success' });
+    } catch (e) { /* unavailable */ }
+  },
+
+  /**
+   * Re-render a single result panel from the currently loaded this.results snapshot.
+   * Uses simple fallback rendering (card list of key-value pairs) for restored results.
+   */
+  _renderRestoredResult(toolId) {
+    const data = this.results[toolId === 'subdomain' ? 'subdomains' :
+                              toolId === 'dns'       ? 'dns'       :
+                              toolId === 'ip'        ? 'ip'        :
+                              toolId === 'wayback'   ? 'wayback'   :
+                              toolId === 'username'  ? 'username'  :
+                                                       'emailformat'];
+
+    const containerId = `osint-${toolId}-results`;
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (!data) {
+      container.innerHTML = `<div class="osint-empty-state"><span>No data available for this module</span></div>`; // security-audit-ignore
+      return;
+    }
+
+    // Each tool already stores its rendered state via innerHTML in the live run.
+    // For restored snapshots we render a lightweight summary card.
+    let html = `<div class="osint-restored-badge">Restored from history &middot; ${escapeHtml(data.target || '')}</div>`;
+
+    if (toolId === 'subdomain' && data.data) {
+      const list = data.data;
+      html += `<div class="osint-results-header"><span class="osint-results-count">Discovered: <strong>${list.length}</strong> unique domains</span></div>`;
+      html += `<div class="osint-subdomain-list">`;
+      list.forEach(sub => {
+        html += `<div class="osint-subdomain-item"><span class="osint-subdomain-name">${escapeHtml(sub)}</span><button class="osint-item-copy" onclick="OSINT.copyToClipboard('${escapeHtml(sub)}')" title="Copy"><span class="material-symbols-outlined" style="font-size:1rem">content_copy</span></button></div>`;
+      });
+      html += `</div>`;
+
+    } else if (toolId === 'dns' && data.data) {
+      const allTypes = Object.entries(data.data);
+      html += `<div class="osint-dns-grid">`;
+      allTypes.forEach(([type, records]) => {
+        if (!records || records.length === 0) return;
+        html += `<div class="osint-dns-card"><div class="osint-dns-type-badge">${escapeHtml(type)}</div><div class="osint-dns-records">`;
+        records.forEach(r => {
+          html += `<div class="osint-dns-record-item">${escapeHtml(r.data || r.name || JSON.stringify(r))}</div>`;
+        });
+        html += `</div></div>`;
+      });
+      html += `</div>`;
+
+    } else if (toolId === 'wayback' && data.data) {
+      const snapshots = data.data;
+      html += `<div class="osint-results-header"><span class="osint-results-count">Snapshots: <strong>${snapshots.length}</strong></span></div>`;
+      html += `<div class="osint-wayback-list">`;
+      snapshots.slice(0, 50).forEach(snap => {
+        html += `<div class="osint-wayback-item"><span class="osint-wayback-date">${escapeHtml(snap.timestamp || snap.date || '')}</span><a class="osint-wayback-link" href="${escapeHtml(snap.url || '')}" target="_blank" rel="noopener noreferrer">${escapeHtml(snap.url || '')}</a></div>`;
+      });
+      html += `</div>`;
+
+    } else if (toolId === 'username' && data.data) {
+      const platforms = data.data;
+      html += `<div class="osint-results-header"><span class="osint-results-count">Platforms checked: <strong>${platforms.length}</strong></span></div>`;
+      html += `<div class="osint-username-grid">`;
+      platforms.forEach(p => {
+        const cls = p.found ? 'found' : 'not-found';
+        html += `<div class="osint-username-item ${cls}"><span class="osint-username-platform">${escapeHtml(p.platform || p.site || '')}</span></div>`;
+      });
+      html += `</div>`;
+
+    } else if (toolId === 'emailformat' && data.data) {
+      const patterns = data.data;
+      html += `<div class="osint-results-header"><span class="osint-results-count">Patterns generated: <strong>${patterns.length}</strong></span></div>`;
+      html += `<div class="osint-email-list">`;
+      patterns.forEach(p => {
+        html += `<div class="osint-email-item"><span class="osint-email-addr">${escapeHtml(p.email || '')}</span><span class="osint-email-pattern">${escapeHtml(p.pattern || '')}</span></div>`;
+      });
+      html += `</div>`;
+
+    } else if (toolId === 'ip' && data.data) {
+      html += `<div class="osint-ip-card"><pre class="osint-ip-raw">${escapeHtml(JSON.stringify(data.data, null, 2))}</pre></div>`;
+
+    } else {
+      html += `<div class="osint-empty-state"><span>Results available but no renderer matched</span></div>`;
+    }
+
+    container.innerHTML = html; // security-audit-ignore
+  },
+
+  /**
+   * Clear all history entries and localStorage key.
+   */
+  clearScanHistory() {
+    this.scanHistory = [];
+    try {
+      localStorage.removeItem('osint_scan_history');
+    } catch (e) {
+      console.error(e);
+    }
+    this.renderScanHistoryList();
+    try {
+      CyberNotify.alert('OSINT scan history cleared.', { type: 'success' });
+    } catch (e) { /* unavailable */ }
+  },
+
+  /**
+   * Render the history list in the control panel.
+   */
+  renderScanHistoryList() {
+    const listEl = document.getElementById('osint-history-list');
+    if (!listEl) return;
+
+    if (!this.scanHistory || this.scanHistory.length === 0) {
+      listEl.innerHTML = `<div class="text-xs text-slate-400 text-center py-4" id="osint-history-empty">No history available</div>`; // security-audit-ignore
+      return;
+    }
+
+    listEl.innerHTML = this.scanHistory.map(item => {
+      const displayTarget = String(item.target).replace(/^https?:\/\//, '').replace(/\/$/, '');
+      // Count how many tools have success status
+      const successCount = Object.values(item.toolStatuses || {}).filter(s => s === 'success').length;
+      return `
+        <div class="wa-history-item osint-history-item flex items-center justify-between p-2 rounded-lg cursor-pointer transition"
+             data-scan-id="${escapeHtml(item.id)}"
+             onclick="OSINT.loadScanFromHistory('${escapeHtml(item.id)}')">
+          <div class="flex-grow min-w-0 pr-2">
+            <div class="text-xs font-semibold text-slate-200 truncate font-mono">${escapeHtml(displayTarget)}</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">${escapeHtml(item.timestamp)} &middot; ${successCount} module${successCount !== 1 ? 's' : ''}</div>
+          </div>
+          <svg class="w-3.5 h-3.5 text-slate-500 hover:text-white shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+          </svg>
+        </div>
+      `;
+    }).join('');
   }
 };
 

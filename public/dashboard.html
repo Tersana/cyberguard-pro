@@ -5,6 +5,31 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>CyberGuard</title>
         <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            "neon-cyan": "#60a5fa",
+                            "neon-purple": "#3b82f6",
+                            purple: {
+                                50: "#eff6ff",
+                                100: "#dbeafe",
+                                200: "#bfdbfe",
+                                300: "#93c5fd",
+                                400: "#60a5fa",
+                                500: "#3b82f6",
+                                600: "#2563eb",
+                                700: "#1d4ed8",
+                                800: "#1e40af",
+                                900: "#1e3a8a",
+                                950: "#172554"
+                            }
+                        }
+                    }
+                }
+            };
+        </script>
         <link
             href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
             rel="stylesheet"
@@ -113,13 +138,13 @@
                                 <defs>
                                     <!-- Vibrant cyber gradient: neon purple -> bright indigo -> neon cyan -->
                                     <linearGradient id="cyber-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stop-color="#6d28d9" />
-                                        <stop offset="50%" stop-color="#a855f7" />
-                                        <stop offset="100%" stop-color="#22d3ee" />
+                                        <stop offset="0%" stop-color="#1d4ed8" />
+                                        <stop offset="50%" stop-color="#3b82f6" />
+                                        <stop offset="100%" stop-color="#60a5fa" />
                                     </linearGradient>
                                     <!-- Glow filter for next-gen emission -->
                                     <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
-                                        <feGaussianBlur stdDeviation="1.2" result="blur" />
+                                        <feGaussianBlur stdDeviation="0" result="blur" />
                                         <feMerge>
                                             <feMergeNode in="blur" />
                                             <feMergeNode in="SourceGraphic" />
@@ -176,10 +201,10 @@
                                 />
 
                                 <!-- Micro Node Dots -->
-                                <circle cx="7.5" cy="10" r="1.2" fill="#22d3ee" />
-                                <circle cx="24.5" cy="10" r="1.2" fill="#6d28d9" />
-                                <circle cx="7.5" cy="18" r="1.2" fill="#6d28d9" />
-                                <circle cx="24.5" cy="18" r="1.2" fill="#22d3ee" />
+                                <circle cx="7.5" cy="10" r="1.2" fill="#60a5fa" />
+                                <circle cx="24.5" cy="10" r="1.2" fill="#1d4ed8" />
+                                <circle cx="7.5" cy="18" r="1.2" fill="#1d4ed8" />
+                                <circle cx="24.5" cy="18" r="1.2" fill="#60a5fa" />
                             </svg>
                         </div>
                         <div class="flex-shrink-0">
@@ -457,10 +482,10 @@
                     <div class="mt-auto pt-4 border-t border-slate-800/35 pb-2" id="sidebar-system-health">
                         <div class="px-3 mb-3 flex items-center justify-between">
                             <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">System & Scans</span>
-                            <span class="flex items-center gap-1.5 text-[9px] font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20 shadow-[0_0_8px_rgba(167,139,250,0.1)]">
+                            <span class="flex items-center gap-1.5 text-[9px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20 shadow-[0_0_8px_rgba(59, 130, 246,0.1)]">
                                 <span class="relative flex h-1.5 w-1.5">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-purple-500 shadow-[0_0_6px_#a78bfa]"></span>
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500 shadow-[0_0_6px_#3b82f6]"></span>
                                 </span>
                                 LIVE
                             </span>
@@ -473,7 +498,7 @@
                                     <span class="text-slate-300 font-medium" id="sidebar-projects-text">0/0 Projects</span>
                                 </div>
                                 <div class="w-full bg-slate-800/60 rounded-full h-1 overflow-hidden border border-slate-700/30">
-                                    <div class="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full transition-all duration-500" id="sidebar-projects-bar" style="width: 0%"></div>
+                                    <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-500" id="sidebar-projects-bar" style="width: 0%"></div>
                                 </div>
                             </div>
                             <!-- Meter 2: Active Targets -->
@@ -544,7 +569,7 @@
                                 <ul class="space-y-1.5 text-xs text-slate-300">
                                     <li class="flex items-center gap-2">
                                         <svg
-                                            class="w-3 h-3 text-purple-400 flex-shrink-0"
+                                            class="w-3 h-3 text-blue-400 flex-shrink-0"
                                             xmlns="http://www.w3.org/2000/svg"
                                             fill="none"
                                             viewBox="0 0 24 24"
@@ -563,7 +588,7 @@
                                     </li>
                                     <li class="flex items-center gap-2">
                                         <svg
-                                            class="w-3 h-3 text-purple-400 flex-shrink-0"
+                                            class="w-3 h-3 text-blue-400 flex-shrink-0"
                                             xmlns="http://www.w3.org/2000/svg"
                                             fill="none"
                                             viewBox="0 0 24 24"
@@ -582,7 +607,7 @@
                                     </li>
                                     <li class="flex items-center gap-2">
                                         <svg
-                                            class="w-3 h-3 text-purple-400 flex-shrink-0"
+                                            class="w-3 h-3 text-blue-400 flex-shrink-0"
                                             xmlns="http://www.w3.org/2000/svg"
                                             fill="none"
                                             viewBox="0 0 24 24"
@@ -787,7 +812,7 @@
                                         user@example.com
                                     </div>
                                 </div>
-                                <div class="cyber-avatar-sm relative flex items-center justify-center overflow-hidden bg-purple-500 rounded-full" id="navbar-avatar-container">
+                                <div class="cyber-avatar-sm relative flex items-center justify-center overflow-hidden rounded-full" id="navbar-avatar-container">
                                     <span class="text-xs font-bold text-white" id="navbarUserInitials">MG</span>
                                 </div>
                                 <svg
@@ -1067,7 +1092,7 @@
                                 >
                                     <div class="cyber-icon-box-purple">
                                         <svg
-                                            class="w-4 h-4 text-purple-300"
+                                            class="w-4 h-4 text-blue-300"
                                             xmlns="http://www.w3.org/2000/svg"
                                             fill="none"
                                             viewBox="0 0 24 24"
@@ -1210,7 +1235,7 @@
                                 <!-- Info Box -->
                                 <div class="cyber-info-box p-4 rounded-xl">
                                     <p class="text-xs text-slate-300">
-                                        <strong class="text-purple-300"
+                                        <strong class="text-blue-300"
                                             >💡 Tip:</strong
                                         >
                                         Keep your authenticator app secure.
@@ -1341,7 +1366,7 @@
                         <div class="flex items-center gap-3">
                             <div class="cyber-icon-box-purple flex-shrink-0">
                                 <svg
-                                    class="w-4 h-4 text-purple-300"
+                                    class="w-4 h-4 text-blue-300"
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
                                     viewBox="0 0 24 24"
@@ -1486,58 +1511,47 @@
                                     </div>
                                 </div>
 
-                                <!-- Streaming Alert Banner -->
-                                <div class="streaming-alert-banner flex items-center gap-3 px-4 py-3 rounded-xl border border-emerald-500/15" id="streaming-alert-banner">
-                                    <span class="flex h-2 w-2 relative">
-                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                    </span>
-                                    <span class="text-xs text-slate-300 font-medium" id="streaming-alert-text">
-                                        WebSocket Connected — Real-time scan results are being streamed.
-                                    </span>
-                                </div>
-
                                 <!-- Stat Cards Grid -->
                                 <div class="stat-cards-grid">
                                     <!-- Card 1: Critical Findings -->
                                     <div class="stat-card critical" id="critical-findings-card">
-                                        <div class="stat-card-icon-container bg-rose-500/10 border border-rose-500/20 text-rose-500">
+                                        <div class="stat-card-icon-container bg-red-500/10 border border-red-500/20 text-red-500">
                                             <span class="material-symbols-outlined !text-xl">gpp_maybe</span>
                                         </div>
                                         <div class="stat-card-content">
                                             <div class="stat-card-label">Critical Findings</div>
                                             <div class="stat-card-value font-mono" id="critical-findings-value">0</div>
-                                            <div class="stat-card-subtext text-rose-400" id="critical-findings-subtext">+0 this week</div>
+                                            <div class="stat-card-subtext text-red-400" id="critical-findings-subtext">+0 this week</div>
                                         </div>
                                     </div>
 
                                     <!-- Card 2: Total Findings -->
                                     <div class="stat-card total" id="total-findings-card">
-                                        <div class="stat-card-icon-container bg-blue-500/10 border border-blue-500/20 text-blue-500">
+                                        <div class="stat-card-icon-container bg-white/5 border border-white/10 text-white">
                                             <span class="material-symbols-outlined !text-xl">bar_chart</span>
                                         </div>
                                         <div class="stat-card-content">
                                             <div class="stat-card-label">Total Findings</div>
                                             <div class="stat-card-value font-mono" id="total-findings-value">0</div>
-                                            <div class="stat-card-subtext text-blue-400" id="total-findings-subtext">+0 new</div>
+                                            <div class="stat-card-subtext text-slate-400" id="total-findings-subtext">+0 new</div>
                                         </div>
                                     </div>
 
                                     <!-- Card 3: Resolved -->
                                     <div class="stat-card resolved" id="resolved-card">
-                                        <div class="stat-card-icon-container bg-emerald-500/10 border border-emerald-500/20 text-emerald-500">
+                                        <div class="stat-card-icon-container bg-white/5 border border-white/10 text-white">
                                             <span class="material-symbols-outlined !text-xl">verified</span>
                                         </div>
                                         <div class="stat-card-content">
                                             <div class="stat-card-label">Resolved</div>
                                             <div class="stat-card-value font-mono" id="resolved-value">0</div>
-                                            <div class="stat-card-subtext text-emerald-400" id="resolved-subtext">0% resolved</div>
+                                            <div class="stat-card-subtext text-slate-400" id="resolved-subtext">0% resolved</div>
                                         </div>
                                     </div>
 
                                     <!-- Card 4: Targets / Scans -->
                                     <div class="stat-card targets" id="targets-scans-card">
-                                        <div class="stat-card-icon-container bg-purple-500/10 border border-purple-500/20 text-purple-500">
+                                        <div class="stat-card-icon-container bg-white/5 border border-white/10 text-white">
                                             <span class="material-symbols-outlined !text-xl">ads_click</span>
                                         </div>
                                         <div class="stat-card-content">
@@ -1652,7 +1666,7 @@
                                                        spellcheck="false">
                                                 <div class="flex gap-2 mt-2">
                                                     <button id="osint-run-all-btn" class="cyber-btn-primary flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                                         Run Enabled
                                                     </button>
                                                     <button id="osint-clear-all-btn" class="cyber-btn-ghost py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1">
@@ -1663,7 +1677,7 @@
                                             </div>
 
                                             <!-- Scan Modules list -->
-                                            <div class="osint-control-section" style="border-top: 1px solid var(--cg-border); padding-top: var(--cg-space-3); flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
+                                            <div class="osint-control-section" style="border-top: 1px solid var(--cg-border); padding-top: var(--cg-space-3); flex: 1; min-height: 0; display: flex; flex-direction: column;">
                                                 <label class="osint-control-label text-slate-400 mb-2 block">Recon Modules</label>
                                                 <div class="osint-console-tool-list">
                                                     
@@ -1776,6 +1790,20 @@
 
                                                 </div>
                                             </div>
+
+                                            <!-- OSINT Scan History Section -->
+                                            <div class="osint-control-section" style="border-top: 1px solid var(--cg-border); padding-top: var(--cg-space-3);">
+                                                <div class="wa-cp-modules-header" style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 0.25rem;">
+                                                    <label class="wa-cp-label" style="margin:0;">Scan History</label>
+                                                    <button id="osint-clear-history-btn" class="wa-cp-select-all-btn">Clear History</button>
+                                                </div>
+                                                <div id="osint-history-list" class="space-y-1 mt-2 pr-1" style="max-height:160px; overflow-y:auto;">
+                                                    <div class="text-xs text-slate-400 text-center py-4" id="osint-history-empty">
+                                                        No history available
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                         </div>
                                     </div>
 
@@ -1895,8 +1923,15 @@
                                                         id="run-analysis-btn"
                                                         class="cyber-btn-primary flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5"
                                                     >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                                         Run Enabled
+                                                    </button>
+                                                    <button
+                                                        id="stop-analysis-btn"
+                                                        class="cyber-btn-danger flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 hidden"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>
+                                                        Stop Scan
                                                     </button>
                                                     <button
                                                         id="wa-clear-all-btn"
@@ -2041,6 +2076,19 @@
                                                 </div><!-- END wa-cp-tool-list -->
                                             </div><!-- END wa-cp-modules-section -->
 
+                                            <!-- Scan History Section -->
+                                            <div class="wa-cp-section">
+                                                <div class="wa-cp-modules-header">
+                                                    <label class="wa-cp-label">Scan History</label>
+                                                    <button id="wa-clear-history-btn" class="wa-cp-select-all-btn">Clear History</button>
+                                                </div>
+                                                <div id="wa-history-list" class="space-y-1 max-h-[160px] overflow-y-auto mt-2 pr-1">
+                                                    <div class="text-xs text-slate-400 text-center py-4" id="wa-history-empty">
+                                                        No history available
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                         </div><!-- END wa-cp-body -->
                                     </div><!-- END wa-tool-panel -->
 
@@ -2073,7 +2121,7 @@
                                                         </div>
                                                         <div class="summary-metric">
                                                             <span class="text-xs text-slate-400 block">Time Taken</span>
-                                                            <span id="scan-time-display" class="text-lg font-semibold text-purple-300">--</span>
+                                                            <span id="scan-time-display" class="text-lg font-semibold text-blue-300">--</span>
                                                         </div>
                                                         <div class="summary-metric">
                                                             <span class="text-xs text-slate-400 block">Scanned Target</span>
@@ -2161,7 +2209,7 @@
                                 >
                                     <!-- Card 1: Multi-Hash Generator -->
                                     <div
-                                        class="cyber-card p-6 flex flex-col gap-4 border-l-2 border-l-purple-500/30"
+                                        class="cyber-card p-6 flex flex-col gap-4 border-l-2 border-l-blue-500/30"
                                         role="region"
                                         aria-labelledby="hash-gen-title"
                                     >
@@ -2172,7 +2220,7 @@
                                                 class="flex items-center gap-2"
                                             >
                                                 <span
-                                                    class="material-symbols-outlined text-purple-400"
+                                                    class="material-symbols-outlined text-blue-400"
                                                     aria-hidden="true"
                                                     >data_object</span
                                                 >
@@ -2184,7 +2232,7 @@
                                                 </h3>
                                             </div>
                                             <span
-                                                class="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded uppercase font-bold tracking-wider"
+                                                class="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded uppercase font-bold tracking-wider"
                                                 aria-label="Primary algorithm SHA-256"
                                                 >SHA-256</span
                                             >
@@ -2197,7 +2245,7 @@
                                             >
                                             <textarea
                                                 id="ht-hash-input"
-                                                class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-sm text-white/90 placeholder:text-slate-400 focus:border-purple-500/50 focus:ring-0 min-h-[100px] font-mono"
+                                                class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-sm text-white/90 placeholder:text-slate-400 focus:border-blue-500/50 focus:ring-0 min-h-[100px] font-mono"
                                                 placeholder="Enter text to generate cryptographic hashes..."
                                                 aria-label="Text input for hash generation"
                                                 aria-describedby="hash-gen-desc"
@@ -2223,7 +2271,7 @@
                                                     <span>MD5</span>
                                                     <button
                                                         id="ht-copy-md5"
-                                                        class="hover:text-purple-400 transition-colors flex items-center gap-1"
+                                                        class="hover:text-blue-400 transition-colors flex items-center gap-1"
                                                         aria-label="Copy MD5 hash to clipboard"
                                                     >
                                                         <span
@@ -2248,7 +2296,7 @@
                                                     <span>SHA-1</span>
                                                     <button
                                                         id="ht-copy-sha1"
-                                                        class="hover:text-purple-400 transition-colors flex items-center gap-1"
+                                                        class="hover:text-blue-400 transition-colors flex items-center gap-1"
                                                         aria-label="Copy SHA-1 hash to clipboard"
                                                     >
                                                         <span
@@ -2273,7 +2321,7 @@
                                                     <span>SHA-256</span>
                                                     <button
                                                         id="ht-copy-sha256"
-                                                        class="hover:text-purple-400 transition-colors flex items-center gap-1"
+                                                        class="hover:text-blue-400 transition-colors flex items-center gap-1"
                                                         aria-label="Copy SHA-256 hash to clipboard"
                                                     >
                                                         <span
@@ -2286,7 +2334,7 @@
                                                 </div>
                                                 <div
                                                     id="ht-hash-sha256"
-                                                    class="font-mono text-xs bg-slate-950/50 p-2.5 rounded-lg border border-white/5 truncate text-purple-400/80"
+                                                    class="font-mono text-xs bg-slate-950/50 p-2.5 rounded-lg border border-white/5 truncate text-blue-400/80"
                                                     role="status"
                                                     aria-label="SHA-256 hash value"
                                                 ></div>
@@ -2298,7 +2346,7 @@
                                                     <span>SHA-512</span>
                                                     <button
                                                         id="ht-copy-sha512"
-                                                        class="hover:text-purple-400 transition-colors flex items-center gap-1"
+                                                        class="hover:text-blue-400 transition-colors flex items-center gap-1"
                                                         aria-label="Copy SHA-512 hash to clipboard"
                                                     >
                                                         <span
@@ -2311,7 +2359,7 @@
                                                 </div>
                                                 <div
                                                     id="ht-hash-sha512"
-                                                    class="font-mono text-xs bg-slate-950/50 p-2.5 rounded-lg border border-white/5 truncate text-purple-400/80"
+                                                    class="font-mono text-xs bg-slate-950/50 p-2.5 rounded-lg border border-white/5 truncate text-blue-400/80"
                                                     role="status"
                                                     aria-label="SHA-512 hash value"
                                                 ></div>
@@ -2507,13 +2555,13 @@
 
                                     <!-- Card 3: Smart Hash Identifier -->
                                     <div
-                                        class="cyber-card p-6 flex flex-col gap-6 border-l-2 border-l-purple-500/30"
+                                        class="cyber-card p-6 flex flex-col gap-6 border-l-2 border-l-blue-500/30"
                                         role="region"
                                         aria-labelledby="hash-id-title"
                                     >
                                         <div class="flex items-center gap-2">
                                             <span
-                                                class="material-symbols-outlined text-purple-400"
+                                                class="material-symbols-outlined text-blue-400"
                                                 aria-hidden="true"
                                                 >search_insights</span
                                             >
@@ -2533,7 +2581,7 @@
                                                 >
                                                 <input
                                                     id="ht-identifier-input"
-                                                    class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-xs font-mono text-cyan-400/70 focus:border-purple-500/50 focus:ring-0"
+                                                    class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-xs font-mono text-cyan-400/70 focus:border-blue-500/50 focus:ring-0"
                                                     placeholder="Paste hash here to identify algorithm..."
                                                     type="text"
                                                     aria-label="Hash string input for algorithm identification"
@@ -2700,7 +2748,7 @@
                                         <div>
                                             <h2 class="text-xl font-bold text-white flex items-center gap-2">
                                                 <!-- JWT Debugger title icon: token/key shield -->
-                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-400 shrink-0" aria-hidden="true">
                                                     <path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.35C16.5 22.15 20 17.25 20 12V6L12 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
                                                     <circle cx="12" cy="11" r="2.5" stroke="currentColor" stroke-width="1.6"/>
                                                     <path d="M12 13.5v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
@@ -2727,7 +2775,7 @@
                                         <div class="flex items-center gap-2 self-end sm:self-auto">
                                             <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Generate example</span>
                                             <div id="jwt-custom-dropdown-container" class="relative">
-                                                <button id="jwt-dropdown-trigger" class="flex items-center justify-between gap-3 bg-slate-900/80 border border-white/10 hover:border-purple-500/40 rounded-lg py-1.5 px-4 text-xs text-white/90 font-mono transition-all duration-200 cursor-pointer min-w-[190px] text-left select-none focus:outline-none focus:border-purple-500/50" aria-haspopup="listbox" aria-expanded="false" aria-label="Select signing algorithm">
+                                                <button id="jwt-dropdown-trigger" class="flex items-center justify-between gap-3 bg-slate-900/80 border border-white/10 hover:border-blue-500/40 rounded-lg py-1.5 px-4 text-xs text-white/90 font-mono transition-all duration-200 cursor-pointer min-w-[190px] text-left select-none focus:outline-none focus:border-blue-500/50" aria-haspopup="listbox" aria-expanded="false" aria-label="Select signing algorithm">
                                                     <span id="jwt-dropdown-selected-label" class="truncate">Select signing algorithm</span>
                                                     <!-- Chevron caret for dropdown -->
                                                     <svg id="jwt-dropdown-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-slate-400 transition-transform duration-200 pointer-events-none shrink-0" aria-hidden="true">
@@ -2736,19 +2784,19 @@
                                                 </button>
                                                 <div id="jwt-dropdown-options" class="absolute right-0 mt-1.5 w-48 bg-slate-950/95 backdrop-blur-md border border-white/10 rounded-lg shadow-xl overflow-hidden hidden z-50 flex flex-col transition-all duration-200 origin-top transform scale-y-95 opacity-0">
                                                     <div class="max-h-[250px] overflow-y-auto py-1 scrollbar-thin select-none">
-                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="none">none</button>
-                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none border-t border-white/5" data-value="HS256">HS256</button>
-                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="HS384">HS384</button>
-                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="HS512">HS512</button>
-                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none border-t border-white/5" data-value="RS256">RS256</button>
-                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="RS384">RS384</button>
-                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="RS512">RS512</button>
-                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none border-t border-white/5" data-value="ES256">ES256</button>
-                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="ES384">ES384</button>
-                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="ES512">ES512</button>
-                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none border-t border-white/5" data-value="PS256">PS256</button>
-                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="PS384">PS384</button>
-                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-purple-500/20 font-mono transition-colors focus:outline-none" data-value="PS512">PS512</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-blue-500/20 font-mono transition-colors focus:outline-none" data-value="none">none</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-blue-500/20 font-mono transition-colors focus:outline-none border-t border-white/5" data-value="HS256">HS256</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-blue-500/20 font-mono transition-colors focus:outline-none" data-value="HS384">HS384</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-blue-500/20 font-mono transition-colors focus:outline-none" data-value="HS512">HS512</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-blue-500/20 font-mono transition-colors focus:outline-none border-t border-white/5" data-value="RS256">RS256</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-blue-500/20 font-mono transition-colors focus:outline-none" data-value="RS384">RS384</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-blue-500/20 font-mono transition-colors focus:outline-none" data-value="RS512">RS512</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-blue-500/20 font-mono transition-colors focus:outline-none border-t border-white/5" data-value="ES256">ES256</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-blue-500/20 font-mono transition-colors focus:outline-none" data-value="ES384">ES384</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-blue-500/20 font-mono transition-colors focus:outline-none" data-value="ES512">ES512</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-blue-500/20 font-mono transition-colors focus:outline-none border-t border-white/5" data-value="PS256">PS256</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-blue-500/20 font-mono transition-colors focus:outline-none" data-value="PS384">PS384</button>
+                                                        <button class="w-full text-left px-4 py-2 text-xs text-slate-400 hover:text-white hover:bg-blue-500/20 font-mono transition-colors focus:outline-none" data-value="PS512">PS512</button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -2758,11 +2806,11 @@
                                     <!-- DECODER VIEW -->
                                     <div id="jwt-decoder-view" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                         <!-- Left Column: Encoded Token -->
-                                        <div class="cyber-card p-6 flex flex-col gap-4 border-l-2 border-l-purple-500/30">
+                                        <div class="cyber-card p-6 flex flex-col gap-4 border-l-2 border-l-blue-500/30">
                                             <div class="flex justify-between items-center">
                                                 <label class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                                                     <!-- Terminal/code icon for Encoded Token -->
-                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-400 shrink-0" aria-hidden="true">
                                                         <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/>
                                                         <path d="M8 9l-3 3 3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                                         <path d="M16 9l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -2774,7 +2822,7 @@
                                                     <button id="jwt-decoder-clear" class="text-[10px] text-slate-400 hover:text-red-400 transition-colors font-bold uppercase tracking-wider" onclick="CyberGuardJWTDebugger.clearDecoder()">
                                                         Clear
                                                     </button>
-                                                    <button id="jwt-decoder-copy" class="hover:text-purple-400 transition-colors flex items-center gap-1.5 text-[10px] text-slate-400 uppercase font-bold" onclick="CyberGuardJWTDebugger.copyDecoderToken()" aria-label="Copy JWT token">
+                                                    <button id="jwt-decoder-copy" class="hover:text-blue-400 transition-colors flex items-center gap-1.5 text-[10px] text-slate-400 uppercase font-bold" onclick="CyberGuardJWTDebugger.copyDecoderToken()" aria-label="Copy JWT token">
                                                         <!-- Clipboard copy icon -->
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                                             <rect x="9" y="2" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
@@ -2840,11 +2888,11 @@
                                             </div>
 
                                             <!-- Decoded Payload -->
-                                            <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-purple-500/30">
+                                            <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-blue-500/30">
                                                 <div class="flex justify-between items-center">
                                                     <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                                                         <!-- Stacked layers / payload icon -->
-                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-400 shrink-0" aria-hidden="true">
                                                             <path d="M2 8.5L12 3l10 5.5-10 5.5L2 8.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
                                                             <path d="M2 13l10 5.5L22 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                                             <path d="M2 17.5l10 5.5 10-5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -2858,7 +2906,7 @@
                                                 </div>
                                                 
                                                 <div id="jwt-payload-json-view">
-                                                    <div id="jwt-payload-decoded-syntax" class="w-full bg-slate-950/70 border border-white/5 rounded-lg p-3.5 text-xs font-mono min-h-[140px] max-h-[180px] overflow-y-auto leading-relaxed select-text" style="color: #a78bfa;"></div>
+                                                    <div id="jwt-payload-decoded-syntax" class="w-full bg-slate-950/70 border border-white/5 rounded-lg p-3.5 text-xs font-mono min-h-[140px] max-h-[180px] overflow-y-auto leading-relaxed select-text" style="color: #3b82f6;"></div>
                                                 </div>
                                                 <div id="jwt-payload-claims-view" class="hidden">
                                                     <div id="jwt-payload-claims-table" class="w-full text-xs overflow-y-auto max-h-[180px] select-text"></div>
@@ -2887,7 +2935,7 @@
                                                     </div>
                                                 </div>
                                                 <p class="text-[11px] text-slate-400 -mt-1">Enter the secret used to sign the JWT below:</p>
-                                                <input type="text" id="jwt-decoder-secret" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-sm text-white/90 focus:border-purple-500/50 focus:ring-0 font-mono" style="color: #4fc3f7;" placeholder="Enter secret key..." value="" oninput="CyberGuardJWTDebugger.verifyDecoderSignature()" />
+                                                <input type="text" id="jwt-decoder-secret" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-sm text-white/90 focus:border-blue-500/50 focus:ring-0 font-mono" style="color: #4fc3f7;" placeholder="Enter secret key..." value="" oninput="CyberGuardJWTDebugger.verifyDecoderSignature()" />
                                                 <div id="jwt-decoder-secret-status" class="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
                                                     <!-- Status info icon -->
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
@@ -2918,7 +2966,7 @@
                                                     </svg>
                                                     <span>Header</span>
                                                 </label>
-                                                <textarea id="jwt-encoder-header" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3.5 text-xs text-orange-300/90 focus:border-purple-500/50 focus:ring-0 h-[100px] font-mono leading-relaxed" spellcheck="false" oninput="CyberGuardJWTDebugger.encodeToken()"></textarea>
+                                                <textarea id="jwt-encoder-header" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3.5 text-xs text-orange-300/90 focus:border-blue-500/50 focus:ring-0 h-[100px] font-mono leading-relaxed" spellcheck="false" oninput="CyberGuardJWTDebugger.encodeToken()"></textarea>
                                                 <div id="jwt-encoder-header-status" class="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-green-400">
                                                     <!-- Check circle icon -->
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
@@ -2930,17 +2978,17 @@
                                             </div>
                                             
                                             <!-- Payload Input -->
-                                            <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-purple-500/30">
+                                            <div class="cyber-card p-6 flex flex-col gap-3 border-l-2 border-l-blue-500/30">
                                                 <label for="jwt-encoder-payload" class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                                                     <!-- Stacked layers / payload icon -->
-                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-400 shrink-0" aria-hidden="true">
                                                         <path d="M2 8.5L12 3l10 5.5-10 5.5L2 8.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
                                                         <path d="M2 13l10 5.5L22 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                                         <path d="M2 17.5l10 5.5 10-5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                                     </svg>
                                                     <span>Payload</span>
                                                 </label>
-                                                <textarea id="jwt-encoder-payload" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3.5 text-xs text-purple-300/90 focus:border-purple-500/50 focus:ring-0 h-[180px] font-mono leading-relaxed" spellcheck="false" oninput="CyberGuardJWTDebugger.encodeToken()"></textarea>
+                                                <textarea id="jwt-encoder-payload" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3.5 text-xs text-blue-300/90 focus:border-blue-500/50 focus:ring-0 h-[180px] font-mono leading-relaxed" spellcheck="false" oninput="CyberGuardJWTDebugger.encodeToken()"></textarea>
                                                 <div id="jwt-encoder-payload-status" class="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-green-400">
                                                     <!-- Check circle icon -->
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
@@ -2972,7 +3020,7 @@
                                                         </label>
                                                     </div>
                                                 </div>
-                                                <input type="text" id="jwt-encoder-secret" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-sm text-white/90 focus:border-purple-500/50 focus:ring-0 font-mono" style="color: #4fc3f7;" placeholder="Enter secret key..." value="" oninput="CyberGuardJWTDebugger.encodeToken()" />
+                                                <input type="text" id="jwt-encoder-secret" class="w-full bg-slate-900/50 border border-white/5 rounded-lg p-3 text-sm text-white/90 focus:border-blue-500/50 focus:ring-0 font-mono" style="color: #4fc3f7;" placeholder="Enter secret key..." value="" oninput="CyberGuardJWTDebugger.encodeToken()" />
                                                 <div id="jwt-encoder-secret-status" class="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-500">
                                                     <!-- Status info icon -->
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="shrink-0">
@@ -2986,11 +3034,11 @@
                                         </div>
 
                                         <!-- Right Column: Encoded Output -->
-                                        <div class="cyber-card p-6 flex flex-col gap-4 border-l-2 border-l-purple-500/30">
+                                        <div class="cyber-card p-6 flex flex-col gap-4 border-l-2 border-l-blue-500/30">
                                             <div class="flex justify-between items-center">
                                                 <label class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
                                                     <!-- Code/terminal icon for encoded JWT output -->
-                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-purple-400 shrink-0" aria-hidden="true">
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-400 shrink-0" aria-hidden="true">
                                                         <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="1.8"/>
                                                         <path d="M8 9l-3 3 3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                                         <path d="M16 9l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -2998,7 +3046,7 @@
                                                     </svg>
                                                     <span>Encoded JWT</span>
                                                 </label>
-                                                <button id="jwt-encoder-copy" class="hover:text-purple-400 transition-colors flex items-center gap-1.5 text-[10px] text-slate-400 uppercase font-bold" onclick="CyberGuardJWTDebugger.copyEncoderToken()" aria-label="Copy encoded JWT token">
+                                                <button id="jwt-encoder-copy" class="hover:text-blue-400 transition-colors flex items-center gap-1.5 text-[10px] text-slate-400 uppercase font-bold" onclick="CyberGuardJWTDebugger.copyEncoderToken()" aria-label="Copy encoded JWT token">
                                                     <!-- Clipboard copy icon -->
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                                         <rect x="9" y="2" width="11" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
@@ -3019,197 +3067,123 @@
                             <!-- ============================================================ -->
                             <div id="ai-assistant" class="tab-pane hidden">
                                 <div class="ai-chat-wrapper">
-                                    <!-- Chat History Sidebar -->
-                                    <div class="ai-chat-sidebar">
+                                    <aside class="ai-chat-sidebar" aria-label="Chat history">
                                         <div class="ai-new-chat-container">
-                                            <button id="ai-new-chat-btn" class="ai-new-chat-btn">
-                                                <span class="material-symbols-outlined text-[16px]">add</span>
+                                            <button id="ai-new-chat-btn" class="ai-new-chat-btn" type="button">
+                                                <span class="material-symbols-outlined">add</span>
                                                 <span>New Chat</span>
                                             </button>
                                         </div>
                                         <div class="ai-history-section-title">Previous Chats</div>
-                                        <div id="ai-chat-history-list" class="ai-chat-history-list">
-                                            <!-- Dynamically populated chats -->
-                                        </div>
-                                    </div>
+                                        <div id="ai-chat-history-list" class="ai-chat-history-list"></div>
+                                    </aside>
 
-                                    <!-- Main Chat Area -->
                                     <div class="ai-chat-main-container">
-                                        <div class="ai-chat-header">
-                                        <div class="ai-chat-header-left">
-                                            <div class="ai-avatar-ring">
-                                                <div class="ai-avatar">
-                                                    <svg
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke-width="1.5"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                             stroke-linecap="round"
-                                                             stroke-linejoin="round"
-                                                             d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z"
-                                                         />
-                                                     </svg>
+                                        <header class="ai-chat-header">
+                                            <div class="ai-chat-header-left">
+                                                <div class="ai-avatar-ring">
+                                                    <div class="ai-avatar" aria-hidden="true">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <span class="ai-chat-kicker">AI Copilot</span>
+                                                    <h3 class="ai-chat-title">CyberGuard Assistant</h3>
+                                                    <p class="ai-chat-subtitle">
+                                                        <span class="ai-status-dot" aria-hidden="true"></span>
+                                                        <span id="ai-chat-engine-label">OPENROUTER (gpt-oss-120b:free) · Active</span>
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <div>
-                                                <h3 class="ai-chat-title">
-                                                    CyberGuard AI Assistant
-                                                </h3>
-                                                <p class="ai-chat-subtitle">
-                                                    <span class="ai-status-dot"></span>
-                                                    <span id="ai-chat-engine-label">OPENROUTER (gpt-oss-120b:free) • Active</span>
-                                                </p>
+                                            <div class="ai-header-actions">
+                                                <button id="ai-settings-btn" class="ai-settings-btn" type="button" title="Assistant settings" aria-label="Assistant settings">
+                                                    <span class="material-symbols-outlined text-[18px]">tune</span>
+                                                </button>
                                             </div>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <button
-                                                id="ai-settings-btn"
-                                                class="ai-settings-btn"
-                                                title="AI Config Settings"
-                                            >
-                                                <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke-width="2"
-                                                    stroke="currentColor"
-                                                    class="w-4 h-4"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.43l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"
-                                                    />
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
+                                        </header>
 
-                                    <!-- AI SETTINGS DRAWER PANEL -->
-                                    <div id="ai-settings-panel" class="ai-settings-panel hidden">
-                                        <h4 class="ai-settings-title flex items-center gap-2 text-white font-bold text-sm mb-3">
-                                            <span class="material-symbols-outlined text-[16px] text-purple-400">tune</span>
-                                            Assistant Configuration
-                                        </h4>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <!-- Provider Select -->
-                                            <div class="flex flex-col gap-1.5">
-                                                <label for="ai-provider-select" class="ai-settings-label">AI Engine Provider</label>
-                                                <select id="ai-provider-select" class="ai-select">
-                                                    <option value="openrouter">OpenRouter API</option>
-                                                </select>
-                                            </div>
-                                            <!-- Model Presets -->
-                                            <div class="flex flex-col gap-1.5">
-                                                <label for="ai-model-select" class="ai-settings-label">Model Preset</label>
-                                                <select id="ai-model-select" class="ai-select">
-                                                    <!-- Gemini values will be injected dynamically -->
-                                                </select>
-                                                <input type="text" id="ai-model-custom" class="ai-custom-input hidden mt-1.5" placeholder="Enter custom model identifier..." />
-                                            </div>
-                                            <!-- API Key Input -->
-                                            <div class="flex flex-col gap-1.5 md:col-span-2" id="ai-key-container">
-                                                <label for="ai-key-input" class="ai-settings-label">API Access Key</label>
-                                                <div class="relative flex items-center">
-                                                    <input type="password" id="ai-key-input" class="ai-custom-input pr-10 w-full" placeholder="Enter your provider API Key..." />
-                                                    <button type="button" id="ai-key-toggle-btn" class="absolute right-3 text-slate-400 hover:text-white transition-colors cursor-pointer select-none">
-                                                        <span class="material-symbols-outlined text-[16px]">visibility</span>
-                                                    </button>
+                                        <div id="ai-settings-panel" class="ai-settings-panel hidden">
+                                            <h4 class="ai-settings-title flex items-center gap-2 font-bold text-sm mb-3" style="color: var(--cg-text-1);">
+                                                <span class="material-symbols-outlined text-[16px]" style="color: var(--cg-text-2);">tune</span>
+                                                Assistant Configuration
+                                            </h4>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div class="flex flex-col gap-1.5">
+                                                    <label for="ai-provider-select" class="ai-settings-label">AI Engine Provider</label>
+                                                    <select id="ai-provider-select" class="ai-select">
+                                                        <option value="openrouter">OpenRouter API</option>
+                                                    </select>
+                                                </div>
+                                                <div class="flex flex-col gap-1.5">
+                                                    <label for="ai-model-select" class="ai-settings-label">Model Preset</label>
+                                                    <select id="ai-model-select" class="ai-select"></select>
+                                                    <input type="text" id="ai-model-custom" class="ai-custom-input hidden mt-1.5" placeholder="Enter custom model identifier..." />
+                                                </div>
+                                                <div class="flex flex-col gap-1.5 md:col-span-2" id="ai-key-container">
+                                                    <label for="ai-key-input" class="ai-settings-label">API Access Key</label>
+                                                    <div class="relative flex items-center">
+                                                        <input type="password" id="ai-key-input" class="ai-custom-input pr-10 w-full" placeholder="Enter your provider API key..." />
+                                                        <button type="button" id="ai-key-toggle-btn" class="absolute right-3 transition-colors cursor-pointer select-none" style="color: var(--cg-text-3);" aria-label="Toggle key visibility">
+                                                            <span class="material-symbols-outlined text-[16px]">visibility</span>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
+                                            <div class="flex justify-end gap-2.5 mt-4 pt-3" style="border-top: 1px solid var(--cg-border-subtle);">
+                                                <button id="ai-settings-reset-btn" type="button" class="cyber-btn-red px-4 py-1.5 text-xs font-bold">Reset Defaults</button>
+                                                <button id="ai-settings-save-btn" type="button" class="cyber-btn-primary px-4 py-1.5 text-xs font-bold">Save Settings</button>
+                                            </div>
+                                        </div>
 
+                                        <div class="ai-suggestions-container">
+                                            <div class="ai-suggestions" id="ai-suggestions">
+                                                <button class="ai-chip" type="button" data-question="What tools are available on this dashboard?">
+                                                    <span class="material-symbols-outlined">search</span>
+                                                    Available tools
+                                                </button>
+                                                <button class="ai-chip" type="button" data-question="How does the Port Scanner work?">
+                                                    <span class="material-symbols-outlined">bolt</span>
+                                                    Port Scanner
+                                                </button>
+                                                <button class="ai-chip" type="button" data-question="What is phishing and how can I detect it?">
+                                                    <span class="material-symbols-outlined">warning</span>
+                                                    Phishing detection
+                                                </button>
+                                                <button class="ai-chip" type="button" data-question="How do I use the Hash Generator?">
+                                                    <span class="material-symbols-outlined">lock</span>
+                                                    Hash Generator
+                                                </button>
+                                                <button class="ai-chip" type="button" data-question="What is SSL/TLS and why does it matter?">
+                                                    <span class="material-symbols-outlined">verified_user</span>
+                                                    SSL/TLS explained
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div class="flex justify-end gap-2.5 mt-4 pt-3 border-t border-white/5">
-                                            <button id="ai-settings-reset-btn" class="px-4 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white bg-slate-900/50 hover:bg-slate-800/80 transition-colors">
-                                                Reset Defaults
-                                            </button>
-                                            <button id="ai-settings-save-btn" class="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 transition-colors shadow-md shadow-purple-950/30">
-                                                Save Settings
-                                            </button>
-                                        </div>
-                                    </div>
 
-                                    <!-- CHIPS/SUGGESTIONS WRAPPER -->
-                                    <div class="ai-suggestions-container">
-                                        <div class="ai-suggestions" id="ai-suggestions">
-                                            <button
-                                                class="ai-chip"
-                                                data-question="What tools are available on this dashboard?"
-                                            >
-                                                <svg class="w-3.5 h-3.5 mr-1.5 text-purple-400 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>Available tools
-                                            </button>
-                                            <button
-                                                class="ai-chip"
-                                                data-question="How does the Port Scanner work?"
-                                            >
-                                                <svg class="w-3.5 h-3.5 mr-1.5 text-purple-400 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Port Scanner
-                                            </button>
-                                            <button
-                                                class="ai-chip"
-                                                data-question="What is phishing and how can I detect it?"
-                                            >
-                                                <svg class="w-3.5 h-3.5 mr-1.5 text-purple-400 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>Phishing detection
-                                            </button>
-                                            <button
-                                                class="ai-chip"
-                                                data-question="How do I use the Hash Generator?"
-                                            >
-                                                <svg class="w-3.5 h-3.5 mr-1.5 text-purple-400 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>Hash Generator
-                                            </button>
-                                            <button
-                                                class="ai-chip"
-                                                data-question="What is SSL/TLS and why does it matter?"
-                                            >
-                                                <svg class="w-3.5 h-3.5 mr-1.5 text-purple-400 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>SSL/TLS explained
-                                            </button>
-                                        </div>
-                                    </div>
+                                        <div id="ai-messages" class="ai-messages" role="log" aria-live="polite" aria-relevant="additions"></div>
 
-                                    <div
-                                        id="ai-messages"
-                                        class="ai-messages"
-                                    ></div>
-                                    <div class="ai-input-area">
-                                        <div class="ai-input-container">
-                                            <textarea
-                                                id="ai-input"
-                                                class="ai-input"
-                                                placeholder="Ask me anything about cybersecurity or this dashboard…"
-                                                rows="1"
-                                                maxlength="2000"
-                                            ></textarea>
-                                            <button
-                                                id="ai-send-btn"
-                                                class="ai-send-btn"
-                                                title="Send message"
-                                            >
-                                                <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke-width="2"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                        <div class="ai-disclaimer text-center">
-                                            CyberGuard Assistant can operate your parent dashboard via natural language commands (e.g. "Switch to JWT tab").
-                                        </div>
-                                    </div>
+                                        <footer class="ai-input-area">
+                                            <div class="ai-input-container">
+                                                <textarea
+                                                    id="ai-input"
+                                                    class="ai-input"
+                                                    placeholder="Ask about cybersecurity, scan results, or control the dashboard…"
+                                                    rows="1"
+                                                    maxlength="2000"
+                                                    aria-label="Message to AI assistant"
+                                                ></textarea>
+                                                <button id="ai-send-btn" class="ai-send-btn" type="button" title="Send message" aria-label="Send message">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <p class="ai-disclaimer">
+                                                Autopilot can switch tabs, run scans, and operate tools via natural language — e.g. &ldquo;Switch to JWT Debugger&rdquo;
+                                            </p>
+                                        </footer>
                                     </div>
                                 </div>
                             </div>
@@ -3220,24 +3194,17 @@
                             <!-- ============================================================ -->
                             <div
                                 id="projects"
-                                class="tab-pane hidden space-y-6"
+                                class="tab-pane hidden projects-workspace"
                             >
-                                <!-- Header Section -->
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <h2
-                                            class="text-2xl font-bold text-white"
-                                        >
-                                            Security Projects
-                                        </h2>
-                                        <p class="text-sm text-slate-400 mt-1">
-                                            Organize and manage your security
-                                            assessments
-                                        </p>
+                                <div class="projects-hero">
+                                    <div class="projects-hero-copy">
+                                        <span class="projects-kicker">Assessment Workspace</span>
+                                        <h2>Security Projects</h2>
+                                        <p>Track targets, scanners, findings, and collaboration from one operational project view.</p>
                                     </div>
                                     <button
                                         id="new-project-btn"
-                                        class="cyber-btn-primary px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2"
+                                        class="projects-primary-action"
                                     >
                                         <svg
                                             class="w-4 h-4"
@@ -3257,13 +3224,31 @@
                                     </button>
                                 </div>
 
+                                <div class="projects-command-strip">
+                                    <div class="projects-stat">
+                                        <span class="projects-stat-label">Projects</span>
+                                        <strong id="projects-total-count">0</strong>
+                                    </div>
+                                    <div class="projects-stat">
+                                        <span class="projects-stat-label">Targets</span>
+                                        <strong id="projects-total-targets">0</strong>
+                                    </div>
+                                    <div class="projects-stat">
+                                        <span class="projects-stat-label">Findings</span>
+                                        <strong id="projects-total-findings">0</strong>
+                                    </div>
+                                    <div class="projects-stat">
+                                        <span class="projects-stat-label">Scans</span>
+                                        <strong id="projects-total-scans">0</strong>
+                                    </div>
+                                </div>
+
                                 <!-- Sub-tab navigation: My Projects / Collaborating -->
-                                <div
-                                    class="flex gap-1 p-1 rounded-xl border border-[var(--cg-border)] bg-[var(--cg-bg-base)] w-fit"
-                                >
+                                <div class="projects-toolbar">
+                                    <div class="projects-tab-switcher">
                                     <button
                                         id="projects-tab-owned"
-                                        class="cyber-tab active px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
+                                        class="cyber-tab active projects-tab-button"
                                         onclick="
                                             window.projectManager &&
                                                 window.projectManager.switchProjectsTab(
@@ -3288,13 +3273,13 @@
                                         My Projects
                                         <span
                                             id="owned-count"
-                                            class="text-xs bg-[var(--cg-accent-muted)] text-[var(--cg-accent)] px-1.5 py-0.5 rounded-full font-mono min-w-[1.25rem] text-center"
+                                            class="projects-tab-count"
                                             >0</span
                                         >
                                     </button>
                                     <button
                                         id="projects-tab-collaborating"
-                                        class="cyber-tab px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
+                                        class="cyber-tab projects-tab-button"
                                         onclick="
                                             window.projectManager &&
                                                 window.projectManager.switchProjectsTab(
@@ -3319,17 +3304,18 @@
                                         Collaborating
                                         <span
                                             id="collaborating-count"
-                                            class="text-xs bg-[var(--cg-accent-muted)] text-[var(--cg-accent)] px-1.5 py-0.5 rounded-full font-mono min-w-[1.25rem] text-center"
+                                            class="projects-tab-count"
                                             >0</span
                                         >
                                     </button>
+                                    </div>
                                 </div>
 
                                 <!-- Owned Projects Pane -->
-                                <div id="owned-projects-pane" class="space-y-4">
+                                <div id="owned-projects-pane" class="projects-pane">
                                     <div
                                         id="owned-projects-list"
-                                        class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+                                        class="projects-board"
                                     >
                                         <!-- Owner project cards rendered here -->
                                     </div>
@@ -3388,11 +3374,11 @@
                                 <!-- Collaborating Projects Pane -->
                                 <div
                                     id="collaborating-projects-pane"
-                                    class="hidden space-y-4"
+                                    class="hidden projects-pane"
                                 >
                                     <div
                                         id="collaborating-projects-list"
-                                        class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+                                        class="projects-board"
                                     >
                                         <!-- Collaborating project cards rendered here -->
                                     </div>
@@ -3489,7 +3475,7 @@
                                         class="flex items-center justify-between mb-4"
                                     >
                                         <h3
-                                            class="text-lg font-semibold text-purple-400"
+                                            class="text-lg font-semibold text-blue-400"
                                         >
                                             Recent Searches
                                         </h3>
@@ -3619,7 +3605,7 @@
                                                     class="flex items-center justify-between"
                                                 >
                                                     <h3
-                                                        class="text-lg font-semibold text-purple-400"
+                                                        class="text-lg font-semibold text-blue-400"
                                                     >
                                                         VirusTotal
                                                     </h3>
@@ -3637,7 +3623,7 @@
                                                     class="hidden flex justify-center py-8"
                                                 >
                                                     <div
-                                                        class="loading-spinner w-8 h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"
+                                                        class="loading-spinner w-8 h-8 border-4 border-blue-500/30 border-t-purple-500 rounded-full animate-spin"
                                                     ></div>
                                                 </div>
 
@@ -3664,7 +3650,7 @@
                                                     class="flex items-center justify-between"
                                                 >
                                                     <h3
-                                                        class="text-lg font-semibold text-purple-400"
+                                                        class="text-lg font-semibold text-blue-400"
                                                     >
                                                         AbuseIPDB
                                                     </h3>
@@ -3682,7 +3668,7 @@
                                                     class="hidden flex justify-center py-8"
                                                 >
                                                     <div
-                                                        class="loading-spinner w-8 h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"
+                                                        class="loading-spinner w-8 h-8 border-4 border-blue-500/30 border-t-purple-500 rounded-full animate-spin"
                                                     ></div>
                                                 </div>
 
@@ -3709,7 +3695,7 @@
                                                     class="flex items-center justify-between"
                                                 >
                                                     <h3
-                                                        class="text-lg font-semibold text-purple-400"
+                                                        class="text-lg font-semibold text-blue-400"
                                                     >
                                                         URLScan.io
                                                     </h3>
@@ -3727,7 +3713,7 @@
                                                     class="hidden flex justify-center py-8"
                                                 >
                                                     <div
-                                                        class="loading-spinner w-8 h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"
+                                                        class="loading-spinner w-8 h-8 border-4 border-blue-500/30 border-t-purple-500 rounded-full animate-spin"
                                                     ></div>
                                                 </div>
 
@@ -3769,7 +3755,7 @@
                             class="flex items-center gap-2 hidden"
                         >
                             <svg
-                                class="spinner w-4 h-4 text-purple-400"
+                                class="spinner w-4 h-4 text-blue-400"
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
                                 viewBox="0 0 24 24"
@@ -3912,12 +3898,12 @@
                                 <svg class="w-10 h-10" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="none">
                                     <defs>
                                         <linearGradient id="wm-cyber-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stop-color="#6d28d9" />
-                                            <stop offset="50%" stop-color="#a855f7" />
-                                            <stop offset="100%" stop-color="#22d3ee" />
+                                            <stop offset="0%" stop-color="#1d4ed8" />
+                                            <stop offset="50%" stop-color="#3b82f6" />
+                                            <stop offset="100%" stop-color="#60a5fa" />
                                         </linearGradient>
                                         <filter id="wm-neon-glow" x="-20%" y="-20%" width="140%" height="140%">
-                                            <feGaussianBlur stdDeviation="1.2" result="blur" />
+                                            <feGaussianBlur stdDeviation="0" result="blur" />
                                             <feMerge>
                                                 <feMergeNode in="blur" />
                                                 <feMergeNode in="SourceGraphic" />
@@ -3938,10 +3924,10 @@
                                     <!-- Circuit Traces -->
                                     <path d="M7.5 10 L11 11.5 M24.5 10 L21 11.5 M7.5 18 L11 16.5 M24.5 18 L21 16.5" stroke="url(#wm-cyber-grad)" stroke-width="1.2" opacity="0.8" />
                                     <!-- Node Dots -->
-                                    <circle cx="7.5" cy="10" r="1.2" fill="#22d3ee" />
-                                    <circle cx="24.5" cy="10" r="1.2" fill="#6d28d9" />
-                                    <circle cx="7.5" cy="18" r="1.2" fill="#6d28d9" />
-                                    <circle cx="24.5" cy="18" r="1.2" fill="#22d3ee" />
+                                    <circle cx="7.5" cy="10" r="1.2" fill="#60a5fa" />
+                                    <circle cx="24.5" cy="10" r="1.2" fill="#1d4ed8" />
+                                    <circle cx="7.5" cy="18" r="1.2" fill="#1d4ed8" />
+                                    <circle cx="24.5" cy="18" r="1.2" fill="#60a5fa" />
                                 </svg>
                             </div>
                         </div>
@@ -4031,7 +4017,7 @@
                         >
                             <div class="cyber-icon-box-purple">
                                 <svg
-                                    class="w-4 h-4 text-purple-300"
+                                    class="w-4 h-4 text-blue-300"
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
                                     viewBox="0 0 24 24"
@@ -4205,7 +4191,7 @@
                         >
                             <div class="cyber-icon-box-purple">
                                 <svg
-                                    class="w-4 h-4 text-purple-300"
+                                    class="w-4 h-4 text-blue-300"
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
                                     viewBox="0 0 24 24"
@@ -4394,7 +4380,7 @@
                                 class="text-sm font-bold text-white flex items-center gap-2"
                             >
                                 <svg
-                                    class="w-4 h-4 text-purple-300"
+                                    class="w-4 h-4 text-blue-300"
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
                                     viewBox="0 0 24 24"
@@ -4459,7 +4445,7 @@
                         >
                             <div class="cyber-icon-box-purple">
                                 <svg
-                                    class="w-4 h-4 text-purple-300"
+                                    class="w-4 h-4 text-blue-300"
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
                                     viewBox="0 0 24 24"
@@ -4557,7 +4543,7 @@
                     <!-- Invite Link Result Section (shown after success) -->
                     <div id="invite-link-section" class="hidden space-y-4">
                         <div
-                            class="p-4 rounded-xl bg-[rgba(167,139,250,0.08)] border border-[rgba(167,139,250,0.25)]"
+                            class="p-4 rounded-xl bg-[rgba(59, 130, 246,0.08)] border border-[rgba(59, 130, 246,0.25)]"
                         >
                             <p
                                 class="text-xs font-semibold text-[var(--cg-accent)] mb-2 flex items-center gap-1.5"
@@ -4795,13 +4781,13 @@
              */
             function renderBillingRow(order) {
                 const date = formatDate(order.created_at);
-                const plan = capitalize(order.plan);
+                const plan = escapeHtml(capitalize(order.plan));
                 const amount = formatAmount(order.amount_cents);
                 const statusBadge = getStatusBadgeClass(order.status);
-                const transactionId = order.paymob_transaction_id || "—";
+                const transactionId = escapeHtml(order.paymob_transaction_id || "—");
                 const failureReason =
                     order.status === "failed" && order.failure_reason
-                        ? order.failure_reason
+                        ? escapeHtml(order.failure_reason)
                         : "—";
 
                 return `
@@ -4811,7 +4797,7 @@
                         <td class="px-6 py-4 text-sm text-white font-semibold">${amount}</td>
                         <td class="px-6 py-4">
                             <span class="${statusBadge} text-xs px-2.5 py-1 rounded-full font-medium">
-                                ${capitalize(order.status)}
+                                ${escapeHtml(capitalize(order.status))}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-sm text-slate-400 font-mono">${transactionId}</td>

@@ -116,7 +116,7 @@ class ErrorHandler {
     
     // Add error styling to the field
     fieldEl.classList.add('border-red-500/50', 'focus:border-red-500');
-    fieldEl.classList.remove('border-purple-500/30');
+    fieldEl.classList.remove('border-blue-500/30');
     
     // Find or create error message element
     let errorEl = fieldEl.parentElement.querySelector('.field-error');
@@ -151,7 +151,7 @@ class ErrorHandler {
     
     // Remove error styling
     fieldEl.classList.remove('border-red-500/50', 'focus:border-red-500');
-    fieldEl.classList.add('border-purple-500/30');
+    fieldEl.classList.add('border-blue-500/30');
     
     // Remove error message element
     const errorEl = fieldEl.parentElement.querySelector('.field-error');

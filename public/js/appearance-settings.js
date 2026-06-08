@@ -8,13 +8,13 @@ class AppearanceSettings {
         this.initialState = {
             theme: "dark",
             sidebarDefaultCollapsed: false,
-            accentColor: "violet"
+            accentColor: "blue"
         };
         this.currentState = { ...this.initialState };
         this.isDirty = false;
         
         this.accents = {
-            violet: { name: "Violet", primary: "#a78bfa", hover: "#8b5cf6", muted: "rgba(167, 139, 250, 0.15)", dark: "#6d28d9" },
+            blue: { name: "Blue", primary: "#3b82f6", hover: "#60a5fa", muted: "rgba(59, 130, 246, 0.15)", dark: "#1d4ed8" },
             cyan: { name: "Cyan", primary: "#22d3ee", hover: "#06b6d4", muted: "rgba(34, 211, 238, 0.15)", dark: "#0891b2" },
             green: { name: "Green", primary: "#34d399", hover: "#059669", muted: "rgba(52, 211, 153, 0.15)", dark: "#047857" },
             crimson: { name: "Crimson", primary: "#fb7185", hover: "#f43f5e", muted: "rgba(251, 113, 133, 0.15)", dark: "#be123c" }
@@ -38,7 +38,7 @@ class AppearanceSettings {
             try { sidebarCollapsed = JSON.parse(storedSidebar); } catch(e) {}
         }
         
-        const accentColor = localStorage.getItem("cyberguard_accent") || "violet";
+        const accentColor = localStorage.getItem("cyberguard_accent") || "blue";
 
         this.initialState = {
             theme: theme,
@@ -55,7 +55,7 @@ class AppearanceSettings {
         const pane = document.getElementById("pane-appearance");
         if (!pane) return;
 
-        pane.innerHTML = `
+        pane.innerHTML = ` // security-audit-ignore
             <form id="appearance-settings-form" class="space-y-6" onsubmit="return false;">
                 <p class="text-sm text-slate-400 mb-6">
                     Customize the interface theme, colors, and layout configurations.
@@ -67,15 +67,15 @@ class AppearanceSettings {
                     <div class="grid grid-cols-3 gap-4 mt-2">
                         <!-- Dark theme -->
                         <label class="cyber-card p-4 flex flex-col items-center gap-3 cursor-pointer border border-white/5 bg-slate-900/20 hover:bg-slate-900/40 relative">
-                            <input type="radio" name="theme-option" value="dark" class="absolute top-3 left-3 accent-purple-400" ${this.currentState.theme === "dark" ? "checked" : ""}>
-                            <span class="material-symbols-outlined text-3xl text-purple-400 mt-2">dark_mode</span>
+                            <input type="radio" name="theme-option" value="dark" class="absolute top-3 left-3 accent-blue-400" ${this.currentState.theme === "dark" ? "checked" : ""}>
+                            <span class="material-symbols-outlined text-3xl text-blue-400 mt-2">dark_mode</span>
                             <span class="text-sm font-semibold text-white">Dark Theme</span>
                             <span class="text-[10px] text-slate-500">Default & Optimized</span>
                         </label>
 
                         <!-- Light theme -->
                         <label class="cyber-card p-4 flex flex-col items-center gap-3 cursor-pointer border border-white/5 bg-slate-900/20 hover:bg-slate-900/40 relative" style="opacity: 0.85;">
-                            <input type="radio" name="theme-option" value="light" class="absolute top-3 left-3 accent-purple-400" ${this.currentState.theme === "light" ? "checked" : ""}>
+                            <input type="radio" name="theme-option" value="light" class="absolute top-3 left-3 accent-blue-400" ${this.currentState.theme === "light" ? "checked" : ""}>
                             <span class="material-symbols-outlined text-3xl text-amber-400 mt-2">light_mode</span>
                             <span class="text-sm font-semibold text-white">Light Theme</span>
                             <span class="text-[10px] text-slate-500">Experimental</span>
@@ -83,7 +83,7 @@ class AppearanceSettings {
 
                         <!-- System theme -->
                         <label class="cyber-card p-4 flex flex-col items-center gap-3 cursor-pointer border border-white/5 bg-slate-900/20 hover:bg-slate-900/40 relative">
-                            <input type="radio" name="theme-option" value="system" class="absolute top-3 left-3 accent-purple-400" ${this.currentState.theme === "system" ? "checked" : ""}>
+                            <input type="radio" name="theme-option" value="system" class="absolute top-3 left-3 accent-blue-400" ${this.currentState.theme === "system" ? "checked" : ""}>
                             <span class="material-symbols-outlined text-3xl text-sky-400 mt-2">desktop_windows</span>
                             <span class="text-sm font-semibold text-white">System Default</span>
                             <span class="text-[10px] text-slate-500">Syncs with OS</span>

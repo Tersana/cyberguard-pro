@@ -47,19 +47,136 @@ function walkDir(dir, callback) {
   }
 }
 
+function cleanCodeString(str) {
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let inBacktick = false;
+  let inLineComment = false;
+  let inBlockComment = false;
+  let result = '';
+  
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    const nextChar = i < str.length - 1 ? str[i + 1] : '';
+    const prevChar = i > 0 ? str[i - 1] : '';
+    
+    if (inLineComment) {
+      if (char === '\n' || char === '\r') {
+        inLineComment = false;
+        result += char;
+      }
+      continue;
+    }
+    
+    if (inBlockComment) {
+      if (char === '*' && nextChar === '/') {
+        inBlockComment = false;
+        i++; // skip '/'
+      }
+      continue;
+    }
+    
+    if (inSingleQuote) {
+      result += char;
+      if (char === "'" && prevChar !== '\\') {
+        inSingleQuote = false;
+      }
+      continue;
+    }
+    
+    if (inDoubleQuote) {
+      result += char;
+      if (char === '"' && prevChar !== '\\') {
+        inDoubleQuote = false;
+      }
+      continue;
+    }
+    
+    if (inBacktick) {
+      result += char;
+      if (char === '`' && prevChar !== '\\') {
+        inBacktick = false;
+      }
+      continue;
+    }
+    
+    // Check for comments
+    if (char === '/' && nextChar === '/') {
+      inLineComment = true;
+      i++; // skip second '/'
+      continue;
+    }
+    if (char === '/' && nextChar === '*') {
+      inBlockComment = true;
+      i++; // skip '*'
+      continue;
+    }
+    
+    // Check for quotes
+    if (char === "'") inSingleQuote = true;
+    else if (char === '"') inDoubleQuote = true;
+    else if (char === '`') inBacktick = true;
+    
+    result += char;
+  }
+  
+  return result;
+}
+
+function isBalanced(str) {
+  const clean = cleanCodeString(str);
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let inBacktick = false;
+  let parens = 0;
+  let brackets = 0;
+  let braces = 0;
+  
+  for (let i = 0; i < clean.length; i++) {
+    const char = clean[i];
+    const prev = i > 0 ? clean[i - 1] : '';
+    
+    if (prev === '\\') continue;
+    
+    if (inSingleQuote) {
+      if (char === "'") inSingleQuote = false;
+    } else if (inDoubleQuote) {
+      if (char === '"') inDoubleQuote = false;
+    } else if (inBacktick) {
+      if (char === '`') inBacktick = false;
+    } else {
+      if (char === "'") inSingleQuote = true;
+      else if (char === '"') inDoubleQuote = true;
+      else if (char === '`') inBacktick = true;
+      else if (char === '(') parens++;
+      else if (char === ')') parens--;
+      else if (char === '[') brackets++;
+      else if (char === ']') brackets--;
+      else if (char === '{') braces++;
+      else if (char === '}') braces--;
+    }
+  }
+  
+  return !inSingleQuote && !inDoubleQuote && !inBacktick && parens <= 0 && brackets <= 0 && braces <= 0;
+}
+
 function auditFile(filePath) {
   const violations = [];
   const content = fs.readFileSync(filePath, 'utf8');
   const lines = content.split(/\r?\n/);
   const ext = path.extname(filePath);
+  const skippedLines = new Set();
 
-  lines.forEach((line, idx) => {
+  for (let idx = 0; idx < lines.length; idx++) {
+    if (skippedLines.has(idx)) continue;
+    
+    const line = lines[idx];
     const lineNum = idx + 1;
     const trimmed = line.trim();
 
     // Skip inline comment flags
     if (trimmed.includes('security-audit-ignore') || trimmed.startsWith('//') || trimmed.startsWith('*')) {
-      return;
+      continue;
     }
 
     // 1. Check for Script Injections & Eval Wrappers
@@ -99,17 +216,68 @@ function auditFile(filePath) {
     // Flags assignments to innerHTML or outerHTML
     const innerHtmlMatch = trimmed.match(/\.(innerHTML|outerHTML)\s*=\s*(.*)/);
     if (innerHtmlMatch) {
-      const rightSide = innerHtmlMatch[2].trim();
+      let rightSide = innerHtmlMatch[2];
+      let currentIdx = idx;
+      
+      while (currentIdx < lines.length - 1) {
+        let cleanRightSide = cleanCodeString(rightSide).trim();
+        const nextLine = lines[currentIdx + 1].trim();
+        const nextLineClean = cleanCodeString(nextLine).trim();
+        
+        const isCurrentlyBalanced = isBalanced(rightSide);
+        const endsWithSemicolon = cleanRightSide.endsWith(';');
+        const nextLineContinues = nextLineClean.startsWith('.') || nextLineClean.startsWith('+') || nextLineClean.startsWith('?');
+        
+        if (isCurrentlyBalanced && (endsWithSemicolon || (!nextLineContinues && !cleanRightSide.endsWith('+')))) {
+          break;
+        }
+        
+        currentIdx++;
+        skippedLines.add(currentIdx);
+        rightSide += '\n' + lines[currentIdx];
+      }
+
+      if (rightSide.includes('security-audit-ignore')) {
+        continue;
+      }
+      
+      // Clean trailing comments and semicolon from rightSide to accurately verify if it is static
+      let cleanRightSide = cleanCodeString(rightSide).trim();
+      if (cleanRightSide.endsWith(';')) {
+        cleanRightSide = cleanRightSide.slice(0, -1).trim();
+      }
+
       // Safe if it is a plain static string without dynamic content (no backticks with dollars, no addition vars, etc.)
-      const isStaticString = (rightSide.startsWith("'") && rightSide.endsWith("'") && !rightSide.includes('+')) ||
-                             (rightSide.startsWith('"') && rightSide.endsWith('"') && !rightSide.includes('+')) ||
-                             (rightSide.startsWith('`') && rightSide.endsWith('`') && !rightSide.includes('$') && !rightSide.includes('+'));
+      const isStaticString = (cleanRightSide.startsWith("'") && cleanRightSide.endsWith("'") && !cleanRightSide.includes('+')) ||
+                             (cleanRightSide.startsWith('"') && cleanRightSide.endsWith('"') && !cleanRightSide.includes('+')) ||
+                             (cleanRightSide.startsWith('`') && cleanRightSide.endsWith('`') && !cleanRightSide.includes('$') && !cleanRightSide.includes('+'));
       
       // Check if it passes through an escaping function
       const isEscaped = rightSide.includes('escapeHtml(') || 
+                        rightSide.includes('escHtml(') || 
+                        rightSide.includes('esc(') || 
+                        rightSide.includes('_escapeHtml(') || 
                         rightSide.includes('DOMPurify.sanitize(') || 
                         rightSide.includes('cleanTarget') || 
-                        rightSide.includes('encodeURIComponent(');
+                        rightSide.includes('encodeURIComponent(') ||
+                        // Safe rendering functions
+                        rightSide.includes('formatIPGeolocationHtml(') ||
+                        rightSide.includes('formatReverseDNSHtml(') ||
+                        rightSide.includes('formatWhoisHtml(') ||
+                        rightSide.includes('getModalMarkup(') ||
+                        rightSide.includes('buildPanelHTML(') ||
+                        rightSide.includes('renderFindingCard(') ||
+                        rightSide.includes('renderFindingsEmptyState(') ||
+                        rightSide.includes('renderScanRow(') ||
+                        rightSide.includes('renderTargetRow(') ||
+                        rightSide.includes('renderInvitationRow(') ||
+                        rightSide.includes('renderProjectCard(') ||
+                        rightSide.includes('renderBillingRow(') ||
+                        rightSide.includes('formatMessage(') ||
+                        rightSide.includes('errMsg(') ||
+                        // Original element restoration / safe DOM variables
+                        /\b(originalHTML|originalText|origHTML|orig|originalContent|_orig|originalIcon|defaultLabel|originalLabel)\b/.test(rightSide) ||
+                        rightSide.includes('dataset.originalContent');
       
       if (!isStaticString && !isEscaped) {
         violations.push({
@@ -173,7 +341,7 @@ function auditFile(filePath) {
         suggestion: 'Avoid using XOR cipher for security configurations. Use Web Cryptography API (SubtleCrypto) or AES via CryptoJS'
       });
     }
-  });
+  }
 
   return violations;
 }

@@ -1453,8 +1453,8 @@ const UIRenderer = {
     } else {
       verdictText.textContent = 'VERDICT: CLEAR/UNVERIFIED';
       verdictText.className = 'text-3xl font-bold tracking-wider text-cyan-400';
-      verdictText.style.textShadow = '0 0 20px rgba(34, 211, 238, 0.4)';
-      verdictCard.style.boxShadow = '0 0 20px rgba(34, 211, 238, 0.4), 0 0 40px rgba(34, 211, 238, 0.15)';
+      verdictText.style.textShadow = 'none';
+      verdictCard.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.4)';
       
       // Show clear icon, hide malicious icon
       if (verdictIconClear) {
@@ -1505,15 +1505,15 @@ const UIRenderer = {
       
       resultsEl.innerHTML = `
         <div class="space-y-3">
-          <div class="text-red-400 font-semibold text-lg">${sourceData.displayText}</div>
-          <button class="view-details-btn cyber-btn-ghost text-xs px-3 py-2 rounded-lg w-full flex items-center justify-center gap-2" data-source="${sourceName}">
+          <div class="text-red-400 font-semibold text-lg">${this.escapeHtml(sourceData.displayText)}</div>
+          <button class="view-details-btn cyber-btn-ghost text-xs px-3 py-2 rounded-lg w-full flex items-center justify-center gap-2" data-source="${this.escapeHtml(sourceName)}">
             <span>View Details</span>
             <svg class="chevron-icon w-4 h-4 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
             </svg>
           </button>
           <div class="source-details hidden bg-black/30 border border-white/10 rounded-lg p-4 mt-3 overflow-y-auto" style="max-height: 300px;">
-            <pre class="text-xs font-mono text-slate-300 whitespace-pre-wrap">${JSON.stringify(sourceData.rawData, null, 2)}</pre>
+            <pre class="text-xs font-mono text-slate-300 whitespace-pre-wrap">${this.escapeHtml(JSON.stringify(sourceData.rawData, null, 2))}</pre>
           </div>
         </div>
       `;
@@ -1530,16 +1530,16 @@ const UIRenderer = {
       
       resultsEl.innerHTML = `
         <div class="space-y-3">
-          <div class="text-green-400 font-semibold text-lg">${sourceData.displayText}</div>
+          <div class="text-green-400 font-semibold text-lg">${this.escapeHtml(sourceData.displayText)}</div>
           ${sourceData.rawData ? `
-            <button class="view-details-btn cyber-btn-ghost text-xs px-3 py-2 rounded-lg w-full flex items-center justify-center gap-2" data-source="${sourceName}">
+            <button class="view-details-btn cyber-btn-ghost text-xs px-3 py-2 rounded-lg w-full flex items-center justify-center gap-2" data-source="${this.escapeHtml(sourceName)}">
               <span>View Details</span>
               <svg class="chevron-icon w-4 h-4 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
               </svg>
             </button>
             <div class="source-details hidden bg-black/30 border border-white/10 rounded-lg p-4 mt-3 overflow-y-auto" style="max-height: 300px;">
-              <pre class="text-xs font-mono text-slate-300 whitespace-pre-wrap">${JSON.stringify(sourceData.rawData, null, 2)}</pre>
+              <pre class="text-xs font-mono text-slate-300 whitespace-pre-wrap">${this.escapeHtml(JSON.stringify(sourceData.rawData, null, 2))}</pre>
             </div>
           ` : ''}
         </div>
@@ -1606,7 +1606,7 @@ const UIRenderer = {
     `;
     
     resultsEl.innerHTML = `
-      <div class="text-red-400 text-sm">${error}</div>
+      <div class="text-red-400 text-sm">${this.escapeHtml(error)}</div>
     `;
   },
   
@@ -1661,7 +1661,7 @@ const UIRenderer = {
     // Render each history item
     history.forEach((item, index) => {
       const historyItem = document.createElement('div');
-      historyItem.className = 'recent-search-item cyber-card p-3 cursor-pointer transition-all duration-200 hover:bg-purple-500/10 hover:border-purple-500/30 flex items-center justify-between';
+      historyItem.className = 'recent-search-item cyber-card p-3 cursor-pointer transition-all duration-200 hover:bg-blue-500/10 hover:border-blue-500/30 flex items-center justify-between';
       historyItem.dataset.index = index;
       
       // Format timestamp to relative time
