@@ -240,28 +240,59 @@ class SettingsPanel {
         }
     }
 
-    saveAllDirtyTabs() {
-        let success = true;
+    async saveAllDirtyTabs() {
+        const results = [];
 
+        // Save each dirty tab independently — do NOT short-circuit so all tabs are saved
         if (this.dirtyRegistry.profile) {
-            success = success && window.ProfileSettings.save();
+            try {
+                const res = window.ProfileSettings.save();
+                results.push(res !== false);
+            } catch (e) {
+                console.error("[SettingsPanel] ProfileSettings.save() threw:", e);
+                results.push(false);
+            }
         }
         if (this.dirtyRegistry.security) {
-            success = success && window.SecuritySettings.savePassword();
+            try {
+                const res = window.SecuritySettings.savePassword();
+                results.push(res !== false);
+            } catch (e) {
+                console.error("[SettingsPanel] SecuritySettings.savePassword() threw:", e);
+                results.push(false);
+            }
         }
         if (this.dirtyRegistry.notifications) {
-            success = success && window.NotificationSettings.save();
+            try {
+                const res = window.NotificationSettings.save();
+                results.push(res !== false);
+            } catch (e) {
+                console.error("[SettingsPanel] NotificationSettings.save() threw:", e);
+                results.push(false);
+            }
         }
         if (this.dirtyRegistry.appearance) {
-            success = success && window.AppearanceSettings.save();
+            try {
+                const res = window.AppearanceSettings.save();
+                results.push(res !== false);
+            } catch (e) {
+                console.error("[SettingsPanel] AppearanceSettings.save() threw:", e);
+                results.push(false);
+            }
         }
         if (this.dirtyRegistry["api-keys"]) {
-            success = success && window.ApiKeysSettings.save();
+            try {
+                // ApiKeysSettings.save() is async — must be awaited
+                const res = await window.ApiKeysSettings.save();
+                results.push(res !== false);
+            } catch (e) {
+                console.error("[SettingsPanel] ApiKeysSettings.save() threw:", e);
+                results.push(false);
+            }
         }
 
-        if (success) {
-            this.updateDirtyBarVisibility();
-        }
+        // Always update dirty bar visibility after all saves
+        this.updateDirtyBarVisibility();
     }
 
     discardAllDirtyTabs() {
