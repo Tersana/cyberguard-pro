@@ -1,0 +1,283 @@
+/* ==========================================================================
+   CyberGuard Premium Black & White Datepicker Styles
+   ========================================================================== */
+
+.cyber-datepicker-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+/* Calendar Container */
+.cyber-datepicker-popup {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    width: 300px;
+    background: rgba(15, 15, 17, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    box-shadow: 
+        0 20px 40px -15px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(255, 255, 255, 0.02),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    padding: 16px;
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+    pointer-events: none;
+    transition: 
+        opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+}
+
+.cyber-datepicker-popup.active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.cyber-datepicker-popup.align-right {
+    left: auto;
+    right: 0;
+}
+
+/* Header Section */
+.cyber-datepicker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.cyber-datepicker-selectors {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cyber-datepicker-select-btn {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.cyber-datepicker-select-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* Nav Buttons (Arrows) */
+.cyber-datepicker-nav-btn {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: #a1a1aa;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cyber-datepicker-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+.cyber-datepicker-nav-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.5;
+}
+
+/* Custom Dropdown Modals inside Picker */
+.cyber-datepicker-dropdown-menu {
+    position: absolute;
+    top: 50px;
+    left: 16px;
+    right: 16px;
+    background: #0f0f11;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 8px;
+    z-index: 10000;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    max-height: 160px;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+/* Scrollbar styling for dropdown menus */
+.cyber-datepicker-dropdown-menu::-webkit-scrollbar {
+    width: 4px;
+}
+.cyber-datepicker-dropdown-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+.cyber-datepicker-dropdown-menu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 99px;
+}
+
+.cyber-datepicker-dropdown-item {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #a1a1aa;
+    text-align: center;
+    padding: 6px 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cyber-datepicker-dropdown-item:hover,
+.cyber-datepicker-dropdown-item.active {
+    background: #ffffff;
+    color: #09090b;
+}
+
+/* Weekdays Row */
+.cyber-datepicker-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.cyber-datepicker-weekday {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #71717a;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 0;
+}
+
+/* Days Grid */
+.cyber-datepicker-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    row-gap: 4px;
+}
+
+.cyber-datepicker-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    color: #e4e4e7;
+    position: relative;
+    border: 1px solid transparent;
+}
+
+.cyber-datepicker-day:hover:not(.empty):not(.disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    transform: scale(1.06);
+    z-index: 2;
+}
+
+/* Selected State (B&W theme) */
+.cyber-datepicker-day.selected {
+    background: #ffffff !important;
+    border-color: #ffffff !important;
+    color: #09090b !important;
+    font-weight: 700;
+    transform: scale(1.06);
+    z-index: 2;
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.3);
+}
+
+/* Today Highlighter Dot */
+.cyber-datepicker-day.today::after {
+    content: "";
+    position: absolute;
+    bottom: 4px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+/* Muted state for adjacent month days */
+.cyber-datepicker-day.other-month {
+    color: #52525b;
+}
+
+.cyber-datepicker-day.empty {
+    cursor: default;
+    pointer-events: none;
+}
+
+/* Disabled State */
+.cyber-datepicker-day.disabled {
+    color: #27272a;
+    text-decoration: line-through;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Footer Section */
+.cyber-datepicker-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.cyber-datepicker-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #a1a1aa;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.cyber-datepicker-btn:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.cyber-datepicker-btn.clear-btn:hover {
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.03);
+}

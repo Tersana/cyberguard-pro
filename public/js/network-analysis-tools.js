@@ -324,7 +324,7 @@
         try {
           const proxyUrl = proxyOptions[i];
           const encodedUrl = encodeURIComponent(targetUrl.toString());
-          logResult(new Date(), "Shodan Scanner", `🔄 Trying CORS proxy ${i + 1}/${proxyOptions.length}...`, "info");
+          logResult(new Date(), "Shodan Scanner", `[TRY] Trying CORS proxy ${i + 1}/${proxyOptions.length}...`, "info");
 
           const response = await fetch(`${proxyUrl}${encodedUrl}`, {
             method: "GET",
@@ -345,11 +345,11 @@
           if (data.error) {
             throw new Error(`Shodan API Error: ${data.error}`);
           }
-          logResult(new Date(), "Shodan Scanner", `✅ Successfully connected via CORS proxy ${i + 1}`, "success");
+          logResult(new Date(), "Shodan Scanner", `[OK] Successfully connected via CORS proxy ${i + 1}`, "success");
           return data;
         } catch (error) {
           if (i === proxyOptions.length - 1) {
-            logResult(new Date(), "Shodan Scanner", `⚠️ All CORS proxies failed, trying JSONP approach...`, "warning");
+            logResult(new Date(), "Shodan Scanner", `[WARN] All CORS proxies failed, trying JSONP approach...`, "warning");
             return await this.makeShodanRequestJSONP(targetUrl);
           }
           continue;
@@ -397,7 +397,7 @@
 
     async getHostInfo(target) {
       try {
-        logResult(new Date(), "Shodan Scanner", `🔍 Querying Shodan for host information: ${target}...`, "info");
+        logResult(new Date(), "Shodan Scanner", `[INFO] Querying Shodan for host information: ${target}...`, "info");
         const hostInfo = await this.makeShodanRequest(`/shodan/host/${target}`);
         return {
           success: true,
@@ -478,7 +478,7 @@
 
       if (!hostResult.success) {
         addActivityLog(`Shodan query failed: ${hostResult.error}`, "Port Scanner");
-        logResult(new Date(), "Shodan Scanner", `❌ [ERROR] Shodan query failed: ${hostResult.error}`, "danger");
+        logResult(new Date(), "Shodan Scanner", `[ERROR] Shodan query failed: ${hostResult.error}`, "danger");
         return;
       }
 
@@ -492,13 +492,13 @@
           const serviceInfo = service.service !== "Unknown" ? ` - ${service.service.toUpperCase()}` : "";
           const versionInfo = service.version !== "Unknown" ? ` (${service.version})` : "";
           const protocolInfo = service.protocol ? ` [${service.protocol.toUpperCase()}]` : "";
-          const vulnInfo = service.vulns.length > 0 ? ` ⚠️ ${service.vulns.length} vulns` : "";
+          const vulnInfo = service.vulns.length > 0 ? ` (WARN: ${service.vulns.length} vulns)` : "";
 
-          logResult(new Date(), "Shodan Scanner", `✅ Port ${service.port} is OPEN${serviceInfo}${versionInfo}${protocolInfo}${vulnInfo}`, "success");
+          logResult(new Date(), "Shodan Scanner", `[OK] Port ${service.port} is OPEN${serviceInfo}${versionInfo}${protocolInfo}${vulnInfo}`, "success");
 
           if (service.banner && service.banner.length > 0) {
             const bannerPreview = service.banner.length > 100 ? service.banner.substring(0, 100) + "..." : service.banner;
-            logResult(new Date(), "Shodan Scanner", `📋 Banner: ${bannerPreview}`, "info");
+            logResult(new Date(), "Shodan Scanner", `[INFO] Banner: ${bannerPreview}`, "info");
           }
         }
       }
@@ -509,7 +509,7 @@
           .map((s) => {
             const serviceInfo = s.service !== "Unknown" ? ` - ${s.service.toUpperCase()}` : "";
             const versionInfo = s.version !== "Unknown" ? ` (${s.version})` : "";
-            const vulnInfo = s.vulns.length > 0 ? ` ⚠️ ${s.vulns.length} vulns` : "";
+            const vulnInfo = s.vulns.length > 0 ? ` (WARN: ${s.vulns.length} vulns)` : "";
             return `${s.port}${serviceInfo}${versionInfo}${vulnInfo}`;
           })
           .join("\n - ");
@@ -521,7 +521,7 @@
         logResult(
           new Date(),
           "Shodan Scanner",
-          `🚨 [SCAN COMPLETE] Network intelligence for ${target}:\n\n🌐 Host Information:\n - IP: ${report.target}\n - Organization: ${orgInfo}\n - ISP: ${report.isp}\n - Location: ${locationInfo}\n - OS: ${report.os}\n - Hostnames: ${report.hostnames.join(", ") || "None"}\n\n🔓 Open Ports & Services:\n - ${portList}\n\n⚠️ Vulnerabilities: ${report.vulnerabilities.length}\n📊 Scan Statistics:\n - Total ports: ${report.totalPorts}\n - Services detected: ${report.services.length}\n - Scan duration: ${report.scanDuration}ms\n - Data freshness: ${report.lastUpdate}`,
+          `[SCAN COMPLETE] Network intelligence for ${target}:\n\nHost Information:\n - IP: ${report.target}\n - Organization: ${orgInfo}\n - ISP: ${report.isp}\n - Location: ${locationInfo}\n - OS: ${report.os}\n - Hostnames: ${report.hostnames.join(", ") || "None"}\n\nOpen Ports & Services:\n - ${portList}\n\nVulnerabilities: ${report.vulnerabilities.length}\nScan Statistics:\n - Total ports: ${report.totalPorts}\n - Services detected: ${report.services.length}\n - Scan duration: ${report.scanDuration}ms\n - Data freshness: ${report.lastUpdate}`,
           "danger",
         );
       } else {
@@ -529,13 +529,13 @@
         logResult(
           new Date(),
           "Shodan Scanner",
-          `✅ [SCAN COMPLETE] No open ports found in Shodan database for ${target}\n\n📊 Scan Statistics:\n - Scan duration: ${report.scanDuration}ms\n - Data source: Shodan database\n - Last update: ${report.lastUpdate}`,
+          `[SCAN COMPLETE] No open ports found in Shodan database for ${target}\n\nScan Statistics:\n - Scan duration: ${report.scanDuration}ms\n - Data source: Shodan database\n - Last update: ${report.lastUpdate}`,
           "success",
         );
       }
     } catch (error) {
       addActivityLog(`Scan failed: ${error.message}`, "Port Scanner");
-      logResult(new Date(), "Shodan Scanner", `❌ [ERROR] Scan failed: ${error.message}`, "danger");
+      logResult(new Date(), "Shodan Scanner", `[ERROR] Scan failed: ${error.message}`, "danger");
     } finally {
       updateStatus("Shodan scan completed");
     }
@@ -655,7 +655,7 @@
       const vulnsEl = document.createElement("div");
       vulnsEl.className = "shodan-vulns";
       vulnsEl.innerHTML =
-        `<div class="section-label danger-label">⚠ Known Vulnerabilities (${data.vulns.length})</div>` +
+        `<div class="section-label danger-label">[WARN] Known Vulnerabilities (${data.vulns.length})</div>` +
         `<div class="vulns-list">${data.vulns
           .map(
             (cve) =>
@@ -678,6 +678,87 @@
     injectShodanPanel(panel);
   }
 
+  async function scanWithShodanInternetDB(target) {
+    let ip = target.trim();
+    if (ip.startsWith("http://") || ip.startsWith("https://")) {
+      try {
+        ip = new URL(ip).hostname;
+      } catch (_) {}
+    }
+
+    if (!isValidIP(ip)) {
+      appendActivityEvent({
+        type: "system",
+        scanner: "TCP SCAN",
+        message: `Resolving ${ip}...`,
+      });
+      const resolved = await resolveDomainToIP(ip);
+      if (!resolved) {
+        return {
+          error: true,
+          message: `Could not resolve "${ip}" to an IP address. Try entering an IP directly.`,
+        };
+      }
+      appendActivityEvent({
+        type: "info",
+        scanner: "TCP SCAN",
+        message: `Resolved: ${ip} -> ${resolved}`,
+      });
+      ip = resolved;
+    }
+
+    try {
+      updateStatus(`Querying Shodan InternetDB for ${ip}...`);
+      const response = await fetch(`https://internetdb.shodan.io/${ip}`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+
+      if (response.status === 404) {
+        return {
+          error: false,
+          ip,
+          ports: [],
+          hostnames: [],
+          tags: [],
+          vulns: [],
+          cpes: [],
+          message: "No information available for this IP in Shodan database.",
+        };
+      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const data = await response.json();
+
+      if (data.detail) {
+        return {
+          error: false,
+          ip,
+          ports: [],
+          hostnames: [],
+          tags: [],
+          vulns: [],
+          cpes: [],
+          message: data.detail,
+        };
+      }
+
+      return {
+        error: false,
+        ip,
+        ports: data.ports || [],
+        hostnames: data.hostnames || [],
+        tags: data.tags || [],
+        cpes: data.cpes || [],
+        vulns: data.vulns || [],
+        source: "Shodan InternetDB",
+      };
+    } catch (err) {
+      console.error("[Shodan InternetDB]", err);
+      return { error: true, message: `Shodan lookup failed: ${err.message}` };
+    }
+  }
+
   async function realTcpPortScan(target) {
     document.getElementById("tcp-scan-results")?.remove();
     setTCPScanState("scanning", target);
@@ -685,10 +766,45 @@
     appendActivityEvent({
       type: "system",
       scanner: "TCP SCAN",
-      message: `Querying Shodan InternetDB for ${target}`,
+      message: `Initiating TCP connectivity scan for ${target}`,
     });
 
-    const result = await scanWithShodanInternetDB(target);
+    let scanSuccess = false;
+    let result = null;
+
+    try {
+      updateStatus("Probing TCP ports via backend scanner...");
+      const response = await fetch(`/api/scan/tcp-connect?host=${encodeURIComponent(target)}&ports=21,22,23,25,53,80,110,143,443,445,1433,3306,3389,8080`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.results && Array.isArray(data.results)) {
+          scanSuccess = true;
+          const openPorts = data.results.filter(r => r.status === 'open').map(r => r.port);
+          result = {
+            error: false,
+            ip: data.host,
+            ports: openPorts,
+            hostnames: [],
+            tags: [],
+            cpes: [],
+            vulns: [],
+            source: "Live TCP Scan",
+            details: data.results
+          };
+        }
+      }
+    } catch (err) {
+      console.warn("Backend TCP scanner unavailable or failed:", err.message);
+    }
+
+    if (!scanSuccess) {
+      appendActivityEvent({
+        type: "system",
+        scanner: "TCP SCAN",
+        message: "Backend scan unavailable. Querying Shodan InternetDB cache...",
+      });
+      result = await scanWithShodanInternetDB(target);
+    }
 
     if (result.error) {
       appendActivityEvent({
@@ -706,22 +822,31 @@
         type: "success",
         scanner: "TCP SCAN",
         message: `Found ${result.ports.length} open port${result.ports.length !== 1 ? "s" : ""}`,
-        detail: result.ports.slice(0, 10).join(", ") + (result.ports.length > 10 ? "…" : ""),
+        detail: result.ports.slice(0, 10).join(", ") + (result.ports.length > 10 ? "..." : ""),
       });
       result.ports.forEach((port) => {
         const service = getServiceName(port);
         const risk = getPortRisk(port);
         const aType = risk === "high" ? "error" : risk === "medium" ? "warning" : "info";
+        
+        let detailText = service;
+        if (result.source === "Live TCP Scan" && result.details) {
+          const detail = result.details.find(d => d.port === port);
+          if (detail) {
+            detailText += ` (Latency: ${detail.latency}ms)`;
+          }
+        }
+
         appendActivityEvent({
           type: aType,
           scanner: "TCP SCAN",
           message: `Port ${port} OPEN`,
-          detail: service,
+          detail: detailText,
         });
-        logResult(new Date(), "TCP Port Scan", `Port ${port} is OPEN - ${service}`, "success");
+        logResult(new Date(), "TCP Port Scan", `Port ${port} is OPEN - ${detailText}`, "success");
       });
     } else {
-      const msg = result.message || "No open ports found in Shodan database.";
+      const msg = result.message || "No open ports found on target.";
       appendActivityEvent({ type: "info", scanner: "TCP SCAN", message: msg });
       logResult(new Date(), "TCP Port Scan", msg, "info");
     }
@@ -732,13 +857,13 @@
       appendActivityEvent({
         type: "error",
         scanner: "TCP SCAN",
-        message: `${result.vulns.length} known CVE${result.vulns.length !== 1 ? "s" : ""} found`,
+        message: `${result.vulns.length} known CVEs found`,
         detail: topCves + more,
       });
       logResult(
         new Date(),
         "TCP Port Scan",
-        `⚠ ${result.vulns.length} known CVE${result.vulns.length !== 1 ? "s" : ""}: ${topCves}${more}`,
+        `[WARN] ${result.vulns.length} known CVEs: ${topCves}${more}`,
         "danger",
       );
     }
@@ -747,7 +872,7 @@
       appendActivityEvent({
         type: "info",
         scanner: "TCP SCAN",
-        message: `${result.hostnames.length} hostname${result.hostnames.length !== 1 ? "s" : ""} resolved`,
+        message: `${result.hostnames.length} hostnames resolved`,
         detail: result.hostnames.slice(0, 2).join(", "),
       });
     }
@@ -757,156 +882,196 @@
 
   // ===== 3. UDP SERVICES =====
   async function realUdpConnectivityTest(target) {
-    logResult(new Date(), "UDP Port Scan", `📡 Starting REAL UDP-based service connectivity test of ${target}...`);
+    logResult(new Date(), "UDP Port Scan", `[SCAN] Starting UDP-based service connectivity test of ${target}...`);
     logResult(
       new Date(),
       "UDP Port Scan",
-      `⚠️ Note: Browsers cannot directly test UDP ports. Testing UDP-based services via available APIs.`,
+      `[INFO] Note: Browser fallback queries external public servers, while backend scans test the target directly.`,
       "info",
     );
 
     try {
       showProgressBar();
-      updateStatus("Initializing real UDP service test...");
+      updateStatus("Initializing UDP service test...");
 
       let hostname = target;
       if (target.startsWith("http://") || target.startsWith("https://")) {
         hostname = new URL(target).hostname;
       }
 
-      logResult(new Date(), "UDP Port Scan", `📡 Testing UDP-based services on ${hostname}...`, "info");
+      logResult(new Date(), "UDP Port Scan", `[SCAN] Testing UDP-based services on ${hostname}...`, "info");
 
       const testedServices = [];
       const workingServices = [];
       const failedServices = [];
+      let scanSuccess = false;
 
-      // Test DNS
-      updateStatus("Testing DNS service (UDP 53)...");
       try {
-        const startTime = Date.now();
-        const dnsTest = await fetch(`https://dns.google/resolve?name=${hostname}&type=A`, {
-          method: "GET",
-          headers: { Accept: "application/dns-json" },
-        });
-
-        const responseTime = Date.now() - startTime;
-        const dnsData = await dnsTest.json();
-
-        if (dnsData.Status === 0 && dnsData.Answer) {
-          workingServices.push({
-            port: 53,
-            service: "DNS",
-            protocol: "UDP",
-            responseTime,
-            status: "DNS Resolution Working",
-            details: `Resolved to ${dnsData.Answer.map((a) => a.data).join(", ")}`,
-          });
-          logResult(new Date(), "UDP Port Scan", `✅ DNS (UDP 53) - Service responding (${responseTime}ms)`, "success");
-        } else {
-          failedServices.push({ port: 53, service: "DNS", error: "DNS resolution failed" });
-          logResult(new Date(), "UDP Port Scan", `❌ DNS (UDP 53) - Service not responding`, "info");
+        updateStatus("Probing UDP ports via backend scanner...");
+        const response = await fetch(`/api/scan/udp-probe?host=${encodeURIComponent(hostname)}&ports=53,123,1900,5353`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.results && Array.isArray(data.results)) {
+            scanSuccess = true;
+            data.results.forEach(res => {
+              const serviceMap = { 53: "DNS", 123: "NTP", 1900: "SSDP", 5353: "mDNS" };
+              const serviceName = serviceMap[res.port] || `Port ${res.port}`;
+              testedServices.push({ port: res.port, service: serviceName, tested: true });
+              if (res.status === 'open') {
+                workingServices.push({
+                  port: res.port,
+                  service: serviceName,
+                  protocol: "UDP",
+                  responseTime: res.latency,
+                  status: "Service Responding",
+                  details: `Live UDP reply received in ${res.latency}ms`
+                });
+                logResult(new Date(), "UDP Port Scan", `[OK] ${serviceName} (UDP ${res.port}) - Service responding (${res.latency}ms)`, "success");
+              } else {
+                failedServices.push({
+                  port: res.port,
+                  service: serviceName,
+                  error: "Port closed or connection filtered"
+                });
+                logResult(new Date(), "UDP Port Scan", `[FAIL] ${serviceName} (UDP ${res.port}) - Service not responding`, "info");
+              }
+            });
+          }
         }
-        testedServices.push({ port: 53, service: "DNS", tested: true });
-      } catch (error) {
-        failedServices.push({ port: 53, service: "DNS", error: error.message });
-        logResult(new Date(), "UDP Port Scan", `❌ DNS (UDP 53) - Test failed: ${error.message}`, "info");
-        testedServices.push({ port: 53, service: "DNS", tested: true });
+      } catch (err) {
+        console.warn("Backend UDP scanner unavailable or failed:", err.message);
       }
 
-      await new Promise((r) => setTimeout(r, 500));
+      if (!scanSuccess) {
+        logResult(new Date(), "UDP Port Scan", `[INFO] Backend UDP scanner unavailable. Falling back to browser-compatible HTTP checks...`, "info");
 
-      // Test NTP
-      updateStatus("Testing NTP service (UDP 123)...");
-      try {
-        const startTime = Date.now();
-        const ntpTest = await fetch(`https://worldtimeapi.org/api/timezone/Etc/UTC`, {
-          method: "GET",
-          signal: AbortSignal.timeout(5000),
-        });
-
-        const responseTime = Date.now() - startTime;
-
-        if (ntpTest.ok) {
-          const timeData = await ntpTest.json();
-          workingServices.push({
-            port: 123,
-            service: "NTP/Time",
-            protocol: "UDP",
-            responseTime,
-            status: "Time Service Available",
-            details: `Current time: ${timeData.datetime}`,
+        // Test DNS
+        updateStatus("Testing DNS service (UDP 53)...");
+        try {
+          const startTime = Date.now();
+          const dnsTest = await fetch(`https://dns.google/resolve?name=${hostname}&type=A`, {
+            method: "GET",
+            headers: { Accept: "application/dns-json" },
           });
-          logResult(new Date(), "UDP Port Scan", `✅ NTP/Time (UDP 123) - Time service responding (${responseTime}ms)`, "success");
-        } else {
-          failedServices.push({ port: 123, service: "NTP", error: "Time service unavailable" });
-          logResult(new Date(), "UDP Port Scan", `❌ NTP (UDP 123) - Time service not available`, "info");
+
+          const responseTime = Date.now() - startTime;
+          const dnsData = await dnsTest.json();
+
+          if (dnsData.Status === 0 && dnsData.Answer) {
+            workingServices.push({
+              port: 53,
+              service: "DNS",
+              protocol: "UDP",
+              responseTime,
+              status: "DNS Resolution Working",
+              details: `Resolved to ${dnsData.Answer.map((a) => a.data).join(", ")}`,
+            });
+            logResult(new Date(), "UDP Port Scan", `[OK] DNS (UDP 53) - Service responding (${responseTime}ms)`, "success");
+          } else {
+            failedServices.push({ port: 53, service: "DNS", error: "DNS resolution failed" });
+            logResult(new Date(), "UDP Port Scan", `[FAIL] DNS (UDP 53) - Service not responding`, "info");
+          }
+          testedServices.push({ port: 53, service: "DNS", tested: true });
+        } catch (error) {
+          failedServices.push({ port: 53, service: "DNS", error: error.message });
+          logResult(new Date(), "UDP Port Scan", `[FAIL] DNS (UDP 53) - Test failed: ${error.message}`, "info");
+          testedServices.push({ port: 53, service: "DNS", tested: true });
         }
-        testedServices.push({ port: 123, service: "NTP", tested: true });
-      } catch (error) {
-        failedServices.push({ port: 123, service: "NTP", error: error.message });
-        logResult(new Date(), "UDP Port Scan", `❌ NTP (UDP 123) - Test failed: ${error.message}`, "info");
-        testedServices.push({ port: 123, service: "NTP", tested: true });
-      }
 
-      await new Promise((r) => setTimeout(r, 500));
+        await new Promise((r) => setTimeout(r, 500));
 
-      // Test DHCP Indicator
-      updateStatus("Testing DHCP service indicators...");
-      try {
-        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-        if (connection) {
+        // Test NTP
+        updateStatus("Testing NTP service (UDP 123)...");
+        try {
+          const startTime = Date.now();
+          const ntpTest = await fetch(`https://worldtimeapi.org/api/timezone/Etc/UTC`, {
+            method: "GET",
+            signal: AbortSignal.timeout(5000),
+          });
+
+          const responseTime = Date.now() - startTime;
+
+          if (ntpTest.ok) {
+            const timeData = await ntpTest.json();
+            workingServices.push({
+              port: 123,
+              service: "NTP/Time",
+              protocol: "UDP",
+              responseTime,
+              status: "Time Service Available",
+              details: `Current time: ${timeData.datetime}`,
+            });
+            logResult(new Date(), "UDP Port Scan", `[OK] NTP/Time (UDP 123) - Time service responding (${responseTime}ms)`, "success");
+          } else {
+            failedServices.push({ port: 123, service: "NTP", error: "Time service unavailable" });
+            logResult(new Date(), "UDP Port Scan", `[FAIL] NTP (UDP 123) - Time service not available`, "info");
+          }
+          testedServices.push({ port: 123, service: "NTP", tested: true });
+        } catch (error) {
+          failedServices.push({ port: 123, service: "NTP", error: error.message });
+          logResult(new Date(), "UDP Port Scan", `[FAIL] NTP (UDP 123) - Test failed: ${error.message}`, "info");
+          testedServices.push({ port: 123, service: "NTP", tested: true });
+        }
+
+        await new Promise((r) => setTimeout(r, 500));
+
+        // Test DHCP Indicator
+        updateStatus("Testing DHCP service indicators...");
+        try {
+          const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+          if (connection) {
+            workingServices.push({
+              port: 67,
+              service: "DHCP",
+              protocol: "UDP",
+              responseTime: "N/A",
+              status: "Network Connection Active",
+              details: `Type: ${connection.effectiveType || "unknown"}, Downlink: ${connection.downlink || "unknown"}Mbps`,
+            });
+            logResult(new Date(), "UDP Port Scan", `[OK] DHCP (UDP 67/68) - Network connection indicates DHCP usage`, "success");
+          } else {
+            logResult(new Date(), "UDP Port Scan", `[INFO] DHCP (UDP 67/68) - Network connection info unavailable`, "info");
+          }
+          testedServices.push({ port: 67, service: "DHCP", tested: true });
+        } catch (error) {
+          logResult(new Date(), "UDP Port Scan", `[FAIL] DHCP (UDP 67/68) - Test failed: ${error.message}`, "info");
+          testedServices.push({ port: 67, service: "DHCP", tested: true });
+        }
+
+        await new Promise((r) => setTimeout(r, 500));
+
+        // Test mDNS/Bonjour
+        updateStatus("Testing mDNS/Bonjour service...");
+        try {
+          const mdnsTest = await fetch(`http://${hostname}.local`, {
+            method: "HEAD",
+            mode: "no-cors",
+            signal: AbortSignal.timeout(3000),
+          });
+
           workingServices.push({
-            port: 67,
-            service: "DHCP",
+            port: 5353,
+            service: "mDNS",
             protocol: "UDP",
             responseTime: "N/A",
-            status: "Network Connection Active",
-            details: `Type: ${connection.effectiveType || "unknown"}, Downlink: ${connection.downlink || "unknown"}Mbps`,
+            status: "Local network discovery possible",
+            details: "mDNS/.local domain accessible",
           });
-          logResult(new Date(), "UDP Port Scan", `✅ DHCP (UDP 67/68) - Network connection indicates DHCP usage`, "success");
-        } else {
-          logResult(new Date(), "UDP Port Scan", `ℹ️ DHCP (UDP 67/68) - Network connection info unavailable`, "info");
+          logResult(new Date(), "UDP Port Scan", `[OK] mDNS (UDP 5353) - Local network discovery working`, "success");
+        } catch (error) {
+          failedServices.push({ port: 5353, service: "mDNS", error: "Local discovery not available" });
+          logResult(new Date(), "UDP Port Scan", `[FAIL] mDNS (UDP 5353) - Local network discovery failed`, "info");
         }
-        testedServices.push({ port: 67, service: "DHCP", tested: true });
-      } catch (error) {
-        logResult(new Date(), "UDP Port Scan", `❌ DHCP (UDP 67/68) - Test failed: ${error.message}`, "info");
-        testedServices.push({ port: 67, service: "DHCP", tested: true });
+        testedServices.push({ port: 5353, service: "mDNS", tested: true });
       }
 
-      await new Promise((r) => setTimeout(r, 500));
-
-      // Test mDNS/Bonjour
-      updateStatus("Testing mDNS/Bonjour service...");
-      try {
-        const mdnsTest = await fetch(`http://${hostname}.local`, {
-          method: "HEAD",
-          mode: "no-cors",
-          signal: AbortSignal.timeout(3000),
-        });
-
-        workingServices.push({
-          port: 5353,
-          service: "mDNS",
-          protocol: "UDP",
-          responseTime: "N/A",
-          status: "Local network discovery possible",
-          details: "mDNS/.local domain accessible",
-        });
-        logResult(new Date(), "UDP Port Scan", `✅ mDNS (UDP 5353) - Local network discovery working`, "success");
-      } catch (error) {
-        failedServices.push({ port: 5353, service: "mDNS", error: "Local discovery not available" });
-        logResult(new Date(), "UDP Port Scan", `❌ mDNS (UDP 5353) - Local network discovery failed`, "info");
-      }
-      testedServices.push({ port: 5353, service: "mDNS", tested: true });
-
-      // Generate report
       updateStatus("Generating UDP service report...");
       await new Promise((r) => setTimeout(r, 300));
 
       const scanReport = [
-        `📡 REAL UDP Service Connectivity Test Results for ${hostname}`,
+        `[SCAN REPORT] UDP Service Connectivity Test Results for ${hostname}`,
         `Test completed at ${new Date().toLocaleString()}`,
-        `Method: Browser APIs + Public Service Tests`,
+        `Method: ${scanSuccess ? 'Backend Socket Probes' : 'Browser APIs + Public Service Tests'}`,
         ``,
         `WORKING UDP SERVICES:`,
       ];
@@ -920,11 +1085,11 @@
             `${service.port.toString().padEnd(7)} ${service.service.padEnd(10)} ${service.protocol.padEnd(11)} ${response.padEnd(11)} ${service.status}`,
           );
           if (service.details) {
-            scanReport.push(`        Details: ${service.details}`);
+            scanReport.push("        Details: " + service.details);
           }
         });
       } else {
-        scanReport.push(`No UDP services detected with available browser methods`);
+        scanReport.push(`No UDP services detected on target`);
       }
 
       if (failedServices.length > 0) {
@@ -937,28 +1102,27 @@
 
       scanReport.push(``);
       scanReport.push(`UDP TESTING LIMITATIONS IN BROWSERS:`);
-      scanReport.push(`• Cannot create raw UDP sockets`);
-      scanReport.push(`• Can only test via HTTP APIs and indirect methods`);
-      scanReport.push(`• DNS, NTP, and network info are testable`);
-      scanReport.push(`• Direct UDP port scanning requires native tools`);
-      scanReport.push(`• Results indicate service availability, not port status`);
+      scanReport.push(`- Browsers cannot create raw UDP sockets directly`);
+      scanReport.push(`- Fallback mode queries public APIs and network properties`);
+      scanReport.push(`- Direct UDP port scanning requires backend connection`);
+      scanReport.push(`- Results indicate service response, not raw port open status`);
 
       scanReport.push(``);
-      scanReport.push(`REAL SERVICE TEST SUMMARY:`);
+      scanReport.push(`SERVICE TEST SUMMARY:`);
       scanReport.push(`Total services tested: ${testedServices.length}`);
       scanReport.push(`Working services: ${workingServices.length}`);
       scanReport.push(`Failed/Unavailable: ${failedServices.length}`);
-      scanReport.push(`Method: Real API calls and browser capabilities`);
+      scanReport.push(`Method: ${scanSuccess ? 'Backend Socket Probes' : 'Browser APIs + Public Service Tests'}`);
 
       hideProgressBar();
-      updateStatus("Real UDP service test completed");
+      updateStatus("UDP service test completed");
 
       const status = workingServices.length > 0 ? "success" : "info";
       logResult(new Date(), "UDP Port Scan", scanReport.join("\n"), status);
     } catch (error) {
       hideProgressBar();
-      updateStatus("Real UDP service test failed");
-      logResult(new Date(), "UDP Port Scan", `❌ [ERROR] Real UDP service test failed: ${error.message}`, "danger");
+      updateStatus("UDP service test failed");
+      logResult(new Date(), "UDP Port Scan", `[FAIL] [ERROR] UDP service test failed: ${error.message}`, "danger");
     }
   }
 
