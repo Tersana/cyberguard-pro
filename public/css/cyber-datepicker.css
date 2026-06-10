@@ -11,7 +11,7 @@
 /* Calendar Container */
 .cyber-datepicker-popup {
     position: absolute;
-    bottom: calc(100% + 8px);
+    top: calc(100% + 8px);
     left: 0;
     width: 300px;
     background: rgba(15, 15, 17, 0.95);
@@ -28,7 +28,7 @@
     padding: 16px;
     z-index: 9999;
     opacity: 0;
-    transform: translateY(-10px) scale(0.98);
+    transform: translateY(10px) scale(0.98);
     pointer-events: none;
     transition: 
         opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
@@ -280,4 +280,11 @@
     border-color: rgba(239, 68, 68, 0.3);
     color: #f87171;
     background: rgba(239, 68, 68, 0.03);
+}
+
+/* Prevent overflow clipping in settings and form containers for datepicker */
+#tab-settings,
+#settings-form,
+#settings-form .cyber-card {
+    overflow: visible !important;
 }
