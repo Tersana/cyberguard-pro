@@ -1,5 +1,5 @@
 /**
- * CyberGuard Pro Data Normalizer Utility
+ * CyberGuard Data Normalizer Utility
  * Handles backend data inconsistencies and provides consistent data structures
  * 
  * Validates: Requirements 2.2, 13.1, 13.2, 13.3, 13.4, 13.5

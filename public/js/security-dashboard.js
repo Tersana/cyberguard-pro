@@ -1,5 +1,5 @@
 /**
- * Security Dashboard Controller — CyberGuard Pro
+ * Security Dashboard Controller — CyberGuard
  * 
  * Manages parallel API fetches across all projects, aggregates targets and scans,
  * processes finding severities, renders high-fidelity custom circular gauges and conic-gradient doughnut charts,

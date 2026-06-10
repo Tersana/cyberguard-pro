@@ -1,7 +1,7 @@
 /**
  * Result Item Data Structure for Professional Security Reports View
  * 
- * This module defines the schema for result objects used in the CyberGuard Pro
+ * This module defines the schema for result objects used in the CyberGuard
  * professional security reports view. It extends the existing results array structure
  * with additional fields for enhanced reporting capabilities.
  * 

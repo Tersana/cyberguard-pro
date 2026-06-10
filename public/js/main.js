@@ -13652,7 +13652,7 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("cg_ai_temp", "0.7");
   }
 
-  const SYSTEM_PROMPT = `You are CyberGuard Pro AI, a premium, elite cybersecurity copilot built directly into the CyberGuard Security Dashboard.
+  const SYSTEM_PROMPT = `You are CyberGuard AI, a premium, elite cybersecurity copilot built directly into the CyberGuard Security Dashboard.
 Your primary role is to help security engineers, developers, and administrators understand and operate the dashboard's tools:
 - Security Dashboard: Main telemetry, charts, and metrics overview.
 - OSINT (Passive Recon): Subdomain Finder, DNS Record Lookup, Wayback Machine, Username OSINT, Email Format Guesser, IP Intelligence.
@@ -14127,7 +14127,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
         </span>
-        <h4>CyberGuard Pro AI Copilot</h4>
+        <h4>CyberGuard AI Copilot</h4>
         <p>Ask me cybersecurity questions, explain dashboard results, or command me to control your tools! Try checking out these presets below or open settings to hook your keys.</p>
       </div>`;
   }
@@ -14492,7 +14492,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
         "HTTP-Referer": window.location.href,
-        "X-Title": "CyberGuard Pro"
+        "X-Title": "CyberGuard"
       },
       body
     });
@@ -14937,7 +14937,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
     if (/\b(what tools|available tools|tools available|list tools|all tools|tabs)\b/.test(q)) {
       return `### Available Dashboard Modules & Capabilities
 
-The **CyberGuard Pro Security Dashboard** organizes its elite security suites into 8 dedicated, highly integrated modules/tabs:
+The **CyberGuard Security Dashboard** organizes its elite security suites into 8 dedicated, highly integrated modules/tabs:
 
 1. **Security Dashboard**: General security posture overview, active scans telemetry, and threat metric tracking.
 2. **OSINT**: Contains 6 passive recon tools: Subdomain Finder, DNS Lookup, Wayback Machine, Username OSINT, Email Format Guesser, and IP Intelligence.
@@ -14953,7 +14953,7 @@ You can switch to any of these tabs directly or tell me what scan you'd like to 
 
     // Who are you / identity
     if (/\b(who are you|your name|what are you|who's this|identity)\b/.test(q)) {
-      return `I am the **CyberGuard Pro AI Copilot**, your elite cybersecurity assistant and dashboard co-pilot. In offline mode, I operate locally using interactive security wizards (Phishing URL audits, Password strength ratings, and Port hardening guidelines) and autopilot controls to help you navigate your dashboard. Enter an OpenRouter key in the settings drawer (top-right gear icon) to unlock my full AI-powered reasoning capabilities!`;
+      return `I am the **CyberGuard AI Copilot**, your elite cybersecurity assistant and dashboard co-pilot. In offline mode, I operate locally using interactive security wizards (Phishing URL audits, Password strength ratings, and Port hardening guidelines) and autopilot controls to help you navigate your dashboard. Enter an OpenRouter key in the settings drawer (top-right gear icon) to unlock my full AI-powered reasoning capabilities!`;
     }
 
     // OWASP Top 10
@@ -14973,7 +14973,7 @@ Their most famous resource is the **OWASP Top 10**, a regularly updated report o
 9. **Security Logging and Monitoring Failures** – Active attacks occurring unlogged.
 10. **Server-Side Request Forgery (SSRF)** – Web app fetching remote resources without validation.
 
-You can use CyberGuard Pro's **Web Auditing** suite to scan targets and detect several OWASP Top 10 vulnerabilities (like SSL/TLS misconfigurations)!`;
+You can use CyberGuard's **Web Auditing** suite to scan targets and detect several OWASP Top 10 vulnerabilities (like SSL/TLS misconfigurations)!`;
     }
 
     // Cybersecurity
@@ -15045,7 +15045,7 @@ Launch our interactive local **Password Strength Solver Wizard** by asking for i
 
     // Default Keyword Fallback
     if (/\b(hello|hi|hey|greet)\b/.test(q)) {
-      return `Hello! I'm the CyberGuard Pro AI assistant. I can operate your dashboard via Autopilot commands! Try asking me:
+      return `Hello! I'm the CyberGuard AI assistant. I can operate your dashboard via Autopilot commands! Try asking me:
 - *"Switch to the JWT Debugger tab"*
 - *"Run a subdomain scan on google.com"*
 - *"Run a threat intel lookup on 8.8.8.8"*

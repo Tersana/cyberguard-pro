@@ -1,5 +1,5 @@
 /**
- * CyberGuard Pro — Google OAuth Authentication Handler
+ * CyberGuard — Google OAuth Authentication Handler
  *
  * Extracted from AuthManager following SOLID principles:
  *   - Single Responsibility: Only handles Google OAuth (redirect + callback)
