@@ -1150,9 +1150,9 @@ class ProjectManager {
       if (f("edit-project-status"))
         f("edit-project-status").value = project.status || "active";
       if (f("edit-project-start-date"))
-        f("edit-project-start-date").value = project.start_date || "";
+        f("edit-project-start-date").value = project.start_date ? project.start_date.split("T")[0] : "";
       if (f("edit-project-end-date"))
-        f("edit-project-end-date").value = project.end_date || "";
+        f("edit-project-end-date").value = project.end_date ? project.end_date.split("T")[0] : "";
 
       this.clearEditFormErrors();
       await this.loadCollaborators(projectId);
@@ -1730,6 +1730,18 @@ if (typeof window !== "undefined") {
   function _setupProjectManagerListeners() {
     if (!window.projectManager) return;
     const pm = window.projectManager;
+
+    // Initialize custom date pickers
+    if (typeof window.CyberDatePicker !== "undefined") {
+      const initDate = (id) => {
+        const el = document.getElementById(id);
+        if (el) new window.CyberDatePicker(el);
+      };
+      initDate("project-start-date");
+      initDate("project-end-date");
+      initDate("edit-project-start-date");
+      initDate("edit-project-end-date");
+    }
 
     // ── Create modal ────────────────────────────────────────────────────────
     document

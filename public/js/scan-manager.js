@@ -35,7 +35,8 @@
                <path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788 3.807-3.808 9.98-3.808 13.788 0 3.808 3.807 3.808 9.98 0 13.788-3.807 3.808-9.98 3.808-13.788 0Z" />
              </svg>`,
       category: 'NETWORK ANALYSIS',
-      isFrontend: true
+      isFrontend: true,
+      supportedTypes: ['domain', 'ip']
     },
     {
       id: 'net-tcp-connectivity',
@@ -47,7 +48,8 @@
                <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
              </svg>`,
       category: 'NETWORK ANALYSIS',
-      isFrontend: true
+      isFrontend: true,
+      supportedTypes: ['domain', 'ip']
     },
     {
       id: 'net-udp-services',
@@ -59,7 +61,8 @@
                <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z" />
              </svg>`,
       category: 'NETWORK ANALYSIS',
-      isFrontend: true
+      isFrontend: true,
+      supportedTypes: ['domain', 'ip']
     },
     {
       id: 'net-ip-geolocation',
@@ -72,7 +75,8 @@
                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12c0 5.385 4.365 9.75 9.75 9.75s9.75-4.365 9.75-9.75S17.385 2.25 12 2.25 2.25 6.615 2.25 12Z" />
              </svg>`,
       category: 'NETWORK ANALYSIS',
-      isFrontend: true
+      isFrontend: true,
+      supportedTypes: ['ip']
     },
     {
       id: 'net-reverse-dns',
@@ -84,7 +88,8 @@
                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m-4.991 4.992" />
              </svg>`,
       category: 'NETWORK ANALYSIS',
-      isFrontend: true
+      isFrontend: true,
+      supportedTypes: ['domain', 'ip']
     },
     {
       id: 'net-whois-lookup',
@@ -96,7 +101,8 @@
                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
              </svg>`,
       category: 'NETWORK ANALYSIS',
-      isFrontend: true
+      isFrontend: true,
+      supportedTypes: ['domain', 'ip']
     }
   ];
 
@@ -234,17 +240,69 @@
     };
   }
 
+  function isScannerCompatible(s, targetType) {
+    if (!targetType) return true;
+    const type = targetType.toLowerCase();
+
+    // Check if the scanner object itself defines supported types (future proofing)
+    const supported = s.supported_types || s.supportedTypes || s.target_types || s.targetTypes;
+    if (Array.isArray(supported)) {
+      const normalizedSupported = supported.map(t => String(t).toLowerCase());
+      if (type === "network" && (normalizedSupported.includes("network") || normalizedSupported.includes("cidr"))) {
+        return true;
+      }
+      return normalizedSupported.includes(type);
+    }
+
+    const id = (s.id || "").toLowerCase();
+    const name = (s.name || "").toLowerCase();
+
+    // Subdomain Enum
+    if (id.includes("subdomain") || name.includes("subdomain")) {
+      return type === "domain";
+    }
+
+    // SQLi Testing / SQL Injection Scanner
+    if (id.includes("sqli") || name.includes("sqli") || id.includes("sql-injection") || name.includes("sql injection")) {
+      return type === "domain" || type === "ip";
+    }
+
+    // Web Endpoint Fuzzer & Classifier
+    if (id.includes("fuzzer") || name.includes("fuzzer") || id.includes("fuzz") || name.includes("fuzz")) {
+      return type === "domain" || type === "ip";
+    }
+
+    // Host Operating System Fingerprinting
+    if (id.includes("fingerprint") || name.includes("fingerprint") || id.includes("os") || name.includes("os") || id.includes("nmap") || name.includes("nmap")) {
+      return type === "domain" || type === "ip" || type === "network";
+    }
+
+    // Fallback default: support domain & IP, not Network (CIDR) unless explicitly identified
+    return type === "domain" || type === "ip";
+  }
+
   function renderScannerList() {
     const bodyEl = document.getElementById("scan-modal-scanner-body");
     if (!bodyEl) return;
 
-    if (_scanners.length === 0) {
-      bodyEl.innerHTML = `<p class="text-sm text-slate-400 text-center py-8">No scanners available.</p>`;
+    // Filter compatible backend scanners
+    const compatibleScanners = _scanners.filter(s => isScannerCompatible(s, scanState.targetType));
+
+    // Filter compatible network (frontend) tools
+    const compatibleNetworkTools = NETWORK_ANALYSIS_TOOLS.filter(tool => {
+      if (Array.isArray(tool.supportedTypes)) {
+        return tool.supportedTypes.includes(scanState.targetType);
+      }
+      return scanState.targetType === "domain" || scanState.targetType === "ip";
+    });
+
+    if (compatibleScanners.length === 0 && compatibleNetworkTools.length === 0) {
+      bodyEl.innerHTML = `<p class="text-sm text-slate-400 text-center py-8">No scanners available for target type "${escHtml(scanState.targetType)}".</p>`;
       return;
     }
 
     const groups = {};
-    _scanners.forEach((s) => {
+    compatibleScanners.forEach((s) => {
       const cat = (s.category || "other").toLowerCase();
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(s);
@@ -268,23 +326,25 @@
         </div>`;
     }
 
-    // Render Network Analysis section
-    html += `
-      <div class="mb-8" data-scan-group="network-analysis">
-        <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
-          <span class="text-xs font-bold uppercase tracking-widest text-[var(--cg-accent)]">
-            NETWORK ANALYSIS
-          </span>
-          <button type="button"
-            class="text-xs text-[var(--cg-info)] hover:underline focus:outline-none font-semibold"
-            onclick="window.ScanManager._toggleNetworkGroup()">
-            Select All
-          </button>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          ${NETWORK_ANALYSIS_TOOLS.map(renderFrontendToolCard).join("")}
-        </div>
-      </div>`;
+    // Render Network Analysis section if we have compatible network tools
+    if (compatibleNetworkTools.length > 0) {
+      html += `
+        <div class="mb-8" data-scan-group="network-analysis">
+          <div class="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
+            <span class="text-xs font-bold uppercase tracking-widest text-[var(--cg-accent)]">
+              NETWORK ANALYSIS
+            </span>
+            <button type="button"
+              class="text-xs text-[var(--cg-info)] hover:underline focus:outline-none font-semibold"
+              onclick="window.ScanManager._toggleNetworkGroup()">
+              Select All
+            </button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            ${compatibleNetworkTools.map(renderFrontendToolCard).join("")}
+          </div>
+        </div>`;
+    }
 
     bodyEl.innerHTML = html;
   }

@@ -47,6 +47,7 @@
         <link rel="stylesheet" href="css/settings-panel.css" />
         <link rel="stylesheet" href="css/security-dashboard.css" />
         <link rel="stylesheet" href="css/osint.css" />
+        <link rel="stylesheet" href="css/cyber-datepicker.css" />
         <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />
         <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/translucent.css" />
         <style>
@@ -4102,10 +4103,12 @@
                                     >Start Date</label
                                 >
                                 <input
-                                    type="date"
+                                    type="text"
                                     id="project-start-date"
                                     name="start_date"
                                     class="cyber-input w-full p-3 rounded-lg text-sm"
+                                    readonly
+                                    placeholder="YYYY-MM-DD"
                                 />
                                 <p
                                     id="project-start-date-error"
@@ -4119,10 +4122,12 @@
                                     >End Date</label
                                 >
                                 <input
-                                    type="date"
+                                    type="text"
                                     id="project-end-date"
                                     name="end_date"
                                     class="cyber-input w-full p-3 rounded-lg text-sm"
+                                    readonly
+                                    placeholder="YYYY-MM-DD"
                                 />
                                 <p
                                     id="project-end-date-error"
@@ -4302,10 +4307,12 @@
                                     >Start Date</label
                                 >
                                 <input
-                                    type="date"
+                                    type="text"
                                     id="edit-project-start-date"
                                     name="start_date"
                                     class="cyber-input w-full p-3 rounded-lg text-sm"
+                                    readonly
+                                    placeholder="YYYY-MM-DD"
                                 />
                                 <p
                                     id="edit-project-start-date-error"
@@ -4319,10 +4326,12 @@
                                     >End Date</label
                                 >
                                 <input
-                                    type="date"
+                                    type="text"
                                     id="edit-project-end-date"
                                     name="end_date"
                                     class="cyber-input w-full p-3 rounded-lg text-sm"
+                                    readonly
+                                    placeholder="YYYY-MM-DD"
                                 />
                                 <p
                                     id="edit-project-end-date-error"
@@ -4720,6 +4729,8 @@
         <script src="js/billing-api.js"></script>
         <!-- Billing Utilities -->
         <script src="js/billing-utils.js"></script>
+        <!-- CyberDatePicker (Custom Calendar) -->
+        <script src="js/cyber-datepicker.js"></script>
         <!-- Project Manager -->
         <script src="js/project-manager.js?v=1.0.2"></script>
         <!-- Authentication System -->
