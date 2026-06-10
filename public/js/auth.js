@@ -1,5 +1,5 @@
 /**
- * CyberGuard Pro Authentication System
+ * CyberGuard Authentication System
  * Handles user authentication, session management, and security features
  */
 

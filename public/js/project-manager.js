@@ -1,5 +1,5 @@
 /**
- * CyberGuard Pro — Project Management System
+ * CyberGuard — Project Management System
  * Version: 2.0.0
  * Full Projects & Collaborators/Invitations API integration
  *

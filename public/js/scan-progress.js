@@ -1,5 +1,5 @@
 /**
- * scan-progress.js — CyberGuard Pro
+ * scan-progress.js — CyberGuard
  * Handles all logic for /scan/{scanJobId} progress page.
  *
  * Depends on (loaded via script tags in scan-progress.html):

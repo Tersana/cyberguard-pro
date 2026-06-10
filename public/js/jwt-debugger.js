@@ -1,5 +1,5 @@
 /**
- * CyberGuard Pro standalone JWT Debugger & Editor Module
+ * CyberGuard standalone JWT Debugger & Editor Module
  * Real-time JWT decoding, encoding, signature verification, and claims breakdown
  */
 

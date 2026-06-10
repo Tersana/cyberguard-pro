@@ -1,5 +1,5 @@
 /**
- * CyberGuard Pro - Target Validation Utility
+ * CyberGuard - Target Validation Utility
  * Provides type-specific client-side validation for security scan targets.
  *
  * Supported types:
