@@ -4180,8 +4180,16 @@
             class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 hidden"
         >
             <div
-                class="cyber-modal max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto"
+                class="cyber-modal max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto relative"
             >
+                <!-- Loading Shimmer Overlay -->
+                <div id="edit-project-loading" class="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center z-50 transition-opacity duration-300 hidden">
+                    <div class="relative flex items-center justify-center mb-4">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                        <div class="absolute inset-0 rounded-full border border-blue-500/20"></div>
+                    </div>
+                    <span class="text-xs text-blue-300 font-mono tracking-widest uppercase animate-pulse">Decrypting Project Data...</span>
+                </div>
                 <div class="p-8">
                     <div class="flex items-center justify-between mb-6">
                         <h3

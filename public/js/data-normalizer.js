@@ -170,13 +170,16 @@ function normalizeCollaboratorData(collaboratorData) {
     return null;
   }
 
+  // Handle nested user object if present (e.g. from /projects/{id}/collaborators endpoint)
+  const user = collaboratorData.user || {};
+
   return {
-    id: collaboratorData.id || null,
-    fullName: collaboratorData.full_name || collaboratorData.name || '',
-    email: collaboratorData.email || '',
+    id: collaboratorData.id || collaboratorData.user_id || user.id || user.user_id || null,
+    fullName: collaboratorData.fullName || collaboratorData.full_name || collaboratorData.name || user.fullName || user.full_name || user.name || '',
+    email: collaboratorData.email || user.email || '',
     role: collaboratorData.role || 'collaborator',
     // Handle job_title/job_tittle for collaborators too
-    jobTitle: collaboratorData.job_title || collaboratorData.job_tittle || ''
+    jobTitle: collaboratorData.jobTitle || collaboratorData.job_title || collaboratorData.job_tittle || user.jobTitle || user.job_title || user.job_tittle || ''
   };
 }
 
