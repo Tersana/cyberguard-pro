@@ -9,7 +9,6 @@
 class AuthManager {
   constructor() {
     this.currentUser = null;
-    this.sessionTimeout = 30 * 60 * 1000; // 30 minutes
     // Initialize API client for backend communication
     this.apiClient = new APIClient();
     this.init();
@@ -25,7 +24,6 @@ class AuthManager {
     this.initializeAdminAccount();
 
     this.loadUserSession();
-    this.setupSessionTimeout();
     this.setupEventListeners();
     this.setupPageVisibilityHandler();
   }
@@ -55,18 +53,14 @@ class AuthManager {
 
       // No token, check for legacy localStorage session
       const userData = localStorage.getItem("cyberguard_user");
-      const sessionData = localStorage.getItem("cyberguard_session");
 
-      if (userData && sessionData) {
-        const user = JSON.parse(userData);
-        const session = JSON.parse(sessionData);
-
-        // Check if session is still valid
-        if (Date.now() - session.timestamp < this.sessionTimeout) {
-          this.currentUser = user;
+      if (userData) {
+        try {
+          this.currentUser = JSON.parse(userData);
           this.updateUI();
           return true;
-        } else {
+        } catch (e) {
+          console.error("Error parsing legacy user data:", e);
           this.logout();
         }
       }
@@ -1197,20 +1191,6 @@ class AuthManager {
     }
   }
 
-  // Setup session timeout
-  setupSessionTimeout() {
-    setInterval(() => {
-      if (this.isAuthenticated()) {
-        const sessionData = localStorage.getItem("cyberguard_session");
-        if (sessionData) {
-          const session = JSON.parse(sessionData);
-          if (Date.now() - session.timestamp > this.sessionTimeout) {
-            this.handleSessionExpiration();
-          }
-        }
-      }
-    }, 60000); // Check every minute
-  }
 
   // Setup page visibility handler to check session on every page load/focus
   setupPageVisibilityHandler() {
@@ -1254,15 +1234,8 @@ class AuthManager {
         return;
       }
 
-      // Check if session has expired locally
-      const sessionData = localStorage.getItem("cyberguard_session");
-      if (sessionData) {
-        const session = JSON.parse(sessionData);
-        if (Date.now() - session.timestamp > this.sessionTimeout) {
-          this.handleSessionExpiration();
-          return;
-        }
-      }
+      // Client-side local sessionTimeout check is removed.
+      // Session validation is driven strictly by backend API status check.
 
       // Validate session with backend (lightweight check)
       const statusResult = await this.fetchSessionStatus().catch((err) => {
@@ -1360,13 +1333,6 @@ class AuthManager {
         this.showFeatureLimitation();
       }
     });
-
-    // Session activity tracking
-    ["mousedown", "mousemove", "keypress", "scroll", "touchstart"].forEach(
-      (event) => {
-        document.addEventListener(event, () => this.updateSessionActivity());
-      },
-    );
   }
 
   // Show authentication prompt
@@ -1502,17 +1468,6 @@ class AuthManager {
     }, 15000);
   }
 
-  // Update session activity
-  updateSessionActivity() {
-    if (this.isAuthenticated()) {
-      const sessionData = localStorage.getItem("cyberguard_session");
-      if (sessionData) {
-        const session = JSON.parse(sessionData);
-        session.timestamp = Date.now();
-        localStorage.setItem("cyberguard_session", JSON.stringify(session));
-      }
-    }
-  }
 
   // Simulate API authentication
   async authenticateUser(email, password) {
