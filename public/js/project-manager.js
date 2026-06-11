@@ -999,8 +999,8 @@ class ProjectManager {
           <div class="project-actions">
             <a href="${detailUrl}" class="project-action primary" title="Open project">
               Open
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5H19.5V10.5M19.5 4.5 10 14M6 6h5M6 18h12" />
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 19.5 15-15m0 0H8.25m11.25 0v11.25" />
               </svg>
             </a>
             ${ownerBtns}
@@ -1137,10 +1137,39 @@ class ProjectManager {
     const modal = document.getElementById("edit-project-modal");
     if (!modal) return;
 
-    try {
-      const project = await this.fetchProject(projectId);
+    // Reset the form fields and errors to avoid showing old project data
+    const f = (id) => document.getElementById(id);
+    if (f("edit-project-id")) f("edit-project-id").value = "";
+    if (f("edit-project-name")) f("edit-project-name").value = "";
+    if (f("edit-project-description")) f("edit-project-description").value = "";
+    if (f("edit-project-status")) f("edit-project-status").value = "active";
+    if (f("edit-project-start-date")) f("edit-project-start-date").value = "";
+    if (f("edit-project-end-date")) f("edit-project-end-date").value = "";
+    this.clearEditFormErrors();
 
-      const f = (id) => document.getElementById(id);
+    // Reset collaborators list display
+    const listEl = document.getElementById("collaborators-list");
+    if (listEl) {
+      listEl.innerHTML = `<div class="text-center py-4 text-xs text-slate-500">Loading collaborators...</div>`;
+    }
+
+    // Show modal immediately
+    modal.classList.remove("hidden");
+
+    // Show loading overlay
+    const loadingEl = document.getElementById("edit-project-loading");
+    if (loadingEl) {
+      loadingEl.classList.remove("hidden");
+      loadingEl.style.opacity = "1";
+    }
+
+    try {
+      // Fetch details and collaborators in parallel
+      const [project, _] = await Promise.all([
+        this.fetchProject(projectId),
+        this.loadCollaborators(projectId)
+      ]);
+
       if (f("edit-project-id"))
         f("edit-project-id").value = project.id || projectId;
       if (f("edit-project-name"))
@@ -1154,10 +1183,17 @@ class ProjectManager {
       if (f("edit-project-end-date"))
         f("edit-project-end-date").value = project.end_date ? project.end_date.split("T")[0] : "";
 
-      this.clearEditFormErrors();
-      await this.loadCollaborators(projectId);
-      modal.classList.remove("hidden");
+      // Smooth transition to hide loading overlay
+      if (loadingEl) {
+        loadingEl.style.opacity = "0";
+        setTimeout(() => {
+          loadingEl.classList.add("hidden");
+        }, 300);
+      }
     } catch (error) {
+      console.error("[showEditProjectModal] Error:", error);
+      // Close modal on failure
+      this.hideEditProjectModal();
       if (window.CyberNotify)
         window.CyberNotify.alert("Failed to load project details.", {
           type: "error",

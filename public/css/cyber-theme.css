@@ -3642,7 +3642,7 @@ body.authenticated [data-auth-required].cyber-tool-link::after {
 .project-actions {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.5rem; /* cg-ignore */
 }
 
 .project-action,
@@ -3651,36 +3651,108 @@ body.authenticated [data-auth-required].cyber-tool-link::after {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
-    min-height: 2rem;
-    padding: 0.35rem 0.55rem;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 7px;
-    background: rgba(255, 255, 255, 0.03);
+    gap: 0.45rem; /* cg-ignore */
+    min-height: 2.25rem; /* cg-ignore */
+    padding: 0.45rem 0.8rem; /* cg-ignore */
+    border: 1px solid rgba(255, 255, 255, 0.08); /* cg-ignore */
+    border-radius: 8px; /* cg-ignore */
+    background: rgba(255, 255, 255, 0.02); /* cg-ignore */
     color: var(--cg-text-2);
-    font-size: 0.75rem;
-    font-weight: 750;
+    font-size: 0.78rem; /* cg-ignore */
+    font-weight: 700;
     text-decoration: none;
-    transition: background var(--cg-transition-fast), color var(--cg-transition-fast), border-color var(--cg-transition-fast);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+    transition: 
+        background var(--cg-transition-fast), 
+        color var(--cg-transition-fast), 
+        border-color var(--cg-transition-fast),
+        transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.project-action:active,
+.project-actions .cyber-btn-ghost:active,
+.project-actions .btn-clear-history:active {
+    transform: scale(0.96);
+}
+
+/* Primary "Open" Button styling */
 .project-action.primary {
-    border-color: rgba(96, 165, 250, 0.22);
-    color: #bfdbfe;
-    background: rgba(59, 130, 246, 0.09);
+    border-color: rgba(59, 130, 246, 0.3); /* cg-ignore */
+    color: #e0f2fe; /* cg-ignore */
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.16), rgba(29, 78, 216, 0.05)); /* cg-ignore */
+    font-weight: 800;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08); /* cg-ignore */
 }
 
-.project-action:hover,
+.project-action.primary:hover {
+    border-color: rgba(96, 165, 250, 0.6); /* cg-ignore */
+    color: #ffffff; /* cg-ignore */
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.28), rgba(29, 78, 216, 0.14)); /* cg-ignore */
+    box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.12), /* cg-ignore */
+        0 0 16px rgba(59, 130, 246, 0.3); /* cg-ignore */
+    transform: translateY(-1px);
+}
+
+/* Micro-animation for Open icon */
+.project-action.primary svg {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.project-action.primary:hover svg {
+    transform: translate(2px, -2px);
+}
+
+/* Edit Button styling */
+.project-actions .cyber-btn-ghost {
+    color: var(--cg-text-2);
+    background: rgba(255, 255, 255, 0.02); /* cg-ignore */
+    border: 1px solid rgba(255, 255, 255, 0.08); /* cg-ignore */
+}
+
 .project-actions .cyber-btn-ghost:hover {
-    border-color: rgba(96, 165, 250, 0.32);
-    color: var(--cg-text-1);
-    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(56, 189, 248, 0.45); /* cg-ignore */
+    color: #e0f2fe; /* cg-ignore */
+    background: rgba(56, 189, 248, 0.08); /* cg-ignore */
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.2); /* cg-ignore */
+    transform: translateY(-1px);
+}
+
+/* Micro-animation for Edit icon */
+.project-actions .cyber-btn-ghost svg {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.project-actions .cyber-btn-ghost:hover svg {
+    transform: rotate(15deg) scale(1.05);
+}
+
+/* Delete Button styling */
+.project-actions .btn-clear-history {
+    color: var(--cg-text-2);
+    background: rgba(255, 255, 255, 0.02); /* cg-ignore */
+    border: 1px solid rgba(255, 255, 255, 0.08); /* cg-ignore */
 }
 
 .project-actions .btn-clear-history:hover {
-    border-color: rgba(248, 113, 113, 0.35);
-    color: #fca5a5;
-    background: rgba(248, 113, 113, 0.08);
+    border-color: rgba(248, 113, 113, 0.45); /* cg-ignore */
+    color: #fee2e2; /* cg-ignore */
+    background: rgba(248, 113, 113, 0.08); /* cg-ignore */
+    box-shadow: 0 0 14px rgba(248, 113, 113, 0.2); /* cg-ignore */
+    transform: translateY(-1px);
+}
+
+/* Micro-animation for Delete icon */
+.project-actions .btn-clear-history svg {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.project-actions .btn-clear-history:hover svg {
+    transform: scale(1.1);
 }
 
 @media (max-width: 900px) {
@@ -4599,5 +4671,35 @@ code,
 
 #subscription-card:active {
   transform: translateY(0);
+}
+
+/* ================================================================
+   STUNNING MODAL ANIMATION SYSTEM
+   ================================================================ */
+
+@keyframes modalBackdropFadeIn {
+    from { opacity: 0; backdrop-filter: blur(0px); } /* cg-ignore */
+    to { opacity: 1; backdrop-filter: blur(4px); } /* cg-ignore */
+}
+
+@keyframes modalContentSlideIn {
+    from { transform: scale(0.94) translateY(24px); opacity: 0; } /* cg-ignore */
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* Apply fade-in to modal backdrop overlays when they are open */
+#create-project-modal:not(.hidden),
+#edit-project-modal:not(.hidden),
+#invite-collaborator-modal:not(.hidden),
+#delete-project-modal:not(.hidden) {
+    animation: modalBackdropFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Apply slide-up and scale-up to actual modal cards inside */
+#create-project-modal:not(.hidden) .cyber-modal,
+#edit-project-modal:not(.hidden) .cyber-modal,
+#invite-collaborator-modal:not(.hidden) .cyber-modal,
+#delete-project-modal:not(.hidden) .cyber-modal {
+    animation: modalContentSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
