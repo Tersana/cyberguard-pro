@@ -1103,7 +1103,7 @@
     border-radius: var(--cg-radius-xl) !important;
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8),
                 inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                0 0 50px rgba(99, 102, 241, 0.08) !important;
+                0 0 50px rgba(59, 130, 246, 0.08) !important;
     backdrop-filter: blur(20px);
     transition: all 0.3s ease;
 }
@@ -1148,16 +1148,16 @@
 }
 
 .cyber-step-item.active .cyber-step-dot {
-    border-color: rgba(99, 102, 241, 0.4);
+    border-color: rgba(59, 130, 246, 0.4);
     color: var(--cg-text-2);
-    background: rgba(99, 102, 241, 0.05);
+    background: rgba(59, 130, 246, 0.05);
 }
 
 .cyber-step-item.current .cyber-step-dot {
-    border-color: #6366f1;
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: #ffffff;
-    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
 }
 
 .cyber-step-item.completed .cyber-step-dot {
@@ -1201,8 +1201,8 @@
 }
 
 .cyber-step-line.active {
-    background: #6366f1;
-    box-shadow: 0 0 6px rgba(99, 102, 241, 0.3);
+    background: #3b82f6;
+    box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
 }
 
 .cyber-step-line.completed {
@@ -1242,10 +1242,10 @@
 }
 
 .cyber-plan-card.selected {
-    background: rgba(99, 102, 241, 0.05);
-    border-color: #6366f1;
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.15),
-                inset 0 0 0 1px rgba(99, 102, 241, 0.2);
+    background: rgba(59, 130, 246, 0.05);
+    border-color: #3b82f6;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.15),
+                inset 0 0 0 1px rgba(59, 130, 246, 0.2);
 }
 
 .cyber-plan-badge {
@@ -1257,9 +1257,9 @@
     letter-spacing: 0.05em;
     padding: 2px 8px;
     border-radius: 999px;
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: #ffffff;
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
 }
 
 .cyber-plan-icon {
@@ -1270,7 +1270,7 @@
 }
 
 .cyber-plan-card.selected .cyber-plan-icon {
-    color: #6366f1;
+    color: #3b82f6;
 }
 
 .cyber-plan-name {
@@ -1319,26 +1319,26 @@
 }
 
 .cyber-onboarding-modal .cyber-input:focus {
-    border-color: rgba(99, 102, 241, 0.5) !important;
+    border-color: rgba(59, 130, 246, 0.5) !important;
     background: rgba(10, 10, 10, 0.8);
-    box-shadow: 0 0 10px rgba(99, 102, 241, 0.12) !important;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.12) !important;
 }
 
 /* Premium Action Buttons */
 .cyber-onboarding-modal .cyber-btn-primary {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
     color: #ffffff !important;
     border: none !important;
     font-weight: 600 !important;
     letter-spacing: 0.02em !important;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2) !important;
     transition: all 0.2s ease !important;
 }
 
 .cyber-onboarding-modal .cyber-btn-primary:hover {
     transform: translateY(-1px) !important;
-    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35) !important;
-    background: linear-gradient(135deg, #6d70f2 0%, #554ce6 100%) !important;
+    box-shadow: 0 6px 18px rgba(59, 130, 246, 0.35) !important;
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
 }
 
 .cyber-onboarding-modal .cyber-btn-primary:active {
