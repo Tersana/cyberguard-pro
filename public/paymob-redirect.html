@@ -573,6 +573,7 @@
 
     <!-- Core API deps so BillingAPI is available for polling -->
     <script src="js/api-client.js"></script>
+    <script src="js/organization-manager.js"></script>
     <script src="js/billing-api.js"></script>
 
     <script>
@@ -620,33 +621,59 @@
                     'Go to Dashboard <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;flex-shrink:0" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>' // cg-ignore
                 );
 
-                // ── Poll subscription until active (max 5 × 3 s) ──
+                // ── Poll subscription / organization activation until active ──
                 show('activation-status');
 
                 (async () => {
-                    try {
-                        const sub = await BillingAPI.pollSubscriptionUntilActive(5, 3000);
-                        const spinner = document.getElementById('activation-spinner');
-                        const msg     = document.getElementById('activation-msg');
+                    const pendingOrgId = localStorage.getItem('cyberguard_pending_org_id');
+                    const spinner = document.getElementById('activation-spinner');
+                    const msg     = document.getElementById('activation-msg');
 
-                        if (sub && sub.status === 'active') {
-                            // Plan confirmed active
+                    if (pendingOrgId) {
+                        msg.textContent = "Activating organization workspace...";
+                        try {
+                            const statusRes = await window.organizationManager.pollPaymentStatus(pendingOrgId);
+                            if (statusRes && (statusRes.payment_status === 'pending_email_verification' || statusRes.payment_status === 'active')) {
+                                spinner.style.display = 'none';
+                                const planStr = statusRes.plan ? (statusRes.plan.charAt(0).toUpperCase() + statusRes.plan.slice(1)) : 'Pro';
+                                msg.innerHTML = `<span class="activation-plan">✓ Organization (${escapeHtml(planStr)} plan) created!</span>`;
+                                
+                                // Customize title/subtitles
+                                const successState = document.getElementById('success-state');
+                                if (successState) {
+                                    successState.textContent = "Your organization workspace has been created successfully. Proceed to the dashboard to verify your corporate email.";
+                                }
+                            } else {
+                                spinner.style.display = 'none';
+                                msg.textContent = 'Organization workspace is activating — check Dashboard shortly.';
+                            }
+                        } catch (err) {
+                            console.warn('[PaymobRedirect] Organization status polling error:', err);
                             spinner.style.display = 'none';
-                            const planName = sub.plan
-                                ? (sub.plan.charAt(0).toUpperCase() + sub.plan.slice(1))
-                                : 'Your';
-                            msg.innerHTML = `<span class="activation-plan">✓ ${escapeHtml(planName)} plan activated!</span>`;
-                        } else {
-                            // Max attempts reached — still activated most likely, just slow
-                            spinner.style.display = 'none';
-                            msg.textContent = 'Plan is activating — check Dashboard shortly.';
+                            msg.textContent = 'Organization workspace is activating — check Dashboard shortly.';
                         }
-
-                        // Clean up pending order id
-                        localStorage.removeItem('pending_billing_order_id');
-                    } catch (err) {
-                        console.warn('[PaymobRedirect] Polling error (non-fatal):', err);
-                        hide('activation-status');
+                    } else {
+                        // Personal subscription flow (Original logic)
+                        try {
+                            const sub = await BillingAPI.pollSubscriptionUntilActive(5, 3000);
+                            if (sub && sub.status === 'active') {
+                                // Plan confirmed active
+                                spinner.style.display = 'none';
+                                const planName = sub.plan
+                                    ? (sub.plan.charAt(0).toUpperCase() + sub.plan.slice(1))
+                                    : 'Your';
+                                msg.innerHTML = `<span class="activation-plan">✓ ${escapeHtml(planName)} plan activated!</span>`;
+                            } else {
+                                // Max attempts reached — still activated most likely, just slow
+                                spinner.style.display = 'none';
+                                msg.textContent = 'Plan is activating — check Dashboard shortly.';
+                            }
+                            // Clean up pending order id
+                            localStorage.removeItem('pending_billing_order_id');
+                        } catch (err) {
+                            console.warn('[PaymobRedirect] Polling error (non-fatal):', err);
+                            hide('activation-status');
+                        }
                     }
                 })();
 

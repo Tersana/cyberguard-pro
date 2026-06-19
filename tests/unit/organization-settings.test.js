@@ -552,6 +552,69 @@ describe("OrganizationSettings", () => {
     });
   });
 
+  // ─── Onboarding Form Submissions ────────────────────────────────
+  describe("Onboarding Form Submissions", () => {
+    beforeEach(() => {
+      window.organizationManager.setPendingOrgId("pending-123");
+    });
+
+    it("submits Step 3 successfully", async () => {
+      window.OrganizationSettings._openOnboardingWizard();
+      window.OrganizationSettings._renderOnboardingStep(3);
+
+      const form = document.getElementById("org-onboard-step3-form");
+      const emailInput = document.getElementById("corp-email");
+      emailInput.value = "test@company.com";
+
+      const submitSpy = vi.spyOn(window.organizationManager, "submitCorporateEmail").mockResolvedValue({
+        status: "success",
+        message: "Email verification sent",
+      });
+
+      // Dispatch submit event
+      const submitEvent = new window.Event("submit", { bubbles: true, cancelable: true });
+      form.dispatchEvent(submitEvent);
+
+      // Wait for any promises to resolve
+      await new Promise((r) => setTimeout(r, 0));
+
+      expect(submitSpy).toHaveBeenCalledWith("pending-123", "test@company.com");
+      expect(window.CyberNotify.alert).toHaveBeenCalledWith(
+        "Verification email sent. Check your corporate inbox.",
+        { type: "success" }
+      );
+      expect(window.organizationManager.getPendingOrgId()).toBeNull();
+    });
+
+    it("displays error toast on Step 3 ValidationError with no matching field errors", async () => {
+      window.OrganizationSettings._openOnboardingWizard();
+      window.OrganizationSettings._renderOnboardingStep(3);
+
+      const form = document.getElementById("org-onboard-step3-form");
+      const emailInput = document.getElementById("corp-email");
+      emailInput.value = "test@gmail.com";
+
+      const validationError = new Error("Validation failed");
+      validationError.name = "ValidationError";
+      validationError.errors = [
+        { field: "status", message: "error" },
+        { field: "message", message: "Corporate email domain must match the company domain you set up." }
+      ];
+
+      vi.spyOn(window.organizationManager, "submitCorporateEmail").mockRejectedValue(validationError);
+
+      const submitEvent = new window.Event("submit", { bubbles: true, cancelable: true });
+      form.dispatchEvent(submitEvent);
+
+      await new Promise((r) => setTimeout(r, 0));
+
+      expect(window.CyberNotify.alert).toHaveBeenCalledWith(
+        "Corporate email domain must match the company domain you set up.",
+        { type: "error" }
+      );
+    });
+  });
+
   // ─── Helper Methods ─────────────────────────────────────────────
 
   describe("Helper methods", () => {
