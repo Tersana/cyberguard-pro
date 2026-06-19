@@ -22,7 +22,8 @@ class SettingsPanel {
             security: false,
             notifications: false,
             appearance: false,
-            "api-keys": false
+            "api-keys": false,
+            "org-settings": false
         };
         this.focusedElementBeforeOpen = null;
     }
@@ -61,6 +62,7 @@ class SettingsPanel {
             if (window.BillingSettings) window.BillingSettings.init();
             if (window.ApiKeysSettings) window.ApiKeysSettings.init();
             window.AccountSettings.init();
+            if (window.OrganizationSettings) window.OrganizationSettings.init();
 
             // Set focus inside the modal for screen readers (Focus Trap)
             this.setupFocusTrap();
@@ -101,6 +103,7 @@ class SettingsPanel {
             window.NotificationSettings.reset();
             window.AppearanceSettings.reset();
             if (window.ApiKeysSettings) window.ApiKeysSettings.reset();
+            if (window.OrganizationSettings) window.OrganizationSettings.reset();
 
             // Restore focus (Accessibility)
             if (this.focusedElementBeforeOpen) {
@@ -155,6 +158,11 @@ class SettingsPanel {
 
         // Accessibility announcement helper
         this.announceTabChange(tabId);
+
+        // Lazily load Organization settings pane when switching to it
+        if (tabId === "org-settings" && window.OrganizationSettings) {
+            window.OrganizationSettings.loadSettingsPane();
+        }
     }
 
     announceTabChange(tabId) {

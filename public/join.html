@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Join Organization — CyberGuard</title>
+        <meta name="description" content="Accept your organization invitation to join CyberGuard corporate workspace." />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            /* ─── Hard-coded palette (no CSS variables — standalone page) ── */
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            html,
+            body {
+                height: 100%;
+            }
+
+            body {
+                font-family:
+                    "Inter",
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    sans-serif;
+                min-height: 100vh;
+                background-color: #09090b;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem 1rem;
+                color: #fafafa;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            .hidden { display: none !important; }
+
+            /* ─── card ─────────────────────────────────────────── */
+            .card {
+                width: 100%;
+                max-width: 480px;
+                background: #111111;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+                animation: rise 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+            }
+            @keyframes rise {
+                from { opacity: 0; transform: translateY(30px) scale(0.97); }
+                to   { opacity: 1; transform: translateY(0) scale(1); }
+            }
+
+            .strip { height: 3px; background: #3b82f6; }
+            .strip-danger { background: #ef4444; }
+            .strip-success { background: #22c55e; }
+
+            /* ─── shimmer ──────────────────────────────────────── */
+            .shimmer {
+                border-radius: 6px;
+                background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+                background-size: 200% 100%;
+                animation: sh 1.5s infinite;
+            }
+            @keyframes sh { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+            /* ─── rows ─────────────────────────────────────────── */
+            .row {
+                background: #18181b;
+                border: 1px solid rgba(255, 255, 255, 0.06);
+                border-radius: 8px;
+                padding: 12px 15px;
+            }
+            .row-label {
+                font-size: 10px;
+                font-weight: 600;
+                color: #71717a;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                margin-bottom: 5px;
+            }
+
+            /* ─── form ─────────────────────────────────────────── */
+            .form-label {
+                display: block;
+                font-size: 12px;
+                font-weight: 600;
+                color: #a1a1aa;
+                margin-bottom: 6px;
+            }
+            .form-input {
+                width: 100%;
+                padding: 10px 14px;
+                border-radius: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                background: #18181b;
+                color: #fafafa;
+                font-family: inherit;
+                font-size: 14px;
+                outline: none;
+                transition: border-color 0.2s;
+            }
+            .form-input:focus {
+                border-color: #3b82f6;
+            }
+            .form-error {
+                font-size: 11px;
+                color: #f87171;
+                margin-top: 4px;
+                display: none;
+            }
+            .form-error.visible { display: block; }
+
+            /* ─── buttons ──────────────────────────────────────── */
+            .btn-primary {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                padding: 11px 14px;
+                border-radius: 10px;
+                border: none;
+                cursor: pointer;
+                font-family: inherit;
+                font-size: 14px;
+                font-weight: 700;
+                color: #ffffff;
+                background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+                transition: opacity 0.18s, transform 0.12s;
+            }
+            .btn-primary:hover:not(:disabled) { opacity: 0.87; }
+            .btn-primary:active:not(:disabled) { transform: scale(0.97); }
+            .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+            .btn-ghost {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 9px 18px;
+                border-radius: 8px;
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                background: transparent;
+                color: #a1a1aa;
+                font-size: 13px;
+                font-weight: 600;
+                text-decoration: none;
+                font-family: inherit;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+            .btn-ghost:hover { background: rgba(255, 255, 255, 0.05); color: #fafafa; }
+
+            /* ─── badge ────────────────────────────────────────── */
+            .badge {
+                display: inline-block;
+                font-size: 12px;
+                font-weight: 700;
+                padding: 3px 11px;
+                border-radius: 999px;
+                border: 1px solid;
+            }
+            .badge-admin  { color: #a78bfa; border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.1); }
+            .badge-member { color: #94a3b8; border-color: rgba(148,163,184,0.3); background: rgba(148,163,184,0.08); }
+            .badge-viewer { color: #64748b; border-color: rgba(100,116,139,0.3); background: rgba(100,116,139,0.08); }
+
+            /* ─── spinner ──────────────────────────────────────── */
+            @keyframes spin { to { transform: rotate(360deg); } }
+            .spin {
+                display: inline-block;
+                width: 13px; height: 13px;
+                border: 2px solid currentColor;
+                border-top-color: transparent;
+                border-radius: 50%;
+                animation: spin 0.65s linear infinite;
+            }
+
+            /* ─── brand ────────────────────────────────────────── */
+            .brand-cyber { color: #3b82f6; font-weight: inherit; }
+            .brand-guard { color: #ffffff; font-weight: inherit; }
+            .brand-name { display: inline-flex; font-weight: bold; letter-spacing: -0.5px; }
+
+            /* ─── icon box ─────────────────────────────────────── */
+            .icon-box {
+                width: 52px; height: 52px;
+                border-radius: 14px;
+                margin: 0 auto 18px;
+                display: flex; align-items: center; justify-content: center;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Logo -->
+        <div style="text-align:center;margin-bottom:2rem">
+            <svg width="48" height="48" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="none" style="margin:0 auto 12px;">
+                <defs>
+                    <linearGradient id="cg" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#1d4ed8"/>
+                        <stop offset="50%" stop-color="#3b82f6"/>
+                        <stop offset="100%" stop-color="#60a5fa"/>
+                    </linearGradient>
+                </defs>
+                <path d="M15 3.5 L6.5 6.5 V14.5 C6.5 20 10 24.5 15 26.5" stroke="url(#cg)" stroke-width="2.2" stroke-linecap="round"/>
+                <path d="M17 3.5 L25.5 6.5 V14.5 C25.5 20 22 24.5 17 26.5" stroke="url(#cg)" stroke-width="2.2" stroke-linecap="round"/>
+                <path d="M13 2.5 H19" stroke="url(#cg)" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+                <path d="M13 28.5 H19" stroke="url(#cg)" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
+                <polygon points="16,8.5 21,11.5 21,17.5 16,20.5 11,17.5 11,11.5" fill="rgba(17,24,39,0.75)" stroke="url(#cg)" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M16 11.5 A2 2 0 0 0 14 13.5 C14 14.3 14.5 15 15.2 15.3 L14.5 18.5 H17.5 L16.8 15.3 C17.5 15 18 14.3 18 13.5 A2 2 0 0 0 16 11.5 Z" fill="url(#cg)"/>
+            </svg>
+            <p style="font-size:1.05rem;font-weight:700;color:#f1f5f9;">
+                <span class="brand-name"><span class="brand-cyber">Cyber</span><span class="brand-guard">Guard</span></span>
+            </p>
+            <p style="font-size:0.65rem;color:#64748b;letter-spacing:0.14em;text-transform:uppercase;margin-top:3px;">
+                Organization Invitation
+            </p>
+        </div>
+
+        <!-- ═══ LOADING ═══ -->
+        <div id="s-loading" class="card">
+            <div class="strip"></div>
+            <div style="padding:2rem">
+                <div class="shimmer" style="height:17px;width:55%;margin:0 auto 8px"></div>
+                <div class="shimmer" style="height:12px;width:36%;margin:0 auto 2rem"></div>
+                <div class="shimmer" style="height:60px;margin-bottom:10px"></div>
+                <div class="shimmer" style="height:60px;margin-bottom:10px"></div>
+                <div class="shimmer" style="height:44px;border-radius:10px"></div>
+            </div>
+        </div>
+
+        <!-- ═══ INVITATION PREVIEW (existing user) ═══ -->
+        <div id="s-accept" class="card hidden">
+            <div class="strip"></div>
+            <div style="padding:1.75rem 1.75rem 2rem">
+                <div style="text-align:center;margin-bottom:1.5rem">
+                    <div class="icon-box" style="background:rgba(59,130,246,0.14);border:1px solid rgba(59,130,246,0.32);">
+                        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#3b82f6" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"/>
+                        </svg>
+                    </div>
+                    <h1 style="font-size:1.2rem;font-weight:800;color:#f1f5f9;margin-bottom:4px">
+                        Organization Invitation
+                    </h1>
+                    <p style="font-size:0.8rem;color:#64748b">You've been invited to join a team workspace.</p>
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.5rem">
+                    <div class="row">
+                        <p class="row-label">Organization</p>
+                        <p id="inv-org-name" style="font-size:0.95rem;font-weight:700;color:#f1f5f9;">—</p>
+                    </div>
+                    <div class="row" style="display:flex;align-items:center;justify-content:space-between;">
+                        <div>
+                            <p class="row-label">Your Role</p>
+                            <span id="inv-role-badge" class="badge">—</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <p class="row-label">Email</p>
+                        <p id="inv-email" style="font-size:0.875rem;font-weight:600;color:#f1f5f9;">—</p>
+                    </div>
+                </div>
+
+                <button id="btn-accept" class="btn-primary">
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                    </svg>
+                    Join Organization
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══ REGISTER (new user) ═══ -->
+        <div id="s-register" class="card hidden">
+            <div class="strip"></div>
+            <div style="padding:1.75rem 1.75rem 2rem">
+                <div style="text-align:center;margin-bottom:1.25rem">
+                    <div class="icon-box" style="background:rgba(59,130,246,0.14);border:1px solid rgba(59,130,246,0.32);">
+                        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#3b82f6" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM4 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 10.374 21c-2.331 0-4.512-.645-6.374-1.766Z"/>
+                        </svg>
+                    </div>
+                    <h1 style="font-size:1.15rem;font-weight:800;color:#f1f5f9;margin-bottom:4px">
+                        Create Your Account
+                    </h1>
+                    <p style="font-size:0.78rem;color:#64748b">
+                        Join <strong id="reg-org-name" style="color:#94a3b8">—</strong> on CyberGuard
+                    </p>
+                </div>
+
+                <form id="register-form" style="display:flex;flex-direction:column;gap:14px">
+                    <div>
+                        <label class="form-label" for="reg-fullname">Full Name</label>
+                        <input type="text" id="reg-fullname" class="form-input" required autocomplete="name" placeholder="John Doe">
+                        <p class="form-error" id="reg-fullname-error"></p>
+                    </div>
+                    <div>
+                        <label class="form-label" for="reg-job">Job Title</label>
+                        <input type="text" id="reg-job" class="form-input" required autocomplete="organization-title" placeholder="Security Engineer">
+                        <p class="form-error" id="reg-job-error"></p>
+                    </div>
+                    <div>
+                        <label class="form-label" for="reg-password">Password</label>
+                        <input type="password" id="reg-password" class="form-input" required minlength="8" autocomplete="new-password" placeholder="Min 8 characters">
+                        <p class="form-error" id="reg-password-error"></p>
+                    </div>
+                    <div>
+                        <label class="form-label" for="reg-password-confirm">Confirm Password</label>
+                        <input type="password" id="reg-password-confirm" class="form-input" required minlength="8" autocomplete="new-password" placeholder="Re-type password">
+                        <p class="form-error" id="reg-password-confirm-error"></p>
+                    </div>
+                    <button type="submit" id="btn-register" class="btn-primary" style="margin-top:4px">
+                        Create Account & Join
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ═══ SUCCESS ═══ -->
+        <div id="s-success" class="card hidden">
+            <div class="strip strip-success"></div>
+            <div style="padding:2.5rem 2rem;text-align:center">
+                <div class="icon-box" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.3);">
+                    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#34D399" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286Z"/>
+                    </svg>
+                </div>
+                <h2 style="font-size:1.15rem;font-weight:800;color:#f1f5f9;margin-bottom:8px">
+                    Welcome to the Team!
+                </h2>
+                <p id="success-msg" style="font-size:0.85rem;color:#94a3b8;margin-bottom:1.75rem">
+                    You've successfully joined the organization.
+                </p>
+                <a href="/dashboard" class="btn-primary" style="display:inline-flex;width:auto;padding:10px 24px;text-decoration:none;">
+                    Go to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- ═══ 404 / INVALID ═══ -->
+        <div id="s-404" class="card hidden">
+            <div class="strip strip-danger"></div>
+            <div style="padding:2.5rem 2rem;text-align:center">
+                <div class="icon-box" style="background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.3);">
+                    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#F87171" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"/>
+                    </svg>
+                </div>
+                <h2 style="font-size:1.15rem;font-weight:800;color:#f1f5f9;margin-bottom:8px">
+                    Invalid or Expired Link
+                </h2>
+                <p id="error-msg" style="font-size:0.85rem;color:#94a3b8;line-height:1.65;margin-bottom:1.75rem">
+                    This invitation link is no longer valid.<br>Contact your organization admin for a new link.
+                </p>
+                <a href="/dashboard" class="btn-ghost">
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- ═══ LOGIN REDIRECT ═══ -->
+        <div id="s-login" class="card hidden">
+            <div class="strip"></div>
+            <div style="padding:2.5rem 2rem;text-align:center">
+                <div class="icon-box" style="background:rgba(59,130,246,0.14);border:1px solid rgba(59,130,246,0.32);">
+                    <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#3b82f6" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"/>
+                    </svg>
+                </div>
+                <h2 style="font-size:1.15rem;font-weight:800;color:#f1f5f9;margin-bottom:8px">
+                    Sign In Required
+                </h2>
+                <p style="font-size:0.85rem;color:#94a3b8;margin-bottom:1.75rem">
+                    You need to sign in first to accept this invitation.
+                </p>
+                <a id="login-redirect-link" href="/login" class="btn-primary" style="display:inline-flex;width:auto;padding:10px 24px;text-decoration:none;">
+                    Sign In
+                </a>
+            </div>
+        </div>
+
+        <!-- ═══ SCRIPT ═══ -->
+        <script>
+            const API_BASE_URL = "https://peptonelike-lelia-interdepartmentally.ngrok-free.dev/api/";
+            const JWT_STORAGE_KEY = "cyberguard_jwt";
+
+            function show(id) {
+                ["s-loading", "s-accept", "s-register", "s-success", "s-404", "s-login"].forEach(s => {
+                    const el = document.getElementById(s);
+                    if (el) el.classList.toggle("hidden", s !== id);
+                });
+            }
+
+            function getToken() { return localStorage.getItem(JWT_STORAGE_KEY); }
+
+            async function apiFetch(method, path, body, skipAuth) {
+                const headers = { Accept: "application/json", "ngrok-skip-browser-warning": "true" };
+                const token = getToken();
+                if (token && !skipAuth) headers["Authorization"] = `Bearer ${token}`;
+                if (body) headers["Content-Type"] = "application/json";
+                const url = API_BASE_URL + path.replace(/^\//, "");
+                const res = await fetch(url, { method, headers, ...(body ? { body: JSON.stringify(body) } : {}) });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    const err = new Error(data.message || `HTTP ${res.status}`);
+                    err.status = res.status;
+                    err.data = data;
+                    throw err;
+                }
+                return data;
+            }
+
+            function showFieldError(id, msg) {
+                const el = document.getElementById(id);
+                if (el) { el.textContent = msg; el.classList.add("visible"); }
+            }
+            function clearFieldErrors() {
+                document.querySelectorAll(".form-error").forEach(el => { el.textContent = ""; el.classList.remove("visible"); });
+            }
+
+            async function init() {
+                const params = new URLSearchParams(window.location.search);
+                const token = params.get("token");
+
+                if (!token) {
+                    document.getElementById("error-msg").textContent = "No invitation token found in the URL.";
+                    show("s-404");
+                    return;
+                }
+
+                try {
+                    // Fetch invitation details (no auth required)
+                    const data = await apiFetch("GET", `organizations/invitations/${token}`, null, true);
+                    const inv = data.invitation || {};
+                    const org = inv.organization || {};
+                    const isExist = data.is_exist === true;
+
+                    if (isExist) {
+                        // User already has an account
+                        const jwt = getToken();
+                        if (jwt) {
+                            // Authenticated — show accept UI
+                            document.getElementById("inv-org-name").textContent = org.name || "Organization";
+                            document.getElementById("inv-email").textContent = inv.email || "—";
+                            const roleBadge = document.getElementById("inv-role-badge");
+                            const role = inv.role || "member";
+                            roleBadge.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+                            roleBadge.className = `badge badge-${role}`;
+                            show("s-accept");
+
+                            document.getElementById("btn-accept").addEventListener("click", async function() {
+                                this.disabled = true;
+                                this.innerHTML = '<span class="spin"></span> Joining…';
+                                try {
+                                    await apiFetch("POST", `organizations/${token}/accept`);
+                                    show("s-success");
+                                } catch (err) {
+                                    this.disabled = false;
+                                    this.innerHTML = 'Join Organization';
+                                    alert(err.message || "Failed to join. Please try again.");
+                                }
+                            });
+                        } else {
+                            // Not authenticated — redirect to login
+                            const loginLink = document.getElementById("login-redirect-link");
+                            const redirect = encodeURIComponent(`/join?token=${token}`);
+                            loginLink.href = `/login?redirect=${redirect}`;
+                            show("s-login");
+                        }
+                    } else {
+                        // New user — show registration form
+                        document.getElementById("reg-org-name").textContent = org.name || "Organization";
+                        show("s-register");
+
+                        document.getElementById("register-form").addEventListener("submit", async function(e) {
+                            e.preventDefault();
+                            clearFieldErrors();
+
+                            const fullName = document.getElementById("reg-fullname").value.trim();
+                            const jobTitle = document.getElementById("reg-job").value.trim();
+                            const password = document.getElementById("reg-password").value;
+                            const passwordConfirm = document.getElementById("reg-password-confirm").value;
+
+                            // Client validation
+                            let hasError = false;
+                            if (!fullName) { showFieldError("reg-fullname-error", "Full name is required."); hasError = true; }
+                            if (!jobTitle) { showFieldError("reg-job-error", "Job title is required."); hasError = true; }
+                            if (password.length < 8) { showFieldError("reg-password-error", "Password must be at least 8 characters."); hasError = true; }
+                            if (password !== passwordConfirm) { showFieldError("reg-password-confirm-error", "Passwords do not match."); hasError = true; }
+                            if (hasError) return;
+
+                            const btn = document.getElementById("btn-register");
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="spin"></span> Creating Account…';
+
+                            try {
+                                // API field is "job_tittle" (double-t — preserved per backend contract)
+                                const res = await apiFetch("POST", `organizations/invitations/${token}/register`, {
+                                    full_name: fullName,
+                                    password: password,
+                                    password_confirmation: passwordConfirm,
+                                    job_tittle: jobTitle
+                                }, true);
+
+                                // Store JWT and user data
+                                if (res.token) localStorage.setItem(JWT_STORAGE_KEY, res.token);
+                                if (res.user) localStorage.setItem("cyberguard_user", JSON.stringify(res.user));
+
+                                document.getElementById("success-msg").textContent =
+                                    `Welcome, ${fullName}! Your account has been created and you've joined the team.`;
+                                show("s-success");
+                            } catch (err) {
+                                btn.disabled = false;
+                                btn.innerHTML = "Create Account & Join";
+
+                                if (err.data && err.data.errors) {
+                                    const errs = err.data.errors;
+                                    if (errs.full_name) showFieldError("reg-fullname-error", errs.full_name[0] || errs.full_name);
+                                    if (errs.job_tittle) showFieldError("reg-job-error", errs.job_tittle[0] || errs.job_tittle);
+                                    if (errs.password) showFieldError("reg-password-error", errs.password[0] || errs.password);
+                                    if (errs.password_confirmation) showFieldError("reg-password-confirm-error", errs.password_confirmation[0] || errs.password_confirmation);
+                                } else {
+                                    showFieldError("reg-fullname-error", err.message || "Registration failed. Please try again.");
+                                }
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error("Join page error:", err);
+                    const errorMsg = document.getElementById("error-msg");
+                    if (err.status === 404) {
+                        errorMsg.textContent = "This invitation was not found or has expired.";
+                    } else if (err.status === 410) {
+                        errorMsg.textContent = "This invitation has already been used.";
+                    } else {
+                        errorMsg.textContent = err.message || "An unexpected error occurred.";
+                    }
+                    show("s-404");
+                }
+            }
+
+            // Run on load
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", init);
+            } else {
+                init();
+            }
+        </script>
+    </body>
+</html>

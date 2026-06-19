@@ -243,6 +243,9 @@
                     </button>
                 </div>
 
+                <!-- Workspace Switcher (populated by organization-settings.js) -->
+                <div id="org-workspace-switcher" class="hidden px-3 mb-2"></div>
+
                 <div class="cyber-divider mx-5 mb-2"></div>
 
                 <!-- Nav -->
@@ -477,6 +480,16 @@
                             <span class="text-sm font-medium">API Keys</span>
                             <span class="cyber-active-dot"></span>
                         </a>
+                        <a
+                            href="#"
+                            id="org-nav-toggle"
+                            class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                            data-auth-required
+                        >
+                            <span class="material-symbols-outlined" style="font-size:1.125rem;">business</span>
+                            <span class="text-sm font-medium">Organizations</span>
+                            <span class="cyber-active-dot"></span>
+                        </a>
                     </div>
 
                     <!-- System Health & Scans Widget -->
@@ -513,6 +526,16 @@
                                 </div>
                                 <div class="w-full bg-slate-800/60 rounded-full h-1 overflow-hidden border border-slate-700/30">
                                     <div class="bg-gradient-to-r from-blue-500 to-cyan-500 h-full rounded-full transition-all duration-500" id="sidebar-scans-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <!-- Meter 4: Team Members (org context only) -->
+                            <div id="sidebar-members-row" class="hidden">
+                                <div class="flex justify-between text-[10px] mb-1">
+                                    <span class="text-slate-400">Team Members</span>
+                                    <span class="text-slate-300 font-medium" id="sidebar-members-text">0/0 Members</span>
+                                </div>
+                                <div class="w-full bg-slate-800/60 rounded-full h-1 overflow-hidden border border-slate-700/30">
+                                    <div class="bg-gradient-to-r from-violet-500 to-purple-500 h-full rounded-full transition-all duration-500" id="sidebar-members-bar" style="width: 0%"></div>
                                 </div>
                             </div>
                         </div>
@@ -937,6 +960,10 @@
                                     <span class="material-symbols-outlined">key</span>
                                     API Keys
                                 </button>
+                                <button class="settings-nav-item" data-tab="org-settings" role="tab" aria-selected="false" aria-controls="pane-org-settings" id="tab-org-settings">
+                                    <span class="material-symbols-outlined">business</span>
+                                    Organization
+                                </button>
                                 <button class="settings-nav-item" data-tab="account" role="tab" aria-selected="false" aria-controls="pane-account" id="tab-account">
                                     <span class="material-symbols-outlined">manage_accounts</span>
                                     Account
@@ -1048,6 +1075,11 @@
                                     <!-- API Keys JS will inject content here -->
                                 </div>
 
+                                <!-- Organization Settings Pane -->
+                                <div id="pane-org-settings" class="settings-tab-pane" role="tabpanel" aria-labelledby="tab-org-settings">
+                                    <!-- Organization Settings JS will inject content here -->
+                                </div>
+
                                 <!-- Account Pane -->
                                 <div id="pane-account" class="settings-tab-pane" role="tabpanel" aria-labelledby="tab-account">
                                     <!-- Account JS will inject content here -->
@@ -1071,10 +1103,48 @@
 
 
 
+                <!-- Organization Onboarding Wizard Modal -->
+                <div id="org-onboarding-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100] hidden">
+                    <div class="cyber-modal cyber-onboarding-modal max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-5">
+                                <div class="flex items-center gap-3">
+                                    <div class="cyber-icon-box-purple">
+                                        <span class="material-symbols-outlined" style="font-size:1.125rem;color:var(--cg-accent);">business</span>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-white">Organization Setup</h3>
+                                </div>
+                                <button id="org-onboarding-close-btn" class="text-slate-400 hover:text-white transition-colors" onclick="window.OrganizationSettings._closeOnboardingWizard()">
+                                    <span class="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
+                            <!-- Step Indicators -->
+                            <div class="cyber-stepper-row">
+                                <div class="cyber-step-item active current" data-step="1">
+                                    <div class="cyber-step-dot"><span>1</span></div>
+                                    <span class="cyber-step-label">Organization</span>
+                                </div>
+                                <div class="cyber-step-line"></div>
+                                <div class="cyber-step-item" data-step="2">
+                                    <div class="cyber-step-dot"><span>2</span></div>
+                                    <span class="cyber-step-label">Billing</span>
+                                </div>
+                                <div class="cyber-step-line"></div>
+                                <div class="cyber-step-item" data-step="3">
+                                    <div class="cyber-step-dot"><span>3</span></div>
+                                    <span class="cyber-step-label">Verification</span>
+                                </div>
+                            </div>
+                            <!-- Wizard Body -->
+                            <div id="org-onboarding-body"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 2FA Setup Modal -->
                 <div
                     id="twofa-setup-modal"
-                    class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 hidden"
+                    class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100] hidden"
                 >
                     <div
                         class="cyber-modal max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto"
@@ -1244,7 +1314,7 @@
                 <!-- 2FA Disable Modal -->
                 <div
                     id="twofa-disable-modal"
-                    class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 hidden"
+                    class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100] hidden"
                 >
                     <div class="cyber-modal max-w-md w-full mx-4">
                         <div class="p-8">
@@ -4775,6 +4845,9 @@
         <script src="js/billing-settings.js"></script>
         <script src="js/api-keys-settings.js"></script>
         <script src="js/account-settings.js"></script>
+        <!-- Organization Multi-Tenancy Modules -->
+        <script src="js/organization-manager.js"></script>
+        <script src="js/organization-settings.js"></script>
         <script src="js/settings-panel.js"></script>
 
         <!-- Billing History Module -->

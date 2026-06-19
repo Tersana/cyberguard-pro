@@ -22,6 +22,10 @@
     {
       "source": "/scan/:scanJobId",
       "destination": "/scan-progress"
+    },
+    {
+      "source": "/join",
+      "destination": "/join"
     }
   ],
   "redirects": [
