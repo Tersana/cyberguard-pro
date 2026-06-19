@@ -75,22 +75,30 @@
     // ─── Initialization ─────────────────────────────────────────────────────
 
     init() {
+      console.log("[OrgSettings] init() called. Initialized state:", this._initialized);
       if (this._initialized) return;
       this._initialized = true;
 
       // Listen for session restoration to load workspaces
       document.addEventListener("cyberguard:sessionRestored", () => {
+        console.log("[OrgSettings] cyberguard:sessionRestored event received");
         this._loadWorkspaceSwitcher();
+        this.startPostPaymentFlow();
       });
 
       // Listen for org context changes
       document.addEventListener("cyberguard:orgContextChanged", () => {
+        console.log("[OrgSettings] cyberguard:orgContextChanged event received");
         this._onOrgContextChanged();
       });
 
       // If session already exists, load immediately
       if (window.authManager && window.authManager.isAuthenticated()) {
+        console.log("[OrgSettings] Session already exists on init, loading workspaces and post-payment flow");
         this._loadWorkspaceSwitcher();
+        this.startPostPaymentFlow();
+      } else {
+        console.log("[OrgSettings] No authenticated session found on init yet");
       }
 
       // Setup sidebar nav item click
@@ -1068,22 +1076,30 @@
      */
     async startPostPaymentFlow() {
       const orgId = window.organizationManager.getPendingOrgId();
+      console.log("[OrgSettings] startPostPaymentFlow called. Pending org ID:", orgId);
       if (!orgId) return;
 
       try {
+        console.log("[OrgSettings] Polling payment status for pending org:", orgId);
         const statusRes = await window.organizationManager.pollPaymentStatus(orgId);
+        console.log("[OrgSettings] Polling resolved. Response:", statusRes);
         if (statusRes.payment_status === "pending_email_verification") {
+          console.log("[OrgSettings] Status is pending_email_verification, opening step 3 verification modal");
           // Open the onboarding wizard at step 3
           this._openOnboardingWizard();
           this._renderOnboardingStep(3);
         } else if (statusRes.payment_status === "active") {
+          console.log("[OrgSettings] Status is active, setting context and activating organization workspace");
           // Already active — set context and refresh
           window.organizationManager.setActiveOrg(orgId);
           window.organizationManager.clearPendingOrgId();
           window.CyberNotify.alert("Organization activated successfully!", { type: "success" });
           this._loadWorkspaceSwitcher();
+        } else {
+          console.log("[OrgSettings] Unhandled payment status:", statusRes.payment_status);
         }
       } catch (error) {
+        console.error("[OrgSettings] Payment verification failed:", error);
         window.CyberNotify.alert(error.message || "Payment verification timed out.", { type: "error" });
       }
     }

@@ -506,6 +506,52 @@ describe("OrganizationSettings", () => {
     });
   });
 
+  // ─── Post-Payment Flow ──────────────────────────────────────────
+
+  describe("Post-Payment Flow", () => {
+    it("does nothing if there is no pending organization ID", async () => {
+      const spy = vi.spyOn(window.organizationManager, "pollPaymentStatus");
+      await window.OrganizationSettings.startPostPaymentFlow();
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it("opens step 3 verification if payment status is pending_email_verification", async () => {
+      window.organizationManager.setPendingOrgId("pending-org-123");
+      vi.spyOn(window.organizationManager, "pollPaymentStatus").mockResolvedValue({
+        payment_status: "pending_email_verification",
+      });
+
+      const openSpy = vi.spyOn(window.OrganizationSettings, "_openOnboardingWizard");
+      const renderSpy = vi.spyOn(window.OrganizationSettings, "_renderOnboardingStep");
+
+      await window.OrganizationSettings.startPostPaymentFlow();
+
+      expect(openSpy).toHaveBeenCalled();
+      expect(renderSpy).toHaveBeenCalledWith(3);
+    });
+
+    it("activates organization if payment status is active", async () => {
+      window.organizationManager.setPendingOrgId("pending-org-123");
+      vi.spyOn(window.organizationManager, "pollPaymentStatus").mockResolvedValue({
+        payment_status: "active",
+      });
+
+      const activeSpy = vi.spyOn(window.organizationManager, "setActiveOrg");
+      const clearSpy = vi.spyOn(window.organizationManager, "clearPendingOrgId");
+      const switcherSpy = vi.spyOn(window.OrganizationSettings, "_loadWorkspaceSwitcher");
+
+      await window.OrganizationSettings.startPostPaymentFlow();
+
+      expect(activeSpy).toHaveBeenCalledWith("pending-org-123");
+      expect(clearSpy).toHaveBeenCalled();
+      expect(switcherSpy).toHaveBeenCalled();
+      expect(window.CyberNotify.alert).toHaveBeenCalledWith(
+        "Organization activated successfully!",
+        { type: "success" }
+      );
+    });
+  });
+
   // ─── Helper Methods ─────────────────────────────────────────────
 
   describe("Helper methods", () => {
