@@ -206,6 +206,7 @@
 
     <!-- Scripts -->
     <script src="js/api-client.js"></script>
+    <script src="js/organization-manager.js"></script>
     <script src="js/cyber-notify.js"></script>
     <script src="js/billing-api.js"></script>
     <script>
@@ -284,22 +285,85 @@
             }
         }
 
-        // Poll subscription status (will be implemented in Task 7)
+        // Poll subscription status
         async function pollSubscriptionStatus() {
-            try {
-                const subscription = await BillingAPI.pollSubscriptionUntilActive(3000, 5);
+            const pendingOrgId = localStorage.getItem('cyberguard_pending_org_id');
+            
+            if (pendingOrgId) {
+                // Update text to reflect organization creation
+                const activationStatusText = document.querySelector('#activation-status p');
+                if (activationStatusText) {
+                    activationStatusText.textContent = "Activating organization workspace...";
+                }
                 
-                if (subscription && subscription.status === 'active') {
-                    // Hide activation status
-                    document.getElementById('activation-status').classList.add('hidden');
+                try {
+                    const statusRes = await window.organizationManager.pollPaymentStatus(pendingOrgId);
                     
-                    // Show plan confirmed
-                    const planConfirmed = document.getElementById('plan-confirmed');
-                    const planName = document.getElementById('confirmed-plan-name');
-                    planName.textContent = `${capitalize(subscription.plan)} Plan`;
-                    planConfirmed.classList.remove('hidden');
-                } else {
-                    // Polling timeout - show pending message
+                    if (statusRes && (statusRes.payment_status === 'pending_email_verification' || statusRes.payment_status === 'active')) {
+                        // Hide activation status
+                        document.getElementById('activation-status').classList.add('hidden');
+                        
+                        // Show plan confirmed
+                        const planConfirmed = document.getElementById('plan-confirmed');
+                        const planName = document.getElementById('confirmed-plan-name');
+                        const planStr = statusRes.plan ? capitalize(statusRes.plan) : 'Pro';
+                        planName.textContent = `Organization (${planStr} Plan)`;
+                        
+                        // Customize title and message for Organization Onboarding
+                        const resultTitle = document.querySelector('.result-title');
+                        if (resultTitle) {
+                            resultTitle.textContent = "Organization Created!";
+                        }
+                        
+                        const successMessage = document.getElementById('success-message');
+                        if (successMessage) {
+                            successMessage.textContent = "Your organization workspace has been created successfully. Proceed to the dashboard to verify your corporate email.";
+                        }
+                        
+                        planConfirmed.classList.remove('hidden');
+                    } else {
+                        document.getElementById('activation-status').innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; color: var(--cg-info-400);">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                            </svg>
+                            <p>Organization is activating — check Dashboard shortly.</p>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error polling organization status:', error);
+                    document.getElementById('activation-status').innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; color: var(--cg-info-400);">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                        </svg>
+                        <p>Organization activation processing. Please check your Dashboard.</p>
+                    `;
+                }
+            } else {
+                // Personal subscription flow (Original logic)
+                try {
+                    const subscription = await BillingAPI.pollSubscriptionUntilActive(3000, 5);
+                    
+                    if (subscription && subscription.status === 'active') {
+                        // Hide activation status
+                        document.getElementById('activation-status').classList.add('hidden');
+                        
+                        // Show plan confirmed
+                        const planConfirmed = document.getElementById('plan-confirmed');
+                        const planName = document.getElementById('confirmed-plan-name');
+                        planName.textContent = `${capitalize(subscription.plan)} Plan`;
+                        planConfirmed.classList.remove('hidden');
+                    } else {
+                        // Polling timeout - show pending message
+                        document.getElementById('activation-status').innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; color: var(--cg-info-400);">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                            </svg>
+                            <p>Your plan may take a few minutes to activate. Check your dashboard for updates.</p>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error polling subscription:', error);
+                    // Show pending message on error
                     document.getElementById('activation-status').innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; color: var(--cg-info-400);">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
@@ -307,15 +371,6 @@
                         <p>Your plan may take a few minutes to activate. Check your dashboard for updates.</p>
                     `;
                 }
-            } catch (error) {
-                console.error('Error polling subscription:', error);
-                // Show pending message on error
-                document.getElementById('activation-status').innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; color: var(--cg-info-400);">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                    </svg>
-                    <p>Your plan may take a few minutes to activate. Check your dashboard for updates.</p>
-                `;
             }
         }
 

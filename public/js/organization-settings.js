@@ -601,7 +601,22 @@
         this._loadWorkspaceSwitcher();
       } catch (error) {
         if (error.name === "ValidationError" && error.errors) {
-          this._showFieldErrors(error.errors);
+          const shown = this._showFieldErrors(error.errors);
+          if (!shown) {
+            let msg = error.message || "Failed to update organization.";
+            if (error.errors && error.errors.length > 0) {
+              const msgErr = error.errors.find(e => e.field === "message");
+              if (msgErr) {
+                msg = msgErr.message;
+              } else {
+                msg = error.errors
+                  .filter(e => e.field !== "status")
+                  .map(e => e.message)
+                  .join(" ");
+              }
+            }
+            window.CyberNotify.alert(msg, { type: "error" });
+          }
         } else if (error.name !== "APIError") {
           window.CyberNotify.alert(error.message || "Failed to update organization.", { type: "error" });
         }
@@ -876,7 +891,22 @@
           this._renderOnboardingStep(2);
         } catch (error) {
           if (error.name === "ValidationError") {
-            this._showFieldErrors(error.errors, "onboard-");
+            const shown = this._showFieldErrors(error.errors, "onboard-");
+            if (!shown) {
+              let msg = error.message || "Failed to create organization.";
+              if (error.errors && error.errors.length > 0) {
+                const msgErr = error.errors.find(e => e.field === "message");
+                if (msgErr) {
+                  msg = msgErr.message;
+                } else {
+                  msg = error.errors
+                    .filter(e => e.field !== "status")
+                    .map(e => e.message)
+                    .join(" ");
+                }
+              }
+              window.CyberNotify.alert(msg, { type: "error" });
+            }
           } else if (error.name !== "APIError") {
             window.CyberNotify.alert(error.message || "Failed to create organization.", { type: "error" });
           }
@@ -1006,7 +1036,22 @@
           }
         } catch (error) {
           if (error.name === "ValidationError") {
-            this._showFieldErrors(error.errors, "billing-");
+            const shown = this._showFieldErrors(error.errors, "billing-");
+            if (!shown) {
+              let msg = error.message || "Checkout failed.";
+              if (error.errors && error.errors.length > 0) {
+                const msgErr = error.errors.find(e => e.field === "message");
+                if (msgErr) {
+                  msg = msgErr.message;
+                } else {
+                  msg = error.errors
+                    .filter(e => e.field !== "status")
+                    .map(e => e.message)
+                    .join(" ");
+                }
+              }
+              window.CyberNotify.alert(msg, { type: "error" });
+            }
           } else if (error.name !== "APIError") {
             window.CyberNotify.alert(error.message || "Checkout failed.", { type: "error" });
           }
@@ -1062,7 +1107,22 @@
           this._closeOnboardingWizard();
         } catch (error) {
           if (error.name === "ValidationError") {
-            this._showFieldErrors(error.errors, "corp-");
+            const shown = this._showFieldErrors(error.errors, "corp-");
+            if (!shown) {
+              let msg = error.message || "Failed to send verification email.";
+              if (error.errors && error.errors.length > 0) {
+                const msgErr = error.errors.find(e => e.field === "message");
+                if (msgErr) {
+                  msg = msgErr.message;
+                } else {
+                  msg = error.errors
+                    .filter(e => e.field !== "status")
+                    .map(e => e.message)
+                    .join(" ");
+                }
+              }
+              window.CyberNotify.alert(msg, { type: "error" });
+            }
           } else if (error.name !== "APIError") {
             window.CyberNotify.alert(error.message || "Failed to send verification email.", { type: "error" });
           }
@@ -1107,7 +1167,8 @@
     // ─── Utilities ──────────────────────────────────────────────────────────
 
     _showFieldErrors(errors, prefix = "org-edit-") {
-      if (!Array.isArray(errors)) return;
+      if (!Array.isArray(errors)) return false;
+      let shownAny = false;
       errors.forEach((err) => {
         // Map backend field names to DOM IDs
         const fieldMap = {
@@ -1128,8 +1189,10 @@
         if (errorEl) {
           errorEl.textContent = err.message;
           errorEl.classList.remove("hidden");
+          shownAny = true;
         }
       });
+      return shownAny;
     }
 
     _getInitials(name) {
