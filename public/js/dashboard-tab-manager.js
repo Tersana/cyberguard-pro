@@ -81,36 +81,63 @@ const DashboardTabManager = {
       return;
     }
     
-    // Stop active scans polling if leaving Security Dashboard
-    if (this.currentTab === 'security-dashboard') {
-      if (typeof window.stopActiveScansPolling === 'function') {
-        window.stopActiveScansPolling();
+    const executeSwitch = () => {
+      // Stop active scans polling if leaving Security Dashboard
+      if (this.currentTab === 'security-dashboard') {
+        if (typeof window.stopActiveScansPolling === 'function') {
+          window.stopActiveScansPolling();
+        }
       }
-    }
-    
-    // Update button states
-    this.updateTabButtons(tabId);
-    
-    // Update pane visibility using display: none/block approach
-    this.updateTabPanes(tabId);
-    
-    // Initialize tab-specific functionality if needed
-    this.initializeTab(tabId);
-    
-    // Trigger telemetry load if entering Security Dashboard (even if already initialized)
-    if (tabId === 'security-dashboard') {
-      if (typeof window.loadSecurityDashboard === 'function') {
-        window.loadSecurityDashboard();
+      
+      // Update button states
+      this.updateTabButtons(tabId);
+      
+      // Update pane visibility using display: none/block approach
+      this.updateTabPanes(tabId);
+      
+      // Initialize tab-specific functionality if needed
+      this.initializeTab(tabId);
+      
+      // Trigger telemetry load if entering Security Dashboard (even if already initialized)
+      if (tabId === 'security-dashboard') {
+        if (typeof window.loadSecurityDashboard === 'function') {
+          window.loadSecurityDashboard();
+        }
       }
+      
+      // Update current tab
+      this.currentTab = tabId;
+      
+      // Trigger global UI updates
+      this.triggerGlobalUpdates();
+      
+      console.log(`DashboardTabManager: Successfully switched to "${tabId}"`);
+    };
+
+    // Close settings modal if open when navigating to a dashboard tab
+    if (window.SettingsPanel && window.SettingsPanel.isOpen) {
+      if (window.SettingsPanel.hasUnsavedChanges()) {
+        if (window.CyberNotify && typeof window.CyberNotify.confirm === "function") {
+          window.CyberNotify.confirm(
+            "You have unsaved changes. Discard changes and close settings?",
+            () => {
+              window.SettingsPanel.forceClose();
+              executeSwitch();
+            }
+          );
+        } else {
+          if (confirm("You have unsaved changes. Are you sure you want to discard them?")) {
+            window.SettingsPanel.forceClose();
+            executeSwitch();
+          }
+        }
+      } else {
+        window.SettingsPanel.forceClose();
+        executeSwitch();
+      }
+    } else {
+      executeSwitch();
     }
-    
-    // Update current tab
-    this.currentTab = tabId;
-    
-    // Trigger global UI updates
-    this.triggerGlobalUpdates();
-    
-    console.log(`DashboardTabManager: Successfully switched to "${tabId}"`);
   },
   
   /**

@@ -10,20 +10,32 @@
     <link rel="stylesheet" href="css/cyber-theme.css">
     <style>
         /* ── Layout ── */
+        :root {
+            --orb-color-1: var(--cg-accent-dark);
+            --orb-color-2: var(--cg-success);
+        }
+        body.payment-failed {
+            --orb-color-1: var(--cg-danger);
+            --orb-color-2: #f97316;
+        }
+
+        /* ── Layout ── */
         .redirect-page {
-            background: var(--cg-bg-base);
             min-height: 100vh;
             font-family: var(--cg-font-sans);
             color: var(--cg-text-1);
             display: flex;
             flex-direction: column;
+            margin: 0;
+            position: relative;
         }
 
         /* ── Navbar ── */
         .redirect-nav {
-            background: var(--cg-bg-surface);
+            background: rgba(17, 17, 17, 0.75);
             border-bottom: 1px solid var(--cg-border);
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -68,11 +80,13 @@
             max-width: 1200px;
             margin: 0 auto;
             width: 100%;
-            padding: 5rem 1.5rem 4rem;
+            padding: 2rem 1.5rem;
             display: grid;
             grid-template-columns: 1fr auto;
             gap: 5rem;
             align-items: center;
+            position: relative;
+            z-index: 1;
         }
 
         /* ── Left column ── */
@@ -115,19 +129,37 @@
             text-decoration: none;
             width: fit-content;
             transition: all var(--cg-transition-base);
-            background: linear-gradient(135deg, var(--cg-accent-hover), var(--cg-accent-dark));
-            color: #fff;
-            border: 1px solid var(--cg-accent-hover);
+            background: #fafafa;
+            color: #09090b;
+            border: 1px solid #fafafa;
             cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
         }
         .hero-btn:hover {
-            background: linear-gradient(135deg, var(--cg-accent), var(--cg-accent-hover));
-            transform: translateX(2px);
+            background: #e4e4e7;
+            border-color: #e4e4e7;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(255, 255, 255, 0.15);
+        }
+        .hero-btn:active {
+            transform: translateY(0);
         }
         .hero-btn svg {
             width: 16px;
             height: 16px;
             flex-shrink: 0;
+        }
+        .hero-btn .arrow-icon {
+            transition: transform var(--cg-transition-fast);
+        }
+        .hero-btn:hover .arrow-icon {
+            transform: translateX(3px);
+        }
+        .hero-btn .refresh-icon {
+            transition: transform 0.5s ease;
+        }
+        .hero-btn:hover .refresh-icon {
+            transform: rotate(180deg);
         }
 
         /* ── Subscription activation spinner row ── */
@@ -156,7 +188,7 @@
 
         /* ── Right column — payment card ── */
         .payment-card {
-            background: var(--cg-bg-surface);
+            background: rgba(17, 17, 17, 0.7);
             border: 1px solid var(--cg-border);
             border-radius: var(--cg-radius-xl);
             padding: 2rem 2.25rem 2.25rem;
@@ -166,6 +198,10 @@
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            position: relative;
+            z-index: 1;
         }
 
         /* ── Status badge at top of card ── */
@@ -207,8 +243,12 @@
             flex-shrink: 0;
         }
         .shield-ring.success-ring {
-            border: 3px solid var(--cg-info);
-            box-shadow: none;
+            border: 3px solid var(--cg-success);
+            box-shadow:
+                0 0 20px rgba(34, 197, 94, 0.40),
+                0 0 50px rgba(34, 197, 94, 0.15),
+                inset 0 0 20px rgba(34, 197, 94, 0.05);
+            animation: pulseRingGreen 3s ease-in-out infinite;
         }
         .shield-ring.failure-ring {
             border: 3px solid #f97316;
@@ -222,9 +262,9 @@
             width: 52px;
             height: 52px;
         }
-        .shield-ring.success-ring svg { color: var(--cg-info); }
+        .shield-ring.success-ring svg { color: var(--cg-success); }
         .shield-ring.failure-ring svg { color: #f97316; }
-
+ 
         @keyframes pulseRingCyan {
             0%, 100% { box-shadow: none; }
             50%       { box-shadow: none; }
@@ -232,6 +272,50 @@
         @keyframes pulseRingOrange {
             0%, 100% { box-shadow: 0 0 20px rgba(249,115,22,0.40), 0 0 50px rgba(249,115,22,0.15), inset 0 0 20px rgba(249,115,22,0.05); }
             50%       { box-shadow: 0 0 36px rgba(249,115,22,0.60), 0 0 80px rgba(249,115,22,0.22), inset 0 0 24px rgba(249,115,22,0.08); }
+        }
+        @keyframes pulseRingGreen {
+            0%, 100% { box-shadow: 0 0 20px rgba(34,197,94,0.40), 0 0 50px rgba(34,197,94,0.15), inset 0 0 20px rgba(34,197,94,0.05); }
+            50%       { box-shadow: 0 0 36px rgba(34,197,94,0.60), 0 0 80px rgba(34,197,94,0.22), inset 0 0 24px rgba(34,197,94,0.08); }
+        }
+
+        /* ── Ambient Background Glows ── */
+        .hero-background {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .gradient-orb {
+            position: absolute;
+            width: clamp(300px, 45vw, 600px);
+            height: clamp(300px, 45vw, 600px);
+            border-radius: 50%;
+            filter: blur(140px);
+            opacity: 0.1;
+            pointer-events: none;
+            will-change: transform;
+        }
+        .orb-1 {
+            background: radial-gradient(circle, var(--orb-color-1) 0%, transparent 70%);
+            top: -10%;
+            left: -10%;
+            animation: float-orb-1 20s infinite alternate ease-in-out;
+        }
+        .orb-2 {
+            background: radial-gradient(circle, var(--orb-color-2) 0%, transparent 70%);
+            bottom: -10%;
+            right: -10%;
+            animation: float-orb-2 25s infinite alternate ease-in-out;
+        }
+        @keyframes float-orb-1 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 80px) scale(1.1); }
+        }
+        @keyframes float-orb-2 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-60px, -50px) scale(1.05); }
+        }x rgba(249,115,22,0.22), inset 0 0 24px rgba(249,115,22,0.08); }
         }
 
         /* ── Transaction data grid ── */
@@ -313,7 +397,13 @@
         }
     </style>
 </head>
-<body class="redirect-page">
+<body class="redirect-page cyber-body">
+
+    <!-- Ambient background glows -->
+    <div class="hero-background">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+    </div>
 
     <!-- Navbar -->
     <nav class="redirect-nav" aria-label="CyberGuard navigation">
@@ -386,8 +476,20 @@
                 <a href="/dashboard">Dashboard</a>
                 <a href="#">Support</a>
                 <a href="#" id="nav-logout-btn"
-                   class="cyber-btn-primary"
-                   style="padding:0.4rem 1rem;border-radius:var(--cg-radius-md);font-size:0.85rem;">
+                   class="btn-logout"
+                   style="width: auto; padding: 0.4rem 1rem; border-radius: var(--cg-radius-md); font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
                     Logout
                 </a>
             </div>
@@ -423,7 +525,7 @@
 
             <a href="/dashboard" class="hero-btn" id="return-btn">
                 Return to Dashboard
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                      stroke-width="2" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                 </svg>
@@ -526,6 +628,7 @@
             const returnBtn = document.getElementById('return-btn');
 
             if (success) {
+                document.body.classList.add('payment-success');
                 // ── SUCCESS STATE ──
                 show('success-state');  hide('failure-state');
                 show('badge-success');  hide('badge-failure');
@@ -535,7 +638,7 @@
                 returnBtn.href        = '/dashboard';
                 returnBtn.textContent = '';
                 returnBtn.insertAdjacentHTML('beforeend',
-                    'Go to Dashboard <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;flex-shrink:0" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>'
+                    'Go to Dashboard <svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;flex-shrink:0" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>' // cg-ignore
                 );
 
                 // ── Poll subscription until active (max 5 × 3 s) ──
@@ -569,6 +672,7 @@
                 })();
 
             } else {
+                document.body.classList.add('payment-failed');
                 // ── FAILURE STATE ──
                 hide('success-state');  show('failure-state');
                 hide('badge-success');  show('badge-failure');
@@ -578,7 +682,7 @@
                 returnBtn.href        = '/pricing';
                 returnBtn.textContent = '';
                 returnBtn.insertAdjacentHTML('beforeend',
-                    'Try Again <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;flex-shrink:0" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>'
+                    'Try Again <svg class="refresh-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;flex-shrink:0" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>' // cg-ignore
                 );
             }
 
