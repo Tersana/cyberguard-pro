@@ -41,6 +41,12 @@ const SidebarSystemHealth = {
       this.loadData();
     });
 
+    // Re-render when organization context switches
+    document.addEventListener("cyberguard:orgContextChanged", () => {
+      console.log("[SidebarSystemHealth] Event: org context changed");
+      this.loadData();
+    });
+
     // Run initial data load
     this.loadData();
   },
@@ -60,6 +66,36 @@ const SidebarSystemHealth = {
     this._loading = true;
 
     try {
+      // ── Org Context Branch ────────────────────────────────────────
+      const activeOrgId = localStorage.getItem("cyberguard_active_org_id");
+      if (activeOrgId && window.organizationManager) {
+        try {
+          const orgRes = await window.organizationManager.fetchOrgDetails();
+          const orgLimits = orgRes.limits || {};
+          const orgUsage  = orgRes.usage  || {};
+
+          const limits = {
+            maxProjects:      orgLimits.max_projects       ?? 0,
+            maxTargets:       orgLimits.max_targets         ?? 0,
+            maxScansPerMonth: orgLimits.max_scans_per_month ?? 0,
+            maxMembers:       orgLimits.max_members         ?? 0,
+          };
+
+          const usage = {
+            projectsUsed: orgUsage.projects_count ?? 0,
+            targetsUsed:  orgUsage.targets_count  ?? 0,
+            scansUsed:    orgUsage.scans_used      ?? 0,
+            membersUsed:  orgUsage.members_count   ?? 0,
+          };
+
+          this.updateUI(limits, usage);
+        } catch (err) {
+          console.warn("[SidebarSystemHealth] Failed to load org details for sidebar:", err);
+        }
+        return;
+      }
+
+      // ── Personal Context (existing logic) ─────────────────────────
       // 1. Fetch current subscription limits (cached or fetched)
       let subscription = window.currentSubscription;
       if (!subscription && typeof BillingAPI !== "undefined") {
@@ -100,8 +136,6 @@ const SidebarSystemHealth = {
       let projects = [];
       if (window.projectManager) {
         try {
-          // If we have local projects already, we can use them to save a network round-trip,
-          // but we also want to verify they are loaded.
           projects = window.projectManager.projects || [];
           if (projects.length === 0) {
             const { projects: fetchedProjects } = await window.projectManager.fetchProjects();
@@ -118,7 +152,6 @@ const SidebarSystemHealth = {
 
       if (projects.length > 0 && window.apiClient) {
         try {
-          // Fetch global targets and scans in parallel
           const globalTargetsPromise = window.apiClient.get("/targets")
             .then(res => Array.isArray(res) ? res : (res.targets || res.data || []))
             .catch(() => []);
@@ -134,10 +167,8 @@ const SidebarSystemHealth = {
             Promise.all(scansPromises)
           ]);
 
-          // Calculate total target count
           targetsUsed = globalTargets.length;
 
-          // Filter scans completed in current calendar month
           const allScans = scansResults.flat();
           const now = new Date();
           const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -220,6 +251,25 @@ const SidebarSystemHealth = {
     if (scansBarEl) {
       const pct = limits.maxScansPerMonth ? Math.min(100, Math.round((usage.scansUsed / limits.maxScansPerMonth) * 100)) : 0;
       scansBarEl.style.width = `${pct}%`;
+    }
+
+    // 4. Team Members (org context only)
+    const membersTextEl = document.getElementById("sidebar-members-text");
+    const membersBarEl  = document.getElementById("sidebar-members-bar");
+    const membersRow    = document.getElementById("sidebar-members-row");
+    if (usage.membersUsed !== undefined && limits.maxMembers) {
+      // Show members row if it exists
+      if (membersRow) membersRow.classList.remove("hidden");
+      if (membersTextEl) {
+        membersTextEl.textContent = `${usage.membersUsed}/${limits.maxMembers} Members`;
+      }
+      if (membersBarEl) {
+        const pct = limits.maxMembers ? Math.min(100, Math.round((usage.membersUsed / limits.maxMembers) * 100)) : 0;
+        membersBarEl.style.width = `${pct}%`;
+      }
+    } else {
+      // Hide members row when not in org context
+      if (membersRow) membersRow.classList.add("hidden");
     }
   }
 };

@@ -400,7 +400,8 @@ class ProjectManager {
    * POST /api/projects/{id}/targets
    * @param {string|number} projectId
    * @param {Object} data - { type, label, value }
-   * @returns {Promise<Object>} Created target object
+   * @returns {Promise<Object>} Created target object. In org context the response
+   *          may also include `dns_verification` and `is_verified` fields.
    */
   async createTarget(projectId, data) {
     try {
@@ -409,7 +410,14 @@ class ProjectManager {
         `/projects/${projectId}/targets`,
         data,
       );
-      return response.target || response;
+      // In org context the response includes dns_verification alongside target.
+      // Return the full response so callers can access both.
+      const target = response.target || response;
+      if (response.dns_verification) {
+        target._dnsVerification = response.dns_verification;
+        target._isVerified = response.is_verified === true;
+      }
+      return target;
     } catch (error) {
       console.error("[ProjectManager] createTarget error:", error);
       throw error;
@@ -474,6 +482,19 @@ class ProjectManager {
     } finally {
       if (typeof hideLoading !== "undefined") hideLoading();
     }
+  }
+
+  /**
+   * POST /api/targets/{targetId}/verify-dns
+   * Delegates to OrganizationManager for DNS TXT record verification.
+   * @param {string|number} targetId
+   * @returns {Promise<Object>} Verification result
+   */
+  async verifyDns(targetId) {
+    if (window.organizationManager) {
+      return window.organizationManager.verifyDns(targetId);
+    }
+    throw new Error("Organization module not loaded");
   }
 
   // ─── UI: Projects Tab Sub-navigation ──────────────────────────────────────

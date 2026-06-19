@@ -733,3 +733,616 @@
         gap: var(--cg-space-4);
     }
 }
+
+/* ============================================================
+   Organization & Multi-Tenancy Styles
+   Scope: workspace switcher, team list, badges, onboarding wizard
+   ============================================================ */
+
+/* ─── Workspace Switcher (sidebar) ─────────────────────────── */
+.cyber-org-switcher-dropdown {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--cg-space-2) 0;
+}
+
+.cyber-org-switcher-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--cg-space-3);
+    padding: var(--cg-space-2) var(--cg-space-3);
+    border-radius: var(--cg-radius-md);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--cg-text-2);
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+    transition: all var(--cg-transition-fast);
+}
+
+.cyber-org-switcher-item:hover {
+    background: var(--cg-bg-elevated);
+    color: var(--cg-text-1);
+    border-color: var(--cg-border-subtle);
+}
+
+.cyber-org-switcher-item.active {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.2);
+    color: var(--cg-text-1);
+}
+
+.cyber-org-switcher-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.cyber-org-switcher-name {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cyber-org-switcher-badges {
+    display: flex;
+    align-items: center;
+    gap: var(--cg-space-2);
+}
+
+.cyber-org-switcher-divider {
+    height: 1px;
+    background: var(--cg-border);
+    margin: var(--cg-space-1) 0;
+}
+
+.cyber-org-check {
+    font-size: 1rem;
+    color: var(--cg-accent);
+    flex-shrink: 0;
+}
+
+/* ─── Micro Badges ─────────────────────────────────────────── */
+.cyber-badge-xs {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+    text-transform: capitalize;
+    line-height: 1.6;
+    white-space: nowrap;
+}
+
+.cyber-badge-info {
+    color: #60a5fa;
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.cyber-badge-success {
+    color: #34d399;
+    background: rgba(52, 211, 153, 0.1);
+    border: 1px solid rgba(52, 211, 153, 0.25);
+}
+
+.cyber-badge-warning {
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.cyber-badge-purple {
+    color: #a78bfa;
+    background: rgba(139, 92, 246, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+.cyber-badge-gold {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.cyber-badge-slate {
+    color: #94a3b8;
+    background: rgba(148, 163, 184, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.cyber-badge-muted {
+    color: #64748b;
+    background: rgba(100, 116, 139, 0.08);
+    border: 1px solid rgba(100, 116, 139, 0.18);
+}
+
+/* ─── Status Dots ──────────────────────────────────────────── */
+.cyber-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.cyber-status-active {
+    background: var(--cg-success, #22c55e);
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+}
+
+.cyber-status-pending {
+    background: var(--cg-warning, #f59e0b);
+    box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+}
+
+/* ─── Org Avatar ───────────────────────────────────────────── */
+.cyber-org-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--cg-radius-lg);
+    background: var(--cg-bg-elevated);
+    border: 1px solid var(--cg-border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+/* ─── Team Member Rows ─────────────────────────────────────── */
+.cyber-org-member-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--cg-space-3);
+    padding: var(--cg-space-3) var(--cg-space-4);
+    border-radius: var(--cg-radius-md);
+    border: 1px solid var(--cg-border);
+    background: rgba(255, 255, 255, 0.015);
+    transition: background var(--cg-transition-fast);
+}
+
+.cyber-org-member-row:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.cyber-org-pending-row {
+    opacity: 0.7;
+    border-style: dashed;
+}
+
+.cyber-avatar-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--cg-radius-full);
+    background: var(--cg-bg-elevated);
+    border: 1px solid var(--cg-border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--cg-text-1);
+    flex-shrink: 0;
+}
+
+.cyber-avatar-pending {
+    background: rgba(251, 191, 36, 0.1);
+    border-color: rgba(251, 191, 36, 0.25);
+    color: #fbbf24;
+}
+
+/* ─── Mini Inputs ──────────────────────────────────────────── */
+.cyber-input-xs {
+    padding: 4px 8px !important;
+    font-size: 0.6875rem !important;
+    border-radius: var(--cg-radius-sm) !important;
+    min-width: 80px;
+}
+
+/* ─── Ghost Danger Button ──────────────────────────────────── */
+.cyber-btn-ghost-danger {
+    background: transparent;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border-radius: var(--cg-radius-sm);
+    cursor: pointer;
+    padding: 4px 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--cg-transition-fast);
+}
+
+.cyber-btn-ghost-danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.cyber-btn-xs {
+    padding: 4px 8px !important;
+    font-size: 0.6875rem !important;
+}
+
+/* ─── Danger Card ──────────────────────────────────────────── */
+.cyber-card-danger {
+    border-color: rgba(239, 68, 68, 0.2) !important;
+    background: rgba(239, 68, 68, 0.03) !important;
+}
+
+/* ─── Onboarding Wizard Step Indicators ────────────────────── */
+.cyber-step-dot {
+    width: 30px;
+    height: 30px;
+    border-radius: var(--cg-radius-full);
+    border: 2px solid var(--cg-border);
+    background: var(--cg-bg-elevated);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--cg-text-3);
+    transition: all 0.3s ease;
+}
+
+.cyber-step-dot.active {
+    border-color: var(--cg-accent);
+    color: var(--cg-accent);
+    background: rgba(59, 130, 246, 0.08);
+}
+
+.cyber-step-dot.current {
+    border-color: var(--cg-accent);
+    background: var(--cg-accent);
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+}
+
+.cyber-step-line {
+    flex: 1;
+    max-width: 60px;
+    height: 2px;
+    background: var(--cg-border);
+    border-radius: 1px;
+}
+
+/* ─── DNS Verification Banner ──────────────────────────────── */
+.cyber-dns-banner {
+    background: rgba(251, 191, 36, 0.06);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    border-radius: var(--cg-radius-md);
+    padding: var(--cg-space-4);
+    margin-top: var(--cg-space-3);
+}
+
+.cyber-dns-banner-header {
+    display: flex;
+    align-items: center;
+    gap: var(--cg-space-2);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #fbbf24;
+    margin-bottom: var(--cg-space-2);
+}
+
+.cyber-dns-record {
+    font-family: var(--cg-font-mono);
+    font-size: 0.75rem;
+    color: var(--cg-text-2);
+    background: rgba(0, 0, 0, 0.3);
+    padding: var(--cg-space-2) var(--cg-space-3);
+    border-radius: var(--cg-radius-sm);
+    border: 1px solid var(--cg-border);
+    word-break: break-all;
+    margin-bottom: var(--cg-space-3);
+}
+
+.cyber-verified-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #34d399;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(52, 211, 153, 0.1);
+    border: 1px solid rgba(52, 211, 153, 0.25);
+}
+
+.cyber-unverified-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #fbbf24;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+/* ─── Field-Level Error ────────────────────────────────────── */
+.cyber-field-error {
+    font-size: 0.6875rem;
+    color: var(--cg-danger, #f87171);
+    margin-top: 4px;
+}
+
+/* ─── Responsive: Org Settings ─────────────────────────────── */
+@media (max-width: 640px) {
+    .cyber-org-member-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--cg-space-2);
+    }
+}
+
+/* Modals opened from settings pane stack on top of settings modal (z-index: 90) */
+#org-onboarding-modal,
+#twofa-setup-modal,
+#twofa-disable-modal {
+    z-index: 100 !important;
+}
+
+/* ─── Premium Onboarding Wizard Modal ──────────────────────── */
+.cyber-onboarding-modal {
+    background: linear-gradient(135deg, #090a0f 0%, #12131a 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: var(--cg-radius-xl) !important;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05),
+                0 0 50px rgba(99, 102, 241, 0.08) !important;
+    backdrop-filter: blur(20px);
+    transition: all 0.3s ease;
+}
+
+/* Stepper Custom Rows & Items */
+.cyber-stepper-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--cg-space-6);
+    padding: var(--cg-space-4) var(--cg-space-5);
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: var(--cg-radius-lg);
+    position: relative;
+}
+
+.cyber-step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    position: relative;
+}
+
+.cyber-step-item .cyber-step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    background: #18181b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--cg-text-3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 2;
+}
+
+.cyber-step-item.active .cyber-step-dot {
+    border-color: rgba(99, 102, 241, 0.4);
+    color: var(--cg-text-2);
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.cyber-step-item.current .cyber-step-dot {
+    border-color: #6366f1;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #ffffff;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+}
+
+.cyber-step-item.completed .cyber-step-dot {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+.cyber-step-label {
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--cg-text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    transition: color 0.3s ease;
+}
+
+.cyber-step-item.active .cyber-step-label {
+    color: var(--cg-text-2);
+}
+
+.cyber-step-item.current .cyber-step-label {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.cyber-step-item.completed .cyber-step-label {
+    color: #10b981;
+}
+
+/* Stepper connectors */
+.cyber-step-line {
+    flex: 1;
+    max-width: 60px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 1px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 14px; /* Center horizontally with dots */
+}
+
+.cyber-step-line.active {
+    background: #6366f1;
+    box-shadow: 0 0 6px rgba(99, 102, 241, 0.3);
+}
+
+.cyber-step-line.completed {
+    background: #10b981;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.3);
+}
+
+/* Interactive Plan Selection Cards */
+.cyber-plans-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--cg-space-3);
+    margin-bottom: var(--cg-space-5);
+    margin-top: var(--cg-space-2);
+}
+
+.cyber-plan-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--cg-radius-lg);
+    padding: var(--cg-space-4) var(--cg-space-2);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 145px;
+}
+
+.cyber-plan-card:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.cyber-plan-card.selected {
+    background: rgba(99, 102, 241, 0.05);
+    border-color: #6366f1;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.15),
+                inset 0 0 0 1px rgba(99, 102, 241, 0.2);
+}
+
+.cyber-plan-badge {
+    position: absolute;
+    top: -9px;
+    font-size: 0.55rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+}
+
+.cyber-plan-icon {
+    font-size: 1.5rem !important;
+    margin-bottom: var(--cg-space-2);
+    color: var(--cg-text-3);
+    transition: color 0.25s ease;
+}
+
+.cyber-plan-card.selected .cyber-plan-icon {
+    color: #6366f1;
+}
+
+.cyber-plan-name {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--cg-text-2);
+    margin-bottom: 4px;
+}
+
+.cyber-plan-card.selected .cyber-plan-name {
+    color: #ffffff;
+}
+
+.cyber-plan-price {
+    font-size: 1.125rem;
+    font-weight: 800;
+    font-family: var(--cg-font-mono);
+    color: #ffffff;
+    margin-bottom: 2px;
+}
+
+.cyber-plan-price span {
+    font-size: 0.625rem;
+    font-weight: 500;
+    color: var(--cg-text-3);
+}
+
+.cyber-plan-features {
+    font-size: 0.625rem;
+    color: var(--cg-text-3);
+    margin-top: auto;
+    line-height: 1.3;
+}
+
+/* Onboarding Form Layouts */
+.cyber-onboarding-form-section {
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: var(--cg-radius-lg);
+    padding: var(--cg-space-4);
+    margin-bottom: var(--cg-space-4);
+}
+
+.cyber-onboarding-modal .cyber-input {
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+}
+
+.cyber-onboarding-modal .cyber-input:focus {
+    border-color: rgba(99, 102, 241, 0.5) !important;
+    background: rgba(10, 10, 10, 0.8);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.12) !important;
+}
+
+/* Premium Action Buttons */
+.cyber-onboarding-modal .cyber-btn-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2) !important;
+    transition: all 0.2s ease !important;
+}
+
+.cyber-onboarding-modal .cyber-btn-primary:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35) !important;
+    background: linear-gradient(135deg, #6d70f2 0%, #554ce6 100%) !important;
+}
+
+.cyber-onboarding-modal .cyber-btn-primary:active {
+    transform: translateY(0) !important;
+}
+
+

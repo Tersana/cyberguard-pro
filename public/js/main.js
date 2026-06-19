@@ -2463,6 +2463,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const tabButtons = document.querySelectorAll(".tab-button");
   const tabPanes = document.querySelectorAll(".tab-pane");
   const apiKeysToggle = document.getElementById("api-keys-toggle");
+  const orgNavToggle = document.getElementById("org-nav-toggle");
   const floatingSidebarToggle = document.getElementById("sidebar-toggle-btn");
 
   const VT_BASE_URL = "https://www.virustotal.com/api/v3";
@@ -2547,6 +2548,16 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (typeof window.SettingsPanel !== "undefined") {
         window.SettingsPanel.open("api-keys");
+      }
+    });
+  }
+
+  // --- Organizations Settings Tab Management ---
+  if (orgNavToggle) {
+    orgNavToggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (typeof window.SettingsPanel !== "undefined") {
+        window.SettingsPanel.open("org-settings");
       }
     });
   }
