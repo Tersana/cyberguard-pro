@@ -33,6 +33,11 @@ class SettingsPanel {
         this.setupModalControls();
         this.setupDirtyStateListeners();
         this.updateNavbarTrigger();
+        
+        // Initialize OrganizationSettings immediately on dashboard load to support workspace switcher and post-payment flows
+        if (window.OrganizationSettings) {
+            window.OrganizationSettings.init();
+        }
     }
 
     // Modal Display Controls
