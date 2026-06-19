@@ -244,19 +244,10 @@
         }
         .shield-ring.success-ring {
             border: 3px solid var(--cg-success);
-            box-shadow:
-                0 0 20px rgba(34, 197, 94, 0.40),
-                0 0 50px rgba(34, 197, 94, 0.15),
-                inset 0 0 20px rgba(34, 197, 94, 0.05);
-            animation: pulseRingGreen 3s ease-in-out infinite;
         }
         .shield-ring.failure-ring {
             border: 3px solid #f97316;
-            box-shadow:
-                0 0 20px rgba(249, 115, 22, 0.40),
-                0 0 50px rgba(249, 115, 22, 0.15),
-                inset 0 0 20px rgba(249, 115, 22, 0.05);
-            animation: pulseRingOrange 3s ease-in-out infinite;
+
         }
         .shield-ring svg {
             width: 52px;
@@ -264,19 +255,7 @@
         }
         .shield-ring.success-ring svg { color: var(--cg-success); }
         .shield-ring.failure-ring svg { color: #f97316; }
- 
-        @keyframes pulseRingCyan {
-            0%, 100% { box-shadow: none; }
-            50%       { box-shadow: none; }
-        }
-        @keyframes pulseRingOrange {
-            0%, 100% { box-shadow: 0 0 20px rgba(249,115,22,0.40), 0 0 50px rgba(249,115,22,0.15), inset 0 0 20px rgba(249,115,22,0.05); }
-            50%       { box-shadow: 0 0 36px rgba(249,115,22,0.60), 0 0 80px rgba(249,115,22,0.22), inset 0 0 24px rgba(249,115,22,0.08); }
-        }
-        @keyframes pulseRingGreen {
-            0%, 100% { box-shadow: 0 0 20px rgba(34,197,94,0.40), 0 0 50px rgba(34,197,94,0.15), inset 0 0 20px rgba(34,197,94,0.05); }
-            50%       { box-shadow: 0 0 36px rgba(34,197,94,0.60), 0 0 80px rgba(34,197,94,0.22), inset 0 0 24px rgba(34,197,94,0.08); }
-        }
+
 
         /* ── Ambient Background Glows ── */
         .hero-background {
