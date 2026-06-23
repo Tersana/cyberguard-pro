@@ -2072,6 +2072,602 @@ body::before {
 .node-db .node-icon-wrapper { color: #f59e0b; }
 .node-db:hover { border-color: #f59e0b; }
 
+
+/* ===========================
+   Organization Workflow Section
+   =========================== */
+.org-workflow {
+  padding: var(--section-padding) 0;
+  background: transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.workflow-container {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: clamp(40px, 6vw, 80px) /* cg-ignore */;
+  align-items: center;
+  margin-top: 50px /* cg-ignore */;
+}
+
+.workflow-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 24px /* cg-ignore */;
+}
+
+.workflow-step-card {
+  display: flex;
+  gap: 20px /* cg-ignore */;
+  padding: 24px /* cg-ignore */;
+  border-radius: 16px /* cg-ignore */;
+  border: 1px solid var(--cg-border);
+  background: rgba(17, 17, 17, 0.45) /* cg-ignore */;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all var(--cg-transition-base);
+  position: relative;
+  text-align: left;
+}
+
+.workflow-step-card:hover {
+  background: rgba(255, 255, 255, 0.02) /* cg-ignore */;
+  border-color: rgba(255, 255, 255, 0.12) /* cg-ignore */;
+  transform: translateX(4px) /* cg-ignore */;
+}
+
+.workflow-step-card.active {
+  background: var(--cg-bg-surface);
+  border-color: rgba(59, 130, 246, 0.45) /* cg-ignore */;
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  transform: translateX(8px) /* cg-ignore */;
+}
+
+.step-card-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  width: 24px;
+}
+
+.step-card-num {
+  font-size: 15px /* cg-ignore */;
+  font-weight: 800;
+  color: var(--cg-text-3);
+  font-family: var(--cg-font-mono);
+  transition: color var(--cg-transition-base);
+}
+
+.workflow-step-card.active .step-card-num {
+  color: var(--cg-accent-dark);
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.step-card-line-track {
+  width: 2px;
+  flex: 1;
+  background: var(--cg-border);
+  margin: 12px 0 0 0 /* cg-ignore */;
+  min-height: 50px /* cg-ignore */;
+  position: relative;
+}
+
+.step-card-line-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0;
+  background: linear-gradient(180deg, var(--cg-accent-dark), transparent);
+  transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.workflow-step-card.active .step-card-line-fill {
+  height: 100%;
+}
+
+.step-card-content h3 {
+  font-size: 18px /* cg-ignore */;
+  font-weight: 700;
+  color: var(--cg-text-1);
+  margin-bottom: 6px /* cg-ignore */;
+  letter-spacing: -0.015em;
+}
+
+.step-card-content p {
+  font-size: 13.5px /* cg-ignore */;
+  color: var(--cg-text-3);
+  line-height: 1.65;
+  transition: color var(--cg-transition-base);
+}
+
+.workflow-step-card.active .step-card-content p {
+  color: var(--cg-text-2);
+}
+
+/* Right Side: Visual Sandbox / Preview Console */
+.workflow-preview-wrapper {
+  position: relative;
+  height: 440px /* cg-ignore */;
+  border-radius: 20px /* cg-ignore */;
+  background: rgba(9, 9, 11, 0.7) /* cg-ignore */;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--cg-border);
+  box-shadow: var(--cg-shadow-xl);
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+}
+
+.workflow-preview-pane {
+  position: absolute;
+  inset: 0;
+  padding: clamp(20px, 3.5vw, 32px) /* cg-ignore */;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(15px) /* cg-ignore */;
+  pointer-events: none;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.workflow-preview-pane.active {
+  opacity: 1;
+  transform: translateY(0) /* cg-ignore */;
+  pointer-events: auto;
+  z-index: 5;
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  gap: 12px /* cg-ignore */;
+  margin-bottom: 20px /* cg-ignore */;
+  padding-bottom: 12px /* cg-ignore */;
+  border-bottom: 1px solid var(--cg-border);
+  flex-shrink: 0;
+}
+
+.preview-dots {
+  display: flex;
+  gap: 6px /* cg-ignore */;
+}
+
+.preview-dots .dot {
+  width: 8px /* cg-ignore */;
+  height: 8px /* cg-ignore */;
+  border-radius: 50%;
+}
+
+.preview-dots .dot.red { background: #ff5f56 /* cg-ignore */; }
+.preview-dots .dot.yellow { background: #ffbd2e /* cg-ignore */; }
+.preview-dots .dot.green { background: #27c93f /* cg-ignore */; }
+
+.preview-title {
+  font-size: 10px /* cg-ignore */;
+  font-family: var(--cg-font-mono);
+  color: var(--cg-text-3);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.preview-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Mock Forms & UI Components */
+.mock-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px /* cg-ignore */;
+}
+
+.mock-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px /* cg-ignore */;
+  text-align: left;
+}
+
+.mock-label {
+  font-size: 10px /* cg-ignore */;
+  color: var(--cg-text-3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.mock-input {
+  background: var(--cg-bg-surface);
+  border: 1px solid var(--cg-border);
+  padding: 10px 14px /* cg-ignore */;
+  border-radius: 8px /* cg-ignore */;
+  font-size: 13.5px /* cg-ignore */;
+  color: var(--cg-text-1);
+  font-family: var(--cg-font-mono);
+}
+
+.mock-plans-row {
+  display: flex;
+  gap: 10px /* cg-ignore */;
+  margin-top: 6px /* cg-ignore */;
+}
+
+.mock-plan-pill {
+  flex: 1;
+  text-align: center;
+  font-size: 11.5px /* cg-ignore */;
+  font-weight: 700;
+  padding: 8px 10px /* cg-ignore */;
+  border-radius: 6px /* cg-ignore */;
+  border: 1px solid var(--cg-border);
+  background: transparent;
+  color: var(--cg-text-3);
+  cursor: pointer;
+  transition: all var(--cg-transition-fast);
+}
+
+.mock-plan-pill:hover {
+  border-color: rgba(255, 255, 255, 0.12) /* cg-ignore */;
+  color: var(--cg-text-2);
+}
+
+.mock-plan-pill.active {
+  border-color: rgba(59, 130, 246, 0.4) /* cg-ignore */;
+  background: rgba(59, 130, 246, 0.1) /* cg-ignore */;
+  color: var(--cg-text-1);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+}
+
+.mock-plan-features-card {
+  margin-top: 14px /* cg-ignore */;
+  padding: 12px 14px /* cg-ignore */;
+  border-radius: 10px /* cg-ignore */;
+  background: rgba(255, 255, 255, 0.02) /* cg-ignore */;
+  border: 1px solid var(--cg-border);
+  text-align: left;
+}
+
+.mock-plan-price-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px /* cg-ignore */;
+  padding-bottom: 8px /* cg-ignore */;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) /* cg-ignore */;
+}
+
+.price-label {
+  font-size: 10px /* cg-ignore */;
+  color: var(--cg-text-3);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.price-value {
+  font-size: 14px /* cg-ignore */;
+  font-weight: 800;
+  color: var(--cg-accent-dark);
+  font-family: var(--cg-font-mono);
+}
+
+.mock-plan-features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px /* cg-ignore */;
+}
+
+.mock-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 8px /* cg-ignore */;
+  font-size: 11px /* cg-ignore */;
+  color: var(--cg-text-2);
+}
+
+.mock-feature-item .chk-icon {
+  color: var(--cg-success);
+  font-weight: 800;
+}
+
+/* Paymob Mock Card with 3D wrapper */
+.mock-card-3d-wrapper {
+  perspective: 1000px /* cg-ignore */;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+.mock-credit-card {
+  width: 100%;
+  max-width: 290px /* cg-ignore */;
+  aspect-ratio: 1.586/1;
+  padding: 20px /* cg-ignore */;
+  border-radius: 14px /* cg-ignore */;
+  background: linear-gradient(135deg, #1e1b4b 0%, #030712 100%) /* cg-ignore */;
+  border: 1px solid rgba(99, 102, 241, 0.2) /* cg-ignore */;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.mock-credit-card::before {
+  content: '';
+  position: absolute;
+  top: -50% /* cg-ignore */;
+  left: -50% /* cg-ignore */;
+  width: 200% /* cg-ignore */;
+  height: 200% /* cg-ignore */;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 60%) /* cg-ignore */;
+  pointer-events: none;
+}
+
+.mock-credit-card.success-glow {
+  border-color: rgba(34, 197, 94, 0.6) /* cg-ignore */;
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.35), 0 10px 30px rgba(0, 0, 0, 0.4) /* cg-ignore */;
+}
+
+.card-chip {
+  width: 32px /* cg-ignore */;
+  height: 24px /* cg-ignore */;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) /* cg-ignore */;
+  border-radius: 4px /* cg-ignore */;
+  opacity: 0.85;
+}
+
+.card-number {
+  font-family: var(--cg-font-mono);
+  font-size: 15px /* cg-ignore */;
+  color: var(--cg-text-1);
+  letter-spacing: 0.1em;
+  margin: 12px 0 /* cg-ignore */;
+}
+
+.card-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.card-label {
+  display: block;
+  font-size: 8px /* cg-ignore */;
+  color: rgba(255, 255, 255, 0.4) /* cg-ignore */;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 2px /* cg-ignore */;
+}
+
+.card-val {
+  font-family: var(--cg-font-mono);
+  font-size: 11px /* cg-ignore */;
+  color: var(--cg-text-1);
+  font-weight: 600;
+}
+
+/* Action button for Step 2 checkout */
+.billing-action-container {
+  margin-top: 18px /* cg-ignore */;
+  display: flex;
+  justify-content: center;
+}
+
+.mock-checkout-btn {
+  width: 100%;
+  max-width: 290px /* cg-ignore */;
+  padding: 10px 20px /* cg-ignore */;
+  border-radius: 8px /* cg-ignore */;
+  background: var(--cg-accent-dark);
+  border: 1px solid rgba(255, 255, 255, 0.05) /* cg-ignore */;
+  color: var(--cg-text-1);
+  font-weight: 700;
+  font-size: 12px /* cg-ignore */;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px /* cg-ignore */;
+  transition: all var(--cg-transition-base);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.mock-checkout-btn:hover:not(:disabled) {
+  transform: translateY(-2px) /* cg-ignore */;
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  background: #2563eb /* cg-ignore */;
+}
+
+.mock-checkout-btn:disabled {
+  background: var(--cg-border);
+  color: var(--cg-text-3);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.mock-checkout-btn.success {
+  background: linear-gradient(90deg, #10b981, #059669) /* cg-ignore */;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.btn-spinner {
+  width: 14px /* cg-ignore */;
+  height: 14px /* cg-ignore */;
+  border: 2px solid rgba(255, 255, 255, 0.3) /* cg-ignore */;
+  border-radius: 50%;
+  border-top-color: #ffffff /* cg-ignore */;
+  animation: btn-spin 0.8s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+.billing-status {
+  margin-top: 18px /* cg-ignore */;
+  display: flex;
+  justify-content: center;
+}
+
+.status-badge-secure {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px /* cg-ignore */;
+  padding: 6px 12px /* cg-ignore */;
+  border-radius: 20px /* cg-ignore */;
+  background: rgba(34, 197, 94, 0.1) /* cg-ignore */;
+  border: 1px solid rgba(34, 197, 94, 0.2) /* cg-ignore */;
+  color: var(--cg-success);
+  font-size: 11.5px /* cg-ignore */;
+  font-weight: 700;
+}
+
+.status-badge-secure svg {
+  flex-shrink: 0;
+}
+
+.status-badge-secure.processing {
+  background: rgba(245, 158, 11, 0.1) /* cg-ignore */;
+  border-color: rgba(245, 158, 11, 0.2) /* cg-ignore */;
+  color: #f59e0b /* cg-ignore */;
+}
+
+/* DNS Terminal Console */
+.terminal-console {
+  background: #000000;
+  border-radius: 12px /* cg-ignore */;
+  border: 1px solid var(--cg-border);
+  padding: 16px /* cg-ignore */;
+  font-family: var(--cg-font-mono);
+  font-size: 10px /* cg-ignore */;
+  line-height: 1.6;
+  text-align: left;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-action-container {
+  margin-bottom: 12px /* cg-ignore */;
+}
+
+.mock-audit-btn {
+  padding: 6px 12px /* cg-ignore */;
+  border-radius: 6px /* cg-ignore */;
+  background: rgba(59, 130, 246, 0.1) /* cg-ignore */;
+  border: 1px solid rgba(59, 130, 246, 0.3) /* cg-ignore */;
+  color: var(--cg-accent-dark);
+  font-weight: 700;
+  font-size: 11px /* cg-ignore */;
+  font-family: var(--cg-font-mono);
+  cursor: pointer;
+  transition: all var(--cg-transition-fast);
+}
+
+.mock-audit-btn:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.2) /* cg-ignore */;
+  border-color: rgba(59, 130, 246, 0.5) /* cg-ignore */;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.15);
+}
+
+.mock-audit-btn:disabled {
+  border-color: var(--cg-border);
+  color: var(--cg-text-3);
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.terminal-lines {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 140px /* cg-ignore */;
+}
+
+.terminal-console .prompt {
+  color: var(--cg-accent-dark);
+  font-weight: 700;
+}
+
+.terminal-line {
+  margin-bottom: 4px /* cg-ignore */;
+  opacity: 0;
+  transform: translateY(8px) /* cg-ignore */;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.terminal-line.reveal {
+  opacity: 1;
+  transform: translateY(0) /* cg-ignore */;
+}
+
+.terminal-cursor {
+  display: inline-block;
+  width: 6px /* cg-ignore */;
+  background: var(--cg-accent-dark);
+  margin-left: 2px /* cg-ignore */;
+  animation: term-blink 1s step-end infinite;
+}
+
+@keyframes term-blink {
+  from, to { background: transparent; }
+  50% { background: var(--cg-accent-dark); }
+}
+
+.mock-roles-row {
+  display: flex;
+  gap: 8px /* cg-ignore */;
+  flex-wrap: wrap;
+  transition: opacity 0.5s ease;
+}
+
+.mock-role-badge {
+  padding: 4px 8px /* cg-ignore */;
+  border-radius: 4px /* cg-ignore */;
+  font-size: 9.5px /* cg-ignore */;
+  font-weight: 700;
+  border: 1px solid var(--cg-border);
+}
+
+.mock-role-badge.owner {
+  background: rgba(168, 85, 247, 0.1) /* cg-ignore */;
+  border-color: rgba(168, 85, 247, 0.2) /* cg-ignore */;
+  color: #c084fc /* cg-ignore */;
+}
+
+.mock-role-badge.editor {
+  background: rgba(59, 130, 246, 0.1) /* cg-ignore */;
+  border-color: rgba(59, 130, 246, 0.2) /* cg-ignore */;
+  color: #60a5fa /* cg-ignore */;
+}
+
+@media (max-width: 900px) {
+  .workflow-container {
+    grid-template-columns: 1fr;
+    gap: 40px /* cg-ignore */;
+  }
+  
+  .workflow-preview-wrapper {
+    height: 400px /* cg-ignore */;
+  }
+}
+
 /* ===========================
    CTA Section
    =========================== */
