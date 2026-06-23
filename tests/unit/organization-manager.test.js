@@ -140,12 +140,14 @@ describe("OrganizationManager", () => {
         org_name: "Acme",
         company_domain: "acme.com",
         plan: "pro",
+        corporate_email: "admin@acme.com",
       });
 
       expect(window.apiClient.post).toHaveBeenCalledWith("organizations/initiate", {
         org_name: "Acme",
         company_domain: "acme.com",
         plan: "pro",
+        corporate_email: "admin@acme.com",
       });
       expect(result.organization_id).toBe("new-org-99");
       expect(window.organizationManager.getPendingOrgId()).toBe("new-org-99");

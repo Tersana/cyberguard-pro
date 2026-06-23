@@ -822,6 +822,12 @@
             <p class="cyber-field-error hidden" id="onboard-domain-error"></p>
           </div>
           <div>
+            <label class="block text-xs text-slate-400 mb-1.5" for="onboard-corp-email">Corporate Email Address</label>
+            <input type="email" id="onboard-corp-email" class="cyber-input w-full py-2 px-3" required
+                   placeholder="you@company.com" autocomplete="email">
+            <p class="cyber-field-error hidden" id="onboard-corp-email-error"></p>
+          </div>
+          <div>
             <label class="block text-xs text-slate-400 mb-2">Plan</label>
             <select id="onboard-plan" class="hidden" required>
               <option value="starter">Starter</option>
@@ -880,13 +886,18 @@
         e.preventDefault();
         const orgName = document.getElementById("onboard-org-name").value.trim();
         const domain = document.getElementById("onboard-domain").value.trim();
+        const corporateEmail = document.getElementById("onboard-corp-email").value.trim();
         const plan = planSelect ? planSelect.value : "pro";
+
+        // Store email to display in Step 2 verification
+        this._pendingCorpEmail = corporateEmail;
 
         try {
           await window.organizationManager.initiateOnboarding({
             org_name: orgName,
             company_domain: domain,
             plan: plan,
+            corporate_email: corporateEmail,
           });
           this._renderOnboardingStep(2);
         } catch (error) {
@@ -915,10 +926,93 @@
     }
 
     _renderOnboardingStep2() {
+      const email = this._pendingCorpEmail || "";
+      return `
+        <h4 class="text-base font-bold text-white mb-1">Corporate Email Verification</h4>
+        <p class="text-xs text-slate-400 mb-5">Verify your identity with your corporate email address</p>
+        <form id="org-onboard-step2-form" class="space-y-4">
+          <div class="cyber-onboarding-form-section space-y-3">
+            <div class="flex items-start gap-3 p-3 bg-blue-500/5 border border-blue-500/10 rounded-lg mb-3">
+              <span class="material-symbols-outlined text-blue-400 mt-0.5 text-lg">info</span>
+              <p class="text-xs text-slate-300 leading-relaxed">
+                We have sent a security verification link to your corporate email. This email domain must match the company domain you set up. Please click the link to verify, then click "Continue to Billing" below.
+              </p>
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1" for="corp-email">Corporate Email Address</label>
+              <input type="email" id="corp-email" class="cyber-input w-full py-2 px-3" required
+                     value="${escapeHtml(email)}" placeholder="you@company.com" autocomplete="email">
+              <p class="text-[11px] text-slate-500 mt-1">Example: you@company.com</p>
+              <p class="cyber-field-error hidden" id="corp-email-error"></p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button type="submit" class="cyber-btn-ghost flex-1 py-2.5 rounded-lg text-sm font-semibold" id="org-onboard-resend-btn">
+              Resend Verification
+            </button>
+            <button type="button" class="cyber-btn-primary flex-1 py-2.5 rounded-lg text-sm font-semibold" id="org-onboard-verify-continue-btn">
+              Continue to Billing
+            </button>
+          </div>
+        </form>`;
+    }
+
+    _bindOnboardingStep2() {
+      const form = document.getElementById("org-onboard-step2-form");
+      if (!form) return;
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const orgId = window.organizationManager.getPendingOrgId();
+        if (!orgId) {
+          window.CyberNotify.alert("No pending organization found.", { type: "error" });
+          return;
+        }
+
+        const corporateEmail = document.getElementById("corp-email").value.trim();
+        if (!corporateEmail) return;
+        this._pendingCorpEmail = corporateEmail;
+
+        try {
+          await window.organizationManager.submitCorporateEmail(orgId, corporateEmail);
+          window.CyberNotify.alert("Verification email sent. Check your corporate inbox.", { type: "success" });
+        } catch (error) {
+          if (error.name === "ValidationError") {
+            const shown = this._showFieldErrors(error.errors, "corp-");
+            if (!shown) {
+              let msg = error.message || "Failed to send verification email.";
+              if (error.errors && error.errors.length > 0) {
+                const msgErr = error.errors.find(e => e.field === "message");
+                if (msgErr) {
+                  msg = msgErr.message;
+                } else {
+                  msg = error.errors
+                    .filter(e => e.field !== "status")
+                    .map(e => e.message)
+                    .join(" ");
+                }
+              }
+              window.CyberNotify.alert(msg, { type: "error" });
+            }
+          } else if (error.name !== "APIError") {
+            window.CyberNotify.alert(error.message || "Failed to send verification email.", { type: "error" });
+          }
+        }
+      });
+
+      const continueBtn = document.getElementById("org-onboard-verify-continue-btn");
+      if (continueBtn) {
+        continueBtn.addEventListener("click", () => {
+          this._renderOnboardingStep(3);
+        });
+      }
+    }
+
+    _renderOnboardingStep3() {
       return `
         <h4 class="text-base font-bold text-white mb-1">Billing Information</h4>
         <p class="text-xs text-slate-400 mb-5">Enter your billing details for Paymob checkout</p>
-        <form id="org-onboard-step2-form" class="space-y-4">
+        <form id="org-onboard-step3-form" class="space-y-4">
           <!-- Contact Info Section -->
           <div class="cyber-onboarding-form-section space-y-3">
             <h5 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Contact Details</h5>
@@ -988,8 +1082,8 @@
         </form>`;
     }
 
-    _bindOnboardingStep2() {
-      const form = document.getElementById("org-onboard-step2-form");
+    _bindOnboardingStep3() {
+      const form = document.getElementById("org-onboard-step3-form");
       if (!form) return;
 
       form.addEventListener("submit", async (e) => {
@@ -1059,77 +1153,6 @@
       });
     }
 
-    _renderOnboardingStep3() {
-      return `
-        <h4 class="text-base font-bold text-white mb-1">Corporate Email Verification</h4>
-        <p class="text-xs text-slate-400 mb-5">Verify your identity with your corporate email address</p>
-        <form id="org-onboard-step3-form" class="space-y-4">
-          <div class="cyber-onboarding-form-section space-y-3">
-            <div class="flex items-start gap-3 p-3 bg-blue-500/5 border border-blue-500/10 rounded-lg mb-3">
-              <span class="material-symbols-outlined text-blue-400 mt-0.5 text-lg">info</span>
-              <p class="text-xs text-slate-300 leading-relaxed">
-                We will send a security verification link to your official company email. This email domain must match the company domain you set up.
-              </p>
-            </div>
-            <div>
-              <label class="block text-[11px] text-slate-400 mb-1" for="corp-email">Corporate Email Address</label>
-              <input type="email" id="corp-email" class="cyber-input w-full py-2 px-3" required
-                     placeholder="you@company.com" autocomplete="email">
-              <p class="text-[11px] text-slate-500 mt-1">Example: you@company.com</p>
-              <p class="cyber-field-error hidden" id="corp-email-error"></p>
-            </div>
-          </div>
-          <button type="submit" class="cyber-btn-primary w-full py-2.5 rounded-lg text-sm font-semibold">
-            Send Verification Email
-          </button>
-        </form>`;
-    }
-
-    _bindOnboardingStep3() {
-      const form = document.getElementById("org-onboard-step3-form");
-      if (!form) return;
-
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const orgId = window.organizationManager.getPendingOrgId();
-        if (!orgId) {
-          window.CyberNotify.alert("No pending organization found.", { type: "error" });
-          return;
-        }
-
-        const corporateEmail = document.getElementById("corp-email").value.trim();
-        if (!corporateEmail) return;
-
-        try {
-          await window.organizationManager.submitCorporateEmail(orgId, corporateEmail);
-          window.CyberNotify.alert("Verification email sent. Check your corporate inbox.", { type: "success" });
-          window.organizationManager.clearPendingOrgId();
-          this._closeOnboardingWizard();
-        } catch (error) {
-          if (error.name === "ValidationError") {
-            const shown = this._showFieldErrors(error.errors, "corp-");
-            if (!shown) {
-              let msg = error.message || "Failed to send verification email.";
-              if (error.errors && error.errors.length > 0) {
-                const msgErr = error.errors.find(e => e.field === "message");
-                if (msgErr) {
-                  msg = msgErr.message;
-                } else {
-                  msg = error.errors
-                    .filter(e => e.field !== "status")
-                    .map(e => e.message)
-                    .join(" ");
-                }
-              }
-              window.CyberNotify.alert(msg, { type: "error" });
-            }
-          } else if (error.name !== "APIError") {
-            window.CyberNotify.alert(error.message || "Failed to send verification email.", { type: "error" });
-          }
-        }
-      });
-    }
-
     /**
      * Start polling for payment status and advance to step 3 when ready.
      * Called after user returns from Paymob redirect.
@@ -1144,10 +1167,10 @@
         const statusRes = await window.organizationManager.pollPaymentStatus(orgId);
         console.log("[OrgSettings] Polling resolved. Response:", statusRes);
         if (statusRes.payment_status === "pending_email_verification") {
-          console.log("[OrgSettings] Status is pending_email_verification, opening step 3 verification modal");
-          // Open the onboarding wizard at step 3
+          console.log("[OrgSettings] Status is pending_email_verification, opening step 2 verification modal");
+          // Open the onboarding wizard at step 2
           this._openOnboardingWizard();
-          this._renderOnboardingStep(3);
+          this._renderOnboardingStep(2);
         } else if (statusRes.payment_status === "active") {
           console.log("[OrgSettings] Status is active, setting context and activating organization workspace");
           // Already active — set context and refresh

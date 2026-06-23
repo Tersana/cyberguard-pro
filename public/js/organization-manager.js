@@ -124,6 +124,7 @@
           org_name: data.org_name,
           company_domain: data.company_domain,
           plan: data.plan,
+          corporate_email: data.corporate_email,
         });
         // Store the pending org ID for checkout
         if (response.organization_id) {
