@@ -57,8 +57,8 @@
 
   // Plan badge color mapping
   const PLAN_BADGES = {
-    starter:    { cls: "cyber-badge-info",    label: "Starter" },
-    pro:        { cls: "cyber-badge-success", label: "Pro" },
+    starter:    { cls: "cyber-badge-slate",   label: "Starter" },
+    pro:        { cls: "cyber-badge-info",    label: "Pro" },
     enterprise: { cls: "cyber-badge-gold",    label: "Enterprise" },
   };
 
@@ -140,20 +140,22 @@
         .map((ws) => {
           const isActive = String(ws.id) === String(activeOrgId);
           const plan = ws.subscription ? ws.subscription.plan : "starter";
-          const status = ws.subscription ? ws.subscription.status : "pending";
           const planBadge = PLAN_BADGES[plan] || PLAN_BADGES.starter;
-          const statusCls = status === "active" ? "cyber-status-active" : "cyber-status-pending";
 
           return `
             <button class="cyber-org-switcher-item ${isActive ? "active" : ""}"
                     data-org-id="${escapeHtml(ws.id)}"
                     id="org-switch-${escapeHtml(ws.id)}"
                     title="${escapeHtml(ws.name)}">
-              <div class="cyber-org-switcher-info">
-                <span class="cyber-org-switcher-name">${escapeHtml(ws.name)}</span>
-                <div class="cyber-org-switcher-badges">
-                  <span class="cyber-badge-xs ${escapeHtml(planBadge.cls)}">${escapeHtml(planBadge.label)}</span>
-                  <span class="cyber-status-dot ${escapeHtml(statusCls)}"></span>
+              <div class="flex items-center gap-3 flex-1 min-w-0">
+                <div class="cyber-org-switcher-icon w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 flex-shrink-0">
+                  <span class="material-symbols-outlined" style="font-size: 1.1rem;">business</span>
+                </div>
+                <div class="cyber-org-switcher-info">
+                  <span class="cyber-org-switcher-name">${escapeHtml(ws.name)}</span>
+                  <div class="cyber-org-switcher-badges">
+                    <span class="cyber-badge-xs ${escapeHtml(planBadge.cls)}">${escapeHtml(planBadge.label)}</span>
+                  </div>
                 </div>
               </div>
               ${isActive ? '<span class="material-symbols-outlined cyber-org-check">check_circle</span>' : ""}
@@ -168,10 +170,15 @@
           <button class="cyber-org-switcher-item ${personalActive ? "active" : ""}"
                   id="org-switch-personal"
                   data-org-id="">
-            <div class="cyber-org-switcher-info">
-              <span class="cyber-org-switcher-name">Personal Workspace</span>
-              <div class="cyber-org-switcher-badges">
-                <span class="cyber-badge-xs cyber-badge-slate">Personal</span>
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+              <div class="cyber-org-switcher-icon w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 flex-shrink-0">
+                <span class="material-symbols-outlined" style="font-size: 1.1rem;">person</span>
+              </div>
+              <div class="cyber-org-switcher-info">
+                <span class="cyber-org-switcher-name">Personal Workspace</span>
+                <div class="cyber-org-switcher-badges">
+                  <span class="cyber-badge-xs cyber-badge-slate">Personal</span>
+                </div>
               </div>
             </div>
             ${personalActive ? '<span class="material-symbols-outlined cyber-org-check">check_circle</span>' : ""}
