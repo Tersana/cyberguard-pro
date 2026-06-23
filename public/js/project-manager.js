@@ -166,18 +166,37 @@ class ProjectManager {
     try {
       const response = await this.apiClient.get("/projects");
 
-      this.ownedProjects = Array.isArray(response.owned) ? response.owned : [];
-      this.collaboratingProjects = Array.isArray(response.collaborating)
-        ? response.collaborating
-        : [];
+      // Robustly handle response shape differences between personal & organization context
+      if (Array.isArray(response)) {
+        this.projects = response;
+        this.ownedProjects = response;
+        this.collaboratingProjects = [];
+      } else if (response && Array.isArray(response.projects)) {
+        this.projects = response.projects;
+        this.ownedProjects = response.projects;
+        this.collaboratingProjects = [];
+      } else if (response && response.data && Array.isArray(response.data.projects)) {
+        this.projects = response.data.projects;
+        this.ownedProjects = response.data.projects;
+        this.collaboratingProjects = [];
+      } else if (response && (response.owned || response.collaborating)) {
+        this.ownedProjects = Array.isArray(response.owned) ? response.owned : [];
+        this.collaboratingProjects = Array.isArray(response.collaborating)
+          ? response.collaborating
+          : [];
 
-      // Deduplicated merge for backward compat
-      const map = new Map();
-      this.ownedProjects.forEach((p) => map.set(String(p.id), p));
-      this.collaboratingProjects.forEach((p) => {
-        if (!map.has(String(p.id))) map.set(String(p.id), p);
-      });
-      this.projects = Array.from(map.values());
+        // Deduplicated merge for backward compat
+        const map = new Map();
+        this.ownedProjects.forEach((p) => map.set(String(p.id), p));
+        this.collaboratingProjects.forEach((p) => {
+          if (!map.has(String(p.id))) map.set(String(p.id), p);
+        });
+        this.projects = Array.from(map.values());
+      } else {
+        this.ownedProjects = [];
+        this.collaboratingProjects = [];
+        this.projects = [];
+      }
 
       return {
         owned: this.ownedProjects,
