@@ -26,6 +26,7 @@ class SettingsPanel {
             "org-settings": false
         };
         this.focusedElementBeforeOpen = null;
+        this.initializedTabs = {};
     }
 
     init() {
@@ -56,18 +57,8 @@ class SettingsPanel {
             this.isOpen = true;
             document.body.style.overflow = "hidden"; // disable background scrolling
 
-            // Switch to requested tab on open
+            // Switch to requested tab on open, which will initialize the active tab
             this.switchTab(tabId);
-            
-            // Initialize tab modules
-            window.ProfileSettings.init();
-            window.SecuritySettings.init();
-            window.NotificationSettings.init();
-            window.AppearanceSettings.init();
-            if (window.BillingSettings) window.BillingSettings.init();
-            if (window.ApiKeysSettings) window.ApiKeysSettings.init();
-            window.AccountSettings.init();
-            if (window.OrganizationSettings) window.OrganizationSettings.init();
 
             // Set focus inside the modal for screen readers (Focus Trap)
             this.setupFocusTrap();
@@ -109,6 +100,9 @@ class SettingsPanel {
             window.AppearanceSettings.reset();
             if (window.ApiKeysSettings) window.ApiKeysSettings.reset();
             if (window.OrganizationSettings) window.OrganizationSettings.reset();
+
+            // Reset initialization registry
+            this.initializedTabs = {};
 
             // Restore focus (Accessibility)
             if (this.focusedElementBeforeOpen) {
@@ -164,9 +158,47 @@ class SettingsPanel {
         // Accessibility announcement helper
         this.announceTabChange(tabId);
 
+        // Lazily initialize the tab module if not done yet
+        this.lazyInitTab(tabId);
+
         // Lazily load Organization settings pane when switching to it
         if (tabId === "org-settings" && window.OrganizationSettings) {
             window.OrganizationSettings.loadSettingsPane();
+        }
+    }
+
+    lazyInitTab(tabId) {
+        if (!this.initializedTabs) {
+            this.initializedTabs = {};
+        }
+        if (this.initializedTabs[tabId]) return;
+        this.initializedTabs[tabId] = true;
+
+        switch (tabId) {
+            case "profile":
+                if (window.ProfileSettings) window.ProfileSettings.init();
+                break;
+            case "security":
+                if (window.SecuritySettings) window.SecuritySettings.init();
+                break;
+            case "notifications":
+                if (window.NotificationSettings) window.NotificationSettings.init();
+                break;
+            case "appearance":
+                if (window.AppearanceSettings) window.AppearanceSettings.init();
+                break;
+            case "billing":
+                if (window.BillingSettings) window.BillingSettings.init();
+                break;
+            case "api-keys":
+                if (window.ApiKeysSettings) window.ApiKeysSettings.init();
+                break;
+            case "account":
+                if (window.AccountSettings) window.AccountSettings.init();
+                break;
+            case "org-settings":
+                if (window.OrganizationSettings) window.OrganizationSettings.init();
+                break;
         }
     }
 
