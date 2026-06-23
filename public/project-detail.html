@@ -3219,6 +3219,7 @@
         <script src="js/cyber-datepicker.js"></script>
         <script src="js/api-client.js"></script>
         <script src="js/target-validator.js"></script>
+        <script src="js/organization-manager.js"></script>
 
         <!-- ─── Laravel Echo + Pusher (browser builds from node_modules/dist) ───── -->
         <script src="lib/pusher.min.js"></script>
@@ -5175,7 +5176,7 @@
                         listEl.innerHTML = `
                             <div class="col-span-full text-center py-10 text-slate-500 space-y-3">
                                 <p class="text-sm">No targets yet.</p>
-                                ${canEdit ? `<button onclick="showAddTargetModal()" class="cyber-btn-primary px-4 py-2 rounded-lg text-sm font-semibold">Add First Target</button>` : ""}
+                                ${canEdit ? `<button onclick="showAddTargetModal()" class="cyber-btn-primary px-4 py-2 rounded-lg text-sm font-semibold">Add your First Target</button>` : ""}
                             </div>`;
                     } else {
                         listEl.innerHTML = targets
@@ -5227,6 +5228,101 @@
                 }
             }
 
+            function getBaseDomain(hostname) {
+                if (!hostname) return "";
+                const host = hostname.split(':')[0];
+                const parts = host.split('.');
+                if (parts.length <= 2) return host;
+                return parts.slice(-2).join('.');
+            }
+
+            function renderDnsVerificationPanel(target) {
+                const id = esc(String(target.id || ""));
+                const value = esc(target.value || "");
+                const token = esc(target.ownership_verification_token || target.ownership_token || (target._dnsVerification && target._dnsVerification.record_value) || "cyberguard_secret_key:pending");
+                const recordName = esc((target._dnsVerification && target._dnsVerification.record_name) || getBaseDomain(value) || value);
+
+                return `
+                <div class="mt-4 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 backdrop-blur-sm space-y-3 relative overflow-hidden" id="dns-verify-panel-${id}">
+                    <!-- Decorative glow -->
+                    <div class="absolute -right-10 -bottom-10 w-24 h-24 bg-amber-500/10 rounded-full blur-xl pointer-events-none"></div>
+                    
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center gap-2 text-xs font-bold text-amber-400">
+                            <svg class="w-4 h-4 text-amber-400 animate-pulse" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <span>DNS Domain Ownership Verification Required</span>
+                        </div>
+                        <button
+                            onclick="verifyTargetDns('${id}', this)"
+                            id="btn-dns-verify-${id}"
+                            class="cyber-btn-primary text-xs px-3.5 py-1.5 rounded-xl font-bold bg-amber-500 hover:bg-amber-600 border-amber-600/30 text-black shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all duration-300"
+                        >
+                            Verify DNS Record
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-slate-400 font-sans leading-relaxed">
+                        Before scanning this domain in an organization workspace, verify your ownership by adding the following <strong>TXT</strong> record to your DNS settings (e.g. Cloudflare, GoDaddy, Route53):
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-[11px] font-mono">
+                        <div class="bg-black/50 p-2.5 rounded-lg border border-white/5 flex flex-col justify-center min-h-[46px]">
+                            <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Record Type</span>
+                            <span class="text-slate-200 font-bold">TXT</span>
+                        </div>
+                        <div class="bg-black/50 p-2.5 rounded-lg border border-white/5 flex flex-col justify-center min-h-[46px] group relative">
+                            <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Host / Name</span>
+                            <div class="flex items-center justify-between gap-1">
+                                <span class="text-slate-200 font-bold truncate select-all" title="${recordName}">${recordName}</span>
+                                <button onclick="copyToClipboard('${recordName}', this); event.stopPropagation();" class="text-slate-500 hover:text-white p-0.5 rounded transition-colors flex-shrink-0" title="Copy Host">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-1.5a2.251 2.251 0 0 0-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 0 0-9-9Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bg-black/50 p-2.5 rounded-lg border border-white/5 flex flex-col justify-center min-h-[46px] relative group">
+                            <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Value (Token)</span>
+                            <div class="flex items-center justify-between gap-2 min-w-0">
+                                <span class="text-slate-200 font-bold truncate select-all min-w-0 flex-1" title="${token}">${token}</span>
+                                <button onclick="copyToClipboard('${token}', this); event.stopPropagation();" class="text-slate-500 hover:text-white p-0.5 rounded transition-colors flex-shrink-0" title="Copy Token">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-1.5a2.251 2.251 0 0 0-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 0 0-9-9Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }
+
+            async function verifyTargetDns(targetId, buttonEl) {
+                if (!window.organizationManager) {
+                    notify("Organization module not loaded.", "error");
+                    return;
+                }
+                setBtnLoading(buttonEl, "Verifying…");
+                try {
+                    const res = await window.organizationManager.verifyDns(targetId);
+                    if (res && (res.status === "success" || res.is_verified === true || res.target?.is_verified === true)) {
+                        notify(res.message || "DNS ownership verified successfully!", "success");
+                        await loadTargets();
+                        if (typeof loadProjectFindings === "function") {
+                            loadProjectFindings();
+                        }
+                    } else {
+                        notify(res?.message || "Verification failed. Please check your DNS record.", "error");
+                    }
+                } catch (error) {
+                    console.error("[ProjectDetail] verifyTargetDns error:", error);
+                    const errorMsg = error?.data?.message || error?.message || "DNS verification failed. Make sure the TXT record has propagated.";
+                    notify(errorMsg, "error");
+                } finally {
+                    restoreBtn(buttonEl);
+                }
+            }
+
             function renderTargetRow(target) {
                 const label = esc(target.label || "");
                 const value = esc(target.value || "");
@@ -5234,6 +5330,8 @@
                 const id = esc(String(target.id || ""));
                 const canEdit = canModify();
                 const valTypeLabel = type === "domain" ? "HOST" : type === "ip" ? "IP" : "CIDR";
+
+                const isUnverifiedDomain = type === "domain" && window.organizationManager && window.organizationManager.isOrgContext() && !target.is_verified;
 
                 const riskScore = target.risk_score != null ? Number(target.risk_score) : 0;
                 let riskScoreLabel = "";
@@ -5285,22 +5383,35 @@
                         </button>`
                     : "";
 
-                const scanBtn = `
-                    <button
-                        onclick="window.ScanManager?.openScanModal(this)"
-                        data-tid="${id}"
-                        data-lbl="${label}"
-                        data-val="${value}"
-                        data-typ="${esc(type)}"
-                        title="Run security scan on this target"
-                        aria-label="Run scan on ${label}"
-                        class="cyber-btn-primary text-xs px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 font-bold shadow-[0_0_15px_rgba(167,139,250,0.15)] hover:shadow-[0_0_20px_rgba(167,139,250,0.3)] transition-all duration-300 whitespace-nowrap flex-shrink-0"
-                    >
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/>
-                        </svg>
-                        Scan Target
-                    </button>`;
+                const scanBtn = isUnverifiedDomain
+                    ? `
+                        <button
+                            disabled
+                            title="DNS ownership verification required before scanning"
+                            aria-label="Scan blocked: DNS verification required"
+                            class="bg-slate-800/40 text-slate-500 cursor-not-allowed border border-white/5 text-xs px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 font-bold whitespace-nowrap flex-shrink-0"
+                        >
+                            <svg class="w-3.5 h-3.5 opacity-55" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/>
+                            </svg>
+                            Verification Required
+                        </button>`
+                    : `
+                        <button
+                            onclick="window.ScanManager?.openScanModal(this)"
+                            data-tid="${id}"
+                            data-lbl="${label}"
+                            data-val="${value}"
+                            data-typ="${esc(type)}"
+                            title="Run security scan on this target"
+                            aria-label="Run scan on ${label}"
+                            class="cyber-btn-primary text-xs px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 font-bold shadow-[0_0_15px_rgba(167,139,250,0.15)] hover:shadow-[0_0_20px_rgba(167,139,250,0.3)] transition-all duration-300 whitespace-nowrap flex-shrink-0"
+                        >
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/>
+                            </svg>
+                            Scan Target
+                        </button>`;
 
                 const historyBtn = `
                     <button
@@ -5315,6 +5426,33 @@
                         </svg>
                         Scan History
                     </button>`;
+
+                const riskPostureHtml = isUnverifiedDomain
+                    ? `
+                        <div class="target-risk-panel">
+                            <div class="target-risk-topline">
+                                <span>Risk posture</span>
+                                <span class="target-risk-level text-amber-500 font-extrabold flex items-center gap-1">
+                                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                    Unverified
+                                </span>
+                            </div>
+                            <div class="target-progress-track">
+                                <div class="target-progress-fill bg-amber-500/20" id="target-progress-fill-${id}" style="width: 0%;"></div>
+                            </div>
+                            <span id="target-risk-badge-${id}" class="target-risk-score-value text-amber-400 bg-amber-500/10 border border-amber-500/20">${Number(0).toFixed(1)} / 100</span>
+                        </div>`
+                    : `
+                        <div class="target-risk-panel">
+                            <div class="target-risk-topline">
+                                <span>Risk posture</span>
+                                <span class="target-risk-level">${riskScoreLabel}</span>
+                            </div>
+                            <div class="target-progress-track">
+                                <div class="target-progress-fill" id="target-progress-fill-${id}" style="width: ${riskScore}%; background: ${scoreColorHex};"></div>
+                            </div>
+                            <span id="target-risk-badge-${id}" class="target-risk-score-value" style="color: ${scoreColorHex}; background: ${scoreColorHex}15; border: 1px solid ${scoreColorHex}30">${riskScore.toFixed(1)} / 100</span>
+                        </div>`;
 
                 return `
                     <div class="target-card-item target-card-type-${type}" data-target-wrapper="${id}" data-target-id="${id}">
@@ -5350,17 +5488,10 @@
                             </div>
                         </div>
 
+                        ${isUnverifiedDomain ? renderDnsVerificationPanel(target) : ""}
+
                         <!-- Risk Posture Progress Bar Section (matches project cards) -->
-                        <div class="target-risk-panel">
-                            <div class="target-risk-topline">
-                                <span>Risk posture</span>
-                                <span class="target-risk-level">${riskScoreLabel}</span>
-                            </div>
-                            <div class="target-progress-track">
-                                <div class="target-progress-fill" id="target-progress-fill-${id}" style="width: ${riskScore}%; background: ${scoreColorHex};"></div>
-                            </div>
-                            <span id="target-risk-badge-${id}" class="target-risk-score-value" style="color: ${scoreColorHex}; background: ${scoreColorHex}15; border: 1px solid ${scoreColorHex}30">${riskScore.toFixed(1)} / 100</span>
-                        </div>
+                        ${riskPostureHtml}
 
                         <!-- Dropdown sliding console drawer for history scans logs -->
                         <div id="target-history-drawer-${id}" class="target-history-drawer max-h-0 opacity-0 overflow-hidden border-t border-white/0">
@@ -5517,7 +5648,13 @@
                         return;
                     }
                     hideAddTargetModal();
-                    notify("Target added successfully.", "success");
+                    const result = await res.json().catch(() => ({}));
+                    const target = result.target || result;
+                    if (target.type === "domain" && window.organizationManager && window.organizationManager.isOrgContext() && !target.is_verified) {
+                        notify("Target added. DNS verification required before scanning.", "warning");
+                    } else {
+                        notify("Target added successfully.", "success");
+                    }
                     loadTargets();
                     loadProjectFindings();
                 } catch (_) {
@@ -5740,7 +5877,7 @@
                         listEl.innerHTML = `
                             <div class="col-span-full text-center py-10 text-slate-500 space-y-3">
                                 <p class="text-sm">No targets yet.</p>
-                                ${canEdit ? `<button onclick="showAddTargetModal()" class="cyber-btn-primary px-4 py-2 rounded-lg text-sm font-semibold">Add First Target</button>` : ""}
+                                ${canEdit ? `<button onclick="showAddTargetModal()" class="cyber-btn-primary px-4 py-2 rounded-lg text-sm font-semibold">Add your First Target</button>` : ""}
                             </div>`;
                     }
 
