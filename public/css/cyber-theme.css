@@ -581,6 +581,7 @@ select.cyber-input option {
     text-decoration: none;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
 }
 .cyber-btn-ghost:hover {
     border-color: rgba(255, 255, 255, 0.25);
