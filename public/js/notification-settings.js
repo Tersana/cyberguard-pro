@@ -37,7 +37,8 @@ class NotificationSettings {
         const pane = document.getElementById("pane-notifications");
         if (!pane) return;
 
-        pane.innerHTML = ` // security-audit-ignore
+        // security-audit-ignore
+        pane.innerHTML = `
             <form id="notification-settings-form" class="space-y-6" onsubmit="return false;">
                 <p class="text-sm text-slate-400 mb-6">
                     Configure how and when you receive email notifications from CyberGuard.

@@ -187,7 +187,8 @@ class ApiKeysSettings {
             `;
         });
 
-        pane.innerHTML = ` // security-audit-ignore
+        // security-audit-ignore
+        pane.innerHTML = `
             <div class="space-y-6">
                 <div>
                     <p class="text-sm text-slate-400 mb-4">

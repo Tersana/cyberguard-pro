@@ -73,7 +73,8 @@ class SecuritySettings {
         const pane = document.getElementById("pane-security");
         if (!pane) return;
 
-        pane.innerHTML = ` // security-audit-ignore
+        // security-audit-ignore
+        pane.innerHTML = `
             <div class="space-y-8">
                 <!-- SECTION A: CHANGE PASSWORD -->
                 <div class="settings-section-card">

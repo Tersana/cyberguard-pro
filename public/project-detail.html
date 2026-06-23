@@ -3235,6 +3235,7 @@
             const API_BASE =
                 "https://peptonelike-lelia-interdepartmentally.ngrok-free.dev/api/";
             const JWT_KEY = "cyberguard_jwt";
+            let _activeOrgId = localStorage.getItem("cyberguard_active_org_id");
 
             let _projectId = null;
             let _project = null;
@@ -3305,21 +3306,44 @@
             // ─── API helpers ─────────────────────────────────────────────────────────
             function apiFetch(endpoint, opts = {}) {
                 const token = localStorage.getItem(JWT_KEY);
+                const activeOrgId = _activeOrgId;
+                
+                const headers = {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    "ngrok-skip-browser-warning": "true",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    ...(activeOrgId ? { "X-Organization-Id": activeOrgId } : {}),
+                    ...(opts.headers || {}),
+                };
+
                 return fetch(API_BASE + endpoint.replace(/^\//, ""), {
-                    headers: {
-                        Accept: "application/json",
-                        "Content-Type": "application/json",
-                        "ngrok-skip-browser-warning": "true",
-                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                    },
                     ...opts,
+                    headers,
                 });
             }
 
             // ─── Load Project ─────────────────────────────────────────────────────────
             async function loadProject(isOwnedHint) {
                 try {
-                    const res = await apiFetch(`/projects/${_projectId}`);
+                    let res = await apiFetch(`/projects/${_projectId}`);
+
+                    // Fallback: If organization-scoped fetch fails, try without X-Organization-Id context
+                    if (res.status === 403 || res.status === 404) {
+                        const token = localStorage.getItem(JWT_KEY);
+                        const fallbackRes = await fetch(API_BASE + `projects/${_projectId}`, {
+                            headers: {
+                                Accept: "application/json",
+                                "Content-Type": "application/json",
+                                "ngrok-skip-browser-warning": "true",
+                                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                            }
+                        });
+                        if (fallbackRes.ok) {
+                            res = fallbackRes;
+                            _activeOrgId = null; // Clear org context for subsequent sub-resource fetches on this page
+                        }
+                    }
 
                     if (res.status === 403 || res.status === 404) {
                         showError(

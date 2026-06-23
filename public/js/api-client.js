@@ -553,12 +553,14 @@ function withLoading(asyncFn, options = {}) {
    */
   async function _apiFetch(method, path, body) {
     const token = localStorage.getItem(JWT_STORAGE_KEY);
+    const activeOrgId = localStorage.getItem("cyberguard_active_org_id");
     const headers = {
       Accept: "application/json",
       "ngrok-skip-browser-warning": "true",
     };
     if (token) headers["Authorization"] = `Bearer ${token}`;
     if (body) headers["Content-Type"] = "application/json";
+    if (activeOrgId) headers["X-Organization-Id"] = activeOrgId;
 
     // Strip leading slash so we don't double-slash with base URL
     const cleanPath = path.replace(/^\//, "");
