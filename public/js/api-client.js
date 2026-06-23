@@ -109,7 +109,7 @@ class APIClient {
     const cleanEndpoint = endpoint.startsWith("/")
       ? endpoint.slice(1)
       : endpoint;
-    const fullURL = `${this.baseURL}${cleanEndpoint}`;
+    let fullURL = `${this.baseURL}${cleanEndpoint}`;
 
     // Ensure HTTPS is used for all API requests (Requirement 15.5)
     if (!fullURL.startsWith("https://")) {
@@ -118,6 +118,10 @@ class APIClient {
       );
       throw new Error("Security Error: API requests must use HTTPS");
     }
+
+    // Append ngrok bypass query parameter to prevent browser warning intercept on CORS preflights
+    const separator = fullURL.includes("?") ? "&" : "?";
+    fullURL = `${fullURL}${separator}ngrok-skip-browser-warning=true`;
 
     return fullURL;
   }
