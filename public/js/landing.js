@@ -983,7 +983,7 @@ document.addEventListener("DOMContentLoaded", () => {
         paymentStatusBadge.className = "status-badge-secure processing";
       }
       if (paymentStatusText) {
-        paymentStatusText.textContent = "Authorizing Card via Paymob...";
+        paymentStatusText.textContent = "Authorizing Card...";
       }
 
       // Simulate Payment Delay
