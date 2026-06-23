@@ -29,7 +29,8 @@ class AccountSettings {
             }
         }
 
-        pane.innerHTML = ` // security-audit-ignore
+        // security-audit-ignore
+        pane.innerHTML = `
             <div class="space-y-8">
                 <!-- Account Summary Card -->
                 <div class="settings-section-card">

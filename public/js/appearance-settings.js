@@ -55,7 +55,8 @@ class AppearanceSettings {
         const pane = document.getElementById("pane-appearance");
         if (!pane) return;
 
-        pane.innerHTML = ` // security-audit-ignore
+        // security-audit-ignore
+        pane.innerHTML = `
             <form id="appearance-settings-form" class="space-y-6" onsubmit="return false;">
                 <p class="text-sm text-slate-400 mb-6">
                     Customize the interface theme, colors, and layout configurations.

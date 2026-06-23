@@ -122,13 +122,16 @@
   ═══════════════════════════════════════════════════════════════════════ */
   function apiFetch(endpoint, opts = {}) {
     const token   = localStorage.getItem(JWT_KEY);
+    const activeOrgId = localStorage.getItem("cyberguard_active_org_id");
     const headers = {
       "Accept"                  : "application/json",
       "Content-Type"            : "application/json",
       "ngrok-skip-browser-warning": "true",
+      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+      ...(activeOrgId ? { "X-Organization-Id": activeOrgId } : {}),
+      ...(opts.headers || {}),
     };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    return fetch(API_BASE + endpoint.replace(/^\//, ""), { headers, ...opts });
+    return fetch(API_BASE + endpoint.replace(/^\//, ""), { ...opts, headers });
   }
 
   /* ═══════════════════════════════════════════════════════════════════════
