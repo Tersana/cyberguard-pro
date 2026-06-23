@@ -947,7 +947,7 @@
             </div>
           </div>
           <div class="flex gap-3">
-            <button type="submit" class="cyber-btn-ghost flex-1 py-2.5 rounded-lg text-sm font-semibold" id="org-onboard-resend-btn">
+            <button type="submit" class="cyber-btn-ghost flex-1 py-2.5 rounded-lg text-sm font-semibold" style="justify-content: center;" id="org-onboard-resend-btn">
               Resend Verification
             </button>
             <button type="button" class="cyber-btn-primary flex-1 py-2.5 rounded-lg text-sm font-semibold" id="org-onboard-verify-continue-btn">
