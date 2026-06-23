@@ -641,7 +641,11 @@
                                 // Customize title/subtitles
                                 const successState = document.getElementById('success-state');
                                 if (successState) {
-                                    successState.textContent = "Your organization workspace has been created successfully. Proceed to the dashboard to verify your corporate email.";
+                                    if (statusRes.payment_status === 'active') {
+                                        successState.textContent = "Your organization workspace has been activated successfully! Go to the dashboard to start scanning.";
+                                    } else {
+                                        successState.textContent = "Your organization workspace has been created successfully. Proceed to the dashboard to verify your corporate email.";
+                                    }
                                 }
                             } else {
                                 spinner.style.display = 'none';

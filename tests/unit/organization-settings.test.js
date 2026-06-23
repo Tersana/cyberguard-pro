@@ -473,6 +473,7 @@ describe("OrganizationSettings", () => {
       expect(body.innerHTML).toContain("Create Organization");
       expect(body.innerHTML).toContain("onboard-org-name");
       expect(body.innerHTML).toContain("onboard-domain");
+      expect(body.innerHTML).toContain("onboard-corp-email");
       expect(body.innerHTML).toContain("onboard-plan");
     });
 
@@ -484,9 +485,18 @@ describe("OrganizationSettings", () => {
       expect(modal.classList.contains("hidden")).toBe(true);
     });
 
-    it("renders step 2 billing form", () => {
+    it("renders step 2 corporate email form", () => {
       window.OrganizationSettings._openOnboardingWizard();
       window.OrganizationSettings._renderOnboardingStep(2);
+
+      const body = document.getElementById("org-onboarding-body");
+      expect(body.innerHTML).toContain("Corporate Email Verification");
+      expect(body.innerHTML).toContain("corp-email");
+    });
+
+    it("renders step 3 billing form", () => {
+      window.OrganizationSettings._openOnboardingWizard();
+      window.OrganizationSettings._renderOnboardingStep(3);
 
       const body = document.getElementById("org-onboarding-body");
       expect(body.innerHTML).toContain("Billing Information");
@@ -494,15 +504,6 @@ describe("OrganizationSettings", () => {
       expect(body.innerHTML).toContain("billing-last-name");
       expect(body.innerHTML).toContain("billing-email");
       expect(body.innerHTML).toContain("billing-phone");
-    });
-
-    it("renders step 3 corporate email form", () => {
-      window.OrganizationSettings._openOnboardingWizard();
-      window.OrganizationSettings._renderOnboardingStep(3);
-
-      const body = document.getElementById("org-onboarding-body");
-      expect(body.innerHTML).toContain("Corporate Email Verification");
-      expect(body.innerHTML).toContain("corp-email");
     });
   });
 
@@ -515,7 +516,7 @@ describe("OrganizationSettings", () => {
       expect(spy).not.toHaveBeenCalled();
     });
 
-    it("opens step 3 verification if payment status is pending_email_verification", async () => {
+    it("opens step 2 verification if payment status is pending_email_verification", async () => {
       window.organizationManager.setPendingOrgId("pending-org-123");
       vi.spyOn(window.organizationManager, "pollPaymentStatus").mockResolvedValue({
         payment_status: "pending_email_verification",
@@ -527,7 +528,7 @@ describe("OrganizationSettings", () => {
       await window.OrganizationSettings.startPostPaymentFlow();
 
       expect(openSpy).toHaveBeenCalled();
-      expect(renderSpy).toHaveBeenCalledWith(3);
+      expect(renderSpy).toHaveBeenCalledWith(2);
     });
 
     it("activates organization if payment status is active", async () => {
@@ -558,11 +559,11 @@ describe("OrganizationSettings", () => {
       window.organizationManager.setPendingOrgId("pending-123");
     });
 
-    it("submits Step 3 successfully", async () => {
+    it("submits Step 2 successfully", async () => {
       window.OrganizationSettings._openOnboardingWizard();
-      window.OrganizationSettings._renderOnboardingStep(3);
+      window.OrganizationSettings._renderOnboardingStep(2);
 
-      const form = document.getElementById("org-onboard-step3-form");
+      const form = document.getElementById("org-onboard-step2-form");
       const emailInput = document.getElementById("corp-email");
       emailInput.value = "test@company.com";
 
@@ -583,14 +584,14 @@ describe("OrganizationSettings", () => {
         "Verification email sent. Check your corporate inbox.",
         { type: "success" }
       );
-      expect(window.organizationManager.getPendingOrgId()).toBeNull();
+      expect(window.organizationManager.getPendingOrgId()).toBe("pending-123");
     });
 
-    it("displays error toast on Step 3 ValidationError with no matching field errors", async () => {
+    it("displays error toast on Step 2 ValidationError with no matching field errors", async () => {
       window.OrganizationSettings._openOnboardingWizard();
-      window.OrganizationSettings._renderOnboardingStep(3);
+      window.OrganizationSettings._renderOnboardingStep(2);
 
-      const form = document.getElementById("org-onboard-step3-form");
+      const form = document.getElementById("org-onboard-step2-form");
       const emailInput = document.getElementById("corp-email");
       emailInput.value = "test@gmail.com";
 
