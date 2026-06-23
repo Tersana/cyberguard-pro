@@ -98,6 +98,14 @@ class APIClient {
       }
     }
 
+    // Automatically inject the active organization context if present
+    if (!skipAuth && window.organizationManager && typeof window.organizationManager.getActiveOrgId === "function") {
+      const activeOrgId = window.organizationManager.getActiveOrgId();
+      if (activeOrgId) {
+        headers["X-Organization-Id"] = activeOrgId;
+      }
+    }
+
     return headers;
   }
 

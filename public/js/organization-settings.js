@@ -198,6 +198,15 @@
           }
           // Re-render the switcher
           this._renderWorkspaceSwitcher(window.organizationManager.workspaces);
+          // Reload the page to refresh all context-specific data
+          if (
+            typeof window !== "undefined" &&
+            window.location &&
+            typeof window.location.reload === "function" &&
+            (!window.navigator || !window.navigator.userAgent || !window.navigator.userAgent.includes("jsdom"))
+          ) {
+            window.location.reload();
+          }
         });
       });
     }
