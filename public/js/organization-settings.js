@@ -240,11 +240,9 @@
         </div>`;
 
       try {
-        const [detailsRes, members, invitations] = await Promise.all([
-          om.fetchOrgDetails(),
-          om.fetchMembers(),
-          om.fetchOrgInvitations().catch(() => []),
-        ]);
+        const detailsRes = await om.fetchOrgDetails();
+        const members = await om.fetchMembers();
+        const invitations = await om.fetchOrgInvitations().catch(() => []);
 
         this._orgDetails = detailsRes;
         this._members = members;
