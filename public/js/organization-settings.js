@@ -196,10 +196,8 @@
     }
 
     _onOrgContextChanged() {
-      // Refresh sidebar meters
-      if (typeof SidebarSystemHealth !== "undefined" && SidebarSystemHealth.loadData) {
-        SidebarSystemHealth.loadData();
-      }
+      // SidebarSystemHealth already listens for cyberguard:orgContextChanged
+      // directly — no need to call it again here to avoid duplicate API requests.
     }
 
     // ─── Sidebar Nav ────────────────────────────────────────────────────────
@@ -1157,8 +1155,8 @@
      */
     async startPostPaymentFlow() {
       const orgId = window.organizationManager.getPendingOrgId();
+      if (!orgId) return; // No pending onboarding — skip silently
       console.log("[OrgSettings] startPostPaymentFlow called. Pending org ID:", orgId);
-      if (!orgId) return;
 
       try {
         console.log("[OrgSettings] Polling payment status for pending org:", orgId);

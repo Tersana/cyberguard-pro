@@ -253,19 +253,22 @@ class APIClient {
       // Build URL
       const url = this._buildURL(endpoint);
 
+      // Destructure known options so they don't leak into fetchOptions
+      const { headers: customHeaders, skipAuth, ...fetchExtra } = options;
+
       // Build headers — skipAuth omits Authorization header for public endpoints
-      const headers = this._buildHeaders(options.headers || {}, options.skipAuth || false);
+      const headers = this._buildHeaders(customHeaders || {}, skipAuth || false);
 
       // Add Content-Type for requests with body
       if (data && ["POST", "PUT", "PATCH"].includes(method)) {
         headers["Content-Type"] = "application/json";
       }
 
-      // Build fetch options
+      // Build fetch options — spread fetchExtra (without headers/skipAuth) to avoid overwriting
       const fetchOptions = {
         method,
         headers,
-        ...options,
+        ...fetchExtra,
       };
 
       // Add body for POST/PUT/PATCH
@@ -287,7 +290,7 @@ class APIClient {
       }
 
       // Handle response — pass skipAuth so public endpoints don't trigger login redirect
-      return await this._handleResponse(response, options.skipAuth || false);
+      return await this._handleResponse(response, skipAuth || false);
     } catch (error) {
       // Handle network errors
       if (error instanceof TypeError && error.message.includes("fetch")) {

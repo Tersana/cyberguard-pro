@@ -27,6 +27,7 @@
     constructor() {
       this.workspaces = [];
       this._paymentPollTimer = null;
+      this._pendingDetailsRequest = null;
     }
 
     // ─── Context Helpers ────────────────────────────────────────────────────
@@ -330,15 +331,26 @@
      * @returns {Promise<Object>} { organization, limits, usage }
      */
     async fetchOrgDetails() {
-      try {
-        const response = await window.apiClient.get("organizations/details", {
-          headers: this.getOrgHeaders(),
-        });
-        return response;
-      } catch (error) {
-        console.error("[OrganizationManager] fetchOrgDetails error:", error);
-        throw error;
+      // Deduplicate concurrent calls — return the in-flight promise if one exists
+      if (this._pendingDetailsRequest) {
+        return this._pendingDetailsRequest;
       }
+
+      this._pendingDetailsRequest = (async () => {
+        try {
+          const response = await window.apiClient.get("organizations/details", {
+            headers: this.getOrgHeaders(),
+          });
+          return response;
+        } catch (error) {
+          console.error("[OrganizationManager] fetchOrgDetails error:", error);
+          throw error;
+        } finally {
+          this._pendingDetailsRequest = null;
+        }
+      })();
+
+      return this._pendingDetailsRequest;
     }
 
     /**
