@@ -1160,6 +1160,182 @@
         </div>
     </section>
 
+    <!-- Organization Workflow Section -->
+    <section id="workflow" class="org-workflow">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Organization Setup</span>
+                <h2 class="section-title">Seamless Workspace <span class="gradient-text">Onboarding</span></h2>
+                <p class="section-description">How enterprises establish secure, verified, and collaborative security environments in three simple steps</p>
+            </div>
+            
+            <div class="workflow-container">
+                <!-- Left Side: Interactive Step Cards -->
+                <div class="workflow-steps">
+                    <!-- Step 1 Card -->
+                    <div class="workflow-step-card active" data-step="1" data-aos="fade-right" data-delay="0">
+                        <div class="step-card-progress">
+                            <span class="step-card-num">01</span>
+                            <div class="step-card-line-track">
+                                <div class="step-card-line-fill"></div>
+                            </div>
+                        </div>
+                        <div class="step-card-content">
+                            <h3>Configure Workspace &amp; Plan</h3>
+                            <p>Define your organization name, set up your company's domain, and choose the plan that suits your scale.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 2 Card -->
+                    <div class="workflow-step-card" data-step="2" data-aos="fade-right" data-delay="100">
+                        <div class="step-card-progress">
+                            <span class="step-card-num">02</span>
+                            <div class="step-card-line-track">
+                                <div class="step-card-line-fill"></div>
+                            </div>
+                        </div>
+                        <div class="step-card-content">
+                            <h3>Secure Billing Integration</h3>
+                            <p>Input billing details for Paymob processing to enable your corporate subscription package.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 3 Card -->
+                    <div class="workflow-step-card" data-step="3" data-aos="fade-right" data-delay="200">
+                        <div class="step-card-progress">
+                            <span class="step-card-num">03</span>
+                            <div class="step-card-line-track"></div>
+                        </div>
+                        <div class="step-card-content">
+                            <h3>Identity Verification &amp; Team</h3>
+                            <p>Verify ownership via official corporate email matching or DNS TXT records, then invite your crew.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Dynamic Sandbox Console -->
+                <div class="workflow-preview-wrapper" data-aos="fade-left">
+                    <!-- Preview Pane Step 1 -->
+                    <div class="workflow-preview-pane active" data-preview="1">
+                        <div class="preview-header">
+                            <div class="preview-dots">
+                                <span class="dot red"></span>
+                                <span class="dot yellow"></span>
+                                <span class="dot green"></span>
+                            </div>
+                            <span class="preview-title">Acme Corp - Workspace Setup</span>
+                        </div>
+                        <div class="preview-body">
+                            <div class="mock-form">
+                                <div class="mock-form-group">
+                                    <span class="mock-label">Organization Name</span>
+                                    <div class="mock-input">Acme Corp</div>
+                                </div>
+                                <div class="mock-form-group">
+                                    <span class="mock-label">Company Domain</span>
+                                    <div class="mock-input">acme.com</div>
+                                </div>
+                                <div class="mock-plans-row">
+                                    <button type="button" class="mock-plan-pill" data-plan-pill="starter">Starter</button>
+                                    <button type="button" class="mock-plan-pill active" data-plan-pill="pro">Pro Tier</button>
+                                    <button type="button" class="mock-plan-pill" data-plan-pill="enterprise">Enterprise</button>
+                                </div>
+                                <div class="mock-plan-features-card">
+                                    <div class="mock-plan-price-info">
+                                        <span class="price-label">Plan Price:</span>
+                                        <span id="mockPlanPrice" class="price-value">$49/month</span>
+                                    </div>
+                                    <div class="mock-plan-features-list" id="mockPlanFeatures">
+                                        <div class="mock-feature-item">
+                                            <span class="chk-icon">✓</span>
+                                            <span>5 Team Seats</span>
+                                        </div>
+                                        <div class="mock-feature-item">
+                                            <span class="chk-icon">✓</span>
+                                            <span>Standard vulnerability scans</span>
+                                        </div>
+                                        <div class="mock-feature-item">
+                                            <span class="chk-icon">✓</span>
+                                            <span>API & Webhook Access</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview Pane Step 2 -->
+                    <div class="workflow-preview-pane" data-preview="2">
+                        <div class="preview-header">
+                            <div class="preview-dots">
+                                <span class="dot red"></span>
+                                <span class="dot yellow"></span>
+                                <span class="dot green"></span>
+                            </div>
+                            <span class="preview-title">Secure Checkout</span>
+                        </div>
+                        <div class="preview-body">
+                            <div class="mock-card-3d-wrapper">
+                                <div class="mock-credit-card">
+                                    <div class="card-chip"></div>
+                                    <div class="card-number">••••  ••••  ••••  4242</div>
+                                    <div class="card-details">
+                                        <div>
+                                            <span class="card-label">HOLDER</span>
+                                            <span class="card-val">ACME CORP</span>
+                                        </div>
+                                        <div>
+                                            <span class="card-label">EXPIRES</span>
+                                            <span class="card-val">12/28</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="billing-action-container">
+                                <button type="button" class="mock-checkout-btn" id="btnProcessPayment">
+                                    <span class="btn-spinner hidden"></span>
+                                    <span class="btn-text">Process Secure Payment</span>
+                                </button>
+                            </div>
+                            <div class="billing-status">
+                                <span class="status-badge-secure" id="paymentStatusBadge">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="12" height="12" class="success-icon">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
+                                    </svg>
+                                    <span id="paymentStatusText">Verified Checkout</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview Pane Step 3 -->
+                    <div class="workflow-preview-pane" data-preview="3">
+                        <div class="preview-header">
+                            <div class="preview-dots">
+                                <span class="dot red"></span>
+                                <span class="dot yellow"></span>
+                                <span class="dot green"></span>
+                            </div>
+                            <span class="preview-title">dns_TXT_verifier.sh</span>
+                        </div>
+                        <div class="preview-body terminal-console">
+                            <div class="terminal-action-container">
+                                <button type="button" class="mock-audit-btn" id="btnRunAudit">Run DNS Verification</button>
+                            </div>
+                            <div class="terminal-lines" id="terminalLinesContainer">
+                                <div class="terminal-line"><span class="prompt">$</span> <span class="typed-text"></span><span class="terminal-cursor">|</span></div>
+                            </div>
+                            <div class="mock-roles-row mt-4 hidden" id="mockTerminalRoles">
+                                <div class="mock-role-badge owner">Owner: you@acme.com</div>
+                                <div class="mock-role-badge editor">Editor: security-lead@acme.com</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- CTA Section -->
     <section class="cta">
         <div class="container">

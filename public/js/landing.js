@@ -827,7 +827,308 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// ===========================
+// Organization Workflow Section Interaction & Simulations
+// ===========================
+document.addEventListener("DOMContentLoaded", () => {
+  const stepCards = document.querySelectorAll(".workflow-step-card");
+  const previewPanes = document.querySelectorAll(".workflow-preview-pane");
 
+  if (stepCards.length === 0 || previewPanes.length === 0) return;
+
+  stepCards.forEach((card) => {
+    const triggerHandler = () => {
+      if (card.classList.contains("active")) return;
+
+      // Reset active cards
+      stepCards.forEach((c) => c.classList.remove("active"));
+      card.classList.add("active");
+
+      // Swap active preview panes
+      const step = card.getAttribute("data-step");
+      previewPanes.forEach((pane) => {
+        if (pane.getAttribute("data-preview") === step) {
+          pane.classList.add("active");
+        } else {
+          pane.classList.remove("active");
+        }
+      });
+    };
+
+    // Trigger on click
+    card.addEventListener("click", triggerHandler);
+
+    // Trigger on hover
+    card.addEventListener("mouseenter", triggerHandler);
+  });
+
+  // -----------------------------
+  // Step 1: Interactive Plan Switcher
+  // -----------------------------
+  const planPills = document.querySelectorAll("[data-plan-pill]");
+  const mockPlanPrice = document.getElementById("mockPlanPrice");
+  const mockPlanFeatures = document.getElementById("mockPlanFeatures");
+
+  const plansData = {
+    starter: {
+      price: "$29/month",
+      features: [
+        "3 Team Seats",
+        "Basic vulnerability scans",
+        "Standard Email support"
+      ]
+    },
+    pro: {
+      price: "$49/month",
+      features: [
+        "5 Team Seats",
+        "Standard vulnerability scans",
+        "API & Webhook Access"
+      ]
+    },
+    enterprise: {
+      price: "Custom Pricing",
+      features: [
+        "Unlimited Seats",
+        "Advanced deep scanning",
+        "Dedicated 24/7 Security Engineer"
+      ]
+    }
+  };
+
+  if (planPills.length > 0 && mockPlanPrice && mockPlanFeatures) {
+    planPills.forEach((pill) => {
+      pill.addEventListener("click", () => {
+        // Toggle active pill
+        planPills.forEach((p) => p.classList.remove("active"));
+        pill.classList.add("active");
+
+        const planKey = pill.getAttribute("data-plan-pill");
+        const data = plansData[planKey];
+
+        if (data) {
+          // Update Price
+          mockPlanPrice.textContent = data.price;
+
+          // Rebuild Features Checklist
+          mockPlanFeatures.innerHTML = "";
+          data.features.forEach((feat, idx) => {
+            const item = document.createElement("div");
+            item.className = "mock-feature-item";
+            item.style.opacity = "0";
+            item.style.transform = "translateY(5px)";
+            item.style.transition = "all 0.3s ease";
+            // security-audit-ignore
+            item.innerHTML = `
+              <span class="chk-icon">✓</span>
+              <span>${feat}</span>
+            `;
+            mockPlanFeatures.appendChild(item);
+
+            // Stagger fade-in
+            setTimeout(() => {
+              item.style.opacity = "1";
+              item.style.transform = "translateY(0)";
+            }, idx * 80);
+          });
+        }
+      });
+    });
+  }
+
+  // -----------------------------
+  // Step 2: 3D Credit Card Hover Tilt & Secure Payment Process
+  // -----------------------------
+  const card3dWrapper = document.querySelector(".mock-card-3d-wrapper");
+  const creditCard = document.querySelector(".mock-credit-card");
+
+  if (card3dWrapper && creditCard) {
+    card3dWrapper.addEventListener("mousemove", (e) => {
+      const rect = creditCard.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = (centerY - y) / 10;
+      const rotateY = (x - centerX) / 10;
+
+      creditCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
+    });
+
+    card3dWrapper.addEventListener("mouseleave", () => {
+      creditCard.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px)";
+    });
+  }
+
+  const btnProcessPayment = document.getElementById("btnProcessPayment");
+  const paymentStatusBadge = document.getElementById("paymentStatusBadge");
+  const paymentStatusText = document.getElementById("paymentStatusText");
+
+  if (btnProcessPayment && paymentStatusBadge && paymentStatusText) {
+    let isProcessing = false;
+
+    btnProcessPayment.addEventListener("click", () => {
+      if (isProcessing) return;
+      isProcessing = true;
+
+      // Enter Loading State
+      btnProcessPayment.disabled = true;
+      const spinner = btnProcessPayment.querySelector(".btn-spinner");
+      const btnText = btnProcessPayment.querySelector(".btn-text");
+
+      if (spinner) spinner.classList.remove("hidden");
+      if (btnText) btnText.textContent = "Processing Secure Payment...";
+
+      if (paymentStatusBadge) {
+        paymentStatusBadge.className = "status-badge-secure processing";
+      }
+      if (paymentStatusText) {
+        paymentStatusText.textContent = "Authorizing Card via Paymob...";
+      }
+
+      // Simulate Payment Delay
+      setTimeout(() => {
+        // Success Transition
+        if (spinner) spinner.classList.add("hidden");
+        if (btnText) btnText.textContent = "Payment Successful ✓";
+        btnProcessPayment.classList.add("success");
+
+        if (paymentStatusBadge) {
+          paymentStatusBadge.className = "status-badge-secure";
+        }
+        if (paymentStatusText) {
+          paymentStatusText.textContent = "Payment Securely Processed";
+        }
+
+        if (creditCard) {
+          creditCard.classList.add("success-glow");
+        }
+
+        // Reset state after 4 seconds
+        setTimeout(() => {
+          if (btnText) btnText.textContent = "Process Secure Payment";
+          btnProcessPayment.classList.remove("success");
+          btnProcessPayment.disabled = false;
+          if (creditCard) creditCard.classList.remove("success-glow");
+          if (paymentStatusText) paymentStatusText.textContent = "Verified Checkout";
+          isProcessing = false;
+        }, 4000);
+
+      }, 1800);
+    });
+  }
+
+  // -----------------------------
+  // Step 3: Typewriter DNS Verification Terminal
+  // -----------------------------
+  const btnRunAudit = document.getElementById("btnRunAudit");
+  const terminalLinesContainer = document.getElementById("terminalLinesContainer");
+  const mockTerminalRoles = document.getElementById("mockTerminalRoles");
+
+  if (btnRunAudit && terminalLinesContainer) {
+    const terminalLogs = [
+      { type: "input", text: "dig TXT acme.com" },
+      { type: "output", text: "; <<>> DiG 9.10.6 <<>> TXT acme.com" },
+      { type: "output", text: "acme.com.   300   IN   TXT   \"cyberguard-verification=z78x9w...\"" },
+      { type: "input", text: "./verify_domain.sh acme.com" },
+      { type: "info", text: "[INFO] Checking DNS TXT record match..." },
+      { type: "success", text: "[SUCCESS] DNS verification record match found!" },
+      { type: "success", text: "[SUCCESS] Workspace 'acme' activated." }
+    ];
+
+    let typingTimer = null;
+
+    btnRunAudit.addEventListener("click", () => {
+      btnRunAudit.disabled = true;
+      btnRunAudit.textContent = "Verifying...";
+      if (mockTerminalRoles) mockTerminalRoles.classList.add("hidden");
+
+      // Clear previous lines
+      terminalLinesContainer.innerHTML = "";
+
+      let logIdx = 0;
+
+      function printNextLog() {
+        if (logIdx >= terminalLogs.length) {
+          // Done typing
+          btnRunAudit.textContent = "DNS Verified ✓";
+          if (mockTerminalRoles) {
+            mockTerminalRoles.classList.remove("hidden");
+            mockTerminalRoles.style.opacity = "0";
+            setTimeout(() => {
+              mockTerminalRoles.style.opacity = "1";
+            }, 100);
+          }
+
+          // Reset option after 8 seconds
+          setTimeout(() => {
+            btnRunAudit.disabled = false;
+            btnRunAudit.textContent = "Run DNS Verification";
+          }, 8000);
+
+          return;
+        }
+
+        const log = terminalLogs[logIdx];
+        const line = document.createElement("div");
+        line.className = "terminal-line";
+
+        if (log.type === "input") {
+          // security-audit-ignore
+          line.innerHTML = `<span class="prompt">$</span> <span class="typed-text"></span><span class="terminal-cursor">|</span>`;
+          terminalLinesContainer.appendChild(line);
+          
+          // Force layout reflow so the transition has something to transition from
+          line.getBoundingClientRect();
+          line.classList.add("reveal");
+
+          // Typewriter effect
+          const typedTextEl = line.querySelector(".typed-text");
+          const cursorEl = line.querySelector(".terminal-cursor");
+          let charIdx = 0;
+
+          function typeChar() {
+            if (charIdx < log.text.length) {
+              if (typedTextEl) typedTextEl.textContent += log.text[charIdx];
+              charIdx++;
+              typingTimer = setTimeout(typeChar, 40);
+            } else {
+              // Finish line typing, remove cursor from this line, proceed to next
+              if (cursorEl) cursorEl.remove();
+              logIdx++;
+              setTimeout(printNextLog, 400);
+            }
+          }
+          typeChar();
+
+        } else {
+          // Outputs or status logs reveal instantly
+          if (log.type === "output") {
+            line.className = "terminal-line text-slate-500";
+          } else if (log.type === "info") {
+            line.className = "terminal-line text-blue-400 font-bold";
+          } else if (log.type === "success") {
+            line.className = "terminal-line text-emerald-400 font-bold";
+          }
+          line.textContent = log.text;
+          terminalLinesContainer.appendChild(line);
+
+          // Force reflow and reveal
+          line.getBoundingClientRect();
+          line.classList.add("reveal");
+
+          // Autoscroll terminal
+          terminalLinesContainer.scrollTop = terminalLinesContainer.scrollHeight;
+
+          logIdx++;
+          setTimeout(printNextLog, 600);
+        }
+      }
+
+      printNextLog();
+    });
+  }
+});
 
 console.log(
   "%c CyberGuard",
