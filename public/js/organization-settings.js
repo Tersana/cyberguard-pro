@@ -270,17 +270,19 @@
 
     _renderNoOrgState() {
       return `
-        <div class="text-center py-12 px-6">
+        <div class="settings-section-card text-center py-16 px-6 max-w-xl mx-auto border-dashed border-white/10 bg-white/[0.01]">
           <span class="material-symbols-outlined text-slate-500 text-5xl mb-4 block">business</span>
           <h4 class="text-lg font-bold text-white mb-2">No Organization Selected</h4>
-          <p class="text-sm text-slate-400 mb-6">
+          <p class="text-sm text-slate-400 mb-6 leading-relaxed">
             Select an organization from the workspace switcher, or create a new one.
           </p>
-          <button id="org-start-onboarding-btn"
-                  class="cyber-btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-2">
-            <span class="material-symbols-outlined" style="font-size:1rem;">add_business</span>
-            Create Organization
-          </button>
+          <div class="flex justify-center">
+            <button id="org-start-onboarding-btn"
+                    class="cyber-btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-2">
+              <span class="material-symbols-outlined" style="font-size:1rem;">add_business</span>
+              Create Organization
+            </button>
+          </div>
         </div>`;
     }
 
@@ -294,11 +296,14 @@
       const isOwner = this._currentUserOrgRole === "owner";
 
       return `
-        <div class="space-y-8">
-          ${this._renderOrgOverview(org, sub, planBadge)}
-          ${this._renderUsageMetrics(limits, usage)}
+        <div class="space-y-6">
+          <!-- Workspace Overview and Resource Usage Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+            ${this._renderOrgOverview(org, sub, planBadge)}
+            ${this._renderUsageMetrics(limits, usage)}
+          </div>
+          
           ${isOwnerOrAdmin ? this._renderEditForm(org) : ""}
-          <div class="cyber-divider"></div>
           ${this._renderTeamSection(members, invitations, isOwnerOrAdmin)}
           ${isOwner ? this._renderDangerZone(org) : ""}
         </div>`;
@@ -310,28 +315,36 @@
       const expiresAt = sub.expires_at ? formatDate(sub.expires_at) : "—";
 
       return `
-        <div class="cyber-card p-5">
-          <div class="flex items-start justify-between mb-4">
-            <div class="flex items-center gap-3">
-              <div class="cyber-org-avatar">
+        <div class="settings-section-card flex flex-col justify-between mb-0 h-full">
+          <div>
+            <h5 class="settings-section-card-title">
+              <span class="material-symbols-outlined text-blue-400">business</span>
+              Workspace Overview
+            </h5>
+            <div class="flex items-center gap-4 mt-6">
+              <div class="cyber-org-avatar w-14 h-14 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center font-bold text-white text-xl shadow-lg overflow-hidden flex-shrink-0">
                 ${org.logo_url
-                  ? `<img src="${escapeHtml(org.logo_url)}" alt="Logo" class="w-full h-full object-cover rounded-lg">`
-                  : `<span class="text-lg font-bold text-white">${escapeHtml((org.name || "O")[0].toUpperCase())}</span>`}
+                  ? `<img src="${escapeHtml(org.logo_url)}" alt="Logo" class="w-full h-full object-cover">`
+                  : `<span>${escapeHtml((org.name || "O")[0].toUpperCase())}</span>`}
               </div>
-              <div>
-                <h4 class="text-base font-bold text-white">${escapeHtml(org.name)}</h4>
-                <p class="text-xs text-slate-400">${escapeHtml(org.domain)}</p>
+              <div class="min-w-0 flex-1">
+                <h4 class="text-base font-bold text-white truncate">${escapeHtml(org.name)}</h4>
+                <p class="text-xs text-slate-400 truncate mt-1 flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[12px]">link</span>
+                  ${escapeHtml(org.domain)}
+                </p>
               </div>
+            </div>
+          </div>
+          <div class="mt-6 pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-3">
+            <div class="text-[11px] text-slate-500 font-mono">
+              <span class="block">Expires: ${escapeHtml(expiresAt)}</span>
+              <span class="block mt-0.5">Slug: ${escapeHtml(org.slug || "—")}</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="cyber-badge-xs ${escapeHtml(planBadge.cls)}">${escapeHtml(planBadge.label)}</span>
               <span class="cyber-badge-xs ${escapeHtml(statusCls)}">${escapeHtml(statusLabel)}</span>
             </div>
-          </div>
-          <div class="text-xs text-slate-500">
-            <span>Expires: ${escapeHtml(expiresAt)}</span>
-            <span class="mx-2">·</span>
-            <span>Slug: ${escapeHtml(org.slug || "—")}</span>
           </div>
         </div>`;
     }
@@ -348,62 +361,79 @@
           const pct = m.max ? Math.min(100, Math.round((m.used / m.max) * 100)) : 0;
           return `
             <div>
-              <div class="flex justify-between text-xs mb-1.5">
+              <div class="flex justify-between text-xs mb-1.5 font-mono">
                 <span class="text-slate-400">${escapeHtml(m.label)}</span>
                 <span class="text-slate-300 font-medium">${m.used} / ${m.max || "—"}</span>
               </div>
-              <div class="w-full bg-slate-800/60 rounded-full h-1.5 overflow-hidden border border-slate-700/30">
-                <div class="bg-gradient-to-r ${m.color} h-full rounded-full transition-all duration-500"
+              <div class="w-full bg-[#0a0a0a] rounded-full h-2 overflow-hidden border border-white/5">
+                <div class="bg-gradient-to-r ${m.color} h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(59,130,246,0.3)]"
                      style="width:${pct}%"></div>
               </div>
             </div>`;
         })
         .join("");
 
-      return `<div class="space-y-4">${bars}</div>`;
+      return `
+        <div class="settings-section-card mb-0 h-full flex flex-col justify-between">
+          <div>
+            <h5 class="settings-section-card-title">
+              <span class="material-symbols-outlined text-blue-400">monitoring</span>
+              Resource Usage
+            </h5>
+            <div class="space-y-4 mt-5">
+              ${bars}
+            </div>
+          </div>
+        </div>`;
     }
 
     _renderEditForm(org) {
       return `
-        <div class="cyber-card p-5">
-          <h5 class="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-            <span class="material-symbols-outlined" style="font-size:1rem;">edit</span>
-            Edit Organization
+        <div class="settings-section-card">
+          <h5 class="settings-section-card-title">
+            <span class="material-symbols-outlined text-blue-400">edit</span>
+            Workspace Settings
           </h5>
-          <form id="org-edit-form" class="space-y-4">
-            <div>
-              <label class="block text-xs text-slate-400 mb-1.5" for="org-edit-name">Organization Name</label>
-              <input type="text" id="org-edit-name" class="cyber-input w-full"
-                     value="${escapeHtml(org.name || "")}" maxlength="255" autocomplete="off">
+          <form id="org-edit-form" class="space-y-5 mt-4">
+            <div class="settings-form-group mb-0">
+              <label for="org-edit-name" class="block text-xs font-semibold text-slate-400 mb-2">Organization Name</label>
+              <div class="input-wrapper">
+                <input type="text" id="org-edit-name" class="cyber-input p-3 rounded-lg text-sm w-full"
+                       value="${escapeHtml(org.name || "")}" maxlength="255" autocomplete="off" required>
+              </div>
               <p class="cyber-field-error hidden" id="org-edit-name-error"></p>
             </div>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1.5" for="org-edit-logo">Logo URL</label>
-              <input type="url" id="org-edit-logo" class="cyber-input w-full"
-                     value="${escapeHtml(org.logo_url || "")}" placeholder="https://cdn.example.com/logo.png" autocomplete="off">
+            <div class="settings-form-group mb-0">
+              <label for="org-edit-logo" class="block text-xs font-semibold text-slate-400 mb-2">Logo URL</label>
+              <div class="input-wrapper">
+                <input type="url" id="org-edit-logo" class="cyber-input p-3 rounded-lg text-sm w-full"
+                       value="${escapeHtml(org.logo_url || "")}" placeholder="https://cdn.example.com/logo.png" autocomplete="off">
+              </div>
               <p class="cyber-field-error hidden" id="org-edit-logo-error"></p>
             </div>
-            <button type="submit" class="cyber-btn-primary text-xs px-4 py-2 rounded-lg font-semibold">
-              Save Changes
-            </button>
+            <div class="flex justify-end pt-2">
+              <button type="submit" class="cyber-btn-primary py-2 px-4 rounded-lg font-semibold text-sm">
+                Save Changes
+              </button>
+            </div>
           </form>
         </div>`;
     }
 
     _renderTeamSection(members, invitations, isOwnerOrAdmin) {
       return `
-        <div>
-          <div class="flex items-center justify-between mb-4">
-            <h5 class="text-sm font-semibold text-white flex items-center gap-2">
-              <span class="material-symbols-outlined" style="font-size:1rem;">group</span>
-              Team Members
+        <div class="settings-section-card">
+          <div class="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
+            <h5 class="settings-section-card-title mb-0">
+              <span class="material-symbols-outlined text-blue-400">group</span>
+              Team Management
             </h5>
-            <span class="text-xs text-slate-500">${members.length} member${members.length !== 1 ? "s" : ""}</span>
+            <span class="text-xs text-slate-500 font-mono bg-white/5 px-2 py-1 rounded border border-white/5">${members.length} member${members.length !== 1 ? "s" : ""}</span>
           </div>
 
           ${isOwnerOrAdmin ? this._renderInviteForm() : ""}
 
-          <div id="org-members-list" class="space-y-2 mb-6">
+          <div id="org-members-list" class="space-y-3 mb-6">
             ${members.map((m) => this._renderMemberRow(m, isOwnerOrAdmin)).join("")}
           </div>
 
@@ -413,26 +443,32 @@
 
     _renderInviteForm() {
       return `
-        <form id="org-invite-form" class="cyber-card p-4 mb-4">
-          <div class="flex gap-3 items-end">
-            <div class="flex-1">
-              <label class="block text-xs text-slate-400 mb-1" for="org-invite-email">Email</label>
-              <input type="email" id="org-invite-email" class="cyber-input w-full text-sm"
-                     placeholder="colleague@domain.com" required autocomplete="off">
+        <form id="org-invite-form" class="bg-white/5 border border-white/5 rounded-xl p-4 mb-6">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+            <div class="sm:col-span-1">
+              <label class="block text-xs text-slate-400 mb-1.5" for="org-invite-email">Invite Email Address</label>
+              <div class="input-wrapper">
+                <input type="email" id="org-invite-email" class="cyber-input p-3 rounded-lg text-sm w-full"
+                       placeholder="colleague@domain.com" required autocomplete="off">
+              </div>
             </div>
-            <div class="w-28">
-              <label class="block text-xs text-slate-400 mb-1" for="org-invite-role">Role</label>
-              <select id="org-invite-role" class="cyber-input w-full text-sm">
-                <option value="admin">Admin</option>
-                <option value="member" selected>Member</option>
-                <option value="viewer">Viewer</option>
-              </select>
+            <div class="sm:col-span-1">
+              <label class="block text-xs text-slate-400 mb-1.5" for="org-invite-role">Assign Role</label>
+              <div class="input-wrapper">
+                <select id="org-invite-role" class="cyber-input p-3 rounded-lg text-sm w-full">
+                  <option value="admin">Admin</option>
+                  <option value="member" selected>Member</option>
+                  <option value="viewer">Viewer</option>
+                </select>
+              </div>
             </div>
-            <button type="submit" class="cyber-btn-primary text-xs px-4 py-2 rounded-lg font-semibold whitespace-nowrap"
-                    id="org-invite-submit-btn">
-              <span class="material-symbols-outlined" style="font-size:0.875rem;">send</span>
-              Invite
-            </button>
+            <div class="sm:col-span-1">
+              <button type="submit" class="cyber-btn-primary py-3 px-4 rounded-lg font-semibold text-sm w-full flex items-center justify-center gap-2"
+                      id="org-invite-submit-btn">
+                <span class="material-symbols-outlined" style="font-size:1.1rem;">send</span>
+                Send Invite
+              </button>
+            </div>
           </div>
           <p class="cyber-field-error hidden mt-2" id="org-invite-error"></p>
         </form>`;
@@ -447,8 +483,8 @@
 
       const actions = canManage && !isOwner
         ? `
-          <div class="flex items-center gap-2">
-            <select class="cyber-input cyber-input-xs org-role-select" data-user-id="${escapeHtml(member.id)}">
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <select class="cyber-input py-1 px-2 text-xs rounded border border-white/10 bg-[#0a0a0a] text-slate-300 org-role-select" data-user-id="${escapeHtml(member.id)}">
               <option value="admin" ${role === "admin" ? "selected" : ""}>Admin</option>
               <option value="member" ${role === "member" ? "selected" : ""}>Member</option>
               <option value="viewer" ${role === "viewer" ? "selected" : ""}>Viewer</option>
@@ -463,18 +499,24 @@
         : "";
 
       return `
-        <div class="cyber-org-member-row" id="org-member-${escapeHtml(member.id)}">
-          <div class="flex items-center gap-3 flex-1 min-w-0">
-            <div class="cyber-avatar-sm">${escapeHtml(initials)}</div>
-            <div class="min-w-0">
-              <p class="text-sm font-medium text-white truncate">${escapeHtml(member.full_name)}</p>
-              <p class="text-xs text-slate-500 truncate">${escapeHtml(member.email)}</p>
+        <div class="cyber-org-member-row flex items-center justify-between p-4 border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] rounded-xl transition-all gap-4" id="org-member-${escapeHtml(member.id)}">
+          <div class="flex items-center gap-3 min-w-0 flex-1">
+            <div class="w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center font-bold text-white text-sm flex-shrink-0">
+              ${escapeHtml(initials)}
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold text-white truncate">${escapeHtml(member.full_name)}</span>
+                <span class="cyber-badge-xs ${escapeHtml(badge.cls)}">${escapeHtml(badge.label)}</span>
+              </div>
+              <p class="text-xs text-slate-500 truncate mt-0.5">${escapeHtml(member.email)}</p>
             </div>
           </div>
-          <div class="flex items-center gap-3 flex-shrink-0">
-            <span class="text-xs text-slate-600 hidden sm:inline">${escapeHtml(member.job_tittle || "")}</span>
-            <span class="cyber-badge-xs ${escapeHtml(badge.cls)}">${escapeHtml(badge.label)}</span>
-            <span class="text-xs text-slate-600 hidden md:inline">${escapeHtml(joinedAt)}</span>
+          <div class="flex items-center gap-4 flex-shrink-0">
+            <div class="text-right hidden sm:block">
+              <p class="text-xs text-slate-400">${escapeHtml(member.job_tittle || "Member")}</p>
+              <p class="text-[10px] text-slate-600 mt-0.5 font-mono">Joined: ${escapeHtml(joinedAt)}</p>
+            </div>
             ${actions}
           </div>
         </div>`;
@@ -485,18 +527,20 @@
         .map((inv) => {
           const roleBadge = ROLE_BADGES[inv.role] || ROLE_BADGES.member;
           return `
-            <div class="cyber-org-member-row cyber-org-pending-row">
-              <div class="flex items-center gap-3 flex-1 min-w-0">
-                <div class="cyber-avatar-sm cyber-avatar-pending">
-                  <span class="material-symbols-outlined" style="font-size:0.875rem;">mail</span>
+            <div class="cyber-org-member-row cyber-org-pending-row flex items-center justify-between p-4 border border-dashed border-white/10 bg-white/[0.005] hover:bg-white/[0.015] rounded-xl transition-all gap-4">
+              <div class="flex items-center gap-3 min-w-0 flex-1 opacity-70">
+                <div class="w-10 h-10 rounded-full border border-dashed border-yellow-500/30 bg-yellow-500/5 flex items-center justify-center text-yellow-500 flex-shrink-0">
+                  <span class="material-symbols-outlined" style="font-size:1.1rem;">mail</span>
                 </div>
-                <div class="min-w-0">
-                  <p class="text-sm font-medium text-slate-300 truncate">${escapeHtml(inv.email)}</p>
-                  <p class="text-xs text-slate-600">${timeUntil(inv.expires_at)}</p>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold text-slate-300 truncate">${escapeHtml(inv.email)}</span>
+                    <span class="cyber-badge-xs ${escapeHtml(roleBadge.cls)}">${escapeHtml(roleBadge.label)}</span>
+                  </div>
+                  <p class="text-xs text-yellow-500/70 mt-0.5 font-mono">${timeUntil(inv.expires_at)}</p>
                 </div>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="cyber-badge-xs ${escapeHtml(roleBadge.cls)}">${escapeHtml(roleBadge.label)}</span>
+              <div class="flex items-center gap-2 flex-shrink-0">
                 <span class="cyber-badge-xs cyber-badge-warning">Pending</span>
               </div>
             </div>`;
@@ -504,25 +548,27 @@
         .join("");
 
       return `
-        <div class="mt-4">
-          <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">Pending Invitations</p>
-          <div class="space-y-2">${rows}</div>
+        <div class="mt-6 border-t border-white/5 pt-6">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Pending Invitations</p>
+          <div class="space-y-3">${rows}</div>
         </div>`;
     }
 
     _renderDangerZone(org) {
       return `
-        <div class="cyber-card cyber-card-danger p-5 mt-6">
-          <h5 class="text-sm font-semibold text-red-400 mb-2 flex items-center gap-2">
-            <span class="material-symbols-outlined" style="font-size:1rem;">warning</span>
+        <div class="settings-section-card border-red-900/30 bg-red-950/5 mt-6">
+          <h5 class="settings-section-card-title text-red-400 mb-2">
+            <span class="material-symbols-outlined text-red-500">warning</span>
             Danger Zone
           </h5>
-          <p class="text-xs text-slate-400 mb-4">
-            Permanently delete this organization and all its data. This action cannot be undone.
+          <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+            Permanently delete this organization and all its data. <span class="text-red-400/80 font-semibold">This action cannot be undone.</span>
           </p>
-          <button id="org-delete-btn" class="cyber-btn-danger text-xs px-4 py-2 rounded-lg font-semibold">
-            Delete Workspace
-          </button>
+          <div class="flex">
+            <button id="org-delete-btn" class="cyber-btn-red text-xs px-4 py-2.5 rounded-lg font-semibold transition-all">
+              Delete Workspace
+            </button>
+          </div>
         </div>`;
     }
 
@@ -807,19 +853,19 @@
         <form id="org-onboard-step1-form" class="space-y-4">
           <div>
             <label class="block text-xs text-slate-400 mb-1.5" for="onboard-org-name">Organization Name</label>
-            <input type="text" id="onboard-org-name" class="cyber-input w-full py-2 px-3" required maxlength="255"
+            <input type="text" id="onboard-org-name" class="cyber-input p-3 rounded-lg text-sm w-full" required maxlength="255"
                    placeholder="Acme Corp" autocomplete="off">
             <p class="cyber-field-error hidden" id="onboard-org-name-error"></p>
           </div>
           <div>
             <label class="block text-xs text-slate-400 mb-1.5" for="onboard-domain">Company Domain</label>
-            <input type="text" id="onboard-domain" class="cyber-input w-full py-2 px-3" required maxlength="255"
+            <input type="text" id="onboard-domain" class="cyber-input p-3 rounded-lg text-sm w-full" required maxlength="255"
                    placeholder="acme.com" autocomplete="off">
             <p class="cyber-field-error hidden" id="onboard-domain-error"></p>
           </div>
           <div>
             <label class="block text-xs text-slate-400 mb-1.5" for="onboard-corp-email">Corporate Email Address</label>
-            <input type="email" id="onboard-corp-email" class="cyber-input w-full py-2 px-3" required
+            <input type="email" id="onboard-corp-email" class="cyber-input p-3 rounded-lg text-sm w-full" required
                    placeholder="you@company.com" autocomplete="email">
             <p class="cyber-field-error hidden" id="onboard-corp-email-error"></p>
           </div>
@@ -935,8 +981,8 @@
               </p>
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1" for="corp-email">Corporate Email Address</label>
-              <input type="email" id="corp-email" class="cyber-input w-full py-2 px-3" required
+              <label class="block text-[11px] text-slate-400 mb-1.5" for="corp-email">Corporate Email Address</label>
+              <input type="email" id="corp-email" class="cyber-input p-3 rounded-lg text-sm w-full" required
                      value="${escapeHtml(email)}" placeholder="you@company.com" autocomplete="email">
               <p class="text-[11px] text-slate-500 mt-1">Example: you@company.com</p>
               <p class="cyber-field-error hidden" id="corp-email-error"></p>
@@ -1014,24 +1060,24 @@
             <h5 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Contact Details</h5>
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-[11px] text-slate-400 mb-1" for="billing-first-name">First Name *</label>
-                <input type="text" id="billing-first-name" class="cyber-input w-full text-sm py-2 px-3" required autocomplete="given-name">
+                <label class="block text-[11px] text-slate-400 mb-1.5" for="billing-first-name">First Name *</label>
+                <input type="text" id="billing-first-name" class="cyber-input p-3 rounded-lg text-sm w-full" required autocomplete="given-name">
                 <p class="cyber-field-error hidden" id="billing-first-name-error"></p>
               </div>
               <div>
-                <label class="block text-[11px] text-slate-400 mb-1" for="billing-last-name">Last Name *</label>
-                <input type="text" id="billing-last-name" class="cyber-input w-full text-sm py-2 px-3" required autocomplete="family-name">
+                <label class="block text-[11px] text-slate-400 mb-1.5" for="billing-last-name">Last Name *</label>
+                <input type="text" id="billing-last-name" class="cyber-input p-3 rounded-lg text-sm w-full" required autocomplete="family-name">
                 <p class="cyber-field-error hidden" id="billing-last-name-error"></p>
               </div>
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1" for="billing-email">Email *</label>
-              <input type="email" id="billing-email" class="cyber-input w-full text-sm py-2 px-3" required autocomplete="email">
+              <label class="block text-[11px] text-slate-400 mb-1.5" for="billing-email">Email *</label>
+              <input type="email" id="billing-email" class="cyber-input p-3 rounded-lg text-sm w-full" required autocomplete="email">
               <p class="cyber-field-error hidden" id="billing-email-error"></p>
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1" for="billing-phone">Phone Number *</label>
-              <input type="tel" id="billing-phone" class="cyber-input w-full text-sm py-2 px-3" required autocomplete="tel">
+              <label class="block text-[11px] text-slate-400 mb-1.5" for="billing-phone">Phone Number *</label>
+              <input type="tel" id="billing-phone" class="cyber-input p-3 rounded-lg text-sm w-full" required autocomplete="tel">
               <p class="cyber-field-error hidden" id="billing-phone-error"></p>
             </div>
           </div>
@@ -1041,35 +1087,35 @@
             <h5 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Billing Address</h5>
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-[11px] text-slate-400 mb-1" for="billing-city">City *</label>
-                <input type="text" id="billing-city" class="cyber-input w-full text-sm py-2 px-3" required autocomplete="address-level2">
+                <label class="block text-[11px] text-slate-400 mb-1.5" for="billing-city">City *</label>
+                <input type="text" id="billing-city" class="cyber-input p-3 rounded-lg text-sm w-full" required autocomplete="address-level2">
               </div>
               <div>
-                <label class="block text-[11px] text-slate-400 mb-1" for="billing-country">Country *</label>
-                <input type="text" id="billing-country" class="cyber-input w-full text-sm py-2 px-3" required autocomplete="country-name">
+                <label class="block text-[11px] text-slate-400 mb-1.5" for="billing-country">Country *</label>
+                <input type="text" id="billing-country" class="cyber-input p-3 rounded-lg text-sm w-full" required autocomplete="country-name">
               </div>
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1" for="billing-street">Street</label>
-              <input type="text" id="billing-street" class="cyber-input w-full text-sm py-2 px-3" autocomplete="street-address">
+              <label class="block text-[11px] text-slate-400 mb-1.5" for="billing-street">Street</label>
+              <input type="text" id="billing-street" class="cyber-input p-3 rounded-lg text-sm w-full" autocomplete="street-address">
             </div>
             <div class="grid grid-cols-3 gap-3">
               <div>
-                <label class="block text-[11px] text-slate-400 mb-1" for="billing-building">Building</label>
-                <input type="text" id="billing-building" class="cyber-input w-full text-sm py-2 px-3">
+                <label class="block text-[11px] text-slate-400 mb-1.5" for="billing-building">Building</label>
+                <input type="text" id="billing-building" class="cyber-input p-3 rounded-lg text-sm w-full">
               </div>
               <div>
-                <label class="block text-[11px] text-slate-400 mb-1" for="billing-floor">Floor</label>
-                <input type="text" id="billing-floor" class="cyber-input w-full text-sm py-2 px-3">
+                <label class="block text-[11px] text-slate-400 mb-1.5" for="billing-floor">Floor</label>
+                <input type="text" id="billing-floor" class="cyber-input p-3 rounded-lg text-sm w-full">
               </div>
               <div>
-                <label class="block text-[11px] text-slate-400 mb-1" for="billing-apartment">Apt</label>
-                <input type="text" id="billing-apartment" class="cyber-input w-full text-sm py-2 px-3">
+                <label class="block text-[11px] text-slate-400 mb-1.5" for="billing-apartment">Apt</label>
+                <input type="text" id="billing-apartment" class="cyber-input p-3 rounded-lg text-sm w-full">
               </div>
             </div>
             <div>
-              <label class="block text-[11px] text-slate-400 mb-1" for="billing-postal">Postal Code</label>
-              <input type="text" id="billing-postal" class="cyber-input w-full text-sm py-2 px-3" autocomplete="postal-code">
+              <label class="block text-[11px] text-slate-400 mb-1.5" for="billing-postal">Postal Code</label>
+              <input type="text" id="billing-postal" class="cyber-input p-3 rounded-lg text-sm w-full" autocomplete="postal-code">
             </div>
           </div>
           <button type="submit" class="cyber-btn-primary w-full py-2.5 rounded-lg text-sm font-semibold mt-2">
