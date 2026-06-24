@@ -3291,6 +3291,7 @@
                 } catch (_) {}
 
                 _apiClient = new APIClient(API_BASE);
+                window.apiClient = _apiClient;
 
                 initializeAllowedTools();
                 loadProject(isOwnedHint);
