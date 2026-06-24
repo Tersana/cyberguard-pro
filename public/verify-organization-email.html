@@ -400,10 +400,13 @@
 
                 // Attempt to extract organization ID from verify_url to store context
                 try {
-                    // Try to match specific /organizations/corporate-email/verify/{id} pattern first, then fallback to /organizations/{id}
-                    const match = verifyUrl.match(/\/organizations\/corporate-email\/verify\/([^\/?#]+)/) || verifyUrl.match(/\/organizations\/([^\/?#]+)/);
-                    if (match && match[1] && window.organizationManager) {
-                        window.organizationManager.setPendingOrgId(match[1]);
+                    // Note: /organizations/corporate-email/verify/{billing_order} contains a billing order ID, not an organization ID.
+                    // We only extract the organization ID if it matches /organizations/{id} and is not the verification route.
+                    if (verifyUrl.indexOf('/corporate-email/verify/') === -1) {
+                        const match = verifyUrl.match(/\/organizations\/([^\/?#]+)/);
+                        if (match && match[1] && window.organizationManager) {
+                            window.organizationManager.setPendingOrgId(match[1]);
+                        }
                     }
                 } catch (e) {
                     console.warn("[VerifyOrgEmail] Failed to extract organization ID from URL:", e);
@@ -418,6 +421,14 @@
                     const data = await res.json().catch(function () { return {}; });
 
                     if (res.ok) {
+                        // Extract organization ID from the response if present (supports multiple formats)
+                        const orgId = data.organization_id || 
+                                      (data.organization && data.organization.id) || 
+                                      (data.data && (data.data.organization_id || data.data.id || data.data.organization?.id));
+                        if (orgId && window.organizationManager) {
+                            window.organizationManager.setPendingOrgId(orgId);
+                        }
+
                         const msg = (data.message || '').toLowerCase();
                         if (msg.indexOf('already') !== -1) {
                             document.getElementById('success-title').textContent = 'Already Verified';
