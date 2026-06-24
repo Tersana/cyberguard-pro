@@ -150,10 +150,13 @@
     async submitCheckout(organizationId, data) {
       try {
         if (typeof showLoading === "function") showLoading("Processing payment…");
-        const response = await window.apiClient.post(
-          `organizations/${organizationId}/payment/checkout`,
-          data
-        );
+        const endpoint = `organizations/${organizationId}/payment/checkout`;
+        console.log("[OrganizationManager] submitCheckout called:");
+        console.log("  organizationId:", organizationId);
+        console.log("  endpoint:", endpoint);
+        console.log("  full URL will be:", window.apiClient.baseURL + endpoint);
+        console.log("  payload:", JSON.stringify(data));
+        const response = await window.apiClient.post(endpoint, data);
         return response;
       } catch (error) {
         console.error("[OrganizationManager] submitCheckout error:", error);

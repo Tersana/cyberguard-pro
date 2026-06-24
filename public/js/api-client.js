@@ -307,6 +307,7 @@ class APIClient {
       }
 
       // Execute fetch
+      console.log(`[APIClient] ${method} ${url}`, { headers: { ...headers }, body: fetchOptions.body ? "(has body)" : "(no body)" });
       const response = await fetch(url, fetchOptions);
 
       // Apply response interceptors
