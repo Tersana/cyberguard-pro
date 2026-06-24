@@ -6273,7 +6273,6 @@
 
                 if (!text) return;
                 navigator.clipboard.writeText(text).then(() => {
-                    notify("Copied to clipboard!", "success");
                     if (btn) {
                         const origHTML = btn.innerHTML;
                         btn.innerHTML = `

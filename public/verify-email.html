@@ -463,7 +463,16 @@
                     return;
                 }
 
-                const verifyUrl = decodeURIComponent(rawUrl);
+                let verifyUrl = decodeURIComponent(rawUrl);
+
+                // Re-encode search query parameters to ensure special characters like '@' are properly encoded to '%40' for backend signature verification
+                try {
+                    const parsedUrl = new URL(verifyUrl);
+                    parsedUrl.search = parsedUrl.searchParams.toString();
+                    verifyUrl = parsedUrl.toString();
+                } catch (e) {
+                    console.warn("[VerifyEmail] Failed to parse and re-encode verifyUrl:", e);
+                }
 
                 try {
                     const res = await fetch(verifyUrl, {
