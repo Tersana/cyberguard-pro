@@ -100,25 +100,30 @@ class APIClient {
 
     // Automatically inject the active organization context if present
     if (!skipAuth && !headers["X-Organization-Id"]) {
-      let endpointOrgId = null;
-      if (endpoint) {
-        const match = endpoint.match(/^\/?organizations\/([^/]+)/);
-        if (match && match[1]) {
-          const segment = match[1];
-          // Exclude static non-ID paths
-          const staticRoutes = ["details", "my-workspaces", "members", "invitations", "initiate"];
-          if (!staticRoutes.includes(segment)) {
-            endpointOrgId = segment;
+      // Do not inject X-Organization-Id for onboarding/payment endpoints (payment/checkout, payment/status, corporate-email)
+      const isOnboarding = endpoint && (endpoint.includes("/payment/") || endpoint.includes("/corporate-email"));
+      
+      if (!isOnboarding) {
+        let endpointOrgId = null;
+        if (endpoint) {
+          const match = endpoint.match(/^\/?organizations\/([^/]+)/);
+          if (match && match[1]) {
+            const segment = match[1];
+            // Exclude static non-ID paths
+            const staticRoutes = ["details", "my-workspaces", "members", "invitations", "initiate"];
+            if (!staticRoutes.includes(segment)) {
+              endpointOrgId = segment;
+            }
           }
         }
-      }
 
-      if (endpointOrgId) {
-        headers["X-Organization-Id"] = endpointOrgId;
-      } else if (window.organizationManager && typeof window.organizationManager.getActiveOrgId === "function") {
-        const activeOrgId = window.organizationManager.getActiveOrgId();
-        if (activeOrgId) {
-          headers["X-Organization-Id"] = activeOrgId;
+        if (endpointOrgId) {
+          headers["X-Organization-Id"] = endpointOrgId;
+        } else if (window.organizationManager && typeof window.organizationManager.getActiveOrgId === "function") {
+          const activeOrgId = window.organizationManager.getActiveOrgId();
+          if (activeOrgId) {
+            headers["X-Organization-Id"] = activeOrgId;
+          }
         }
       }
     }
