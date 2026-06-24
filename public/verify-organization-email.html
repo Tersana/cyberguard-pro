@@ -400,7 +400,8 @@
 
                 // Attempt to extract organization ID from verify_url to store context
                 try {
-                    const match = verifyUrl.match(/\/organizations\/([^\/]+)/);
+                    // Try to match specific /organizations/corporate-email/verify/{id} pattern first, then fallback to /organizations/{id}
+                    const match = verifyUrl.match(/\/organizations\/corporate-email\/verify\/([^\/?#]+)/) || verifyUrl.match(/\/organizations\/([^\/?#]+)/);
                     if (match && match[1] && window.organizationManager) {
                         window.organizationManager.setPendingOrgId(match[1]);
                     }
