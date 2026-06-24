@@ -551,6 +551,60 @@ describe("OrganizationSettings", () => {
         { type: "success" }
       );
     });
+
+    it("opens step 3 directly if org_onboarding_step=3 query parameter is present", async () => {
+      const origWindow = global.window;
+      const origDocument = global.document;
+
+      const stepDom = new JSDOM(
+        `<!DOCTYPE html>
+        <html>
+          <body>
+            <div id="org-workspace-switcher" class="hidden"></div>
+            <a href="#" id="org-nav-toggle"></a>
+            <div id="pane-org-settings"></div>
+            <div id="org-onboarding-modal" class="hidden">
+              <div id="org-onboarding-body"></div>
+            </div>
+          </body>
+        </html>`,
+        {
+          url: "http://localhost/dashboard?org_onboarding_step=3",
+          runScripts: "dangerously",
+          resources: "usable",
+        }
+      );
+      
+      const testWindow = stepDom.window;
+      const testDocument = testWindow.document;
+
+      // Load scripts into testWindow
+      const mgrSrc = fs.readFileSync(path.resolve(__dirname, "../../public/js/organization-manager.js"), "utf8");
+      testWindow.eval(mgrSrc);
+      const settingsSrc = fs.readFileSync(path.resolve(__dirname, "../../public/js/organization-settings.js"), "utf8");
+      testWindow.eval(settingsSrc);
+
+      global.window = testWindow;
+      global.document = testDocument;
+
+      testWindow.CyberNotify = { alert: vi.fn() };
+      testWindow.organizationManager.setPendingOrgId("pending-org-123");
+
+      const openSpy = vi.spyOn(testWindow.OrganizationSettings, "_openOnboardingWizard");
+      const renderSpy = vi.spyOn(testWindow.OrganizationSettings, "_renderOnboardingStep");
+      const pollSpy = vi.spyOn(testWindow.organizationManager, "pollPaymentStatus");
+
+      await testWindow.OrganizationSettings.startPostPaymentFlow();
+
+      expect(openSpy).toHaveBeenCalled();
+      expect(renderSpy).toHaveBeenCalledWith(3);
+      expect(pollSpy).not.toHaveBeenCalled();
+      expect(testWindow.location.search).toBe("");
+
+      // Restore original globals
+      global.window = origWindow;
+      global.document = origDocument;
+    });
   });
 
   // ─── Onboarding Form Submissions ────────────────────────────────

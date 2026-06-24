@@ -6260,10 +6260,20 @@
                 }
             }
 
-            function copyToClipboard(text, btn) {
+            function copyToClipboard(textOrId, btn) {
+                if (!textOrId) return;
+                
+                let text = textOrId;
+                if (typeof textOrId === 'string' && (textOrId.startsWith('fd-') || textOrId.startsWith('ep-'))) {
+                    const el = document.getElementById(textOrId);
+                    if (el) {
+                        text = el.textContent || el.value || '';
+                    }
+                }
+
                 if (!text) return;
                 navigator.clipboard.writeText(text).then(() => {
-                    notify("Target value copied!", "success");
+                    notify("Copied to clipboard!", "success");
                     if (btn) {
                         const origHTML = btn.innerHTML;
                         btn.innerHTML = `
@@ -6272,13 +6282,16 @@
                             </svg>
                         `;
                         btn.classList.add("text-emerald-400");
+                        btn.classList.add("bg-emerald-500/10");
                         setTimeout(() => {
                             btn.innerHTML = origHTML;
                             btn.classList.remove("text-emerald-400");
+                            btn.classList.remove("bg-emerald-500/10");
                         }, 2000);
                     }
-                }).catch(() => {
-                    notify("Failed to copy target.", "warning");
+                }).catch((err) => {
+                    console.error("Failed to copy text:", err);
+                    notify("Failed to copy.", "warning");
                 });
             }
 
@@ -8516,27 +8529,7 @@
                 }
             }
 
-            function copyToClipboard(elementId, btnElement) {
-                const text = document.getElementById(elementId)?.textContent || '';
-                if (!text) return;
-                
-                navigator.clipboard.writeText(text).then(() => {
-                    const originalHTML = btnElement.innerHTML;
-                    btnElement.innerHTML = `
-                        <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                    `;
-                    btnElement.classList.add('bg-emerald-500/10');
-                    
-                    setTimeout(() => {
-                        btnElement.innerHTML = originalHTML;
-                        btnElement.classList.remove('bg-emerald-500/10');
-                    }, 1500);
-                }).catch(err => {
-                    console.error('Failed to copy text: ', err);
-                });
-            }
+
 
             function updateFindingsStats(findings) {
                 const counts = {critical:0,high:0,medium:0,low:0,info:0};

@@ -1220,6 +1220,19 @@
       if (!orgId) return; // No pending onboarding — skip silently
       console.log("[OrgSettings] startPostPaymentFlow called. Pending org ID:", orgId);
 
+      // Check query parameter to open Step 3 directly!
+      const urlParams = new URLSearchParams(window.location.search);
+      const stepParam = urlParams.get("org_onboarding_step");
+      if (stepParam === "3") {
+        // Clean the query parameter from URL
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+        
+        this._openOnboardingWizard();
+        this._renderOnboardingStep(3);
+        return;
+      }
+
       try {
         console.log("[OrgSettings] Polling payment status for pending org:", orgId);
         const statusRes = await window.organizationManager.pollPaymentStatus(orgId);
