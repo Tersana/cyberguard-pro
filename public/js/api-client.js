@@ -83,7 +83,7 @@ class APIClient {
   /**
    * Build request headers
    */
-  _buildHeaders(customHeaders = {}, skipAuth = false) {
+  _buildHeaders(customHeaders = {}, skipAuth = false, endpoint = null) {
     const headers = {
       Accept: "application/json",
       ...NGROK_HEADER,
@@ -99,10 +99,27 @@ class APIClient {
     }
 
     // Automatically inject the active organization context if present
-    if (!skipAuth && window.organizationManager && typeof window.organizationManager.getActiveOrgId === "function") {
-      const activeOrgId = window.organizationManager.getActiveOrgId();
-      if (activeOrgId) {
-        headers["X-Organization-Id"] = activeOrgId;
+    if (!skipAuth && !headers["X-Organization-Id"]) {
+      let endpointOrgId = null;
+      if (endpoint) {
+        const match = endpoint.match(/^\/?organizations\/([^/]+)/);
+        if (match && match[1]) {
+          const segment = match[1];
+          // Exclude static non-ID paths
+          const staticRoutes = ["details", "my-workspaces", "members", "invitations", "initiate"];
+          if (!staticRoutes.includes(segment)) {
+            endpointOrgId = segment;
+          }
+        }
+      }
+
+      if (endpointOrgId) {
+        headers["X-Organization-Id"] = endpointOrgId;
+      } else if (window.organizationManager && typeof window.organizationManager.getActiveOrgId === "function") {
+        const activeOrgId = window.organizationManager.getActiveOrgId();
+        if (activeOrgId) {
+          headers["X-Organization-Id"] = activeOrgId;
+        }
       }
     }
 
@@ -265,7 +282,7 @@ class APIClient {
       const { headers: customHeaders, skipAuth, ...fetchExtra } = options;
 
       // Build headers — skipAuth omits Authorization header for public endpoints
-      const headers = this._buildHeaders(customHeaders || {}, skipAuth || false);
+      const headers = this._buildHeaders(customHeaders || {}, skipAuth || false, endpoint);
 
       // Add Content-Type for requests with body
       if (data && ["POST", "PUT", "PATCH"].includes(method)) {
