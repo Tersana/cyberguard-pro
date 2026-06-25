@@ -2233,6 +2233,16 @@
                             await authManager.registerWithAPI(userData);
 
                         if (result.success) {
+                            // Automatically trigger sending the initial verification email
+                            try {
+                                await authManager.resendVerificationEmail(userData.email);
+                            } catch (emailError) {
+                                console.error(
+                                    "Failed to send initial verification email:",
+                                    emailError,
+                                );
+                            }
+
                             // Hide the form and show success state with email verification guidance
                             hideInlineLoading(submitButton);
                             showEmailVerificationSuccess(userData.email);
@@ -2569,7 +2579,7 @@
                                 );
 
                                 const result =
-                                    await authManager.resendVerificationEmail();
+                                    await authManager.resendVerificationEmail(email);
 
                                 if (result.success) {
                                     // Show success feedback

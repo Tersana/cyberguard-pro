@@ -770,8 +770,11 @@ class AuthManager {
       // Show loading indicator
       showLoading("Sending verification email...");
 
-      // Use provided email, fall back to current user's email
-      const targetEmail = email || (this.currentUser && this.currentUser.email);
+      // Use provided email, fall back to current user's email or pending verification email from sessionStorage
+      const targetEmail =
+        email ||
+        (this.currentUser && this.currentUser.email) ||
+        sessionStorage.getItem("pendingVerificationEmail");
       if (!targetEmail) {
         throw new APIError("Email address is required to resend verification.", 400);
       }
