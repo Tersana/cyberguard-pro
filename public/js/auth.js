@@ -15,6 +15,15 @@ class AuthManager {
   }
 
   init() {
+    // If on login, signup, or callback pages, clear active organization context to prevent tenant session contamination
+    if (typeof window !== "undefined" && window.location && window.location.pathname && typeof localStorage !== "undefined") {
+      const path = window.location.pathname.toLowerCase();
+      if (path.includes("/login") || path.includes("/signup") || path.includes("/google-callback")) {
+        localStorage.removeItem("cyberguard_active_org_id");
+        localStorage.removeItem("cyberguard_pending_org_id");
+      }
+    }
+
     // NOTE: OAuth callback handling has been moved to GoogleAuthHandler
     // (google-auth-handler.js). It only runs on the /google-callback page.
     // Removed this.handleOAuthCallback() to prevent race conditions on
@@ -837,6 +846,10 @@ class AuthManager {
         localStorage.removeItem("cyberguard_welcome_shown");
         sessionStorage.removeItem("cyberguard_welcome_shown");
 
+        // Clear active organization context to prevent tenant session contamination
+        localStorage.removeItem("cyberguard_active_org_id");
+        localStorage.removeItem("cyberguard_pending_org_id");
+
         this.currentUser = null;
 
         // Track logout (using captured email)
@@ -987,6 +1000,10 @@ class AuthManager {
       // Clear welcome popup flag so it reappears on next login
       localStorage.removeItem("cyberguard_welcome_shown");
       sessionStorage.removeItem("cyberguard_welcome_shown");
+
+      // Clear active organization context to prevent tenant session contamination
+      localStorage.removeItem("cyberguard_active_org_id");
+      localStorage.removeItem("cyberguard_pending_org_id");
 
       this.currentUser = null;
 
