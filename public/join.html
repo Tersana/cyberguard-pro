@@ -486,60 +486,6 @@
                         const tokenParam = encodeURIComponent(token);
                         window.location.href = `/signup?email=${emailParam}&token=${tokenParam}`;
                     }
-
-                        document.getElementById("register-form").addEventListener("submit", async function(e) {
-                            e.preventDefault();
-                            clearFieldErrors();
-
-                            const fullName = document.getElementById("reg-fullname").value.trim();
-                            const jobTitle = document.getElementById("reg-job").value.trim();
-                            const password = document.getElementById("reg-password").value;
-                            const passwordConfirm = document.getElementById("reg-password-confirm").value;
-
-                            // Client validation
-                            let hasError = false;
-                            if (!fullName) { showFieldError("reg-fullname-error", "Full name is required."); hasError = true; }
-                            if (!jobTitle) { showFieldError("reg-job-error", "Job title is required."); hasError = true; }
-                            if (password.length < 8) { showFieldError("reg-password-error", "Password must be at least 8 characters."); hasError = true; }
-                            if (password !== passwordConfirm) { showFieldError("reg-password-confirm-error", "Passwords do not match."); hasError = true; }
-                            if (hasError) return;
-
-                            const btn = document.getElementById("btn-register");
-                            btn.disabled = true;
-                            btn.innerHTML = '<span class="spin"></span> Creating Account…';
-
-                            try {
-                                // API field is "job_tittle" (double-t — preserved per backend contract)
-                                const res = await apiFetch("POST", `organizations/invitations/${token}/register`, {
-                                    full_name: fullName,
-                                    password: password,
-                                    password_confirmation: passwordConfirm,
-                                    job_tittle: jobTitle
-                                }, true);
-
-                                // Store JWT and user data
-                                if (res.token) localStorage.setItem(JWT_STORAGE_KEY, res.token);
-                                if (res.user) localStorage.setItem("cyberguard_user", JSON.stringify(res.user));
-
-                                document.getElementById("success-msg").textContent =
-                                    `Welcome, ${fullName}! Your account has been created and you've joined the team.`;
-                                show("s-success");
-                            } catch (err) {
-                                btn.disabled = false;
-                                btn.innerHTML = "Create Account & Join";
-
-                                if (err.data && err.data.errors) {
-                                    const errs = err.data.errors;
-                                    if (errs.full_name) showFieldError("reg-fullname-error", errs.full_name[0] || errs.full_name);
-                                    if (errs.job_tittle) showFieldError("reg-job-error", errs.job_tittle[0] || errs.job_tittle);
-                                    if (errs.password) showFieldError("reg-password-error", errs.password[0] || errs.password);
-                                    if (errs.password_confirmation) showFieldError("reg-password-confirm-error", errs.password_confirmation[0] || errs.password_confirmation);
-                                } else {
-                                    showFieldError("reg-fullname-error", err.message || "Registration failed. Please try again.");
-                                }
-                            }
-                        });
-                    }
                 } catch (err) {
                     console.error("Join page error:", err);
                     const errorMsg = document.getElementById("error-msg");
