@@ -383,7 +383,7 @@
                 <h2 style="font-size:1.15rem;font-weight:800;color:#f1f5f9;margin-bottom:8px">
                     Sign In Required
                 </h2>
-                <p style="font-size:0.85rem;color:#94a3b8;margin-bottom:1.75rem">
+                <p id="login-redirect-msg" style="font-size:0.85rem;color:#94a3b8;margin-bottom:1.75rem;line-height:1.5">
                     You need to sign in first to accept this invitation.
                 </p>
                 <a id="login-redirect-link" href="/login" class="btn-primary" style="display:inline-flex;width:auto;padding:10px 24px;text-decoration:none;">
@@ -452,32 +452,81 @@
                         // User already has an account
                         const jwt = getToken();
                         if (jwt) {
-                            // Authenticated — show accept UI
-                            document.getElementById("inv-org-name").textContent = org.name || "Organization";
-                            document.getElementById("inv-email").textContent = inv.email || "—";
-                            const roleBadge = document.getElementById("inv-role-badge");
-                            const role = inv.role || "member";
-                            roleBadge.textContent = role.charAt(0).toUpperCase() + role.slice(1);
-                            roleBadge.className = `badge badge-${role}`;
-                            show("s-accept");
+                            // Verify that the currently logged-in user matches the invitation's email address
+                            const loggedInUserStr = localStorage.getItem("cyberguard_user");
+                            let loggedInUser = null;
+                            try {
+                                if (loggedInUserStr) loggedInUser = JSON.parse(loggedInUserStr);
+                            } catch (e) {}
 
-                            document.getElementById("btn-accept").addEventListener("click", async function() {
-                                this.disabled = true;
-                                this.innerHTML = '<span class="spin"></span> Joining…';
-                                try {
-                                    await apiFetch("POST", `organizations/${token}/accept`);
-                                    show("s-success");
-                                } catch (err) {
-                                    this.disabled = false;
-                                    this.innerHTML = 'Join Organization';
-                                    alert(err.message || "Failed to join. Please try again.");
+                            const isEmailMatch = loggedInUser && loggedInUser.email && inv.email &&
+                                                 loggedInUser.email.trim().toLowerCase() === inv.email.trim().toLowerCase();
+
+                            if (isEmailMatch) {
+                                // Authenticated and email matches — show accept UI
+                                document.getElementById("inv-org-name").textContent = org.name || "Organization";
+                                document.getElementById("inv-email").textContent = inv.email || "—";
+                                const roleBadge = document.getElementById("inv-role-badge");
+                                const role = inv.role || "member";
+                                roleBadge.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+                                roleBadge.className = `badge badge-${role}`;
+                                show("s-accept");
+
+                                document.getElementById("btn-accept").addEventListener("click", async function() {
+                                    this.disabled = true;
+                                    this.innerHTML = '<span class="spin"></span> Joining…';
+                                    try {
+                                        await apiFetch("POST", `organizations/${token}/accept`);
+                                        show("s-success");
+                                    } catch (err) {
+                                        this.disabled = false;
+                                        this.innerHTML = 'Join Organization';
+                                        if (err.status === 401 || err.status === 403) {
+                                            // Clear stale or mismatched session
+                                            localStorage.removeItem(JWT_STORAGE_KEY);
+                                            localStorage.removeItem("cyberguard_user");
+                                            localStorage.removeItem("cyberguard_session");
+                                            alert(err.message || "Your session has expired or is unauthorized. Please sign in again.");
+                                            
+                                            const loginLink = document.getElementById("login-redirect-link");
+                                            const redirect = encodeURIComponent(`/join?token=${token}`);
+                                            loginLink.href = `/login?redirect=${redirect}`;
+                                            document.getElementById("login-redirect-msg").innerHTML =
+                                                `Please sign in with the invited email address (<strong style="color:#fafafa">${inv.email || ""}</strong>) to accept this invitation.`;
+                                            show("s-login");
+                                        } else {
+                                            alert(err.message || "Failed to join. Please try again.");
+                                        }
+                                    }
+                                });
+                            } else {
+                                // Logged-in user email mismatch: force re-login with the correct email
+                                localStorage.removeItem(JWT_STORAGE_KEY);
+                                localStorage.removeItem("cyberguard_user");
+                                localStorage.removeItem("cyberguard_session");
+
+                                const loginLink = document.getElementById("login-redirect-link");
+                                const redirect = encodeURIComponent(`/join?token=${token}`);
+                                loginLink.href = `/login?redirect=${redirect}`;
+                                
+                                if (loggedInUser && loggedInUser.email) {
+                                    document.getElementById("login-redirect-msg").innerHTML =
+                                        `You are currently signed in as <strong style="color:#fafafa">${loggedInUser.email}</strong>.<br>` +
+                                        `This invitation was sent to <strong style="color:#fafafa">${inv.email}</strong>.<br>` +
+                                        `Please sign in with the correct account.`;
+                                } else {
+                                    document.getElementById("login-redirect-msg").innerHTML =
+                                        `Please sign in with the invited email address (<strong style="color:#fafafa">${inv.email || ""}</strong>) to accept this invitation.`;
                                 }
-                            });
+                                show("s-login");
+                            }
                         } else {
                             // Not authenticated — redirect to login
                             const loginLink = document.getElementById("login-redirect-link");
                             const redirect = encodeURIComponent(`/join?token=${token}`);
                             loginLink.href = `/login?redirect=${redirect}`;
+                            document.getElementById("login-redirect-msg").innerHTML =
+                                `Please sign in with the invited email address (<strong style="color:#fafafa">${inv.email || ""}</strong>) to accept this invitation.`;
                             show("s-login");
                         }
                     } else {
