@@ -561,7 +561,7 @@
             <span class="material-symbols-outlined text-blue-400">edit</span>
             Workspace Settings
           </h5>
-          <form id="org-edit-form" class="space-y-5 mt-4">
+          <form id="org-edit-form" class="space-y-5 mt-4" onsubmit="return false;">
             <div class="settings-form-group mb-0">
               <label for="org-edit-name" class="block text-xs font-semibold text-slate-400 mb-2">Organization Name</label>
               <div class="input-wrapper">
@@ -579,7 +579,7 @@
               <p class="cyber-field-error hidden" id="org-edit-logo-error"></p>
             </div>
             <div class="flex justify-end pt-2">
-              <button type="submit" class="cyber-btn-primary py-2 px-4 rounded-lg font-semibold text-sm">
+              <button type="button" id="org-edit-submit-btn" class="cyber-btn-primary py-2 px-4 rounded-lg font-semibold text-sm">
                 Save Changes
               </button>
             </div>
@@ -610,7 +610,7 @@
 
     _renderInviteForm() {
       return `
-        <form id="org-invite-form" class="bg-white/5 border border-white/5 rounded-xl p-4 mb-6">
+        <form id="org-invite-form" class="bg-white/5 border border-white/5 rounded-xl p-4 mb-6" onsubmit="return false;">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
             <div class="sm:col-span-1">
               <label class="block text-xs text-slate-400 mb-1.5" for="org-invite-email">Invite Email Address</label>
@@ -630,7 +630,7 @@
               </div>
             </div>
             <div class="sm:col-span-1">
-              <button type="submit" class="cyber-btn-primary py-3 px-4 rounded-lg font-semibold text-sm w-full flex items-center justify-center gap-2"
+              <button type="button" class="cyber-btn-primary py-3 px-4 rounded-lg font-semibold text-sm w-full flex items-center justify-center gap-2"
                       id="org-invite-submit-btn">
                 <span class="material-symbols-outlined" style="font-size:1.1rem;">send</span>
                 Send Invite
@@ -751,12 +751,47 @@
         });
       }
 
+      const editSubmitBtn = document.getElementById("org-edit-submit-btn");
+      if (editSubmitBtn) {
+        editSubmitBtn.addEventListener("click", () => {
+          this._handleEditSave();
+        });
+      }
+
+      const editNameInput = document.getElementById("org-edit-name");
+      const editLogoInput = document.getElementById("org-edit-logo");
+      const handleEditSave = (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          this._handleEditSave();
+        }
+      };
+      if (editNameInput) editNameInput.addEventListener("keydown", handleEditSave);
+      if (editLogoInput) editLogoInput.addEventListener("keydown", handleEditSave);
+
       // Invite form
       const inviteForm = document.getElementById("org-invite-form");
       if (inviteForm) {
         inviteForm.addEventListener("submit", (e) => {
           e.preventDefault();
           this._handleInvite();
+        });
+      }
+
+      const inviteSubmitBtn = document.getElementById("org-invite-submit-btn");
+      if (inviteSubmitBtn) {
+        inviteSubmitBtn.addEventListener("click", () => {
+          this._handleInvite();
+        });
+      }
+
+      const inviteEmailInput = document.getElementById("org-invite-email");
+      if (inviteEmailInput) {
+        inviteEmailInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            this._handleInvite();
+          }
         });
       }
 
