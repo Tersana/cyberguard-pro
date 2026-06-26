@@ -117,6 +117,26 @@
 
       try {
         const workspaces = await om.fetchMyWorkspaces();
+        
+        // Proactively clear invalid active org ID
+        const activeOrgId = om.getActiveOrgId();
+        if (activeOrgId) {
+          const isValid = workspaces.some((ws) => String(ws.id) === String(activeOrgId));
+          if (!isValid) {
+            console.warn("[OrgSettings] Active organization ID is no longer valid. Clearing active organization.");
+            om.clearActiveOrg();
+            if (
+              typeof window !== "undefined" &&
+              window.location &&
+              typeof window.location.reload === "function" &&
+              (!window.navigator || !window.navigator.userAgent || !window.navigator.userAgent.includes("jsdom"))
+            ) {
+              window.location.reload();
+              return;
+            }
+          }
+        }
+
         this._renderWorkspaceSwitcher(om.workspacesResponse || workspaces);
       } catch (error) {
         console.warn("[OrgSettings] Failed to load workspaces:", error);
