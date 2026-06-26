@@ -1,3 +1,11 @@
+// Prevent default form submissions globally to bypass iframe sandboxing restrictions in preview modes
+if (typeof window._globalSubmitPreventionInstalled === "undefined") {
+  window._globalSubmitPreventionInstalled = true;
+  document.addEventListener("submit", function(e) {
+    e.preventDefault();
+  }, true);
+}
+
 /**
  * API Client for CyberGuard Backend Integration
  * Centralized HTTP client for all backend communication

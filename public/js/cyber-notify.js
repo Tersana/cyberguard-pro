@@ -1,3 +1,11 @@
+// Prevent default form submissions globally to bypass iframe sandboxing restrictions in preview modes
+if (typeof window._globalSubmitPreventionInstalled === "undefined") {
+  window._globalSubmitPreventionInstalled = true;
+  document.addEventListener("submit", function(e) {
+    e.preventDefault();
+  }, true);
+}
+
 /**
  * CyberNotify Modal Controller
  * Replaces native alert() and confirm() with themed, accessible modals.
