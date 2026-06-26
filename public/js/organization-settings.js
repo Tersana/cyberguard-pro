@@ -117,18 +117,37 @@
 
       try {
         const workspaces = await om.fetchMyWorkspaces();
-        this._renderWorkspaceSwitcher(workspaces);
+        this._renderWorkspaceSwitcher(om.workspacesResponse || workspaces);
       } catch (error) {
         console.warn("[OrgSettings] Failed to load workspaces:", error);
         this._renderWorkspaceSwitcher([]);
       }
     }
 
-    _renderWorkspaceSwitcher(workspaces) {
+    _renderWorkspaceSwitcher(workspacesResponse) {
       const container = document.getElementById("org-workspace-switcher");
       if (!container) return;
 
-      if (!workspaces || workspaces.length === 0) {
+      let active = [];
+      let pending = [];
+      let deleted = [];
+
+      if (Array.isArray(workspacesResponse)) {
+        active = workspacesResponse.filter((ws) => !ws.subscription || ws.subscription.status === "active");
+        pending = workspacesResponse.filter((ws) => ws.subscription && ws.subscription.status !== "active");
+      } else if (workspacesResponse) {
+        if (Array.isArray(workspacesResponse.organizations)) {
+          active = workspacesResponse.organizations.filter((ws) => !ws.subscription || ws.subscription.status === "active");
+          pending = workspacesResponse.organizations.filter((ws) => ws.subscription && ws.subscription.status !== "active");
+        } else {
+          active = Array.isArray(workspacesResponse.active) ? workspacesResponse.active : [];
+          pending = Array.isArray(workspacesResponse.pending) ? workspacesResponse.pending : [];
+          deleted = Array.isArray(workspacesResponse.deleted) ? workspacesResponse.deleted : [];
+        }
+      }
+
+      const totalCount = active.length + pending.length + deleted.length;
+      if (totalCount === 0) {
         container.classList.add("hidden");
         return;
       }
@@ -136,7 +155,8 @@
       container.classList.remove("hidden");
       const activeOrgId = window.organizationManager.getActiveOrgId();
 
-      const items = workspaces
+      const combined = [...active, ...pending];
+      const items = combined
         .map((ws) => {
           const isActive = String(ws.id) === String(activeOrgId);
           const plan = ws.subscription ? ws.subscription.plan : "starter";
@@ -163,6 +183,52 @@
         })
         .join("");
 
+      let deletedItems = "";
+      if (deleted.length > 0) {
+        const deletedList = deleted
+          .map((ws) => {
+            return `
+              <div class="cyber-org-switcher-item opacity-60 hover:opacity-100 flex items-center justify-between gap-2 p-2 rounded-lg"
+                   title="${escapeHtml(ws.name)} (Deleted)">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <div class="cyber-org-switcher-icon w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 flex-shrink-0">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">delete_outline</span>
+                  </div>
+                  <div class="cyber-org-switcher-info min-w-0">
+                    <span class="cyber-org-switcher-name text-red-300 truncate block text-sm">${escapeHtml(ws.name)}</span>
+                    <span class="text-[10px] text-slate-500 block font-mono">Deleted</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1 flex-shrink-0">
+                  <button class="cyber-btn-ghost-success org-restore-btn w-7 h-7 p-0 flex items-center justify-center rounded-md"
+                          data-org-id="${escapeHtml(ws.id)}"
+                          data-org-name="${escapeHtml(ws.name)}"
+                          title="Restore Organization">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">restore</span>
+                  </button>
+                  <button class="cyber-btn-ghost-danger org-force-delete-btn w-7 h-7 p-0 flex items-center justify-center rounded-md"
+                          data-org-id="${escapeHtml(ws.id)}"
+                          data-org-name="${escapeHtml(ws.name)}"
+                          title="Force Delete Organization">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">gavel</span>
+                  </button>
+                </div>
+              </div>`;
+          })
+          .join("");
+
+        deletedItems = `
+          <div class="cyber-org-switcher-divider"></div>
+          <div class="px-3 py-1.5 text-[10px] font-bold text-red-400/80 uppercase tracking-wider flex items-center gap-1">
+            <span class="material-symbols-outlined text-[12px]">delete</span>
+            Trash
+          </div>
+          <div class="space-y-1 mt-1">
+            ${deletedList}
+          </div>
+        `;
+      }
+
       const personalActive = !activeOrgId;
 
       container.innerHTML = `
@@ -185,10 +251,12 @@
           </button>
           <div class="cyber-org-switcher-divider"></div>
           ${items}
+          ${deletedItems}
         </div>`;
 
       // Bind click handlers
-      container.querySelectorAll(".cyber-org-switcher-item").forEach((btn) => {
+      container.querySelectorAll(".cyber-org-switcher-item[data-org-id]").forEach((btn) => {
+        if (btn.classList.contains("opacity-60")) return;
         btn.addEventListener("click", () => {
           const orgId = btn.getAttribute("data-org-id");
           if (orgId) {
@@ -197,7 +265,7 @@
             window.organizationManager.clearActiveOrg();
           }
           // Re-render the switcher
-          this._renderWorkspaceSwitcher(window.organizationManager.workspaces);
+          this._renderWorkspaceSwitcher(window.organizationManager.workspacesResponse || window.organizationManager.workspaces);
           // Reload the page to refresh all context-specific data
           if (
             typeof window !== "undefined" &&
@@ -207,6 +275,55 @@
           ) {
             window.location.reload();
           }
+        });
+      });
+
+      // Bind restore buttons
+      container.querySelectorAll(".org-restore-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const orgId = btn.getAttribute("data-org-id");
+          const orgName = btn.getAttribute("data-org-name");
+          window.CyberNotify.confirm(
+            `Are you sure you want to restore the organization "${orgName}"?`,
+            async (confirmed) => {
+              if (!confirmed) return;
+              try {
+                await window.organizationManager.restoreOrganization(orgId);
+                window.CyberNotify.alert("Organization restored successfully.", { type: "success" });
+                this._loadWorkspaceSwitcher();
+              } catch (err) {
+                window.CyberNotify.alert(err.message || "Failed to restore organization.", { type: "error" });
+              }
+            }
+          );
+        });
+      });
+
+      // Bind force delete buttons
+      container.querySelectorAll(".org-force-delete-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const orgId = btn.getAttribute("data-org-id");
+          const orgName = btn.getAttribute("data-org-name");
+          window.CyberNotify.prompt(
+            `Type "${orgName}" to PERMANENTLY delete this organization:`,
+            "",
+            async (value) => {
+              if (value === null) return;
+              if (value !== orgName) {
+                window.CyberNotify.alert("Organization name does not match. Action cancelled.", { type: "error" });
+                return;
+              }
+              try {
+                await window.organizationManager.forceDeleteOrganization(orgId);
+                window.CyberNotify.alert("Organization permanently deleted.", { type: "success" });
+                this._loadWorkspaceSwitcher();
+              } catch (err) {
+                window.CyberNotify.alert(err.message || "Failed to delete organization.", { type: "error" });
+              }
+            }
+          );
         });
       });
     }
@@ -329,6 +446,19 @@
       const statusLabel = sub.status === "active" ? "Active" : (sub.status || "Pending");
       const statusCls = sub.status === "active" ? "cyber-badge-success" : "cyber-badge-warning";
       const expiresAt = sub.expires_at ? formatDate(sub.expires_at) : "—";
+      const isOwnerOrAdmin = this._currentUserOrgRole === "owner" || this._currentUserOrgRole === "admin";
+
+      let resumeBtnHtml = "";
+      if (sub.status !== "active" && isOwnerOrAdmin) {
+        resumeBtnHtml = `
+          <div class="mt-4">
+            <button id="org-resume-payment-btn" class="cyber-btn-primary w-full py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-[14px]">payment</span>
+              Resume Payment
+            </button>
+          </div>
+        `;
+      }
 
       return `
         <div class="settings-section-card flex flex-col justify-between mb-0 h-full">
@@ -351,6 +481,7 @@
                 </p>
               </div>
             </div>
+            ${resumeBtnHtml}
           </div>
           <div class="mt-6 pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-3">
             <div class="text-[11px] text-slate-500 font-mono">
@@ -633,6 +764,20 @@
         deleteBtn.addEventListener("click", () => this._handleDeleteOrg());
       }
 
+      // Resume payment button
+      const resumeBtn = document.getElementById("org-resume-payment-btn");
+      if (resumeBtn) {
+        resumeBtn.addEventListener("click", () => {
+          const org = this._orgDetails?.organization;
+          if (org) {
+            window.organizationManager.setPendingOrgId(org.id);
+            this._openOnboardingWizard();
+            this._isResumingPayment = true;
+            this._renderOnboardingStep(3);
+          }
+        });
+      }
+
       // No-org start onboarding button
       const startBtn = document.getElementById("org-start-onboarding-btn");
       if (startBtn) {
@@ -795,6 +940,7 @@
 
       modal.classList.remove("hidden");
       document.body.style.overflow = "hidden";
+      this._isResumingPayment = false;
       this._renderOnboardingStep(1);
     }
 
@@ -1175,10 +1321,18 @@
         });
 
         try {
-          const response = await window.organizationManager.submitCheckout(orgId, {
-            plan: plan,
-            billing_data: billingData,
-          });
+          let response;
+          if (this._isResumingPayment) {
+            response = await window.organizationManager.resumePayment(orgId, {
+              plan: plan,
+              billing_data: billingData,
+            });
+          } else {
+            response = await window.organizationManager.submitCheckout(orgId, {
+              plan: plan,
+              billing_data: billingData,
+            });
+          }
 
           const iframeUrl = response.data ? response.data.iframe_url : response.iframe_url;
           if (iframeUrl) {

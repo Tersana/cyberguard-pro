@@ -233,6 +233,67 @@ describe("OrganizationSettings", () => {
       personalBtn.click();
       expect(spy).toHaveBeenCalled();
     });
+
+    it("renders Trash / Soft Deleted section when deleted orgs are available", async () => {
+      const mockResponse = {
+        status: "success",
+        active: [{ id: 1, name: "Org Active", subscription: { plan: "pro", status: "active" } }],
+        pending: [],
+        deleted: [{ id: 3, name: "Org Deleted" }],
+      };
+      window.apiClient.get.mockResolvedValue(mockResponse);
+
+      window.OrganizationSettings.init();
+      await new Promise((r) => setTimeout(r, 50));
+
+      const container = document.getElementById("org-workspace-switcher");
+      expect(container.innerHTML).toContain("Org Active");
+      expect(container.innerHTML).toContain("Trash");
+      expect(container.innerHTML).toContain("Org Deleted");
+      expect(container.querySelector(".org-restore-btn")).toBeTruthy();
+      expect(container.querySelector(".org-force-delete-btn")).toBeTruthy();
+    });
+
+    it("clicking restore calls restoreOrganization and reloads", async () => {
+      const mockResponse = {
+        status: "success",
+        active: [],
+        pending: [],
+        deleted: [{ id: 3, name: "Org Deleted" }],
+      };
+      window.apiClient.get.mockResolvedValue(mockResponse);
+
+      const restoreSpy = vi.spyOn(window.organizationManager, "restoreOrganization").mockResolvedValue({ status: "success" });
+
+      window.OrganizationSettings.init();
+      await new Promise((r) => setTimeout(r, 50));
+
+      const restoreBtn = document.querySelector(".org-restore-btn");
+      restoreBtn.click();
+
+      expect(restoreSpy).toHaveBeenCalledWith("3");
+    });
+
+    it("clicking force delete calls forceDeleteOrganization", async () => {
+      const mockResponse = {
+        status: "success",
+        active: [],
+        pending: [],
+        deleted: [{ id: 3, name: "Org Deleted" }],
+      };
+      window.apiClient.get.mockResolvedValue(mockResponse);
+
+      const forceDeleteSpy = vi.spyOn(window.organizationManager, "forceDeleteOrganization").mockResolvedValue({ status: "success" });
+      window.CyberNotify.prompt = vi.fn((msg, def, cb) => cb("Org Deleted"));
+
+      window.OrganizationSettings.init();
+      await new Promise((r) => setTimeout(r, 50));
+
+      const forceBtn = document.querySelector(".org-force-delete-btn");
+      forceBtn.click();
+
+      expect(forceDeleteSpy).toHaveBeenCalledWith("3");
+    });
   });
 
   // ─── Settings Pane ──────────────────────────────────────────────
@@ -288,6 +349,61 @@ describe("OrganizationSettings", () => {
       expect(pane.innerHTML).toContain("3 / 10");
       expect(pane.innerHTML).toContain("42 / 500");
       expect(pane.innerHTML).toContain("5 / 20");
+    });
+
+    it("renders Resume Payment button when subscription is pending and current user is owner/admin", async () => {
+      window.organizationManager.setActiveOrg("org-7");
+
+      window.apiClient.get.mockImplementation(async (url) => {
+        if (url === "organizations/details")
+          return {
+            organization: {
+              id: "org-7",
+              name: "TestOrgPending",
+              domain: "test.io",
+              slug: "testorg",
+              logo_url: null,
+              subscription: { plan: "pro", status: "pending", expires_at: "2027-01-01" },
+            },
+            limits: { max_projects: 10, max_scans_per_month: 500, max_members: 20 },
+            usage: { projects_count: 3, scans_used: 42, members_count: 5 },
+          };
+        if (url === "organizations/members")
+          return {
+            members: [
+              {
+                id: 1,
+                full_name: "Test User",
+                email: "test@domain.com",
+                job_tittle: "Lead",
+                pivot: { role: "owner", joined_at: "2024-01-15" },
+              },
+            ],
+          };
+        if (url === "organizations/invitations") return { invitations: [] };
+        return {};
+      });
+
+      await window.OrganizationSettings.loadSettingsPane();
+
+      const pane = document.getElementById("pane-org-settings");
+      expect(pane.innerHTML).toContain("TestOrgPending");
+      expect(pane.innerHTML).toContain("Pending");
+      expect(pane.innerHTML).toContain("Resume Payment");
+
+      const resumeBtn = document.getElementById("org-resume-payment-btn");
+      expect(resumeBtn).toBeTruthy();
+
+      // Click to open wizard step 3
+      const openWizardSpy = vi.spyOn(window.OrganizationSettings, "_openOnboardingWizard");
+      const renderStepSpy = vi.spyOn(window.OrganizationSettings, "_renderOnboardingStep");
+
+      resumeBtn.click();
+
+      expect(openWizardSpy).toHaveBeenCalled();
+      expect(renderStepSpy).toHaveBeenCalledWith(3);
+      expect(window.OrganizationSettings._isResumingPayment).toBe(true);
+      expect(window.organizationManager.getPendingOrgId()).toBe("org-7");
     });
 
     it("renders member rows with role badges and job_tittle", async () => {
