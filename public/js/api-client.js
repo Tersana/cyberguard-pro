@@ -100,10 +100,18 @@ class APIClient {
 
     // Automatically inject the active organization context if present
     if (!skipAuth && !headers["X-Organization-Id"]) {
-      // Do not inject X-Organization-Id for onboarding/payment endpoints (payment/checkout, payment/status, corporate-email)
+      // Do not inject X-Organization-Id for onboarding/payment, auth, and global organization routes
       const isOnboarding = endpoint && (endpoint.includes("/payment/") || endpoint.includes("/corporate-email"));
+      const isAuth = endpoint && (endpoint.includes("auth/") || endpoint.includes("/auth/"));
+      const isGlobalOrgRoute = endpoint && (
+        endpoint.includes("organizations/my-workspaces") ||
+        endpoint.includes("organizations/initiate") ||
+        endpoint.includes("organizations/invitations")
+      );
       
-      if (!isOnboarding) {
+      const shouldSkipOrgHeader = isOnboarding || isAuth || isGlobalOrgRoute;
+      
+      if (!shouldSkipOrgHeader) {
         let endpointOrgId = null;
         if (endpoint) {
           const match = endpoint.match(/^\/?organizations\/([^/]+)/);

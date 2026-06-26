@@ -230,7 +230,7 @@
                           data-org-id="${escapeHtml(ws.id)}"
                           data-org-name="${escapeHtml(ws.name)}"
                           title="Force Delete Organization">
-                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">gavel</span>
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">delete_forever</span>
                   </button>
                 </div>
               </div>`;
