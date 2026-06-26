@@ -1332,6 +1332,7 @@
 
         <!-- API Client -->
         <script src="js/api-client.js"></script>
+        <script src="js/organization-manager.js"></script>
 
         <!-- Data Normalizer Utility -->
         <script src="js/data-normalizer.js?v=1.0.1"></script>
@@ -1437,6 +1438,59 @@
             // Initialize assets and setup real-time validation listeners
             document.addEventListener("DOMContentLoaded", function() {
                 updateStepProgress();
+
+                // Check if email and token are in search params (invitation flow)
+                const urlParams = new URLSearchParams(window.location.search);
+                const inviteEmail = urlParams.get("email");
+                const inviteToken = urlParams.get("token");
+
+                if (inviteEmail && inviteToken) {
+                    window.inviteToken = inviteToken;
+
+                    const emailInput = document.getElementById("email");
+                    if (emailInput) {
+                        emailInput.value = inviteEmail;
+                        emailInput.readOnly = true;
+                        // Premium visual locking cues
+                        emailInput.classList.add("opacity-60", "cursor-not-allowed", "bg-white/[0.02]");
+                        emailInput.style.borderColor = "rgba(255,255,255,0.1)";
+                    }
+
+                    // Hide Google signup section
+                    const googleBtn = document.getElementById("googleSignupBtn");
+                    if (googleBtn) {
+                        // Find the divider and google button container and hide them
+                        const divider = googleBtn.closest("div").previousElementSibling;
+                        if (divider && divider.textContent.toLowerCase().includes("or continue with")) {
+                            divider.classList.add("hidden");
+                        }
+                        googleBtn.closest("div").classList.add("hidden");
+                    }
+
+                    // Fetch invitation details publicly and dynamically update headers
+                    if (window.organizationManager) {
+                        window.organizationManager.fetchInvitationDetails(inviteToken)
+                            .then(details => {
+                                const inv = details.invitation || {};
+                                const org = inv.organization || {};
+
+                                window.inviteOrgId = org.id;
+                                window.inviteOrgRole = inv.role;
+
+                                const titleEl = document.querySelector("h1");
+                                if (titleEl && org.name) {
+                                    titleEl.textContent = `Join ${org.name}`;
+                                }
+                                const descEl = document.querySelector("p.text-xs.text-gray-400");
+                                if (descEl && org.name) {
+                                    descEl.textContent = `You've been invited to join as a ${inv.role || 'Member'}`;
+                                }
+                            })
+                            .catch(err => {
+                                console.error("Failed to fetch invitation details:", err);
+                            });
+                    }
+                }
                 
                 // Real-time validation for Full Name
                 const fullNameEl = document.getElementById("fullName");
@@ -2191,26 +2245,66 @@
                             return;
                         }
 
-                        // Call the new API-integrated registration method
-                        const result =
-                            await authManager.registerWithAPI(userData);
+                        if (window.inviteToken) {
+                            const response = await window.organizationManager.registerViaInvitation(window.inviteToken, {
+                                full_name: userData.fullName,
+                                password: userData.password,
+                                password_confirmation: userData.passwordConfirmation,
+                                job_tittle: userData.jobTitle
+                            });
 
-                        if (result.success) {
-                            // Automatically trigger sending the initial verification email
-                            try {
-                                await authManager.resendVerificationEmail(userData.email);
-                            } catch (emailError) {
-                                console.error(
-                                    "Failed to send initial verification email:",
-                                    emailError,
-                                );
+                            if (response.token) {
+                                authManager.apiClient.setToken(response.token);
+                            }
+                            if (response.user) {
+                                authManager.saveUserSession(response.user);
                             }
 
-                            // Hide the form and show success state with email verification guidance
+                            if (window.inviteOrgId) {
+                                localStorage.setItem("cyberguard_active_org_id", window.inviteOrgId);
+                            }
+
                             hideInlineLoading(submitButton);
-                            showEmailVerificationSuccess(userData.email);
-                        }
-                    } catch (error) {
+
+                            let orgName = "Organization";
+                            if (window.inviteOrgId && window.organizationManager) {
+                                try {
+                                    const details = await window.organizationManager.fetchOrgDetails();
+                                    if (details && details.organization) {
+                                        orgName = details.organization.name;
+                                    }
+                                } catch (err) {
+                                    console.error("Failed to fetch org details for success message:", err);
+                                }
+                            }
+
+                            showInvitationSuccess(orgName);
+
+                            document.dispatchEvent(new CustomEvent("cyberguard:sessionRestored"));
+
+                            setTimeout(() => {
+                                window.location.href = "/dashboard";
+                            }, 2500);
+                        } else {
+                            // Call the new API-integrated registration method
+                            const result = await authManager.registerWithAPI(userData);
+
+                            if (result.success) {
+                                // Automatically trigger sending the initial verification email
+                                try {
+                                    await authManager.resendVerificationEmail(userData.email);
+                                } catch (emailError) {
+                                    console.error(
+                                        "Failed to send initial verification email:",
+                                        emailError,
+                                    );
+                                }
+
+                                // Hide the form and show success state with email verification guidance
+                                hideInlineLoading(submitButton);
+                                showEmailVerificationSuccess(userData.email);
+                            }
+                        }                    } catch (error) {
                         hideInlineLoading(submitButton);
 
                         // Handle validation errors (422) from API
@@ -2595,6 +2689,55 @@
                             }
                         });
                     }
+                }
+            }
+
+            // Show invitation success state
+            function showInvitationSuccess(orgName) {
+                // Hide form steps
+                const formSteps = document.querySelectorAll(".form-step");
+                formSteps.forEach((step) => (step.style.display = "none"));
+
+                // Hide step indicators
+                const stepIndicators = document.querySelector(
+                    ".step-indicator-container",
+                );
+                if (stepIndicators) stepIndicators.style.display = "none";
+
+                // Hide sign-in link
+                const signInLink = document.querySelector("p.text-center.mt-6") || document.querySelector("p.text-center.mt-2.5");
+                if (signInLink) signInLink.style.display = "none";
+
+                const escapeHtml = (str) => str ? String(str).replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m])) : '';
+
+                // Create success state HTML
+                const successHTML = `
+                <div class="text-center animate-slide-in py-8">
+                    <!-- Success Shield Icon with Neon Glow -->
+                    <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/40 border border-blue-400/20">
+                        <svg class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+
+                    <h2 class="text-2xl font-bold text-white mb-3">Welcome to the Team!</h2>
+
+                    <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.15);" class="rounded-xl p-6 mb-6">
+                        <p class="text-gray-300 text-base mb-2">
+                            You have successfully registered and joined <span class="text-blue-400 font-semibold">${escapeHtml(orgName)}</span>.
+                        </p>
+                        <p class="text-sm text-gray-400">
+                            Redirecting to your workspace dashboard...
+                        </p>
+                    </div>
+
+                    <div class="w-12 h-12 mx-auto border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+                </div>
+                `;
+
+                const form = document.getElementById("signupForm");
+                if (form) {
+                    form.innerHTML = successHTML; // security-audit-ignore
                 }
             }
 
