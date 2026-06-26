@@ -4118,7 +4118,7 @@
                         </button>
                     </div>
 
-                    <form id="create-project-form" class="space-y-5">
+                    <form id="create-project-form" class="space-y-5" onsubmit="return false;">
                         <!-- Project Name -->
                         <div>
                             <label
@@ -4209,7 +4209,7 @@
                         <!-- Action Buttons -->
                         <div class="flex gap-3 pt-4">
                             <button
-                                type="submit"
+                                type="button"
                                 id="create-project-submit"
                                 class="cyber-btn-primary flex-1 py-3 px-4 rounded-lg font-semibold flex items-center justify-center gap-2"
                             >
@@ -4304,7 +4304,7 @@
                         </button>
                     </div>
 
-                    <form id="edit-project-form" class="space-y-5">
+                    <form id="edit-project-form" class="space-y-5" onsubmit="return false;">
                         <!-- Hidden field for project ID -->
                         <input type="hidden" id="edit-project-id" name="id" />
 
@@ -4421,7 +4421,7 @@
                         <!-- Action Buttons -->
                         <div class="flex gap-3 pt-4">
                             <button
-                                type="submit"
+                                type="button"
                                 id="edit-project-submit"
                                 class="cyber-btn-primary flex-1 py-3 px-4 rounded-lg font-semibold flex items-center justify-center gap-2"
                             >
