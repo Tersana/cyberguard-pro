@@ -1532,12 +1532,13 @@
                     });
 
                     jobTitleEl.addEventListener("blur", function() {
-                        const isValid = validateJobTitle(this.value);
-                        if (isValid) {
+                        const val = this.value.trim();
+                        if (validateJobTitle(this.value)) {
                             hideJobTitleError();
                             jobTitleErrorShown = false;
                         } else {
-                            showJobTitleError("Please enter a valid job title");
+                            const errorMsg = val.length < 3 ? "Job title must be at least 3 characters" : "Please enter a valid job title";
+                            showJobTitleError(errorMsg);
                             jobTitleErrorShown = true;
                         }
                     });
@@ -1581,7 +1582,8 @@
                     
                     // Validate job title
                     if (!validateJobTitle(jobTitle)) {
-                        showJobTitleError("Please enter a valid job title");
+                        const errorMsg = jobTitle.length < 3 ? "Job title must be at least 3 characters" : "Please enter a valid job title";
+                        showJobTitleError(errorMsg);
                         document.getElementById("jobTitle").focus();
                         return false;
                     } else {
@@ -1721,8 +1723,8 @@
                 if (!value) return false;
                 const trimmed = value.trim();
 
-                // Length >= 2 characters after trim
-                if (trimmed.length < 2) {
+                // Length >= 3 characters after trim
+                if (trimmed.length < 3) {
                     return false;
                 }
 
@@ -2248,11 +2250,15 @@
                             job_tittle: userData.jobTitle
                         });
 
-                        if (response.token) {
-                            authManager.apiClient.setToken(response.token);
+                        const resData = response.data || response;
+                        const token = resData.token;
+                        const user = resData.user;
+
+                        if (token) {
+                            authManager.apiClient.setToken(token);
                         }
-                        if (response.user) {
-                            authManager.saveUserSession(response.user);
+                        if (user) {
+                            authManager.saveUserSession(user);
                         }
 
                         if (window.inviteOrgId) {
@@ -2302,6 +2308,7 @@
                     }
                 } catch (error) {
                     hideInlineLoading(submitButton);
+                    console.error("Signup error:", error);
 
                     // Handle validation errors (422) from API
                     if (
