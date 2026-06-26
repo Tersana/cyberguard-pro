@@ -1057,6 +1057,10 @@ if (typeof window !== "undefined") {
   window.APIError = APIError;
   window.ValidationError = ValidationError;
   window.NetworkError = NetworkError;
+  
+  if (typeof window.apiClient === "undefined") {
+    window.apiClient = new APIClient();
+  }
 }
 
 // Export for use in other modules
