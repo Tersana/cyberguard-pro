@@ -481,9 +481,11 @@
                             show("s-login");
                         }
                     } else {
-                        // New user — show registration form
-                        document.getElementById("reg-org-name").textContent = org.name || "Organization";
-                        show("s-register");
+                        // New user — redirect to the unified signup page with email and token parameters
+                        const emailParam = encodeURIComponent(inv.email || "");
+                        const tokenParam = encodeURIComponent(token);
+                        window.location.href = `/signup?email=${emailParam}&token=${tokenParam}`;
+                    }
 
                         document.getElementById("register-form").addEventListener("submit", async function(e) {
                             e.preventDefault();
