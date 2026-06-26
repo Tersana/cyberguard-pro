@@ -201,6 +201,37 @@ class APIClient {
    * @param {boolean} skipAuth - If true, do not redirect on 401 (public endpoint)
    */
   async _handleResponse(response, skipAuth = false) {
+    // Handle 403 Forbidden (Organization membership/access errors)
+    if (response.status === 403) {
+      const errorData = await response.json().catch(() => ({}));
+      const message = errorData.message || "Forbidden";
+      const error = new APIError(message, 403, errorData);
+
+      const isNotMemberError =
+        message.toLowerCase().includes("not a member") ||
+        message.toLowerCase().includes("not member") ||
+        message.toLowerCase().includes("membership");
+
+      if (isNotMemberError && window.organizationManager && window.organizationManager.isOrgContext()) {
+        console.warn("[APIClient] Received 403 Forbidden indicating not a member of organization. Clearing context.");
+        window.organizationManager.clearActiveOrg();
+        if (
+          typeof window !== "undefined" &&
+          window.location &&
+          typeof window.location.reload === "function" &&
+          (!window.navigator || !window.navigator.userAgent || !window.navigator.userAgent.includes("jsdom"))
+        ) {
+          window.location.reload();
+        }
+      }
+
+      if (typeof ErrorHandler !== "undefined") {
+        ErrorHandler.handleAPIError(error);
+      }
+
+      throw error;
+    }
+
     // Handle 401 Unauthorized — read body to get the actual backend message
     if (response.status === 401) {
       const errorData = await response.json().catch(() => ({}));
