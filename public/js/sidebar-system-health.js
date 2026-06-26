@@ -104,6 +104,19 @@ const SidebarSystemHealth = {
           window.currentSubscription = subscription;
         } catch (err) {
           console.warn("[SidebarSystemHealth] Failed to load subscription details:", err);
+          if (err.status === 404) {
+            subscription = {
+              plan: "free",
+              status: "active",
+              expires_at: null,
+              limits: {
+                max_projects: 1,
+                max_targets: 2,
+                max_scans_per_month: 10
+              }
+            };
+            window.currentSubscription = subscription;
+          }
         }
       }
 

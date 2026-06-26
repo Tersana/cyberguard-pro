@@ -5106,10 +5106,44 @@
                         } catch (orgError) {
                             console.error("[Subscription] Error fetching org subscription details:", orgError);
                             // Fallback to personal subscription if org details fetch fails
-                            subscription = await BillingAPI.getCurrentSubscription();
+                            try {
+                                subscription = await BillingAPI.getCurrentSubscription();
+                            } catch (subError) {
+                                if (subError.status === 404) {
+                                    subscription = {
+                                        plan: "free",
+                                        status: "active",
+                                        expires_at: null,
+                                        limits: {
+                                            max_projects: 1,
+                                            max_targets: 2,
+                                            max_scans_per_month: 10,
+                                        }
+                                    };
+                                } else {
+                                    throw subError;
+                                }
+                            }
                         }
                     } else {
-                        subscription = await BillingAPI.getCurrentSubscription();
+                        try {
+                            subscription = await BillingAPI.getCurrentSubscription();
+                        } catch (subError) {
+                            if (subError.status === 404) {
+                                subscription = {
+                                    plan: "free",
+                                    status: "active",
+                                    expires_at: null,
+                                    limits: {
+                                        max_projects: 1,
+                                        max_targets: 2,
+                                        max_scans_per_month: 10,
+                                    }
+                                };
+                            } else {
+                                throw subError;
+                            }
+                        }
                     }
                     console.log(
                         "[Subscription] Fetched subscription:",
