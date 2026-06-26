@@ -155,9 +155,10 @@ function updateCountdownText() {
 }
 
 async function handleForgotPasswordSubmit(event) {
-  event.preventDefault();
+  if (event) event.preventDefault();
 
-  const form = event.currentTarget;
+  const form = document.getElementById("forgotPasswordForm");
+  if (!form) return;
   const emailInput = form.querySelector("input[name='email']");
   const email = emailInput ? emailInput.value.trim() : "";
 
@@ -187,6 +188,11 @@ function initForgotPasswordPage() {
   const form = document.getElementById("forgotPasswordForm");
   if (!form) return;
   form.addEventListener("submit", handleForgotPasswordSubmit);
+
+  const submitBtn = document.getElementById("forgotPasswordSubmit");
+  if (submitBtn) {
+    submitBtn.addEventListener("click", handleForgotPasswordSubmit);
+  }
 
   const emailInput = document.getElementById("email");
   const statusIcon = document.getElementById("emailStatusIcon");
