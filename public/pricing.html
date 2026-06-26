@@ -6,6 +6,7 @@
     <title>Pricing - CyberGuard</title>
     <meta name="description" content="Choose the perfect CyberGuard plan for your security needs. Flexible pricing for individuals and teams.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
     <link rel="stylesheet" href="css/theme-tokens.css">
     <link rel="stylesheet" href="css/cyber-theme.css">
     <style>
@@ -1381,5 +1382,34 @@
             }
         });
     </script>
+
+    <!-- CyberNotify Modal -->
+    <div
+        id="cyber-notify-modal"
+        class="hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cyber-notify-message"
+    >
+        <div id="cyber-notify-backdrop"></div>
+        <div id="cyber-notify-dialog">
+            <span
+                id="cyber-notify-icon"
+                class="material-symbols-outlined"
+                aria-hidden="true"
+            ></span>
+            <p id="cyber-notify-message"></p>
+            <div id="cyber-notify-actions">
+                <button
+                    id="cyber-notify-confirm-btn"
+                    class="cyber-btn-primary"
+                ></button>
+                <button
+                    id="cyber-notify-cancel-btn"
+                    class="cyber-btn-ghost"
+                ></button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

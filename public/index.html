@@ -6,6 +6,7 @@
     <title>CyberGuard - Advanced Cybersecurity Toolkit</title>
     <meta name="description" content="CyberGuard is your comprehensive cybersecurity toolkit featuring advanced threat detection, network analysis, and real-time vulnerability assessment.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
     <link rel="stylesheet" href="css/theme-tokens.css">
     <link rel="stylesheet" href="css/landing.css?v=feature-core-logo">
     <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css">
@@ -1471,6 +1472,7 @@
     </footer>
 
     <!-- Authentication System Dependencies -->
+    <script src="js/cyber-notify.js"></script>
     <script src="js/api-client.js"></script>
     <script src="js/data-normalizer.js"></script>
     <script src="js/auth.js"></script>
@@ -1487,5 +1489,34 @@
 
     <!-- Landing Page Interactions -->
     <script src="js/landing.js"></script>
+
+    <!-- CyberNotify Modal -->
+    <div
+        id="cyber-notify-modal"
+        class="hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cyber-notify-message"
+    >
+        <div id="cyber-notify-backdrop"></div>
+        <div id="cyber-notify-dialog">
+            <span
+                id="cyber-notify-icon"
+                class="material-symbols-outlined"
+                aria-hidden="true"
+            ></span>
+            <p id="cyber-notify-message"></p>
+            <div id="cyber-notify-actions">
+                <button
+                    id="cyber-notify-confirm-btn"
+                    class="cyber-btn-primary"
+                ></button>
+                <button
+                    id="cyber-notify-cancel-btn"
+                    class="cyber-btn-ghost"
+                ></button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
