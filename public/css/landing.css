@@ -3858,3 +3858,145 @@ body::before {
     display: none;
   }
 }
+
+/* =============================================
+   CyberNotify Modal System (Copied from cyber-theme.css)
+   ============================================= */
+
+/* 2.1 — Modal layout */
+#cyber-notify-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+#cyber-notify-modal:not(.hidden) {
+  display: flex;
+}
+
+/* 2.1 — Backdrop */
+#cyber-notify-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.cyber-notify-open #cyber-notify-backdrop {
+  opacity: 1;
+}
+
+/* 2.2 — Dialog container (glassmorphism) */
+#cyber-notify-dialog {
+  position: relative;
+  z-index: 1;
+  background: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
+  font-family: var(--cg-font-sans);
+  padding: 2rem;
+  border-radius: var(--cg-radius-lg);
+  min-width: 320px;
+  max-width: 480px;
+  width: 90%;
+  text-align: center;
+  opacity: 0;
+  transform: scale(0.95);
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
+}
+
+.cyber-notify-open #cyber-notify-dialog {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* 2.2 — Icon */
+#cyber-notify-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+/* 2.2 — Message */
+#cyber-notify-message {
+  color: var(--cg-text-1);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* 2.2 — Action buttons row */
+#cyber-notify-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+/* 2.2 — Button base styles */
+#cyber-notify-confirm-btn,
+#cyber-notify-cancel-btn {
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Material Symbols Icons */
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Primary/Ghost Button styling overrides inside the modal */
+#cyber-notify-modal .cyber-btn-primary {
+  background: #fafafa;
+  color: #09090b;
+  border: none;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all var(--cg-transition-base);
+  cursor: pointer;
+  text-decoration: none;
+}
+#cyber-notify-modal .cyber-btn-primary:hover {
+  background: #e4e4e7;
+  box-shadow: none;
+}
+#cyber-notify-modal .cyber-btn-ghost {
+  background: transparent;
+  color: #a1a1aa;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all var(--cg-transition-base);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+#cyber-notify-modal .cyber-btn-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fafafa;
+}
+
