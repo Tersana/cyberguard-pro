@@ -32,7 +32,7 @@ function setSubmittingState(button, isSubmitting, defaultLabel) {
   button.disabled = isSubmitting;
   if (isSubmitting) {
     button.innerHTML = `
-      <svg class="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg class="animate-spin h-5 w-5 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
       </svg>
       <span>Updating...</span>
@@ -238,10 +238,11 @@ function showSuccessState() {
 }
 
 async function handleResetPasswordSubmit(event) {
-  event.preventDefault();
+  if (event) event.preventDefault();
 
-  const form = event.currentTarget;
-  const submitButton = form.querySelector("button[type='submit']");
+  const form = document.getElementById("resetPasswordForm");
+  if (!form) return;
+  const submitButton = document.getElementById("resetPasswordSubmit");
   const token = (form.querySelector("input[name='token']")?.value || "").trim();
   const email = (form.querySelector("input[name='email']")?.value || "").trim();
   const password = form.querySelector("input[name='new_password']")?.value || "";
@@ -307,15 +308,19 @@ function initResetPasswordPage() {
   scrubSensitiveResetQueryParams();
   applyResetParamsToForm(form, params);
 
+  const submitButton = document.getElementById("resetPasswordSubmit");
+
   if (!params.token || !params.email) {
     notify(INVALID_LINK_MESSAGE, "error");
-    const submitButton = form.querySelector("button[type='submit']");
     if (submitButton) {
       submitButton.disabled = true;
     }
   }
 
   form.addEventListener("submit", handleResetPasswordSubmit);
+  if (submitButton) {
+    submitButton.addEventListener("click", handleResetPasswordSubmit);
+  }
 
   const togglePasswordVisibility = (inputId, buttonId) => {
     const input = document.getElementById(inputId);
@@ -371,7 +376,7 @@ function initResetPasswordPage() {
     if (submitButton) {
       if (allRequirementsMet && passwordsMatch) {
         submitButton.disabled = false;
-        submitButton.className = "btn-neon w-full rounded-xl py-3.5 font-semibold text-white cursor-pointer transition-all duration-300";
+        submitButton.className = "btn-neon w-full rounded-xl py-3.5 font-semibold text-black cursor-pointer transition-all duration-300";
       } else {
         submitButton.disabled = true;
         submitButton.className = "w-full rounded-xl py-3.5 font-semibold text-white bg-slate-800 border border-slate-700/50 opacity-50 cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-300";
