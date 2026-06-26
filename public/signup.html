@@ -1233,7 +1233,8 @@
                                 Back
                             </button>
                             <button
-                                type="submit"
+                                type="button"
+                                id="btnCreateAccount"
                                 class="btn-neon flex-1 py-2.5 rounded-xl font-bold text-black flex items-center justify-center gap-2"
                             >
                                 <svg
@@ -2118,277 +2119,284 @@
                     }
                 });
 
-            // Form submission
-            document
-                .getElementById("signupForm")
-                .addEventListener("submit", async function (e) {
-                    e.preventDefault();
+            // Form submission logic
+            async function handleSignup() {
+                // Validate ALL steps before submission (not just current step)
+                if (!validateAllSteps()) return;
 
-                    // Validate ALL steps before submission (not just current step)
-                    if (!validateAllSteps()) return;
+                const submitButton = document.getElementById("btnCreateAccount");
 
-                    const submitButton = e.target.querySelector(
-                        'button[type="submit"]',
+                // Prevent double submission
+                if (submitButton.disabled) return;
+
+                // Clear any previous error messages
+                clearAllFieldErrors();
+
+                // Show loading state on button
+                showInlineLoading(submitButton, "Creating Account");
+
+                try {
+                    // Collect form data with trimmed values (except passwords)
+                    const userData = {
+                        fullName: document
+                            .getElementById("fullName")
+                            .value.trim(),
+                        email: document
+                            .getElementById("email")
+                            .value.trim(),
+                        jobTitle: document
+                            .getElementById("jobTitle")
+                            .value.trim(),
+                        password: document.getElementById("password").value, // Don't trim passwords
+                        passwordConfirmation:
+                            document.getElementById("confirmPassword")
+                                .value, // Don't trim passwords
+                    };
+
+                    // Log collected data for debugging
+                    console.log("📋 FORM DATA COLLECTED:");
+                    console.log(
+                        "  fullName:",
+                        userData.fullName || "EMPTY",
+                    );
+                    console.log("  email:", userData.email || "EMPTY");
+                    console.log(
+                        "  jobTitle:",
+                        userData.jobTitle || "EMPTY",
+                    );
+                    console.log(
+                        "  password:",
+                        userData.password ? "***" : "EMPTY",
+                    );
+                    console.log(
+                        "  confirmPassword:",
+                        userData.passwordConfirmation ? "***" : "EMPTY",
+                    );
+                    console.log(
+                        "📦 USER DATA OBJECT:",
+                        JSON.stringify(
+                            {
+                                ...userData,
+                                password: "***",
+                                passwordConfirmation: "***",
+                            },
+                            null,
+                            2,
+                        ),
                     );
 
-                    // Prevent double submission
-                    if (submitButton.disabled) return;
-
-                    // Clear any previous error messages
-                    clearAllFieldErrors();
-
-                    // Show loading state on button
-                    showInlineLoading(submitButton, "Creating Account");
-
-                    try {
-                        // Collect form data with trimmed values (except passwords)
-                        const userData = {
-                            fullName: document
-                                .getElementById("fullName")
-                                .value.trim(),
-                            email: document
-                                .getElementById("email")
-                                .value.trim(),
-                            jobTitle: document
-                                .getElementById("jobTitle")
-                                .value.trim(),
-                            password: document.getElementById("password").value, // Don't trim passwords
-                            passwordConfirmation:
-                                document.getElementById("confirmPassword")
-                                    .value, // Don't trim passwords
-                        };
-
-                        // Log collected data for debugging
-                        console.log("📋 FORM DATA COLLECTED:");
-                        console.log(
-                            "  fullName:",
-                            userData.fullName || "EMPTY",
+                    // Frontend validation: Check all required fields before API call
+                    if (!userData.fullName) {
+                        showMessage(
+                            "error",
+                            "Missing Field",
+                            "Full name is required",
                         );
-                        console.log("  email:", userData.email || "EMPTY");
-                        console.log(
-                            "  jobTitle:",
-                            userData.jobTitle || "EMPTY",
+                        hideInlineLoading(submitButton);
+                        showFieldError("fullName", "Full name is required");
+                        return;
+                    }
+                    if (!userData.email) {
+                        showMessage(
+                            "error",
+                            "Missing Field",
+                            "Email is required",
                         );
-                        console.log(
-                            "  password:",
-                            userData.password ? "***" : "EMPTY",
+                        hideInlineLoading(submitButton);
+                        showFieldError("email", "Email is required");
+                        return;
+                    }
+                    if (!userData.jobTitle) {
+                        showMessage(
+                            "error",
+                            "Missing Field",
+                            "Job title is required",
                         );
-                        console.log(
-                            "  confirmPassword:",
-                            userData.passwordConfirmation ? "***" : "EMPTY",
+                        hideInlineLoading(submitButton);
+                        showFieldError("jobTitle", "Job title is required");
+                        return;
+                    }
+                    if (!userData.password) {
+                        showMessage(
+                            "error",
+                            "Missing Field",
+                            "Password is required",
                         );
-                        console.log(
-                            "📦 USER DATA OBJECT:",
-                            JSON.stringify(
-                                {
-                                    ...userData,
-                                    password: "***",
-                                    passwordConfirmation: "***",
-                                },
-                                null,
-                                2,
-                            ),
+                        hideInlineLoading(submitButton);
+                        showFieldError("password", "Password is required");
+                        return;
+                    }
+                    if (!userData.passwordConfirmation) {
+                        showMessage(
+                            "error",
+                            "Missing Field",
+                            "Password confirmation is required",
                         );
+                        hideInlineLoading(submitButton);
+                        showFieldError(
+                            "confirmPassword",
+                            "Password confirmation is required",
+                        );
+                        return;
+                    }
 
-                        // Frontend validation: Check all required fields before API call
-                        if (!userData.fullName) {
-                            showMessage(
-                                "error",
-                                "Missing Field",
-                                "Full name is required",
-                            );
-                            hideInlineLoading(submitButton);
-                            showFieldError("fullName", "Full name is required");
-                            return;
+                    if (window.inviteToken) {
+                        const response = await window.organizationManager.registerViaInvitation(window.inviteToken, {
+                            full_name: userData.fullName,
+                            password: userData.password,
+                            password_confirmation: userData.passwordConfirmation,
+                            job_tittle: userData.jobTitle
+                        });
+
+                        if (response.token) {
+                            authManager.apiClient.setToken(response.token);
                         }
-                        if (!userData.email) {
-                            showMessage(
-                                "error",
-                                "Missing Field",
-                                "Email is required",
-                            );
-                            hideInlineLoading(submitButton);
-                            showFieldError("email", "Email is required");
-                            return;
-                        }
-                        if (!userData.jobTitle) {
-                            showMessage(
-                                "error",
-                                "Missing Field",
-                                "Job title is required",
-                            );
-                            hideInlineLoading(submitButton);
-                            showFieldError("jobTitle", "Job title is required");
-                            return;
-                        }
-                        if (!userData.password) {
-                            showMessage(
-                                "error",
-                                "Missing Field",
-                                "Password is required",
-                            );
-                            hideInlineLoading(submitButton);
-                            showFieldError("password", "Password is required");
-                            return;
-                        }
-                        if (!userData.passwordConfirmation) {
-                            showMessage(
-                                "error",
-                                "Missing Field",
-                                "Password confirmation is required",
-                            );
-                            hideInlineLoading(submitButton);
-                            showFieldError(
-                                "confirmPassword",
-                                "Password confirmation is required",
-                            );
-                            return;
+                        if (response.user) {
+                            authManager.saveUserSession(response.user);
                         }
 
-                        if (window.inviteToken) {
-                            const response = await window.organizationManager.registerViaInvitation(window.inviteToken, {
-                                full_name: userData.fullName,
-                                password: userData.password,
-                                password_confirmation: userData.passwordConfirmation,
-                                job_tittle: userData.jobTitle
-                            });
+                        if (window.inviteOrgId) {
+                            localStorage.setItem("cyberguard_active_org_id", window.inviteOrgId);
+                        }
 
-                            if (response.token) {
-                                authManager.apiClient.setToken(response.token);
-                            }
-                            if (response.user) {
-                                authManager.saveUserSession(response.user);
-                            }
-
-                            if (window.inviteOrgId) {
-                                localStorage.setItem("cyberguard_active_org_id", window.inviteOrgId);
-                            }
-
-                            hideInlineLoading(submitButton);
-
-                            let orgName = "Organization";
-                            if (window.inviteOrgId && window.organizationManager) {
-                                try {
-                                    const details = await window.organizationManager.fetchOrgDetails();
-                                    if (details && details.organization) {
-                                        orgName = details.organization.name;
-                                    }
-                                } catch (err) {
-                                    console.error("Failed to fetch org details for success message:", err);
-                                }
-                            }
-
-                            showInvitationSuccess(orgName);
-
-                            document.dispatchEvent(new CustomEvent("cyberguard:sessionRestored"));
-
-                            setTimeout(() => {
-                                window.location.href = "/dashboard";
-                            }, 2500);
-                        } else {
-                            // Call the new API-integrated registration method
-                            const result = await authManager.registerWithAPI(userData);
-
-                            if (result.success) {
-                                // Automatically trigger sending the initial verification email
-                                try {
-                                    await authManager.resendVerificationEmail(userData.email);
-                                } catch (emailError) {
-                                    console.error(
-                                        "Failed to send initial verification email:",
-                                        emailError,
-                                    );
-                                }
-
-                                // Hide the form and show success state with email verification guidance
-                                hideInlineLoading(submitButton);
-                                showEmailVerificationSuccess(userData.email);
-                            }
-                        }                    } catch (error) {
                         hideInlineLoading(submitButton);
 
-                        // Handle validation errors (422) from API
-                        if (
-                            error.name === "ValidationError" &&
-                            error.data &&
-                            error.data.errors
-                        ) {
-                            // API returns errors in format: { field_name: ['Error message'] }
-                            Object.entries(error.data.errors).forEach(
-                                ([field, messages]) => {
-                                    let message = Array.isArray(messages)
-                                        ? messages[0]
-                                        : messages;
+                        let orgName = "Organization";
+                        if (window.inviteOrgId && window.organizationManager) {
+                            try {
+                                const details = await window.organizationManager.fetchOrgDetails();
+                                if (details && details.organization) {
+                                    orgName = details.organization.name;
+                                }
+                            } catch (err) {
+                                console.error("Failed to fetch org details for success message:", err);
+                            }
+                        }
 
-                                    // Backend returns "Invalid Email." for BOTH malformed AND already-taken emails.
-                                    // Remap to a clear, actionable message.
-                                    if (
-                                        field === "email" &&
-                                        message
-                                            .toLowerCase()
-                                            .includes("invalid email")
-                                    ) {
-                                        message =
-                                            "This email is already registered. Please use a different email or sign in.";
-                                    }
+                        showInvitationSuccess(orgName);
 
-                                    showFieldError(field, message);
-                                },
-                            );
-                            showMessage(
-                                "error",
-                                "Validation Error",
-                                "Please correct the highlighted fields",
-                            );
-                        }
-                        // Handle validation errors (frontend)
-                        else if (
-                            error.name === "ValidationError" &&
-                            Array.isArray(error.errors)
-                        ) {
-                            error.errors.forEach(({ field, message }) => {
-                                showFieldError(field, message);
-                            });
-                            showMessage(
-                                "error",
-                                "Validation Error",
-                                "Please correct the errors in the form.",
-                            );
-                        }
-                        // Handle generic validation error
-                        else if (error.name === "ValidationError") {
-                            showMessage(
-                                "error",
-                                "Validation Error",
-                                error.message || "Please check your input",
-                            );
-                        }
-                        // Handle API errors
-                        else if (error.name === "APIError") {
-                            showMessage(
-                                "error",
-                                "Registration Failed",
-                                error.message,
-                            );
-                        }
-                        // Handle network errors
-                        else if (error.name === "NetworkError") {
-                            showMessage(
-                                "error",
-                                "Network Error",
-                                "Please check your connection and try again.",
-                            );
-                        }
-                        // Handle unknown errors
-                        else {
-                            showMessage(
-                                "error",
-                                "Registration Error",
-                                "An unexpected error occurred. Please try again.",
-                            );
+                        document.dispatchEvent(new CustomEvent("cyberguard:sessionRestored"));
+
+                        setTimeout(() => {
+                            window.location.href = "/dashboard";
+                        }, 2500);
+                    } else {
+                        // Call the new API-integrated registration method
+                        const result = await authManager.registerWithAPI(userData);
+
+                        if (result.success) {
+                            // Automatically trigger sending the initial verification email
+                            try {
+                                await authManager.resendVerificationEmail(userData.email);
+                            } catch (emailError) {
+                                console.error(
+                                    "Failed to send initial verification email:",
+                                    emailError,
+                                );
+                            }
+
+                            // Hide the form and show success state with email verification guidance
+                            hideInlineLoading(submitButton);
+                            showEmailVerificationSuccess(userData.email);
                         }
                     }
-                });
+                } catch (error) {
+                    hideInlineLoading(submitButton);
+
+                    // Handle validation errors (422) from API
+                    if (
+                        error.name === "ValidationError" &&
+                        error.data &&
+                        error.data.errors
+                    ) {
+                        // API returns errors in format: { field_name: ['Error message'] }
+                        Object.entries(error.data.errors).forEach(
+                            ([field, messages]) => {
+                                let message = Array.isArray(messages)
+                                    ? messages[0]
+                                    : messages;
+
+                                // Backend returns "Invalid Email." for BOTH malformed AND already-taken emails.
+                                // Remap to a clear, actionable message.
+                                if (
+                                    field === "email" &&
+                                    message
+                                        .toLowerCase()
+                                        .includes("invalid email")
+                                ) {
+                                    message =
+                                        "This email is already registered. Please use a different email or sign in.";
+                                }
+
+                                showFieldError(field, message);
+                            },
+                        );
+                        showMessage(
+                            "error",
+                            "Validation Error",
+                            "Please correct the highlighted fields",
+                        );
+                    }
+                    // Handle validation errors (frontend)
+                    else if (
+                        error.name === "ValidationError" &&
+                        Array.isArray(error.errors)
+                    ) {
+                        error.errors.forEach(({ field, message }) => {
+                            showFieldError(field, message);
+                        });
+                        showMessage(
+                            "error",
+                            "Validation Error",
+                            "Please correct the errors in the form.",
+                        );
+                    }
+                    // Handle generic validation error
+                    else if (error.name === "ValidationError") {
+                        showMessage(
+                            "error",
+                            "Validation Error",
+                            error.message || "Please check your input",
+                        );
+                    }
+                    // Handle API errors
+                    else if (error.name === "APIError") {
+                        showMessage(
+                            "error",
+                            "Registration Failed",
+                            error.message,
+                        );
+                    }
+                    // Handle network errors
+                    else if (error.name === "NetworkError") {
+                        showMessage(
+                            "error",
+                            "Network Error",
+                            "Please check your connection and try again.",
+                        );
+                    }
+                    // Handle unknown errors
+                    else {
+                        showMessage(
+                            "error",
+                            "Registration Error",
+                            "An unexpected error occurred. Please try again.",
+                        );
+                    }
+                }
+            }
+
+            // Bind event listener to Create Account button click
+            const btnCreateAccount = document.getElementById("btnCreateAccount");
+            if (btnCreateAccount) {
+                btnCreateAccount.addEventListener("click", handleSignup);
+            }
+
+            // Fallback form submit listener
+            document.getElementById("signupForm").addEventListener("submit", function (e) {
+                e.preventDefault();
+                handleSignup();
+            });
 
             // Helper function to show field-specific errors
             function showFieldError(fieldName, message) {
