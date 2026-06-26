@@ -1120,10 +1120,11 @@ class ProjectManager {
   }
 
   async handleProjectFormSubmit(event) {
-    event.preventDefault();
+    if (event) event.preventDefault();
     this.clearFormErrors();
 
-    const form = event.target;
+    const form = document.getElementById("create-project-form");
+    if (!form) return;
     const data = {
       name: (form.name?.value || "").trim(),
       description: (form.description?.value || "").trim(),
@@ -1274,10 +1275,11 @@ class ProjectManager {
   }
 
   async handleEditProjectFormSubmit(event) {
-    event.preventDefault();
+    if (event) event.preventDefault();
     this.clearEditFormErrors();
 
-    const form = event.target;
+    const form = document.getElementById("edit-project-form");
+    if (!form) return;
     const projectId = document.getElementById("edit-project-id")?.value;
 
     const data = {
@@ -1835,6 +1837,9 @@ if (typeof window !== "undefined") {
     document
       .getElementById("create-project-form")
       ?.addEventListener("submit", (e) => pm.handleProjectFormSubmit(e));
+    document
+      .getElementById("create-project-submit")
+      ?.addEventListener("click", (e) => pm.handleProjectFormSubmit(e));
 
     document
       .getElementById("create-project-modal")
@@ -1858,6 +1863,9 @@ if (typeof window !== "undefined") {
     document
       .getElementById("edit-project-form")
       ?.addEventListener("submit", (e) => pm.handleEditProjectFormSubmit(e));
+    document
+      .getElementById("edit-project-submit")
+      ?.addEventListener("click", (e) => pm.handleEditProjectFormSubmit(e));
 
     document
       .getElementById("edit-project-modal")
