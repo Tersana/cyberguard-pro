@@ -1257,7 +1257,7 @@
                 </form>
 
                 <!-- Sign In Link -->
-                <p class="text-center mt-2.5 text-gray-400 text-sm">
+                <p id="signInLink" class="text-center mt-2.5 text-gray-400 text-sm">
                     Already have an account?
                     <a
                         href="/login"
@@ -2564,7 +2564,7 @@
                 if (stepIndicators) stepIndicators.style.display = "none";
 
                 // Hide sign-in link
-                const signInLink = document.querySelector("p.text-center.mt-6");
+                const signInLink = document.getElementById("signInLink");
                 if (signInLink) signInLink.style.display = "none";
 
                 // Create success state HTML
@@ -2720,7 +2720,7 @@
                 if (stepIndicators) stepIndicators.style.display = "none";
 
                 // Hide sign-in link
-                const signInLink = document.querySelector("p.text-center.mt-6") || document.querySelector("p.text-center.mt-2.5");
+                const signInLink = document.getElementById("signInLink");
                 if (signInLink) signInLink.style.display = "none";
 
                 const escapeHtml = (str) => str ? String(str).replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m])) : '';
