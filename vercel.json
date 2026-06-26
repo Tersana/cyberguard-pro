@@ -24,6 +24,10 @@
       "destination": "/scan-progress"
     },
     {
+      "source": "/organizations/join",
+      "destination": "/join"
+    },
+    {
       "source": "/join",
       "destination": "/join"
     }
