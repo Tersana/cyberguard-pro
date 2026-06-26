@@ -5087,8 +5087,30 @@
 
                 try {
                     // Fetch subscription details
-                    const subscription =
-                        await BillingAPI.getCurrentSubscription();
+                    let subscription;
+                    const activeOrgId = localStorage.getItem("cyberguard_active_org_id");
+                    if (activeOrgId && window.organizationManager) {
+                        try {
+                            const orgDetails = await window.organizationManager.fetchOrgDetails();
+                            const orgSub = orgDetails.organization?.subscription || {};
+                            subscription = {
+                                plan: orgSub.plan || "free",
+                                status: orgSub.status || "active",
+                                expires_at: orgSub.expires_at || null,
+                                limits: {
+                                    max_projects: orgDetails.limits?.max_projects ?? 0,
+                                    max_targets: orgDetails.limits?.max_targets ?? 0,
+                                    max_scans_per_month: orgDetails.limits?.max_scans_per_month ?? 0,
+                                }
+                            };
+                        } catch (orgError) {
+                            console.error("[Subscription] Error fetching org subscription details:", orgError);
+                            // Fallback to personal subscription if org details fetch fails
+                            subscription = await BillingAPI.getCurrentSubscription();
+                        }
+                    } else {
+                        subscription = await BillingAPI.getCurrentSubscription();
+                    }
                     console.log(
                         "[Subscription] Fetched subscription:",
                         subscription,
@@ -5234,6 +5256,14 @@
                     if (cardEl) cardEl.classList.add("hidden");
                     if (loadingEl) loadingEl.classList.add("hidden");
                     if (errorEl) errorEl.classList.add("hidden");
+                });
+
+                // Listen for organization context changes
+                window.addEventListener("cyberguard:orgContextChanged", () => {
+                    console.log(
+                        "[Subscription] Organization context changed, reloading subscription...",
+                    );
+                    loadCurrentSubscription();
                 });
 
                 console.log("[Subscription] Subscription module initialized");
