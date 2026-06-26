@@ -171,16 +171,44 @@ describe("OrganizationManager", () => {
       expect(result.data.iframe_url).toBe("https://paymob.com/checkout");
     });
 
-    it("submitCorporateEmail sends correct payload", async () => {
+    it("submitCorporateEmail sends correct payload to resend-verification", async () => {
       window.apiClient.post.mockResolvedValue({ message: "Verification email sent" });
 
       const result = await window.organizationManager.submitCorporateEmail("org-99", "admin@acme.com");
 
       expect(window.apiClient.post).toHaveBeenCalledWith(
-        "organizations/org-99/corporate-email",
+        "organizations/org-99/resend-verification",
         { corporate_email: "admin@acme.com" }
       );
       expect(result.message).toBe("Verification email sent");
+    });
+
+    it("resendVerification sends correct payload to resend-verification", async () => {
+      window.apiClient.post.mockResolvedValue({ message: "Resent" });
+
+      const result = await window.organizationManager.resendVerification("org-99", "admin@acme.com");
+
+      expect(window.apiClient.post).toHaveBeenCalledWith(
+        "organizations/org-99/resend-verification",
+        { corporate_email: "admin@acme.com" }
+      );
+      expect(result.message).toBe("Resent");
+    });
+
+    it("resumePayment sends correct payload to resume-payment", async () => {
+      const billingData = { first_name: "John", last_name: "Doe" };
+      window.apiClient.post.mockResolvedValue({ data: { iframe_url: "https://paymob.com/resume" } });
+
+      const result = await window.organizationManager.resumePayment("org-99", {
+        plan: "pro",
+        billing_data: billingData,
+      });
+
+      expect(window.apiClient.post).toHaveBeenCalledWith(
+        "organizations/org-99/resume-payment",
+        { plan: "pro", billing_data: billingData }
+      );
+      expect(result.data.iframe_url).toBe("https://paymob.com/resume");
     });
   });
 
@@ -236,7 +264,7 @@ describe("OrganizationManager", () => {
   // ─── Workspace Management ──────────────────────────────────────
 
   describe("Workspace management", () => {
-    it("fetchMyWorkspaces stores workspaces and returns array", async () => {
+    it("fetchMyWorkspaces stores workspaces and returns array (legacy format)", async () => {
       const mockWorkspaces = [
         { id: 1, name: "Org A", subscription: { plan: "pro" } },
         { id: 2, name: "Org B", subscription: { plan: "starter" } },
@@ -250,7 +278,25 @@ describe("OrganizationManager", () => {
       expect(window.organizationManager.workspaces).toHaveLength(2);
     });
 
-    it("fetchMyWorkspaces returns empty array on missing organizations key", async () => {
+    it("fetchMyWorkspaces stores workspaces and returns combined array (new format)", async () => {
+      const mockResponse = {
+        status: "success",
+        active: [{ id: 1, name: "Org Active" }],
+        pending: [{ id: 2, name: "Org Pending" }],
+        deleted: [{ id: 3, name: "Org Deleted" }],
+      };
+      window.apiClient.get.mockResolvedValue(mockResponse);
+
+      const result = await window.organizationManager.fetchMyWorkspaces();
+
+      expect(window.apiClient.get).toHaveBeenCalledWith("organizations/my-workspaces");
+      expect(result).toHaveLength(2);
+      expect(window.organizationManager.workspacesResponse).toEqual(mockResponse);
+      expect(result[0].name).toBe("Org Active");
+      expect(result[1].name).toBe("Org Pending");
+    });
+
+    it("fetchMyWorkspaces returns empty array on missing organizations/active/pending keys", async () => {
       window.apiClient.get.mockResolvedValue({});
       const result = await window.organizationManager.fetchMyWorkspaces();
       expect(result).toEqual([]);
@@ -295,6 +341,24 @@ describe("OrganizationManager", () => {
         headers: { "X-Organization-Id": "org-7" },
       });
       expect(window.organizationManager.getActiveOrgId()).toBeNull();
+    });
+
+    it("forceDeleteOrganization sends DELETE to /force", async () => {
+      window.apiClient.delete.mockResolvedValue({ message: "Force deleted" });
+
+      const result = await window.organizationManager.forceDeleteOrganization("org-88");
+
+      expect(window.apiClient.delete).toHaveBeenCalledWith("organizations/org-88/force");
+      expect(result.message).toBe("Force deleted");
+    });
+
+    it("restoreOrganization sends POST to /restore", async () => {
+      window.apiClient.post.mockResolvedValue({ message: "Restored" });
+
+      const result = await window.organizationManager.restoreOrganization("org-88");
+
+      expect(window.apiClient.post).toHaveBeenCalledWith("organizations/org-88/restore");
+      expect(result.message).toBe("Restored");
     });
   });
 

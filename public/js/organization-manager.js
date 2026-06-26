@@ -221,7 +221,7 @@
 
     /**
      * Step 3b — Submit corporate email for verification.
-     * POST /api/organizations/{organization_id}/corporate-email
+     * POST /api/organizations/{organization_id}/resend-verification
      * @param {string} organizationId
      * @param {string} corporateEmail
      * @returns {Promise<Object>}
@@ -230,12 +230,59 @@
       try {
         if (typeof showLoading === "function") showLoading("Sending verification…");
         const response = await window.apiClient.post(
-          `organizations/${organizationId}/corporate-email`,
+          `organizations/${organizationId}/resend-verification`,
           { corporate_email: corporateEmail }
         );
         return response;
       } catch (error) {
         console.error("[OrganizationManager] submitCorporateEmail error:", error);
+        throw error;
+      } finally {
+        if (typeof hideLoading === "function") hideLoading();
+      }
+    }
+
+    /**
+     * Resend or update corporate email verification link.
+     * POST /api/organizations/{organization_id}/resend-verification
+     * @param {string} organizationId
+     * @param {string} [corporateEmail]
+     * @returns {Promise<Object>}
+     */
+    async resendVerification(organizationId, corporateEmail = null) {
+      try {
+        if (typeof showLoading === "function") showLoading("Sending verification…");
+        const payload = corporateEmail ? { corporate_email: corporateEmail } : {};
+        const response = await window.apiClient.post(
+          `organizations/${organizationId}/resend-verification`,
+          payload
+        );
+        return response;
+      } catch (error) {
+        console.error("[OrganizationManager] resendVerification error:", error);
+        throw error;
+      } finally {
+        if (typeof hideLoading === "function") hideLoading();
+      }
+    }
+
+    /**
+     * Resume checkout payment for an organization.
+     * POST /api/organizations/{organization_id}/resume-payment
+     * @param {string} organizationId
+     * @param {{ plan: string, billing_data: Object }} data
+     * @returns {Promise<Object>}
+     */
+    async resumePayment(organizationId, data) {
+      try {
+        if (typeof showLoading === "function") showLoading("Resuming payment…");
+        const response = await window.apiClient.post(
+          `organizations/${organizationId}/resume-payment`,
+          data
+        );
+        return response;
+      } catch (error) {
+        console.error("[OrganizationManager] resumePayment error:", error);
         throw error;
       } finally {
         if (typeof hideLoading === "function") hideLoading();
@@ -317,13 +364,23 @@
     async fetchMyWorkspaces() {
       try {
         const response = await window.apiClient.get("organizations/my-workspaces");
-        this.workspaces = Array.isArray(response.organizations)
-          ? response.organizations
-          : [];
+        this.workspacesResponse = response;
+        if (response && response.organizations) {
+          this.workspaces = Array.isArray(response.organizations)
+            ? response.organizations
+            : [];
+        } else if (response) {
+          const active = Array.isArray(response.active) ? response.active : [];
+          const pending = Array.isArray(response.pending) ? response.pending : [];
+          this.workspaces = [...active, ...pending];
+        } else {
+          this.workspaces = [];
+        }
         return this.workspaces;
       } catch (error) {
         console.error("[OrganizationManager] fetchMyWorkspaces error:", error);
         this.workspaces = [];
+        this.workspacesResponse = null;
         throw error;
       }
     }
@@ -393,6 +450,48 @@
         return response;
       } catch (error) {
         console.error("[OrganizationManager] deleteOrganization error:", error);
+        throw error;
+      } finally {
+        if (typeof hideLoading === "function") hideLoading();
+      }
+    }
+
+    /**
+     * Force delete organization from trash (Owner only).
+     * DELETE /api/organizations/{organization_id}/force
+     * @param {string} organizationId
+     * @returns {Promise<Object>}
+     */
+    async forceDeleteOrganization(organizationId) {
+      try {
+        if (typeof showLoading === "function") showLoading("Permanently deleting workspace…");
+        const response = await window.apiClient.delete(
+          `organizations/${organizationId}/force`
+        );
+        return response;
+      } catch (error) {
+        console.error("[OrganizationManager] forceDeleteOrganization error:", error);
+        throw error;
+      } finally {
+        if (typeof hideLoading === "function") hideLoading();
+      }
+    }
+
+    /**
+     * Restore organization from trash (Owner only).
+     * POST /api/organizations/{organization_id}/restore
+     * @param {string} organizationId
+     * @returns {Promise<Object>}
+     */
+    async restoreOrganization(organizationId) {
+      try {
+        if (typeof showLoading === "function") showLoading("Restoring workspace…");
+        const response = await window.apiClient.post(
+          `organizations/${organizationId}/restore`
+        );
+        return response;
+      } catch (error) {
+        console.error("[OrganizationManager] restoreOrganization error:", error);
         throw error;
       } finally {
         if (typeof hideLoading === "function") hideLoading();
