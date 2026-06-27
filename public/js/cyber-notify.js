@@ -1,8 +1,60 @@
 // Prevent default form submissions globally to bypass iframe sandboxing restrictions in preview modes
 if (typeof window._globalSubmitPreventionInstalled === "undefined") {
   window._globalSubmitPreventionInstalled = true;
+
+  // Intercept all submit events in the capturing phase to prevent native browser submission
   document.addEventListener("submit", function(e) {
     e.preventDefault();
+  }, true);
+
+  // Intercept click events on submit buttons in the capturing phase to prevent native action and dispatch JS submit
+  document.addEventListener("click", function(e) {
+    // Select any button that acts as a submit button: either explicitly type="submit",
+    // or a button without any type attribute inside a form, or input[type="submit"]
+    const btn = e.target.closest('button[type="submit"], input[type="submit"], button:not([type])');
+    if (btn) {
+      const form = btn.closest("form");
+      if (form) {
+        // Trigger native HTML5 validation UI if form is invalid
+        if (typeof form.reportValidity === "function" && !form.reportValidity()) {
+          e.preventDefault();
+          return;
+        }
+        e.preventDefault();
+        // Dispatch custom submit event so JS event listeners run
+        const submitEvent = new Event("submit", {
+          bubbles: true,
+          cancelable: true
+        });
+        form.dispatchEvent(submitEvent);
+      }
+    }
+  }, true);
+
+  // Intercept Enter keypress inside form inputs to prevent native browser submission triggering sandbox warning
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      const target = e.target;
+      if (target && target.tagName === "INPUT" && !["button", "submit", "reset", "checkbox", "radio", "file"].includes(target.type)) {
+        const form = target.closest("form");
+        if (form) {
+          e.preventDefault(); // Stop native submission initiation!
+          
+          // Trigger the submit event programmatically, or find the submit button and click it
+          const submitBtn = form.querySelector('button[type="submit"], input[type="submit"], button:not([type])');
+          if (submitBtn) {
+            submitBtn.click();
+          } else {
+            // Dispatch custom submit event directly
+            const submitEvent = new Event("submit", {
+              bubbles: true,
+              cancelable: true
+            });
+            form.dispatchEvent(submitEvent);
+          }
+        }
+      }
+    }
   }, true);
 }
 
