@@ -404,6 +404,7 @@
         }
 
         let pendingOrgs = [];
+        let deletedOrgs = [];
         const workspacesResponse = om.workspacesResponse || workspaces;
         if (Array.isArray(workspacesResponse)) {
           pendingOrgs = workspacesResponse.filter((ws) => ws.subscription && ws.subscription.status !== "active");
@@ -412,10 +413,11 @@
             pendingOrgs = workspacesResponse.organizations.filter((ws) => ws.subscription && ws.subscription.status !== "active");
           } else {
             pendingOrgs = Array.isArray(workspacesResponse.pending) ? workspacesResponse.pending : [];
+            deletedOrgs = Array.isArray(workspacesResponse.deleted) ? workspacesResponse.deleted : [];
           }
         }
 
-        pane.innerHTML = this._renderNoOrgState(pendingOrgs);
+        pane.innerHTML = this._renderNoOrgState(pendingOrgs, deletedOrgs);
 
         // Bind "Create Organization" button immediately
         const startBtn = document.getElementById("org-start-onboarding-btn");
@@ -425,38 +427,127 @@
 
         // Bind pending resume buttons
         pane.querySelectorAll(".org-resume-btn").forEach((btn) => {
-          btn.addEventListener("click", () => {
+          btn.addEventListener("click", async () => {
             const orgId = btn.getAttribute("data-org-id");
-            const status = btn.getAttribute("data-org-status");
-            
-            om.setPendingOrgId(orgId);
-            this._openOnboardingWizard();
-            
-            if (status === "pending_email_verification") {
-              this._renderOnboardingStep(2);
-            } else {
-              this._renderOnboardingStep(3);
+            try {
+              if (typeof showLoading === "function") showLoading("Checking status…");
+              const res = await window.apiClient.get(`organizations/${orgId}/payment/status`);
+              if (typeof hideLoading === "function") hideLoading();
+              
+              const status = res.payment_status;
+              om.setPendingOrgId(orgId);
+              this._openOnboardingWizard();
+              
+              if (status === "pending_email_verification") {
+                window.CyberNotify.alert("Please verify your corporate email to proceed.", { type: "info" });
+                this._renderOnboardingStep(2);
+              } else if (status === "active") {
+                window.CyberNotify.alert("This organization is already active.", { type: "success" });
+                window.organizationManager.setActiveOrg(orgId);
+                window.organizationManager.clearPendingOrgId();
+                this._loadWorkspaceSwitcher();
+                this.loadSettingsPane();
+              } else {
+                window.CyberNotify.alert("Email verified! Proceeding to billing details.", { type: "info" });
+                this._renderOnboardingStep(3);
+              }
+            } catch (err) {
+              if (typeof hideLoading === "function") hideLoading();
+              window.CyberNotify.alert(err.message || "Failed to check onboarding status.", { type: "error" });
             }
           });
         });
 
-        // Bind pending delete buttons
-        pane.querySelectorAll(".org-delete-pending-btn").forEach((btn) => {
+        // Bind soft delete pending buttons
+        pane.querySelectorAll(".org-soft-delete-pending-btn").forEach((btn) => {
           btn.addEventListener("click", () => {
             const orgId = btn.getAttribute("data-org-id");
             const orgName = btn.getAttribute("data-org-name");
             
             window.CyberNotify.confirm(
-              `Are you sure you want to permanently delete the pending organization "${orgName}"? This action is irreversible.`,
+              `Are you sure you want to move the pending organization "${orgName}" to Trash?`,
+              async (confirmed) => {
+                if (!confirmed) return;
+                try {
+                  await om.deleteOrganization(orgId);
+                  window.CyberNotify.alert("Organization moved to Trash.", { type: "success" });
+                  if (om.getPendingOrgId() === orgId) {
+                    om.clearPendingOrgId();
+                  }
+                  // Reload lists
+                  this._loadWorkspaceSwitcher();
+                  this.loadSettingsPane();
+                } catch (err) {
+                  window.CyberNotify.alert(err.message || "Failed to delete organization.", { type: "error" });
+                }
+              }
+            );
+          });
+        });
+
+        // Bind force delete pending buttons
+        pane.querySelectorAll(".org-force-delete-pending-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const orgId = btn.getAttribute("data-org-id");
+            const orgName = btn.getAttribute("data-org-name");
+            
+            window.CyberNotify.confirm(
+              `Are you sure you want to PERMANENTLY delete the pending organization "${orgName}"? This action is irreversible.`,
               async (confirmed) => {
                 if (!confirmed) return;
                 try {
                   await om.forceDeleteOrganization(orgId);
-                  window.CyberNotify.alert("Pending organization deleted successfully.", { type: "success" });
+                  window.CyberNotify.alert("Organization permanently deleted.", { type: "success" });
                   if (om.getPendingOrgId() === orgId) {
                     om.clearPendingOrgId();
                   }
-                  // Reload the workspaces list, switcher and reload settings pane
+                  // Reload lists
+                  this._loadWorkspaceSwitcher();
+                  this.loadSettingsPane();
+                } catch (err) {
+                  window.CyberNotify.alert(err.message || "Failed to delete organization.", { type: "error" });
+                }
+              }
+            );
+          });
+        });
+
+        // Bind restore pending buttons (for trashed orgs)
+        pane.querySelectorAll(".org-restore-pending-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const orgId = btn.getAttribute("data-org-id");
+            const orgName = btn.getAttribute("data-org-name");
+            
+            window.CyberNotify.confirm(
+              `Are you sure you want to restore the organization "${orgName}"?`,
+              async (confirmed) => {
+                if (!confirmed) return;
+                try {
+                  await om.restoreOrganization(orgId);
+                  window.CyberNotify.alert("Organization restored successfully.", { type: "success" });
+                  this._loadWorkspaceSwitcher();
+                  this.loadSettingsPane();
+                } catch (err) {
+                  window.CyberNotify.alert(err.message || "Failed to restore organization.", { type: "error" });
+                }
+              }
+            );
+          });
+        });
+
+        // Bind force delete trashed buttons
+        pane.querySelectorAll(".org-force-delete-trashed-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const orgId = btn.getAttribute("data-org-id");
+            const orgName = btn.getAttribute("data-org-name");
+            
+            window.CyberNotify.confirm(
+              `Are you sure you want to PERMANENTLY delete the organization "${orgName}" from Trash? This action is irreversible.`,
+              async (confirmed) => {
+                if (!confirmed) return;
+                try {
+                  await om.forceDeleteOrganization(orgId);
+                  window.CyberNotify.alert("Organization permanently deleted.", { type: "success" });
                   this._loadWorkspaceSwitcher();
                   this.loadSettingsPane();
                 } catch (err) {
@@ -506,7 +597,7 @@
       }
     }
 
-    _renderNoOrgState(pendingOrgs = []) {
+    _renderNoOrgState(pendingOrgs = [], deletedOrgs = []) {
       let pendingHtml = "";
       if (pendingOrgs && pendingOrgs.length > 0) {
         const pendingItems = pendingOrgs.map((org) => {
@@ -551,11 +642,17 @@
                           data-org-status="${escapeHtml(sub.status || "")}">
                     Resume Onboarding
                   </button>
-                  <button class="cyber-btn-ghost-danger org-delete-pending-btn w-8 h-8 p-0 flex items-center justify-center rounded-lg"
+                  <button class="cyber-btn-ghost-danger org-soft-delete-pending-btn w-8 h-8 p-0 flex items-center justify-center rounded-lg"
                           data-org-id="${escapeHtml(org.id)}"
                           data-org-name="${escapeHtml(org.name)}"
-                          title="Delete Pending Organization">
+                          title="Move to Trash">
                     <span class="material-symbols-outlined text-[16px]">delete</span>
+                  </button>
+                  <button class="cyber-btn-ghost-danger org-force-delete-pending-btn w-8 h-8 p-0 flex items-center justify-center rounded-lg"
+                          data-org-id="${escapeHtml(org.id)}"
+                          data-org-name="${escapeHtml(org.name)}"
+                          title="Delete Permanently">
+                    <span class="material-symbols-outlined text-[16px]">delete_forever</span>
                   </button>
                 </div>
               </div>
@@ -570,6 +667,54 @@
             </h5>
             <div class="space-y-3">
               ${pendingItems}
+            </div>
+          </div>`;
+      }
+
+      let deletedHtml = "";
+      if (deletedOrgs && deletedOrgs.length > 0) {
+        const deletedItems = deletedOrgs.map((org) => {
+          return `
+            <div class="flex items-center justify-between p-4 border border-red-500/10 bg-red-500/[0.01] hover:bg-red-500/[0.02] rounded-xl transition-all gap-4 text-left">
+              <div class="flex items-center gap-3 min-w-0 flex-1">
+                <div class="w-10 h-10 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 flex-shrink-0">
+                  <span class="material-symbols-outlined">delete_outline</span>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <span class="font-semibold text-sm text-red-300 truncate">${escapeHtml(org.name)}</span>
+                    <span class="cyber-badge-xs cyber-badge-danger">Deleted</span>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[12px]">link</span>
+                    ${escapeHtml(org.domain || org.company_domain || "")}
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 flex-shrink-0">
+                <button class="cyber-btn-ghost-success org-restore-pending-btn px-3 py-1.5 rounded-lg text-xs font-semibold"
+                        data-org-id="${escapeHtml(org.id)}"
+                        data-org-name="${escapeHtml(org.name)}">
+                  Restore
+                </button>
+                <button class="cyber-btn-ghost-danger org-force-delete-trashed-btn w-8 h-8 p-0 flex items-center justify-center rounded-lg"
+                        data-org-id="${escapeHtml(org.id)}"
+                        data-org-name="${escapeHtml(org.name)}"
+                        title="Delete Permanently">
+                  <span class="material-symbols-outlined text-[16px]">delete_forever</span>
+                </button>
+              </div>
+            </div>`;
+        }).join("");
+
+        deletedHtml = `
+          <div class="mt-8 text-left max-w-xl mx-auto border-t border-white/5 pt-8">
+            <h5 class="text-xs font-bold text-red-400/80 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">delete</span>
+              Trash / Trashed Workspaces
+            </h5>
+            <div class="space-y-3">
+              ${deletedItems}
             </div>
           </div>`;
       }
@@ -589,7 +734,8 @@
             </button>
           </div>
         </div>
-        ${pendingHtml}`;
+        ${pendingHtml}
+        ${deletedHtml}`;
     }
 
     _renderOrgSettingsContent(details, members, invitations) {

@@ -437,16 +437,22 @@
     /**
      * Delete organization (Owner only).
      * DELETE /api/organizations
+     * @param {string} [organizationId] - Optional organization ID to soft delete.
      * @returns {Promise<Object>}
      */
-    async deleteOrganization() {
+    async deleteOrganization(organizationId = null) {
       try {
         if (typeof showLoading === "function") showLoading("Deleting workspace…");
+        const headers = organizationId
+          ? { "X-Organization-Id": organizationId }
+          : this.getOrgHeaders();
         const response = await window.apiClient.delete("organizations", {
-          headers: this.getOrgHeaders(),
+          headers: headers,
         });
-        // Clear org context on successful deletion
-        this.clearActiveOrg();
+        // Clear org context on successful deletion if we just deleted the active one
+        if (!organizationId || String(organizationId) === String(this.getActiveOrgId())) {
+          this.clearActiveOrg();
+        }
         return response;
       } catch (error) {
         console.error("[OrganizationManager] deleteOrganization error:", error);

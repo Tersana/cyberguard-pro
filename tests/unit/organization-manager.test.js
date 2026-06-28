@@ -343,6 +343,18 @@ describe("OrganizationManager", () => {
       expect(window.organizationManager.getActiveOrgId()).toBeNull();
     });
 
+    it("deleteOrganization accepts custom organizationId and sets header without clearing active context of another org", async () => {
+      window.organizationManager.setActiveOrg("org-active");
+      window.apiClient.delete.mockResolvedValue({ message: "Deleted" });
+
+      await window.organizationManager.deleteOrganization("org-custom");
+
+      expect(window.apiClient.delete).toHaveBeenCalledWith("organizations", {
+        headers: { "X-Organization-Id": "org-custom" },
+      });
+      expect(window.organizationManager.getActiveOrgId()).toBe("org-active");
+    });
+
     it("forceDeleteOrganization sends DELETE to /force", async () => {
       window.apiClient.delete.mockResolvedValue({ message: "Force deleted" });
 
