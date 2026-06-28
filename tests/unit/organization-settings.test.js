@@ -157,8 +157,24 @@ describe("OrganizationSettings", () => {
       const container = document.getElementById("org-workspace-switcher");
       expect(container.classList.contains("hidden")).toBe(false);
       expect(container.innerHTML).toContain("Org Alpha");
-      expect(container.innerHTML).toContain("Org Beta");
+      expect(container.innerHTML).not.toContain("Org Beta");
       expect(container.innerHTML).toContain("Personal Workspace");
+    });
+
+    it("proactively clears pending active org on load", async () => {
+      window.organizationManager.setActiveOrg("2");
+      const workspaces = [
+        { id: 1, name: "Org Alpha", subscription: { plan: "pro", status: "active" } },
+        { id: 2, name: "Org Beta", subscription: { plan: "starter", status: "pending" } },
+      ];
+      window.apiClient.get.mockResolvedValue({ organizations: workspaces });
+
+      const clearSpy = vi.spyOn(window.organizationManager, "clearActiveOrg");
+      window.OrganizationSettings.init();
+      await new Promise((r) => setTimeout(r, 50));
+
+      expect(clearSpy).toHaveBeenCalled();
+      expect(window.organizationManager.getActiveOrgId()).toBeNull();
     });
 
     it("hides switcher when no workspaces exist", async () => {
