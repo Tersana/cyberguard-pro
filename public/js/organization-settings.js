@@ -389,12 +389,83 @@
 
       const om = window.organizationManager;
       if (!om || !om.isOrgContext()) {
-        pane.innerHTML = this._renderNoOrgState();
+        pane.innerHTML = `
+          <div class="flex items-center justify-center py-12">
+            <div class="cyber-spinner"></div>
+            <span class="text-slate-400 text-sm ml-3">Loading workspaces…</span>
+          </div>`;
+
+        let workspaces = [];
+        try {
+          workspaces = await om.fetchMyWorkspaces();
+        } catch (e) {
+          console.warn("[OrgSettings] Failed to fetch workspaces in settings pane:", e);
+          workspaces = om.workspaces || [];
+        }
+
+        let pendingOrgs = [];
+        const workspacesResponse = om.workspacesResponse || workspaces;
+        if (Array.isArray(workspacesResponse)) {
+          pendingOrgs = workspacesResponse.filter((ws) => ws.subscription && ws.subscription.status !== "active");
+        } else if (workspacesResponse) {
+          if (Array.isArray(workspacesResponse.organizations)) {
+            pendingOrgs = workspacesResponse.organizations.filter((ws) => ws.subscription && ws.subscription.status !== "active");
+          } else {
+            pendingOrgs = Array.isArray(workspacesResponse.pending) ? workspacesResponse.pending : [];
+          }
+        }
+
+        pane.innerHTML = this._renderNoOrgState(pendingOrgs);
+
         // Bind "Create Organization" button immediately
         const startBtn = document.getElementById("org-start-onboarding-btn");
         if (startBtn) {
           startBtn.addEventListener("click", () => this._openOnboardingWizard());
         }
+
+        // Bind pending resume buttons
+        pane.querySelectorAll(".org-resume-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const orgId = btn.getAttribute("data-org-id");
+            const status = btn.getAttribute("data-org-status");
+            
+            om.setPendingOrgId(orgId);
+            this._openOnboardingWizard();
+            
+            if (status === "pending_email_verification") {
+              this._renderOnboardingStep(2);
+            } else {
+              this._renderOnboardingStep(3);
+            }
+          });
+        });
+
+        // Bind pending delete buttons
+        pane.querySelectorAll(".org-delete-pending-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const orgId = btn.getAttribute("data-org-id");
+            const orgName = btn.getAttribute("data-org-name");
+            
+            window.CyberNotify.confirm(
+              `Are you sure you want to permanently delete the pending organization "${orgName}"? This action is irreversible.`,
+              async (confirmed) => {
+                if (!confirmed) return;
+                try {
+                  await om.forceDeleteOrganization(orgId);
+                  window.CyberNotify.alert("Pending organization deleted successfully.", { type: "success" });
+                  if (om.getPendingOrgId() === orgId) {
+                    om.clearPendingOrgId();
+                  }
+                  // Reload the workspaces list, switcher and reload settings pane
+                  this._loadWorkspaceSwitcher();
+                  this.loadSettingsPane();
+                } catch (err) {
+                  window.CyberNotify.alert(err.message || "Failed to delete organization.", { type: "error" });
+                }
+              }
+            );
+          });
+        });
         return;
       }
 
@@ -435,7 +506,74 @@
       }
     }
 
-    _renderNoOrgState() {
+    _renderNoOrgState(pendingOrgs = []) {
+      let pendingHtml = "";
+      if (pendingOrgs && pendingOrgs.length > 0) {
+        const pendingItems = pendingOrgs.map((org) => {
+          const sub = org.subscription || {};
+          const plan = sub.plan || "starter";
+          const planBadge = PLAN_BADGES[plan] || PLAN_BADGES.starter;
+          const statusLabel = sub.status === "active" ? "Active" : (sub.status || "Pending");
+          
+          // Display company_domain / corporate_email if present
+          const domainLabel = org.domain || org.company_domain || "";
+          const emailLabel = org.corporate_email || "";
+          
+          let subText = "";
+          if (emailLabel) {
+            subText = `<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">email</span>${escapeHtml(emailLabel)}</span>`;
+          } else if (domainLabel) {
+            subText = `<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">link</span>${escapeHtml(domainLabel)}</span>`;
+          }
+
+          return `
+            <div class="flex items-center justify-between p-4 border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] rounded-xl transition-all gap-4 text-left">
+              <div class="flex items-center gap-3 min-w-0 flex-1">
+                <div class="w-10 h-10 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 flex-shrink-0">
+                  <span class="material-symbols-outlined">pending_actions</span>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <span class="font-semibold text-sm text-white truncate">${escapeHtml(org.name)}</span>
+                    <span class="cyber-badge-xs ${escapeHtml(planBadge.cls)}">${escapeHtml(planBadge.label)}</span>
+                  </div>
+                  <div class="text-xs text-slate-400 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                    ${subText}
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 flex-shrink-0">
+                <span class="cyber-badge-xs cyber-badge-warning">${escapeHtml(statusLabel)}</span>
+                <div class="flex items-center gap-1.5">
+                  <button class="cyber-btn-ghost-primary org-resume-btn px-3 py-1.5 rounded-lg text-xs font-semibold"
+                          data-org-id="${escapeHtml(org.id)}"
+                          data-org-name="${escapeHtml(org.name)}"
+                          data-org-status="${escapeHtml(sub.status || "")}">
+                    Resume Onboarding
+                  </button>
+                  <button class="cyber-btn-ghost-danger org-delete-pending-btn w-8 h-8 p-0 flex items-center justify-center rounded-lg"
+                          data-org-id="${escapeHtml(org.id)}"
+                          data-org-name="${escapeHtml(org.name)}"
+                          title="Delete Pending Organization">
+                    <span class="material-symbols-outlined text-[16px]">delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>`;
+        }).join("");
+
+        pendingHtml = `
+          <div class="mt-8 text-left max-w-xl mx-auto border-t border-white/5 pt-8">
+            <h5 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">pending_actions</span>
+              Pending Organizations
+            </h5>
+            <div class="space-y-3">
+              ${pendingItems}
+            </div>
+          </div>`;
+      }
+
       return `
         <div class="settings-section-card text-center py-16 px-6 max-w-xl mx-auto border-dashed border-white/10 bg-white/[0.01]">
           <span class="material-symbols-outlined text-slate-500 text-5xl mb-4 block">business</span>
@@ -445,12 +583,13 @@
           </p>
           <div class="flex justify-center">
             <button id="org-start-onboarding-btn"
-                    class="cyber-btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-2">
-              <span class="material-symbols-outlined" style="font-size:1rem;">add_business</span>
-              Create Organization
+                     class="cyber-btn-primary px-6 py-2.5 rounded-lg text-sm font-semibold inline-flex items-center gap-2">
+               <span class="material-symbols-outlined" style="font-size:1rem;">add_business</span>
+               Create Organization
             </button>
           </div>
-        </div>`;
+        </div>
+        ${pendingHtml}`;
     }
 
     _renderOrgSettingsContent(details, members, invitations) {

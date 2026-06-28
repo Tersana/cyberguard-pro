@@ -323,6 +323,82 @@ describe("OrganizationSettings", () => {
       expect(pane.innerHTML).toContain("org-start-onboarding-btn");
     });
 
+    it("renders pending organizations list when workspaces contain pending orgs", async () => {
+      const mockWorkspaces = [
+        { id: 2, name: "Pending Org", corporate_email: "pending@acme.com", subscription: { plan: "starter", status: "pending" } },
+      ];
+      window.apiClient.get.mockImplementation(async (url) => {
+        if (url === "organizations/my-workspaces") {
+          return { organizations: mockWorkspaces };
+        }
+        return {};
+      });
+
+      await window.OrganizationSettings.loadSettingsPane();
+
+      const pane = document.getElementById("pane-org-settings");
+      expect(pane.innerHTML).toContain("No Organization Selected");
+      expect(pane.innerHTML).toContain("Pending Org");
+      expect(pane.innerHTML).toContain("pending@acme.com");
+      expect(pane.querySelector(".org-resume-btn")).toBeTruthy();
+      expect(pane.querySelector(".org-delete-pending-btn")).toBeTruthy();
+    });
+
+    it("clicking Resume Onboarding sets pending org ID and opens wizard", async () => {
+      const mockWorkspaces = [
+        { id: "pending-12", name: "Pending Org", corporate_email: "pending@acme.com", subscription: { plan: "starter", status: "pending_email_verification" } },
+      ];
+      window.apiClient.get.mockImplementation(async (url) => {
+        if (url === "organizations/my-workspaces") {
+          return { organizations: mockWorkspaces };
+        }
+        return {};
+      });
+
+      await window.OrganizationSettings.loadSettingsPane();
+
+      const setPendingOrgSpy = vi.spyOn(window.organizationManager, "setPendingOrgId");
+      const openWizardSpy = vi.spyOn(window.OrganizationSettings, "_openOnboardingWizard");
+      const renderStepSpy = vi.spyOn(window.OrganizationSettings, "_renderOnboardingStep");
+
+      const resumeBtn = document.querySelector(".org-resume-btn");
+      expect(resumeBtn).toBeTruthy();
+      resumeBtn.click();
+
+      expect(setPendingOrgSpy).toHaveBeenCalledWith("pending-12");
+      expect(openWizardSpy).toHaveBeenCalled();
+      expect(renderStepSpy).toHaveBeenCalledWith(2);
+    });
+
+    it("clicking Delete on a pending organization calls forceDeleteOrganization and refreshes", async () => {
+      const mockWorkspaces = [
+        { id: "pending-12", name: "Pending Org", corporate_email: "pending@acme.com", subscription: { plan: "starter", status: "pending" } },
+      ];
+      window.apiClient.get.mockImplementation(async (url) => {
+        if (url === "organizations/my-workspaces") {
+          return { organizations: mockWorkspaces };
+        }
+        return {};
+      });
+
+      await window.OrganizationSettings.loadSettingsPane();
+
+      const deleteSpy = vi.spyOn(window.organizationManager, "forceDeleteOrganization").mockResolvedValue({});
+      const confirmSpy = vi.spyOn(window.CyberNotify, "confirm").mockImplementation((msg, cb) => cb(true));
+      const alertSpy = vi.spyOn(window.CyberNotify, "alert");
+
+      const deleteBtn = document.querySelector(".org-delete-pending-btn");
+      expect(deleteBtn).toBeTruthy();
+      deleteBtn.click();
+
+      // Wait for async confirmation callback
+      await new Promise((r) => setTimeout(r, 10));
+
+      expect(confirmSpy).toHaveBeenCalled();
+      expect(deleteSpy).toHaveBeenCalledWith("pending-12");
+      expect(alertSpy).toHaveBeenCalledWith("Pending organization deleted successfully.", { type: "success" });
+    });
+
     it("renders org overview with name, domain, plan, status", async () => {
       window.organizationManager.setActiveOrg("org-7");
 
