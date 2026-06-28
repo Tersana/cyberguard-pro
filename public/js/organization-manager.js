@@ -443,9 +443,10 @@
     async deleteOrganization(organizationId = null) {
       try {
         if (typeof showLoading === "function") showLoading("Deleting workspace…");
-        const url = organizationId ? `organizations/${organizationId}` : "organizations";
-        const headers = organizationId ? {} : this.getOrgHeaders();
-        const response = await window.apiClient.delete(url, {
+        const headers = organizationId
+          ? { "X-Organization-Id": organizationId }
+          : this.getOrgHeaders();
+        const response = await window.apiClient.delete("organizations", {
           headers: headers,
         });
         // Clear org context on successful deletion if we just deleted the active one

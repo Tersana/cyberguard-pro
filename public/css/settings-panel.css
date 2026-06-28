@@ -1402,3 +1402,43 @@ select.org-role-select {
     -moz-appearance: none !important;
 }
 
+/* ─── Ghost Success Button ─────────────────────────────────── */
+.cyber-btn-ghost-success {
+    background: transparent;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border-radius: var(--cg-radius-sm);
+    cursor: pointer;
+    padding: 4px 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--cg-transition-fast);
+}
+
+.cyber-btn-ghost-success:hover {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #34d399;
+}
+
+/* ─── Ghost Warning Button ─────────────────────────────────── */
+.cyber-btn-ghost-warning {
+    background: transparent;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border-radius: var(--cg-radius-sm);
+    cursor: pointer;
+    padding: 4px 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--cg-transition-fast);
+}
+
+.cyber-btn-ghost-warning:hover {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+}
+
