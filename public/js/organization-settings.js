@@ -496,6 +496,8 @@
               async (confirmed) => {
                 if (!confirmed) return;
                 try {
+                  // Soft delete first to place in Trash, then force delete
+                  await om.deleteOrganization(orgId);
                   await om.forceDeleteOrganization(orgId);
                   window.CyberNotify.alert("Organization permanently deleted.", { type: "success" });
                   if (om.getPendingOrgId() === orgId) {

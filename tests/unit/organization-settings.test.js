@@ -435,7 +435,7 @@ describe("OrganizationSettings", () => {
       expect(alertSpy).toHaveBeenCalledWith("Organization moved to Trash.", { type: "success" });
     });
 
-    it("clicking Force Delete on a pending organization calls forceDeleteOrganization and refreshes", async () => {
+    it("clicking Force Delete on a pending organization calls deleteOrganization and forceDeleteOrganization", async () => {
       const mockWorkspaces = [
         { id: "pending-12", name: "Pending Org", corporate_email: "pending@acme.com", subscription: { plan: "starter", status: "pending" } },
       ];
@@ -448,6 +448,7 @@ describe("OrganizationSettings", () => {
 
       await window.OrganizationSettings.loadSettingsPane();
 
+      const softDeleteSpy = vi.spyOn(window.organizationManager, "deleteOrganization").mockResolvedValue({});
       const forceDeleteSpy = vi.spyOn(window.organizationManager, "forceDeleteOrganization").mockResolvedValue({});
       const confirmSpy = vi.spyOn(window.CyberNotify, "confirm").mockImplementation((msg, cb) => cb(true));
       const alertSpy = vi.spyOn(window.CyberNotify, "alert");
@@ -459,6 +460,7 @@ describe("OrganizationSettings", () => {
       await new Promise((r) => setTimeout(r, 10));
 
       expect(confirmSpy).toHaveBeenCalled();
+      expect(softDeleteSpy).toHaveBeenCalledWith("pending-12");
       expect(forceDeleteSpy).toHaveBeenCalledWith("pending-12");
       expect(alertSpy).toHaveBeenCalledWith("Organization permanently deleted.", { type: "success" });
     });
