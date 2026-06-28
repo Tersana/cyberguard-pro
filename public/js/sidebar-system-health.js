@@ -76,7 +76,7 @@ const SidebarSystemHealth = {
 
           const limits = {
             maxProjects:      orgLimits.max_projects       ?? 0,
-            maxTargets:       orgLimits.max_targets         ?? 0,
+            maxTargets:       orgLimits.max_targets ?? orgLimits.max_targets_per_project ?? 0,
             maxScansPerMonth: orgLimits.max_scans_per_month ?? 0,
             maxMembers:       orgLimits.max_members         ?? 0,
           };
@@ -123,7 +123,7 @@ const SidebarSystemHealth = {
       // Extract plan limits
       const limits = {
         maxProjects: subscription?.limits?.max_projects ?? 0,
-        maxTargets: subscription?.limits?.max_targets ?? 0,
+        maxTargets: subscription?.limits?.max_targets ?? subscription?.limits?.max_targets_per_project ?? 0,
         maxScansPerMonth: subscription?.limits?.max_scans_per_month ?? 0
       };
 

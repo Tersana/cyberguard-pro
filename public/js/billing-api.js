@@ -33,6 +33,12 @@ class BillingAPI {
       // Log raw response to aid debugging
       console.log('[BillingAPI] Raw plans response:', response);
 
+      // Handle new API response format containing user_plans and organization_plans
+      if (response && response.data && (response.data.user_plans || response.data.organization_plans)) {
+        console.log('[BillingAPI] Parsed new format plans:', response.data);
+        return response.data;
+      }
+
       // Handle all known API response shapes:
       //   Shape 1: raw array → [{...}, ...]
       //   Shape 2: { status, data: [{...}] }       (data IS the array)
@@ -58,8 +64,13 @@ class BillingAPI {
         plans = [];
       }
 
-      console.log('[BillingAPI] Parsed plans:', plans);
-      return plans;
+      const normalized = {
+        currency: 'EGP',
+        user_plans: plans,
+        organization_plans: []
+      };
+      console.log('[BillingAPI] Parsed plans:', normalized);
+      return normalized;
     } catch (error) {
       console.error('[BillingAPI] Error in getPlans:', {
         error: error,
@@ -214,13 +225,20 @@ class BillingAPI {
    * 
    * Requirements: 1.6, 1.8, 1.9
    */
-  static async pollSubscriptionUntilActive(interval = 3000, maxAttempts = 5) {
+  static async pollSubscriptionUntilActive(interval = 3000, maxAttempts = 5, expectedPlan = null) {
+    const targetPlan = expectedPlan || localStorage.getItem('pending_billing_plan');
+
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         const subscription = await this.getCurrentSubscription();
         
-        // Check if subscription is active
-        if (subscription.status === 'active') {
+        // If we are waiting for a specific paid plan, ensure it is active and matching.
+        // Otherwise, if no specific plan is defined, accept any active non-free plan.
+        const isTargetPlanActive = targetPlan
+          ? (subscription.plan === targetPlan && subscription.status === 'active')
+          : (subscription.status === 'active' && subscription.plan !== 'free');
+        
+        if (isTargetPlanActive) {
           console.log('[BillingAPI] Subscription activated successfully:', {
             plan: subscription.plan,
             attempt: attempt,
@@ -231,6 +249,8 @@ class BillingAPI {
         
         console.log('[BillingAPI] Polling subscription status:', {
           status: subscription.status,
+          plan: subscription.plan,
+          waitingFor: targetPlan,
           attempt: attempt,
           maxAttempts: maxAttempts,
           timestamp: new Date().toISOString()

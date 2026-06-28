@@ -659,8 +659,15 @@
                     } else {
                         // Personal subscription flow (Original logic)
                         try {
-                            const sub = await BillingAPI.pollSubscriptionUntilActive(5, 3000);
-                            if (sub && sub.status === 'active') {
+                            const pendingPlan = localStorage.getItem('pending_billing_plan');
+                            const sub = await BillingAPI.pollSubscriptionUntilActive(3000, 10, pendingPlan);
+                            
+                            // Verify that the retrieved active plan matches the plan they just purchased
+                            const isPlanActive = pendingPlan
+                                ? (sub && sub.status === 'active' && sub.plan === pendingPlan)
+                                : (sub && sub.status === 'active' && sub.plan !== 'free');
+
+                            if (isPlanActive) {
                                 // Plan confirmed active
                                 spinner.style.display = 'none';
                                 const planName = sub.plan
@@ -668,15 +675,18 @@
                                     : 'Your';
                                 msg.innerHTML = `<span class="activation-plan">✓ ${escapeHtml(planName)} plan activated!</span>`;
                             } else {
-                                // Max attempts reached — still activated most likely, just slow
+                                // Max attempts reached — still activating most likely, just slow
                                 spinner.style.display = 'none';
                                 msg.textContent = 'Plan is activating — check Dashboard shortly.';
                             }
-                            // Clean up pending order id
+                            // Clean up pending order id and plan
                             localStorage.removeItem('pending_billing_order_id');
+                            localStorage.removeItem('pending_billing_plan');
                         } catch (err) {
                             console.warn('[PaymobRedirect] Polling error (non-fatal):', err);
                             hide('activation-status');
+                            localStorage.removeItem('pending_billing_order_id');
+                            localStorage.removeItem('pending_billing_plan');
                         }
                     }
                 })();
@@ -704,6 +714,7 @@
                     localStorage.removeItem('cyberguard_user');
                     localStorage.removeItem('cyberguard_session');
                     localStorage.removeItem('pending_billing_order_id');
+                    localStorage.removeItem('pending_billing_plan');
                 } catch (_) {}
                 window.location.href = '/login';
             });

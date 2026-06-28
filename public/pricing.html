@@ -711,6 +711,18 @@
             <p>Select the perfect plan for your needs. All plans include core scanning features — upgrade anytime.</p>
         </section>
 
+        <!-- Plan Switcher Toggle -->
+        <div class="plan-switcher-container" style="display: flex; justify-content: center; margin-bottom: 3rem;">
+            <div class="plan-switcher" style="display: inline-flex; padding: 4px; background: rgba(30, 41, 59, 0.7); border: 1px solid var(--cg-border); border-radius: 9999px; gap: 4px; box-shadow: var(--cg-shadow-lg);">
+                <button id="btn-personal-plans" class="plan-switcher-btn active" style="padding: 0.6rem 1.5rem; border: none; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all var(--cg-transition-base); background: var(--cg-accent); color: white;" onclick="switchPlanType('personal')">
+                    Personal Plans
+                </button>
+                <button id="btn-org-plans" class="plan-switcher-btn" style="padding: 0.6rem 1.5rem; border: none; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all var(--cg-transition-base); background: transparent; color: var(--cg-text-2);" onclick="switchPlanType('org')">
+                    Organization Plans
+                </button>
+            </div>
+        </div>
+
         <!-- Plans Grid -->
         <section id="plans-grid" class="plans-grid">
             <div class="plan-skeleton"></div>
@@ -869,6 +881,7 @@
         let plansData = [];
         let currentSubscription = null;
         let isLoadingSubscription = true; // Track loading state
+        let activePlanType = 'personal';
 
         // Load plans on page load
         document.addEventListener('DOMContentLoaded', () => {
@@ -899,7 +912,7 @@
                 console.log('[Pricing] Plans fetched successfully:', plansData);
 
                 // Check if plans data is valid
-                if (!plansData || !Array.isArray(plansData) || plansData.length === 0) {
+                if (!plansData || typeof plansData !== 'object' || (!plansData.user_plans && !plansData.organization_plans)) {
                     throw new Error('No plans data received from API');
                 }
 
@@ -952,7 +965,7 @@
                 console.log('[Pricing] Final currentSubscription before rendering:', currentSubscription);
 
                 // Render plan cards
-                renderPlanCards(plansData);
+                renderPlanCards(activePlanType === 'personal' ? plansData.user_plans : plansData.organization_plans);
             } catch (error) {
                 console.error('[Pricing] Failed to load plans:', error);
                 
@@ -975,6 +988,39 @@
                     errorStateP.textContent = `We couldn't load the subscription plans. ${errorMessage}`;
                 }
                 errorState.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * Switch active plan type between Personal and Organization plans
+         */
+        function switchPlanType(type) {
+            if (activePlanType === type) return;
+            activePlanType = type;
+
+            const btnPersonal = document.getElementById('btn-personal-plans');
+            const btnOrg = document.getElementById('btn-org-plans');
+
+            if (type === 'personal') {
+                btnPersonal.classList.add('active');
+                btnPersonal.style.background = 'var(--cg-accent)';
+                btnPersonal.style.color = 'white';
+
+                btnOrg.classList.remove('active');
+                btnOrg.style.background = 'transparent';
+                btnOrg.style.color = 'var(--cg-text-2)';
+
+                renderPlanCards(plansData.user_plans || []);
+            } else {
+                btnOrg.classList.add('active');
+                btnOrg.style.background = 'var(--cg-accent)';
+                btnOrg.style.color = 'white';
+
+                btnPersonal.classList.remove('active');
+                btnPersonal.style.background = 'transparent';
+                btnPersonal.style.color = 'var(--cg-text-2)';
+
+                renderPlanCards(plansData.organization_plans || []);
             }
         }
 
@@ -1047,10 +1093,16 @@
                     : `<div class="plan-price-row"><span class="plan-price-amount">${plan.amount_egp}</span><span class="plan-price-currency">EGP</span></div><div class="plan-price-period">per month</div>`;
 
                 const limits = plan.limits || {};
+                const maxTargets = limits.max_targets_per_project !== undefined 
+                    ? limits.max_targets_per_project 
+                    : limits.max_targets;
+
                 const featuresHTML = [
                     limits.max_projects != null ? `${checkIcon}<span><span class="plan-feature-value">${limits.max_projects}</span> Projects</span>` : null,
-                    limits.max_targets != null ? `${checkIcon}<span><span class="plan-feature-value">${limits.max_targets}</span> Targets / Project</span>` : null,
+                    limits.max_collaborate_in_projects != null ? `${checkIcon}<span>Collaborate in <span class="plan-feature-value">${limits.max_collaborate_in_projects}</span> Projects</span>` : null,
+                    maxTargets != null ? `${checkIcon}<span><span class="plan-feature-value">${maxTargets}</span> Targets / Project</span>` : null,
                     limits.max_scans_per_month != null ? `${checkIcon}<span><span class="plan-feature-value">${limits.max_scans_per_month.toLocaleString()}</span> Scans / Month</span>` : null,
+                    limits.max_members != null ? `${checkIcon}<span>Up to <span class="plan-feature-value">${limits.max_members}</span> Members</span>` : null,
                     ...(plan.features || []).map(f => `${checkIcon}<span>${f}</span>`)
                 ].filter(Boolean).map(row => `<li class="plan-feature-item">${row}</li>`).join('');
 
@@ -1091,8 +1143,9 @@
                 return;
             }
 
-            // Find selected plan
-            selectedPlan = plansData.find(p => p.id === planId);
+            // Find selected plan in the active plan category
+            const activePlans = activePlanType === 'personal' ? plansData.user_plans : plansData.organization_plans;
+            selectedPlan = (activePlans || []).find(p => p.id === planId);
             if (!selectedPlan) {
                 CyberNotify.alert('Plan not found', { type: 'error' });
                 return;
@@ -1110,11 +1163,19 @@
 
             // Display selected plan info
             const planInfo = document.getElementById('selected-plan-info');
+            const maxTargets = selectedPlan.limits.max_targets_per_project !== undefined 
+                ? selectedPlan.limits.max_targets_per_project 
+                : selectedPlan.limits.max_targets;
+
             planInfo.innerHTML = `
                 <div class="selected-plan-info">
                     <div>
                         <div class="selected-plan-name">${escapeHtml(capitalize(selectedPlan.id))} Plan</div>
-                        <div class="selected-plan-meta">${escapeHtml(selectedPlan.limits.max_projects)} Projects &bull; ${escapeHtml(selectedPlan.limits.max_targets)} Targets &bull; ${escapeHtml(selectedPlan.limits.max_scans_per_month.toLocaleString())} Scans/mo</div>
+                        <div class="selected-plan-meta">
+                            ${escapeHtml(selectedPlan.limits.max_projects)} Projects &bull; 
+                            ${escapeHtml(maxTargets)} Targets${selectedPlan.limits.max_members ? ` &bull; ${escapeHtml(selectedPlan.limits.max_members)} Members` : ''} &bull; 
+                            ${escapeHtml(selectedPlan.limits.max_scans_per_month.toLocaleString())} Scans/mo
+                        </div>
                     </div>
                     <div class="selected-plan-price">${escapeHtml(selectedPlan.amount_egp)} <span>EGP</span></div>
                 </div>
@@ -1331,8 +1392,9 @@
                 const billingOrderId = response.billing_order_id;
                 const iframeUrl = response.iframe_url;
 
-                // Store billing_order_id in localStorage
+                // Store billing_order_id and plan ID in localStorage
                 localStorage.setItem('pending_billing_order_id', billingOrderId);
+                localStorage.setItem('pending_billing_plan', selectedPlan.id);
 
                 // Redirect to Paymob payment gateway (full page redirect)
                 window.location.href = iframeUrl;

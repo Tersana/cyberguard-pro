@@ -1098,21 +1098,21 @@
               <div class="cyber-plan-card" data-plan-val="starter">
                 <span class="material-symbols-outlined cyber-plan-icon">groups</span>
                 <div class="cyber-plan-name">Starter</div>
-                <div class="cyber-plan-price">$29<span>/mo</span></div>
-                <div class="cyber-plan-features">Up to 5 members<br>10 projects</div>
+                <div class="cyber-plan-price">2,999<span> EGP/mo</span></div>
+                <div class="cyber-plan-features">Up to 10 members &bull; 10 projects<br>20 targets/proj &bull; 50 scans/mo</div>
               </div>
               <div class="cyber-plan-card selected" data-plan-val="pro">
                 <span class="cyber-plan-badge">Popular</span>
                 <span class="material-symbols-outlined cyber-plan-icon">shield_with_heart</span>
                 <div class="cyber-plan-name">Pro</div>
-                <div class="cyber-plan-price">$99<span>/mo</span></div>
-                <div class="cyber-plan-features">Up to 20 members<br>50 projects</div>
+                <div class="cyber-plan-price">3,999<span> EGP/mo</span></div>
+                <div class="cyber-plan-features">Up to 15 members &bull; 15 projects<br>25 targets/proj &bull; 100 scans/mo</div>
               </div>
               <div class="cyber-plan-card" data-plan-val="enterprise">
                 <span class="material-symbols-outlined cyber-plan-icon">domain</span>
                 <div class="cyber-plan-name">Enterprise</div>
-                <div class="cyber-plan-price">Custom</div>
-                <div class="cyber-plan-features">Unlimited members<br>Dedicated support</div>
+                <div class="cyber-plan-price">5,999<span> EGP/mo</span></div>
+                <div class="cyber-plan-features">Up to 50 members &bull; 50 projects<br>100 targets/proj &bull; 500 scans/mo</div>
               </div>
             </div>
           </div>
