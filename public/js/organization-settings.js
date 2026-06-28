@@ -118,12 +118,25 @@
       try {
         const workspaces = await om.fetchMyWorkspaces();
         
-        // Proactively clear invalid active org ID
+        // Extract active workspaces (either from the legacy format, or the new format)
+        let activeWorkspaces = [];
+        const workspacesResponse = om.workspacesResponse || workspaces;
+        if (Array.isArray(workspacesResponse)) {
+          activeWorkspaces = workspacesResponse.filter((ws) => !ws.subscription || ws.subscription.status === "active");
+        } else if (workspacesResponse) {
+          if (Array.isArray(workspacesResponse.organizations)) {
+            activeWorkspaces = workspacesResponse.organizations.filter((ws) => !ws.subscription || ws.subscription.status === "active");
+          } else {
+            activeWorkspaces = Array.isArray(workspacesResponse.active) ? workspacesResponse.active : [];
+          }
+        }
+
+        // Proactively clear invalid active org ID (must be active, not pending/deleted)
         const activeOrgId = om.getActiveOrgId();
         if (activeOrgId) {
-          const isValid = workspaces.some((ws) => String(ws.id) === String(activeOrgId));
+          const isValid = activeWorkspaces.some((ws) => String(ws.id) === String(activeOrgId));
           if (!isValid) {
-            console.warn("[OrgSettings] Active organization ID is no longer valid. Clearing active organization.");
+            console.warn("[OrgSettings] Active organization ID is no longer valid or is pending. Clearing active organization.");
             om.clearActiveOrg();
             if (
               typeof window !== "undefined" &&
@@ -166,7 +179,8 @@
         }
       }
 
-      const totalCount = active.length + pending.length + deleted.length;
+      // Only count active and deleted (trash) workspaces; pending is hidden from switcher
+      const totalCount = active.length + deleted.length;
       if (totalCount === 0) {
         container.classList.add("hidden");
         return;
@@ -175,7 +189,7 @@
       container.classList.remove("hidden");
       const activeOrgId = window.organizationManager.getActiveOrgId();
 
-      const combined = [...active, ...pending];
+      const combined = [...active];
       const items = combined
         .map((ws) => {
           const isActive = String(ws.id) === String(activeOrgId);
