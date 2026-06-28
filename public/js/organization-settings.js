@@ -644,7 +644,7 @@
                           data-org-status="${escapeHtml(sub.status || "")}">
                     Resume Onboarding
                   </button>
-                  <button class="cyber-btn-ghost-danger org-soft-delete-pending-btn w-8 h-8 p-0 flex items-center justify-center rounded-lg"
+                  <button class="cyber-btn-ghost-warning org-soft-delete-pending-btn w-8 h-8 p-0 flex items-center justify-center rounded-lg"
                           data-org-id="${escapeHtml(org.id)}"
                           data-org-name="${escapeHtml(org.name)}"
                           title="Move to Trash">
