@@ -1,0 +1,3339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberGuard — Graduation Project Presentation</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* ============================================================
+           CyberGuard Design Tokens (B&W Monochrome Theme)
+           ============================================================ */
+        :root {
+            /* Colors */
+            --bg-base: #09090b;       /* Pure near-black */
+            --bg-surface: #111113;    /* Cards, sections */
+            --bg-elevated: #18181b;   /* Hover, inputs */
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.2);
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-muted: #52525b;
+            --accent: #ffffff;
+            --accent-hover: #e4e4e7;
+            --accent-muted: rgba(255, 255, 255, 0.05);
+            --accent-glow: rgba(255, 255, 255, 0.03);
+            
+            /* Status Colors (Monochrome matching) */
+            --success: #ffffff;
+            --success-bg: rgba(255, 255, 255, 0.08);
+            --warning: #a1a1aa;
+            --warning-bg: rgba(161, 161, 170, 0.12);
+            --danger: #52525b;
+            --danger-bg: rgba(82, 82, 91, 0.15);
+            --info: #fafafa;
+            --info-bg: rgba(250, 250, 250, 0.08);
+
+            /* Typography */
+            --font-display: 'Outfit', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            
+            --title-size: clamp(2rem, 5.5vw, 4.2rem);
+            --h2-size: clamp(1.4rem, 3.2vw, 2.4rem);
+            --h3-size: clamp(1rem, 2.2vw, 1.45rem);
+            --body-size: clamp(0.75rem, 1.35vw, 1.08rem);
+            --small-size: clamp(0.65rem, 1.05vw, 0.88rem);
+
+            /* Spacing & Layout */
+            --slide-padding: clamp(1.5rem, 5vw, 4rem);
+            --content-gap: clamp(0.8rem, 2vh, 1.8rem);
+            --element-gap: clamp(0.4rem, 1vh, 0.9rem);
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --duration-normal: 0.6s;
+            --radius-md: 4px;
+            --radius-lg: 8px;
+        }
+
+        /* ============================================================
+           Base Styles
+           ============================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: var(--font-display);
+            font-weight: 400;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        html {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        /* Background Particle Canvas Overlay */
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.45;
+        }
+
+        /* ============================================================
+           Viewport Fitting Styles (viewport-base.css embedded)
+           ============================================================ */
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background-color: var(--bg-base);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 2;
+        }
+
+        /* Subtle grid background */
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(var(--border-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+            background-size: 80px 80px;
+            opacity: 0.18;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Layered radial glow */
+        .slide::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70vw;
+            height: 70vh;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.02) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+            filter: blur(80px);
+        }
+
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 100%;
+            overflow: hidden;
+            padding: var(--slide-padding);
+            position: relative;
+            z-index: 3;
+        }
+
+        /* ============================================================
+           Animation & Reveals
+           ============================================================ */
+        .reveal {
+            opacity: 0;
+            transform: translateY(25px);
+            transition: 
+                opacity var(--duration-normal) var(--ease-out-expo),
+                transform var(--duration-normal) var(--ease-out-expo);
+        }
+
+        .slide.visible .reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal:nth-child(1) { transition-delay: 0.1s; }
+        .reveal:nth-child(2) { transition-delay: 0.2s; }
+        .reveal:nth-child(3) { transition-delay: 0.3s; }
+        .reveal:nth-child(4) { transition-delay: 0.4s; }
+        .reveal:nth-child(5) { transition-delay: 0.5s; }
+        .reveal:nth-child(6) { transition-delay: 0.6s; }
+
+        /* ============================================================
+           Layout Utilities
+           ============================================================ */
+        .slide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: var(--content-gap);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: var(--element-gap);
+            position: relative;
+        }
+
+        .slide-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 40px;
+            height: 1px;
+            background-color: var(--accent);
+        }
+
+        .slide-title-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .slide-num {
+            font-family: var(--font-mono);
+            color: var(--text-secondary);
+            font-size: var(--body-size);
+            font-weight: 500;
+        }
+
+        .slide-title {
+            font-size: var(--h2-size);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            text-transform: uppercase;
+        }
+
+        .slide-tag {
+            font-family: var(--font-mono);
+            font-size: var(--small-size);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            padding: 2px 10px;
+            border-radius: var(--radius-md);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: var(--content-gap);
+            align-items: center;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--content-gap);
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--element-gap);
+        }
+
+        /* Typography Styles */
+        h1, h2, h3, h4 {
+            font-family: var(--font-display);
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        p {
+            font-size: var(--body-size);
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .mono {
+            font-family: var(--font-mono);
+        }
+
+        /* Card Component */
+        .cyber-card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            padding: var(--content-gap);
+            border-radius: var(--radius-lg);
+            transition: all var(--duration-normal) var(--ease-out-expo);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .cyber-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background-image: linear-gradient(90deg, var(--accent) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .cyber-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+            background-color: var(--bg-elevated);
+        }
+
+        .cyber-card:hover::before {
+            opacity: 1;
+        }
+
+        .card-num {
+            font-family: var(--font-mono);
+            font-size: var(--small-size);
+            color: var(--text-secondary);
+            margin-bottom: var(--element-gap);
+            display: block;
+        }
+
+        .card-title {
+            font-size: var(--h3-size);
+            font-weight: 600;
+            margin-bottom: var(--element-gap);
+            text-transform: uppercase;
+        }
+
+        /* Lists */
+        ul.bullet-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: var(--element-gap);
+        }
+
+        ul.bullet-list li {
+            position: relative;
+            padding-left: 1.5rem;
+            font-size: var(--body-size);
+            color: var(--text-secondary);
+        }
+
+        ul.bullet-list li::before {
+            content: '▫';
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: var(--text-primary);
+            font-weight: 900;
+        }
+
+        /* Buttons & Badges */
+        .cyber-badge {
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: var(--small-size);
+            padding: 3px 10px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-surface);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .cyber-badge.success { border-color: var(--accent); color: var(--text-primary); background-color: var(--accent-muted); }
+        .cyber-badge.warning { border-color: var(--text-secondary); color: var(--text-secondary); }
+        .cyber-badge.danger { border-color: var(--text-muted); color: var(--text-muted); }
+
+        /* ============================================================
+           Screenshots & Zoom (Interactive Lightbox)
+           ============================================================ */
+        .screenshot-container {
+            position: relative;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background-color: #000;
+            aspect-ratio: 16/10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+            transition: border-color 0.3s, transform 0.3s var(--ease-out-expo);
+            width: 100%;
+        }
+
+        .screenshot-container:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .showcase-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            cursor: zoom-in;
+            transition: filter 0.3s;
+        }
+
+        .screenshot-container:hover .showcase-img {
+            filter: brightness(1.05);
+        }
+
+        .zoom-badge {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background-color: rgba(9, 9, 11, 0.85);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 9px;
+            padding: 3px 8px;
+            border-radius: var(--radius-md);
+            pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s, color 0.3s, border-color 0.3s;
+            z-index: 5;
+        }
+
+        .screenshot-container:hover .zoom-badge {
+            color: var(--text-primary);
+            border-color: var(--border-hover);
+        }
+
+        /* Lightbox Fullscreen Modal */
+        .lightbox-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(9, 9, 11, 0.94);
+            z-index: 20000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .lightbox-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .lightbox-img {
+            max-width: 90vw;
+            max-height: 82vh;
+            object-fit: contain;
+            border: 1px solid var(--border-hover);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+            transform: scale(0.95);
+            transition: transform 0.3s var(--ease-out-expo);
+        }
+
+        .lightbox-overlay.active .lightbox-img {
+            transform: scale(1);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 25px;
+            right: 35px;
+            color: var(--text-primary);
+            font-size: 38px;
+            font-weight: 300;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            background-color: var(--bg-surface);
+            transition: all 0.2s;
+        }
+
+        .lightbox-close:hover {
+            color: var(--text-primary);
+            border-color: var(--text-secondary);
+            background-color: var(--bg-elevated);
+        }
+
+        .lightbox-caption {
+            margin-top: 15px;
+            font-family: var(--font-mono);
+            font-size: var(--body-size);
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* ============================================================
+           Visual Diagrams (CSS Crafted)
+           ============================================================ */
+        .diag-container {
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            background-color: var(--bg-surface);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            margin-bottom: var(--element-gap);
+        }
+
+        /* Full-screen diagram slides */
+        .slide.diagram-slide .slide-content {
+            padding-top: clamp(1rem, 2.5vh, 2rem);
+            padding-bottom: clamp(1rem, 2vh, 1.5rem);
+        }
+
+        .slide.diagram-slide .diag-container {
+            border: none;
+            background-color: transparent;
+            box-shadow: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Use Case Diagram */
+        .use-case-diag {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 90%;
+            height: 90%;
+        }
+
+        .uc-actor {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: var(--font-mono);
+            font-size: var(--small-size);
+        }
+
+        .actor-icon {
+            width: 36px;
+            height: 36px;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .actor-icon::before {
+            content: '';
+            position: absolute;
+            top: 36px;
+            left: 16px;
+            width: 2px;
+            height: 12px;
+            background: var(--accent);
+        }
+
+        .uc-cases {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .uc-bubble {
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-elevated);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: var(--small-size);
+            text-align: center;
+            min-width: 160px;
+            transition: all 0.3s;
+        }
+
+        .uc-bubble:hover {
+            border-color: var(--accent);
+            transform: scale(1.03);
+        }
+
+        /* Architecture Diagram */
+        .arch-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 85%;
+        }
+
+        .arch-layer {
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-elevated);
+            padding: 8px 12px;
+            text-align: center;
+            border-radius: var(--radius-md);
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .arch-layer:hover {
+            border-color: var(--accent);
+            transform: scale(1.02);
+        }
+
+        .arch-layer-title {
+            font-weight: 600;
+            font-size: var(--body-size);
+            text-transform: uppercase;
+        }
+
+        .arch-layer-subs {
+            font-family: var(--font-mono);
+            font-size: var(--small-size);
+            color: var(--text-secondary);
+            margin-top: 1px;
+        }
+
+        /* ERD Diagram */
+        .erd-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 95%;
+            height: 90%;
+            padding: 5px;
+        }
+
+        .erd-table {
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-elevated);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .erd-table-header {
+            background-color: var(--accent-muted);
+            padding: 5px;
+            font-weight: 600;
+            font-size: var(--small-size);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .erd-fields {
+            padding: 5px 8px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            color: var(--text-secondary);
+        }
+
+        .erd-field.pk {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* Sequence Flow */
+        .seq-diag {
+            display: flex;
+            justify-content: space-around;
+            width: 90%;
+            height: 90%;
+            position: relative;
+        }
+
+        .seq-line {
+            width: 1px;
+            background-color: var(--border-color);
+            height: 80%;
+            position: relative;
+            top: 20px;
+        }
+
+        .seq-node {
+            position: absolute;
+            top: 0;
+            font-family: var(--font-mono);
+            font-size: var(--small-size);
+            text-transform: uppercase;
+        }
+
+        .seq-msg {
+            position: absolute;
+            height: 1px;
+            border-top: 1px dashed var(--border-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 9px;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================================
+           Showcase Grid
+           ============================================================ */
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--element-gap);
+            width: 100%;
+        }
+
+        .showcase-card {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background-color: var(--bg-surface);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .showcase-card:hover {
+            border-color: var(--accent);
+            transform: scale(1.02);
+        }
+
+        .showcase-img-container {
+            flex: 1;
+            height: 130px;
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .showcase-img-container:hover img {
+            filter: brightness(1.08);
+        }
+
+        .showcase-card .zoom-badge {
+            bottom: 6px;
+            right: 6px;
+        }
+
+        .showcase-label {
+            padding: 8px;
+            font-size: var(--small-size);
+            font-weight: 600;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ============================================================
+           Timeline
+           ============================================================ */
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: var(--element-gap);
+            position: relative;
+            padding-left: 20px;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .timeline-item {
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -25px;
+            top: 6px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--accent);
+            border: 2px solid var(--bg-base);
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            font-size: var(--body-size);
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        /* ============================================================
+           Controls & Navigation UI
+           ============================================================ */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background-color: var(--accent);
+            z-index: 1000;
+            width: 0;
+            transition: width 0.1s ease;
+        }
+
+        .nav-dots {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 999;
+        }
+
+        .nav-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            border: 1px solid var(--text-muted);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            transform: scale(1.3);
+        }
+
+        .keyboard-hint {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-family: var(--font-mono);
+            font-size: 9px;
+            color: var(--text-muted);
+            z-index: 999;
+            pointer-events: none;
+            background-color: rgba(9, 9, 11, 0.85);
+            padding: 4px 8px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            letter-spacing: 0.05em;
+        }
+
+        /* ============================================================
+           Inline Editing Mode (JS Triggered)
+           ============================================================ */
+        .edit-hotzone {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 50px;
+            height: 50px;
+            z-index: 10000;
+            cursor: pointer;
+        }
+
+        .edit-toggle {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 10001;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: var(--radius-md);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, border-color 0.3s;
+        }
+
+        .edit-toggle.show, .edit-toggle.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .edit-toggle:hover {
+            border-color: var(--accent);
+        }
+
+        .edit-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--accent);
+            color: var(--bg-base);
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px;
+            z-index: 9999;
+            transform: translateY(-100%);
+            transition: transform 0.3s var(--ease-out-expo);
+        }
+
+        .edit-banner.active {
+            transform: translateY(0);
+        }
+
+        body.edit-active [contenteditable="true"] {
+            outline: 1px dashed rgba(255, 255, 255, 0.3);
+            padding: 2px;
+        }
+
+        body.edit-active [contenteditable="true"]:focus {
+            outline: 1px solid var(--accent);
+            background-color: var(--bg-surface);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Dynamic Background Particle System -->
+    <canvas id="bgCanvas"></canvas>
+
+    <div class="progress-bar"></div>
+    <nav class="nav-dots"></nav>
+    <div class="keyboard-hint">USE ARROWS / SPACE TO NAVIGATE</div>
+
+    <!-- Edit Mode UI Elements -->
+    <div class="edit-hotzone" title="Double click or hover to edit slides"></div>
+    <button class="edit-toggle" id="editToggle">✏️ EDIT SLIDES (E)</button>
+    <div class="edit-banner">EDIT MODE ACTIVE — CLICK TEXT TO MODIFY. PRESS CTRL+S TO SAVE DIRECTLY.</div>
+
+    <!-- Fullscreen Screenshot Zoom Lightbox Overlay -->
+    <div class="lightbox-overlay" id="lightboxOverlay">
+        <span class="lightbox-close" id="lightboxClose">&times;</span>
+        <img class="lightbox-img" id="lightboxImg" src="" alt="Enlarged UI Screenshot">
+        <div class="lightbox-caption" id="lightboxCaption"></div>
+    </div>
+
+    <!-- ============================================================
+         SLIDES CONTENT (42 Slides)
+         ============================================================ -->
+
+    <!-- SLIDE 1: Title -->
+    <section class="slide title-slide">
+        <div class="slide-content" style="align-items: center; text-align: center; justify-content: space-around;">
+            <div class="reveal" style="border: 1px solid var(--border-color); padding: var(--slide-padding); border-radius: var(--radius-lg); background-color: rgba(18, 18, 19, 0.6); backdrop-filter: blur(4px); box-shadow: 0 15px 40px rgba(0,0,0,0.5);">
+                <div class="cyber-badge" style="margin-bottom: var(--element-gap); letter-spacing: 0.15em;">Graduation Project Presentation</div>
+                <h1 style="font-size: clamp(2.5rem, 8vw, 5.2rem); font-weight: 900; line-height: 1; letter-spacing: -0.04em; text-transform: uppercase; margin: 10px 0;">CyberGuard</h1>
+                <p class="mono" style="color: var(--text-secondary); font-size: var(--body-size); text-transform: uppercase; letter-spacing: 0.1em;">A Comprehensive Web-Based Cybersecurity Analysis Platform</p>
+            </div>
+            
+            <div class="reveal" style="display: flex; gap: var(--content-gap); margin-top: var(--content-gap);">
+                <div style="border-right: 1px solid var(--border-color); padding-right: var(--content-gap); text-align: right;">
+                    <span class="mono" style="font-size: var(--small-size); color: var(--text-secondary); text-transform: uppercase; display: block; letter-spacing: 0.05em;">Supervisor</span>
+                    <strong style="font-size: var(--body-size); font-weight: 600;">Farid Ali</strong>
+                </div>
+                <div style="text-align: left;">
+                    <span class="mono" style="font-size: var(--small-size); color: var(--text-secondary); text-transform: uppercase; display: block; letter-spacing: 0.05em;">Institution</span>
+                    <strong style="font-size: var(--body-size); font-weight: 600;">Beni-Suef National University</strong>
+                </div>
+            </div>
+
+            <div class="reveal mono" style="font-size: var(--small-size); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; margin-top: var(--content-gap);">
+                Department of Computer Science & Cybersecurity &bull; Academic Year 2025/2026
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 2: Team Members -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">02/42</span>
+                    <h2 class="slide-title">Team Members</h2>
+                </div>
+                <span class="slide-tag">Core Developers</span>
+            </div>
+            <div class="grid-3 reveal">
+                <div class="cyber-card" style="min-height: 200px;">
+                    <div>
+                        <span class="card-num">01</span>
+                        <h3 class="card-title" style="font-size: var(--body-size); margin-bottom: 2px;">Mohamed Gamal Abdullah</h3>
+                        <p class="mono" style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Team Leader</p>
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-secondary); margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 8px;">
+                        Database architecture, REST API design, Sanctum authentication, and core systems synchronization.
+                    </p>
+                </div>
+                <div class="cyber-card" style="min-height: 200px;">
+                    <div>
+                        <span class="card-num">02</span>
+                        <h3 class="card-title" style="font-size: var(--body-size); margin-bottom: 2px;">Eid Yasser Eid Hassan</h3>
+                        <p class="mono" style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Core Developer</p>
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-secondary); margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 8px;">
+                        Docker SDK integration, scan orchestrations, isolated containers networking, and log streaming.
+                    </p>
+                </div>
+                <div class="cyber-card" style="min-height: 200px;">
+                    <div>
+                        <span class="card-num">03</span>
+                        <h3 class="card-title" style="font-size: var(--body-size); margin-bottom: 2px;">Mohamed Ahmed Ahmed</h3>
+                        <p class="mono" style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Core Developer</p>
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-secondary); margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 8px;">
+                        Client-side scanners implementation, WHOIS query engines, and DNS resolution handlers.
+                    </p>
+                </div>
+                <div class="cyber-card" style="min-height: 200px;">
+                    <div>
+                        <span class="card-num">04</span>
+                        <h3 class="card-title" style="font-size: var(--body-size); margin-bottom: 2px;">Mohamed Adel Mohamed</h3>
+                        <p class="mono" style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Core Developer</p>
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-secondary); margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 8px;">
+                        OSINT lookup modules, crt.sh parsing, social Sherlock scanners, and historical directories captures.
+                    </p>
+                </div>
+                <div class="cyber-card" style="min-height: 200px;">
+                    <div>
+                        <span class="card-num">05</span>
+                        <h3 class="card-title" style="font-size: var(--body-size); margin-bottom: 2px;">Ahmed Ibrahim Youssef</h3>
+                        <p class="mono" style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Core Developer</p>
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-secondary); margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 8px;">
+                        SaaS Paymob billing gateways integration, multi-tenancy settings, and workspace controls.
+                    </p>
+                </div>
+                <div class="cyber-card" style="min-height: 200px;">
+                    <div>
+                        <span class="card-num">06</span>
+                        <h3 class="card-title" style="font-size: var(--body-size); margin-bottom: 2px;">Ahmed Mohamed Rabie</h3>
+                        <p class="mono" style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Core Developer</p>
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-secondary); margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 8px;">
+                        AI Assistant copilot interface, context injection libraries, and front-end theme tokens layout.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 3: Agenda -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">03/42</span>
+                    <h2 class="slide-title">Presentation Agenda</h2>
+                </div>
+                <span class="slide-tag">Outline</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-title">01. Project Introduction</div>
+                        <p style="font-size: var(--small-size);">Context, vision, and core problem statement.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-title">02. Requirements Analysis</div>
+                        <p style="font-size: var(--small-size);">Functional, non-functional requirements, use cases.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-title">03. Architecture & Tech Stack</div>
+                        <p style="font-size: var(--small-size);">Database schemas, module dependencies, communication flows.</p>
+                    </div>
+                </div>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-title">04. Core Features Deep Dive</div>
+                        <p style="font-size: var(--small-size);">Scanners, threat intel, JWT tools, OSINT, billing, and AI.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-title">05. Quality & Infrastructure</div>
+                        <p style="font-size: var(--small-size);">Testing strategy, deployment flow, UI showcase, and future roadmap.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-title">06. Project Conclusion</div>
+                        <p style="font-size: var(--small-size);">Summary metrics, key achievements, and Q&A.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 4: Introduction -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">04/42</span>
+                    <h2 class="slide-title">Introduction</h2>
+                </div>
+                <span class="slide-tag">Platform Overview</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">What is CyberGuard?</h3>
+                    <p style="margin-bottom: var(--element-gap);">CyberGuard is a browser-based, comprehensive cybersecurity analysis platform designed for security engineers, bug hunters, development teams, and system administrators.</p>
+                    <p>It unifies multiple professional security tools under a single beautiful dashboard. Built as a full-stack SaaS application, it features a lightweight vanilla JavaScript frontend served by Vercel and a robust Laravel 12 backend with Docker scanner isolation.</p>
+                </div>
+                <div class="grid-2">
+                    <div class="cyber-card" style="text-align: center;">
+                        <h4 style="font-size: 2.2rem; font-weight: 800; line-height: 1;">12+</h4>
+                        <span class="mono" style="font-size: var(--small-size); color: var(--text-secondary); text-transform: uppercase;">Docker Scanners</span>
+                    </div>
+                    <div class="cyber-card" style="text-align: center;">
+                        <h4 style="font-size: 2.2rem; font-weight: 800; line-height: 1;">5</h4>
+                        <span class="mono" style="font-size: var(--small-size); color: var(--text-secondary); text-transform: uppercase;">Threat Intel APIs</span>
+                    </div>
+                    <div class="cyber-card" style="text-align: center;">
+                        <h4 style="font-size: 2.2rem; font-weight: 800; line-height: 1;">8</h4>
+                        <span class="mono" style="font-size: var(--small-size); color: var(--text-secondary); text-transform: uppercase;">Dashboard Tabs</span>
+                    </div>
+                    <div class="cyber-card" style="text-align: center;">
+                        <h4 style="font-size: 2.2rem; font-weight: 800; line-height: 1;">Real</h4>
+                        <span class="mono" style="font-size: var(--small-size); color: var(--text-secondary); text-transform: uppercase;">Time WebSockets</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 5: Problem Statement -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">05/42</span>
+                    <h2 class="slide-title">Problem Statement</h2>
+                </div>
+                <span class="slide-tag">Pain Points</span>
+            </div>
+            <div class="grid-3 reveal">
+                <div class="cyber-card">
+                    <span class="card-num">01</span>
+                    <h3 class="card-title">Fragmented Security Tools</h3>
+                    <p style="font-size: var(--small-size);">Practitioners must manually install, configure, and switch between dozens of command-line tools (Nmap, SQLMap, ZAP), losing time and context.</p>
+                </div>
+                <div class="cyber-card">
+                    <span class="card-num">02</span>
+                    <h3 class="card-title">High Technical Barriers</h3>
+                    <p style="font-size: var(--small-size);">Command-line syntax, parameter tuning, and environment setups present a steep learning curve for developers, students, and system admins.</p>
+                </div>
+                <div class="cyber-card">
+                    <span class="card-num">03</span>
+                    <h3 class="card-title">No Correlated Intel</h3>
+                    <p style="font-size: var(--small-size);">Threat intelligence data is scattered. Analysts must visit separate websites (VirusTotal, Shodan, AbuseIPDB) to copy-paste and cross-examine indicators.</p>
+                </div>
+                <div class="cyber-card">
+                    <span class="card-num">04</span>
+                    <h3 class="card-title">Manual Report Writing</h3>
+                    <p style="font-size: var(--small-size);">Consolidating outputs, formatting tables, and compiling final client PDF deliverables is historically a manual, slow, error-prone task.</p>
+                </div>
+                <div class="cyber-card">
+                    <span class="card-num">05</span>
+                    <h3 class="card-title">Lack of Collaboration</h3>
+                    <p style="font-size: var(--small-size);">Traditional security CLI utilities are single-user only. Teams lack unified multi-tenant workspace environments with role-based access controls.</p>
+                </div>
+                <div class="cyber-card">
+                    <span class="card-num">06</span>
+                    <h3 class="card-title">SSRF & Network Blockers</h3>
+                    <p style="font-size: var(--small-size);">Executing queries and scans directly from the browser introduces strict CORS blockages and exposes corporate network IP geolocations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 6: Objectives -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">06/42</span>
+                    <h2 class="slide-title">Objectives & Scope</h2>
+                </div>
+                <span class="slide-tag">Deliverables</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Core Goals & Accomplishments</h3>
+                    <ul class="bullet-list">
+                        <li><strong>Unify tools:</strong> Deliver a single web dashboard hosting network scanners, web securers, OSINT, JWT editors, and AI.</li>
+                        <li><strong>Live feeds:</strong> Implement asynchronous task queue and WebSockets for real-time log streaming.</li>
+                        <li><strong>Consolidated threat intel:</strong> Pull multi-API data in parallel with encrypted API key stores.</li>
+                        <li><strong>Auto-reporting:</strong> Implement client-side PDF/CSV generation engine.</li>
+                        <li><strong>Collaboration:</strong> Enable multi-user projects, organizations, and workspaces.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card">
+                    <h3 class="card-title">What is Out of Scope?</h3>
+                    <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">To maintain focus on core platform strengths, the following were designated out-of-scope for v1.0:</p>
+                    <ul class="bullet-list" style="font-size: var(--small-size);">
+                        <li>Native Mobile Applications (iOS/Android)</li>
+                        <li>Self-hosted on-premises enterprise deployment packaging</li>
+                        <li>CI/CD pipeline integrations (GitHub Actions, Jenkins)</li>
+                        <li>Custom third-party scanner plugin API</li>
+                        <li>Full automated phishing email dispatch management</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 7: Target Users -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">07/42</span>
+                    <h2 class="slide-title">Target Users & Personas</h2>
+                </div>
+                <span class="slide-tag">Audience</span>
+            </div>
+            <div class="grid-4 reveal">
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">01</span>
+                        <h3 class="card-title" style="font-size: var(--body-size);">Security Student</h3>
+                        <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: var(--element-gap);">Wants to learn ethical hacking without complex CLI configurations.</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 10px; color: var(--text-secondary); margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border-color);">
+                        <li><strong>Goal:</strong> Learn port scanning, JWT structures, and OSINT.</li>
+                        <li><strong>Feature:</strong> GUI wrappers for Docker scanners and JWT.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">02</span>
+                        <h3 class="card-title" style="font-size: var(--body-size);">Pentester</h3>
+                        <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: var(--element-gap);">Wants to run active scanning and compile quick client deliverables.</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 10px; color: var(--text-secondary); margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border-color);">
+                        <li><strong>Goal:</strong> Validate active subdomains and generate reports.</li>
+                        <li><strong>Feature:</strong> Parallel active Docker jobs and PDF exports.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">03</span>
+                        <h3 class="card-title" style="font-size: var(--body-size);">IT Administrator</h3>
+                        <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: var(--element-gap);">Wants to monitor company IP ranges, open ports, and certificate statuses.</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 10px; color: var(--text-secondary); margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border-color);">
+                        <li><strong>Goal:</strong> Prevent subdomain hijacking and stale ports.</li>
+                        <li><strong>Feature:</strong> Risk Score gauges and active dashboard widgets.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">04</span>
+                        <h3 class="card-title" style="font-size: var(--body-size);">Security Analyst</h3>
+                        <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: var(--element-gap);">Needs to investigate malicious indicators (IPs, domains, file hashes).</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 10px; color: var(--text-secondary); margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border-color);">
+                        <li><strong>Goal:</strong> Enrich IOC data from multiple reputation APIs.</li>
+                        <li><strong>Feature:</strong> Parallel Threat Intelligence search lookups.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 8: Competitors Analysis -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">08/42</span>
+                    <h2 class="slide-title">Competitors Analysis</h2>
+                </div>
+                <span class="slide-tag">Market Position</span>
+            </div>
+            <div class="reveal">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: var(--body-size);">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-color); text-transform: uppercase; font-family: var(--font-mono); font-size: var(--small-size);">
+                            <th style="padding: 12px;">Feature</th>
+                            <th style="padding: 12px; color: var(--text-primary);">CyberGuard</th>
+                            <th style="padding: 12px; color: var(--text-secondary);">Nessus Professional</th>
+                            <th style="padding: 12px; color: var(--text-secondary);">Burp Suite Pro</th>
+                            <th style="padding: 12px; color: var(--text-secondary);">SecurityHeaders</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 12px; font-weight: 600;">Unified Dashboard Layout</td>
+                            <td style="padding: 12px;">Yes (All-in-one)</td>
+                            <td style="padding: 12px; color: var(--text-secondary);">Only Vulnerabilities</td>
+                            <td style="padding: 12px; color: var(--text-secondary);">Only Web app proxy</td>
+                            <td style="padding: 12px; color: var(--text-secondary);">Only Header scanning</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 12px; font-weight: 600;">No-Install Web SPA</td>
+                            <td style="padding: 12px;">Yes (Static Vercel)</td>
+                            <td style="padding: 12px; color: var(--text-secondary);">No (On-premise server)</td>
+                            <td style="padding: 12px; color: var(--text-secondary);">No (Desktop Java app)</td>
+                            <td style="padding: 12px;">Yes (Public tool)</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 12px; font-weight: 600;">Real-Time WebSocket Feed</td>
+                            <td style="padding: 12px;">Yes (Pusher/Reverb)</td>
+                            <td style="padding: 12px; color: var(--text-secondary);">Polling based</td>
+                            <td style="padding: 12px; color: var(--text-secondary);">Desktop local logs</td>
+                            <td style="padding: 12px; color: var(--text-secondary);">Synchronous wait</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 12px; font-weight: 600;">Threat Intel Aggregation</td>
+                            <td style="padding: 12px;">Yes (5 Parallel APIs)</td>
+                            <td style="padding: 12px; color: var(--text-secondary);">Limited plugins</td>
+                            <td style="padding: 12px; color: var(--text-secondary);">Needs extensions</td>
+                            <td style="padding: 12px; color: var(--text-secondary);">No</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 12px; font-weight: 600;">Free Tier / SaaS Model</td>
+                            <td style="padding: 12px;">Yes (Paymob EGP integration)</td>
+                            <td style="padding: 12px; color: var(--text-secondary);">Expensive license</td>
+                            <td style="padding: 12px; color: var(--text-secondary);">Expensive license</td>
+                            <td style="padding: 12px;">Free only</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 9: Work Methodology -->
+    <section class="slide diagram-slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">09/42</span>
+                    <h2 class="slide-title">Work Methodology</h2>
+                </div>
+                <span class="slide-tag">Sprint Cycles</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Agile & Scrum Process</h3>
+                    <p style="margin-bottom: var(--element-gap);">The application was built over structured development sprints following a collaborative Agile lifecycle:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>Requirements Gathering:</strong> Specifying PRD scopes.</li>
+                        <li><strong>System Design:</strong> Database schemas, modular boundaries, wireframes.</li>
+                        <li><strong>Iterative Implementation:</strong> Dual-pipeline scripts, Laravel APIs.</li>
+                        <li><strong>Comprehensive Testing:</strong> Unit, integration, automated linters.</li>
+                        <li><strong>CI/CD & Deployment:</strong> Vercel static serving, server setups.</li>
+                    </ul>
+                </div>
+                <div class="diag-container" style="padding: 10px;">
+                    <svg viewBox="0 0 450 250" width="100%" height="100%" style="display: block; margin: auto;">
+                        <defs>
+                            <marker id="agileArrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffffff" />
+                            </marker>
+                        </defs>
+                        
+                        <!-- Central loop track -->
+                        <circle cx="225" cy="120" r="75" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="8" />
+                        <path d="M 225 45 A 75 75 0 0 1 290 157" fill="none" stroke="#ffffff" stroke-width="1.5" marker-end="url(#agileArrow)" />
+                        <path d="M 290 157 A 75 75 0 0 1 150 157" fill="none" stroke="#ffffff" stroke-width="1.5" marker-end="url(#agileArrow)" />
+                        <path d="M 150 157 A 75 75 0 0 1 225 45" fill="none" stroke="#ffffff" stroke-width="1.5" marker-end="url(#agileArrow)" />
+
+                        <!-- Center Label -->
+                        <text x="225" y="117" text-anchor="middle" font-family="Outfit" font-weight="700" font-size="11" fill="#ffffff" letter-spacing="0.05em">AGILE SPRINT</text>
+                        <text x="225" y="133" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="rgba(255,255,255,0.4)">2-WEEK CYCLES</text>
+
+                        <!-- Node 1: Specs (x=225, y=45) -->
+                        <g transform="translate(225, 45)">
+                            <circle cx="0" cy="0" r="4" fill="#ffffff" />
+                            <rect x="-60" y="-30" width="120" height="18" rx="9" fill="#111113" stroke="rgba(255,255,255,0.12)" />
+                            <text x="0" y="-18" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="8" fill="#ffffff">01. PLAN &amp; SPEC</text>
+                        </g>
+
+                        <!-- Node 2: Dev (x=300, y=120) -->
+                        <g transform="translate(300, 120)">
+                            <circle cx="0" cy="0" r="4" fill="#ffffff" />
+                            <rect x="15" y="-9" width="110" height="18" rx="9" fill="#111113" stroke="rgba(255,255,255,0.12)" />
+                            <text x="70" y="3" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="8" fill="#ffffff">02. DEVELOPMENT</text>
+                        </g>
+
+                        <!-- Node 3: Test (x=225, y=195) -->
+                        <g transform="translate(225, 195)">
+                            <circle cx="0" cy="0" r="4" fill="#ffffff" />
+                            <rect x="-60" y="12" width="120" height="18" rx="9" fill="#111113" stroke="rgba(255,255,255,0.12)" />
+                            <text x="0" y="24" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="8" fill="#ffffff">03. VITEST TESTING</text>
+                        </g>
+
+                        <!-- Node 4: Deploy (x=150, y=120) -->
+                        <g transform="translate(150, 120)">
+                            <circle cx="0" cy="0" r="4" fill="#ffffff" />
+                            <rect x="-125" y="-9" width="110" height="18" rx="9" fill="#111113" stroke="rgba(255,255,255,0.12)" />
+                            <text x="-70" y="3" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="8" fill="#ffffff">04. VERCEL DEPLOY</text>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 10: Functional Requirements - Auth -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">10/42</span>
+                    <h2 class="slide-title">FR: Auth & User Management</h2>
+                </div>
+                <span class="slide-tag">System Specs</span>
+            </div>
+            <div class="grid-3 reveal">
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">FR-AUTH-001</span>
+                        <h3 class="card-title">Registration</h3>
+                        <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">Users register with name, email, job title, and password. Auto-triggers verification:</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 11px; color: var(--text-secondary); margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <li>Queue-based email dispatch via Laravel job workers.</li>
+                        <li>Mandatory verification link confirmation to activate login.</li>
+                        <li>Strict password policies: min 8 chars, symbols, and numbers.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">FR-AUTH-005</span>
+                        <h3 class="card-title">Token Login</h3>
+                        <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">Returns Laravel Sanctum Bearer tokens stored securely in client-side localStorage:</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 11px; color: var(--text-secondary); margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <li>Tokens injected as Bearer Headers in Axios requests.</li>
+                        <li>Brute-force protection: locks account after 5 failed attempts.</li>
+                        <li>Session logs record login times and client IP ranges.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">FR-AUTH-009</span>
+                        <h3 class="card-title">TOTP 2FA</h3>
+                        <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">Enables visual Google Authenticator compatibility. Generates secure QR codes:</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 11px; color: var(--text-secondary); margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <li>Standard RFC 6238 TOTP algorithm implementation.</li>
+                        <li>Generates inline SVG QR codes client-side.</li>
+                        <li>Requires dynamic OTP verification before activation.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 11: Functional Requirements - Core -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">11/42</span>
+                    <h2 class="slide-title">FR: Core Project Scanning</h2>
+                </div>
+                <span class="slide-tag">System Specs</span>
+            </div>
+            <div class="grid-3 reveal">
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">FR-PROJ-001</span>
+                        <h3 class="card-title">Projects &amp; RBAC</h3>
+                        <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">Create security assessment workspaces. Categorized into Owned vs Collaborating:</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 11px; color: var(--text-secondary); margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <li>Single-use invitation tokens generated secure keys.</li>
+                        <li>Roles assignment: Owner, Editor, or Viewer privileges.</li>
+                        <li>Context workspace isolation restricts database read scopes.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">FR-TGT-001</span>
+                        <h3 class="card-title">Target Validation</h3>
+                        <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">Add scan targets to projects (domains, IPs, CIDRs) with strict validations:</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 11px; color: var(--text-secondary); margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <li>SSRF Protection checks blacklist loopback subnet ranges.</li>
+                        <li>Input validation runs robust regex parsers.</li>
+                        <li>Protects host API commands against command injection.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">FR-SCAN-003</span>
+                        <h3 class="card-title">Scanning Engine</h3>
+                        <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">Dual-architecture scans: Active backend Docker vs Client-side frontend tools:</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 11px; color: var(--text-secondary); margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <li>Spins isolated background Docker containers on demand.</li>
+                        <li>Streams logs via Laravel Reverb WebSockets broadcasting.</li>
+                        <li>Saves results structure to database tables.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 12: Functional Requirements - Advanced -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">12/42</span>
+                    <h2 class="slide-title">FR: Advanced Utilities & Billing</h2>
+                </div>
+                <span class="slide-tag">System Specs</span>
+            </div>
+            <div class="grid-3 reveal">
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">FR-INTEL / OSINT</span>
+                        <h3 class="card-title">Recon &amp; Intel</h3>
+                        <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">Parallel threat intelligence and passive open source intelligence lookup routes:</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 11px; color: var(--text-secondary); margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <li>Queries VirusTotal, Shodan, AbuseIPDB in parallel.</li>
+                        <li>Enumerates domain certificates via crt.sh query endpoints.</li>
+                        <li>Wayback CDX API scrapes historical directories mapping.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">FR-JWT / HASH</span>
+                        <h3 class="card-title">Crypto Debuggers</h3>
+                        <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">Fully client-side token parsing, cryptographic signatures, and hashing suite:</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 11px; color: var(--text-secondary); margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <li>CryptoJS powers on-the-fly signature validator.</li>
+                        <li>Color-coded header, payload, and signature JWT fields.</li>
+                        <li>Calculates text string Shannon entropy for crack times.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">FR-BILL-001</span>
+                        <h3 class="card-title">Paymob Subscriptions</h3>
+                        <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">Public pricing plans fed dynamically by REST API subscription databases:</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 11px; color: var(--text-secondary); margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <li>Integrates Egyptian payment processing gate Paymob (EGP).</li>
+                        <li>Webhook events handle auto upgrading organization limits.</li>
+                        <li>Redirect callback validation checks signature parameters.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 13: Non-Functional Requirements -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">13/42</span>
+                    <h2 class="slide-title">Non-Functional Requirements</h2>
+                </div>
+                <span class="slide-tag">System Constraints</span>
+            </div>
+            <div class="grid-3 reveal">
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">NFR-PERF</span>
+                        <h3 class="card-title">Performance</h3>
+                        <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">System speed thresholds and load constraints optimized for high UX satisfaction:</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 11px; color: var(--text-secondary); margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <li>Initial page load takes under 3 seconds.</li>
+                        <li>Client-side tab routing shifts completed under 200ms.</li>
+                        <li>Database queries rely on indexed columns to speed runs.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">NFR-SEC</span>
+                        <h3 class="card-title">Security Layers</h3>
+                        <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">Encryption, access controls, and boundary validation systems protecting resources:</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 11px; color: var(--text-secondary); margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <li>API Rate Limiter bounds requests to 60/min per IP.</li>
+                        <li>XOR key encryption sanitizes sensitive localStorage keys.</li>
+                        <li>TLS 1.3 protocol enforced across all server API connections.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">NFR-UX / NFR-MAINT</span>
+                        <h3 class="card-title">UX &amp; Maintainability</h3>
+                        <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">Consistent themes, code health indicators, and testing coverage quotas:</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 11px; color: var(--text-secondary); margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <li>Theme variables allow fully monochrome design customization.</li>
+                        <li>Unit testing coverage is targeted at over 90% via Vitest.</li>
+                        <li>Responsive CSS layout targets Mobile, Tablet, and Desktop.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 14: Use Case Diagram -->
+    <section class="slide diagram-slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">14/42</span>
+                    <h2 class="slide-title">Use Case Diagram</h2>
+                </div>
+                <span class="slide-tag">User Interactions</span>
+            </div>
+            <div class="diag-container reveal" style="padding: 15px;">
+                <svg viewBox="0 0 1000 420" width="100%" height="100%" style="display: block;">
+                    <defs>
+                        <!-- Gradients -->
+                        <linearGradient id="caseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#18181b" />
+                            <stop offset="100%" stop-color="#09090b" />
+                        </linearGradient>
+                    </defs>
+                    
+                    <!-- System Boundary -->
+                    <rect x="250" y="20" width="500" height="380" rx="10" ry="10" fill="rgba(255,255,255,0.01)" stroke="rgba(255,255,255,0.08)" stroke-width="1.2" />
+                    <text x="500" y="44" text-anchor="middle" font-family="Outfit" font-weight="700" font-size="13" fill="rgba(255,255,255,0.45)" letter-spacing="0.1em">CYBERGUARD PLATFORM BOUNDARY</text>
+                    
+                    <!-- Connection Lines (User) -->
+                    <!-- Left Actor: Registered User at x=120, y=210 -->
+                    <path d="M 150 180 L 290 95" stroke="rgba(255,255,255,0.22)" stroke-width="1.2" />
+                    <path d="M 150 195 L 290 155" stroke="rgba(255,255,255,0.22)" stroke-width="1.2" />
+                    <path d="M 150 210 L 290 215" stroke="rgba(255,255,255,0.22)" stroke-width="1.2" />
+                    <path d="M 150 225 L 290 275" stroke="rgba(255,255,255,0.22)" stroke-width="1.2" />
+                    <path d="M 150 240 L 290 335" stroke="rgba(255,255,255,0.22)" stroke-width="1.2" />
+                    
+                    <!-- Connection Lines (Admin) -->
+                    <!-- Right Actor: System Admin at x=880, y=210 -->
+                    <path d="M 850 190 L 710 95" stroke="rgba(255,255,255,0.18)" stroke-width="1.2" />
+                    <path d="M 850 205 L 710 155" stroke="rgba(255,255,255,0.18)" stroke-width="1.2" />
+                    <path d="M 850 215 L 710 275" stroke="rgba(255,255,255,0.18)" stroke-width="1.2" />
+                    <path d="M 850 230 L 710 335" stroke="rgba(255,255,255,0.18)" stroke-width="1.2" />
+                    
+                    <!-- Left Actor Node -->
+                    <g transform="translate(60, 150)">
+                        <circle cx="40" cy="30" r="16" fill="none" stroke="#ffffff" stroke-width="2" />
+                        <path d="M 40 46 L 40 80 M 24 60 L 56 60 M 40 80 L 24 105 M 40 80 L 56 105" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+                        <text x="40" y="125" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="12" fill="#ffffff">Registered User</text>
+                    </g>
+                    
+                    <!-- Right Actor Node -->
+                    <g transform="translate(860, 150)">
+                        <circle cx="40" cy="30" r="16" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2" />
+                        <path d="M 40 46 L 40 80 M 24 60 L 56 60 M 40 80 L 24 105 M 40 80 L 56 105" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round" />
+                        <text x="40" y="125" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="12" fill="rgba(255,255,255,0.7)">System Admin</text>
+                    </g>
+                    
+                    <!-- Use Cases (Center) -->
+                    <!-- Column 1 -->
+                    <g transform="translate(290, 75)">
+                        <rect x="0" y="0" width="180" height="40" rx="20" ry="20" fill="url(#caseGrad)" stroke="rgba(255,255,255,0.15)" stroke-width="1.2" />
+                        <text x="90" y="25" text-anchor="middle" font-family="Outfit" font-size="11" fill="#fafafa">Manage Projects &amp; Targets</text>
+                    </g>
+                    <g transform="translate(290, 135)">
+                        <rect x="0" y="0" width="180" height="40" rx="20" ry="20" fill="url(#caseGrad)" stroke="rgba(255,255,255,0.15)" stroke-width="1.2" />
+                        <text x="90" y="25" text-anchor="middle" font-family="Outfit" font-size="11" fill="#fafafa">Initiate Active Docker Scans</text>
+                    </g>
+                    <g transform="translate(290, 195)">
+                        <rect x="0" y="0" width="180" height="40" rx="20" ry="20" fill="url(#caseGrad)" stroke="rgba(255,255,255,0.15)" stroke-width="1.2" />
+                        <text x="90" y="25" text-anchor="middle" font-family="Outfit" font-size="11" fill="#fafafa">Search Threat Intelligence</text>
+                    </g>
+                    <g transform="translate(290, 255)">
+                        <rect x="0" y="0" width="180" height="40" rx="20" ry="20" fill="url(#caseGrad)" stroke="rgba(255,255,255,0.15)" stroke-width="1.2" />
+                        <text x="90" y="25" text-anchor="middle" font-family="Outfit" font-size="11" fill="#fafafa">Decode &amp; Sign JWT</text>
+                    </g>
+                    <g transform="translate(290, 315)">
+                        <rect x="0" y="0" width="180" height="40" rx="20" ry="20" fill="url(#caseGrad)" stroke="rgba(255,255,255,0.15)" stroke-width="1.2" />
+                        <text x="90" y="25" text-anchor="middle" font-family="Outfit" font-size="11" fill="#fafafa">Switch Workspace Context</text>
+                    </g>
+
+                    <!-- Column 2 -->
+                    <g transform="translate(530, 75)">
+                        <rect x="0" y="0" width="180" height="40" rx="20" ry="20" fill="url(#caseGrad)" stroke="rgba(255,255,255,0.15)" stroke-width="1.2" />
+                        <text x="90" y="25" text-anchor="middle" font-family="Outfit" font-size="11" fill="#fafafa">Generate PDF Reports</text>
+                    </g>
+                    <g transform="translate(530, 135)">
+                        <rect x="0" y="0" width="180" height="40" rx="20" ry="20" fill="url(#caseGrad)" stroke="rgba(255,255,255,0.15)" stroke-width="1.2" />
+                        <text x="90" y="25" text-anchor="middle" font-family="Outfit" font-size="11" fill="#fafafa">Upgrade Plans via Paymob</text>
+                    </g>
+                    <g transform="translate(530, 255)">
+                        <rect x="0" y="0" width="180" height="40" rx="20" ry="20" fill="url(#caseGrad)" stroke="rgba(255,255,255,0.15)" stroke-width="1.2" />
+                        <text x="90" y="25" text-anchor="middle" font-family="Outfit" font-size="11" fill="#fafafa">Configure API Key Store</text>
+                    </g>
+                    <g transform="translate(530, 315)">
+                        <rect x="0" y="0" width="180" height="40" rx="20" ry="20" fill="url(#caseGrad)" stroke="rgba(255,255,255,0.15)" stroke-width="1.2" />
+                        <text x="90" y="25" text-anchor="middle" font-family="Outfit" font-size="11" fill="#fafafa">Admin System Overrides</text>
+                    </g>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 15: System Architecture -->
+    <section class="slide diagram-slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">15/42</span>
+                    <h2 class="slide-title">System Architecture</h2>
+                </div>
+                <span class="slide-tag">Topology Stack</span>
+            </div>
+            <div class="diag-container reveal" style="padding: 10px;">
+                <svg viewBox="0 0 1000 400" width="100%" height="100%" style="display: block;">
+                    <defs>
+                        <linearGradient id="layerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#111113" />
+                            <stop offset="50%" stop-color="#1c1c1f" />
+                            <stop offset="100%" stop-color="#111113" />
+                        </linearGradient>
+                        <linearGradient id="glowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.1" />
+                            <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+                        </linearGradient>
+                    </defs>
+                    
+                    <!-- Connection Cables -->
+                    <path d="M 500 75 L 500 135 M 500 175 L 500 235 M 500 275 L 500 335" stroke="rgba(255,255,255,0.2)" stroke-width="2" stroke-dasharray="4,4" />
+                    <path d="M 280 75 L 280 335 M 720 75 L 720 335" stroke="rgba(255,255,255,0.06)" stroke-width="1" stroke-dasharray="2,2" />
+
+                    <!-- LAYER 1: CLIENT LAYER -->
+                    <g transform="translate(150, 30)">
+                        <rect x="0" y="0" width="700" height="50" rx="4" fill="url(#layerGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+                        <rect x="0" y="0" width="700" height="50" rx="4" fill="url(#glowGrad)" pointer-events="none" />
+                        <text x="350" y="24" text-anchor="middle" font-family="Outfit" font-weight="700" font-size="13" fill="#ffffff" letter-spacing="0.05em">USER INTERFACE LAYER (SPA CLIENT)</text>
+                        <text x="350" y="40" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="rgba(255,255,255,0.4)">Vanilla JS Modules &bull; CSS Design Tokens &bull; Served static via Vercel CDN</text>
+                        <circle cx="20" cy="25" r="4" fill="#ffffff" />
+                        <circle cx="680" cy="25" r="4" fill="#ffffff" />
+                    </g>
+                    
+                    <!-- LAYER 2: PROTOCOL GATEWAY -->
+                    <g transform="translate(150, 130)">
+                        <rect x="0" y="0" width="700" height="50" rx="4" fill="url(#layerGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+                        <text x="350" y="24" text-anchor="middle" font-family="Outfit" font-weight="700" font-size="13" fill="rgba(255,255,255,0.85)" letter-spacing="0.05em">COMMUNICATION &amp; PROTOCOL GATEWAY</text>
+                        <text x="350" y="40" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="rgba(255,255,255,0.4)">HTTPS REST APIs &bull; WSS WebSocket Tunnel &bull; Pusher/Reverb broadcast channels</text>
+                        <circle cx="20" cy="25" r="4" fill="rgba(255,255,255,0.5)" />
+                        <circle cx="680" cy="25" r="4" fill="rgba(255,255,255,0.5)" />
+                    </g>
+
+                    <!-- LAYER 3: APPLICATION SERVER -->
+                    <g transform="translate(150, 230)">
+                        <rect x="0" y="0" width="700" height="50" rx="4" fill="url(#layerGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1" />
+                        <text x="350" y="24" text-anchor="middle" font-family="Outfit" font-weight="700" font-size="13" fill="rgba(255,255,255,0.85)" letter-spacing="0.05em">CORE APPLICATION SERVER (LARAVEL 12)</text>
+                        <text x="350" y="40" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="rgba(255,255,255,0.4)">Sanctum Protection &bull; MySQL 8 DB Engine &bull; Redis 7 Job Queues &bull; Reverb Server</text>
+                        <circle cx="20" cy="25" r="4" fill="rgba(255,255,255,0.5)" />
+                        <circle cx="680" cy="25" r="4" fill="rgba(255,255,255,0.5)" />
+                    </g>
+
+                    <!-- LAYER 4: EXECUTION SANDBOX -->
+                    <g transform="translate(150, 330)">
+                        <rect x="0" y="0" width="700" height="50" rx="4" fill="url(#layerGrad)" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+                        <text x="350" y="24" text-anchor="middle" font-family="Outfit" font-weight="700" font-size="13" fill="rgba(255,255,255,0.5)" letter-spacing="0.05em">ISOLATED ENGINE SANDBOX (DOCKER DAEMON)</text>
+                        <text x="350" y="40" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="rgba(255,255,255,0.3)">12 Active CLI Scanners (Nmap, SQLMap, Gobuster, ZAP XSS) &bull; Isolated Container instances</text>
+                        <circle cx="20" cy="25" r="4" fill="rgba(255,255,255,0.2)" />
+                        <circle cx="680" cy="25" r="4" fill="rgba(255,255,255,0.2)" />
+                    </g>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 16: Technology Stack - Frontend -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">16/42</span>
+                    <h2 class="slide-title">Technology Stack: Frontend</h2>
+                </div>
+                <span class="slide-tag">Client Layer</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Vanilla Web Architecture</h3>
+                    <p style="margin-bottom: var(--element-gap);">The client application has **no bundler or transpilation build step**. Modules communicate cleanly via window globals, loading in strict dependency order:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>Vanilla HTML5 &amp; CSS3:</strong> Custom styling token variables.</li>
+                        <li><strong>Laravel Echo IIFE &amp; Pusher JS:</strong> WebSocket transport.</li>
+                        <li><strong>jsPDF &amp; jsPDF-AutoTable:</strong> Client-side PDF exporters.</li>
+                        <li><strong>CryptoJS:</strong> Client key encryption using XOR ciphers.</li>
+                        <li><strong>Vitest &amp; Happy-DOM:</strong> Headless browser unit tests.</li>
+                    </ul>
+                </div>
+                <div class="grid-2">
+                    <div class="cyber-card">
+                        <span class="mono" style="font-size: var(--small-size);">DESIGN SYSTEM</span>
+                        <h4 style="margin: 4px 0; text-transform: uppercase;">Monochrome</h4>
+                        <p style="font-size: var(--small-size); color: var(--text-secondary);">CSS variables and cyber-theme tokens.</p>
+                    </div>
+                    <div class="cyber-card">
+                        <span class="mono" style="font-size: var(--small-size);">DEPLOYMENT</span>
+                        <h4 style="margin: 4px 0; text-transform: uppercase;">Vercel CDN</h4>
+                        <p style="font-size: var(--small-size); color: var(--text-secondary);">Clean URL rewrites with clean static caching.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 17: Technology Stack - Backend -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">17/42</span>
+                    <h2 class="slide-title">Technology Stack: Backend</h2>
+                </div>
+                <span class="slide-tag">Server Layer</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div class="grid-2">
+                    <div class="cyber-card">
+                        <span class="mono" style="font-size: var(--small-size);">FRAMEWORK</span>
+                        <h4 style="margin: 4px 0; text-transform: uppercase;">Laravel 12</h4>
+                        <p style="font-size: var(--small-size); color: var(--text-secondary);">Robust MVC API architecture, Sanctum, Queues.</p>
+                    </div>
+                    <div class="cyber-card">
+                        <span class="mono" style="font-size: var(--small-size);">DATABASE</span>
+                        <h4 style="margin: 4px 0; text-transform: uppercase;">MySQL 8</h4>
+                        <p style="font-size: var(--small-size); color: var(--text-secondary);">Persistent storage, transactional integrity.</p>
+                    </div>
+                    <div class="cyber-card">
+                        <span class="mono" style="font-size: var(--small-size);">JOB QUEUE</span>
+                        <h4 style="margin: 4px 0; text-transform: uppercase;">Redis 7</h4>
+                        <p style="font-size: var(--small-size); color: var(--text-secondary);">Async queues for scans, reports, and mails.</p>
+                    </div>
+                    <div class="cyber-card">
+                        <span class="mono" style="font-size: var(--small-size);">WEBSOCKETS</span>
+                        <h4 style="margin: 4px 0; text-transform: uppercase;">Reverb</h4>
+                        <p style="font-size: var(--small-size); color: var(--text-secondary);">Pusher-compatible, built-in Laravel WebSocket server.</p>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Orchestration &amp; Infrastructure</h3>
+                    <p style="margin-bottom: var(--element-gap);">The backend manages scanners using isolated containers, preventing host corruption:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>Docker SDK for PHP:</strong> Launches containers per scan.</li>
+                        <li><strong>Paymob Payment Gateway:</strong> Handles credit card checkouts.</li>
+                        <li><strong>Sanctum Security Guard:</strong> Validates Bearer request headers.</li>
+                        <li><strong>SMTP Mailer:</strong> Verification and reset queue workers.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 18: ERD & Schema -->
+    <section class="slide diagram-slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">18/42</span>
+                    <h2 class="slide-title">Database Schema (ERD)</h2>
+                </div>
+                <span class="slide-tag">Models & Relationships</span>
+            </div>
+            <div class="diag-container reveal" style="padding: 10px;">
+                <svg viewBox="0 0 1000 400" width="100%" height="100%" style="display: block;">
+                    <defs>
+                        <marker id="dot" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6">
+                            <circle cx="5" cy="5" r="3" fill="#ffffff"/>
+                        </marker>
+                        <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                            <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffffff" />
+                        </marker>
+                    </defs>
+
+                    <!-- Relationships Connecting Lines -->
+                    <!-- users -> organizations (1:N) -->
+                    <path d="M 230 70 L 330 70" stroke="rgba(255,255,255,0.25)" stroke-width="1.2" marker-start="url(#dot)" marker-end="url(#arrow)" fill="none" />
+                    
+                    <!-- organizations -> projects (1:N) -->
+                    <path d="M 400 120 L 400 180 L 480 180" stroke="rgba(255,255,255,0.25)" stroke-width="1.2" marker-start="url(#dot)" marker-end="url(#arrow)" fill="none" />
+                    
+                    <!-- users -> projects (1:N) -->
+                    <path d="M 150 140 L 150 200 L 480 200" stroke="rgba(255,255,255,0.25)" stroke-width="1.2" marker-start="url(#dot)" marker-end="url(#arrow)" fill="none" />
+
+                    <!-- projects -> targets (1:N) -->
+                    <path d="M 640 200 L 780 200" stroke="rgba(255,255,255,0.25)" stroke-width="1.2" marker-start="url(#dot)" marker-end="url(#arrow)" fill="none" />
+
+                    <!-- targets -> scan_jobs (1:N) -->
+                    <path d="M 860 250 L 860 300 L 640 330" stroke="rgba(255,255,255,0.25)" stroke-width="1.2" marker-start="url(#dot)" marker-end="url(#arrow)" fill="none" />
+
+                    <!-- scan_jobs -> findings (1:N) -->
+                    <path d="M 480 330 L 230 330" stroke="rgba(255,255,255,0.25)" stroke-width="1.2" marker-start="url(#dot)" marker-end="url(#arrow)" fill="none" />
+
+                    <!-- Table 1: users (x=70, y=20) -->
+                    <g transform="translate(70, 20)">
+                        <rect x="0" y="0" width="160" height="120" rx="4" fill="#111113" stroke="rgba(255,255,255,0.12)" />
+                        <rect x="0" y="0" width="160" height="25" rx="4" fill="rgba(255,255,255,0.05)" />
+                        <text x="80" y="17" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="11" fill="#ffffff">users</text>
+                        <g font-family="JetBrains Mono" font-size="9" fill="rgba(255,255,255,0.5)" transform="translate(10, 42)">
+                            <text x="0" y="10" fill="#ffffff" font-weight="700">id (PK - INT)</text>
+                            <text x="0" y="24">name (VARCHAR)</text>
+                            <text x="0" y="38">email (VARCHAR)</text>
+                            <text x="0" y="52">password (VARCHAR)</text>
+                            <text x="0" y="66">two_factor_secret</text>
+                        </g>
+                    </g>
+
+                    <!-- Table 2: organizations (x=330, y=20) -->
+                    <g transform="translate(330, 20)">
+                        <rect x="0" y="0" width="160" height="100" rx="4" fill="#111113" stroke="rgba(255,255,255,0.12)" />
+                        <rect x="0" y="0" width="160" height="25" rx="4" fill="rgba(255,255,255,0.05)" />
+                        <text x="80" y="17" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="11" fill="#ffffff">organizations</text>
+                        <g font-family="JetBrains Mono" font-size="9" fill="rgba(255,255,255,0.5)" transform="translate(10, 42)">
+                            <text x="0" y="10" fill="#ffffff" font-weight="700">id (PK - INT)</text>
+                            <text x="0" y="24">name (VARCHAR)</text>
+                            <text x="0" y="38">slug (VARCHAR)</text>
+                            <text x="0" y="52">subscription_id</text>
+                        </g>
+                    </g>
+
+                    <!-- Table 3: projects (x=480, y=140) -->
+                    <g transform="translate(480, 140)">
+                        <rect x="0" y="0" width="160" height="100" rx="4" fill="#111113" stroke="rgba(255,255,255,0.12)" />
+                        <rect x="0" y="0" width="160" height="25" rx="4" fill="rgba(255,255,255,0.05)" />
+                        <text x="80" y="17" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="11" fill="#ffffff">projects</text>
+                        <g font-family="JetBrains Mono" font-size="9" fill="rgba(255,255,255,0.5)" transform="translate(10, 42)">
+                            <text x="0" y="10" fill="#ffffff" font-weight="700">id (PK - INT)</text>
+                            <text x="0" y="24">name (VARCHAR)</text>
+                            <text x="0" y="38">description (TEXT)</text>
+                            <text x="0" y="52">owner_id (FK)</text>
+                        </g>
+                    </g>
+
+                    <!-- Table 4: targets (x=780, y=150) -->
+                    <g transform="translate(780, 150)">
+                        <rect x="0" y="0" width="160" height="100" rx="4" fill="#111113" stroke="rgba(255,255,255,0.12)" />
+                        <rect x="0" y="0" width="160" height="25" rx="4" fill="rgba(255,255,255,0.05)" />
+                        <text x="80" y="17" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="11" fill="#ffffff">targets</text>
+                        <g font-family="JetBrains Mono" font-size="9" fill="rgba(255,255,255,0.5)" transform="translate(10, 42)">
+                            <text x="0" y="10" fill="#ffffff" font-weight="700">id (PK - INT)</text>
+                            <text x="0" y="24">project_id (FK)</text>
+                            <text x="0" y="38">type (ENUM)</text>
+                            <text x="0" y="52">value (VARCHAR)</text>
+                        </g>
+                    </g>
+
+                    <!-- Table 5: scan_jobs (x=480, y=280) -->
+                    <g transform="translate(480, 280)">
+                        <rect x="0" y="0" width="160" height="100" rx="4" fill="#111113" stroke="rgba(255,255,255,0.12)" />
+                        <rect x="0" y="0" width="160" height="25" rx="4" fill="rgba(255,255,255,0.05)" />
+                        <text x="80" y="17" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="11" fill="#ffffff">scan_jobs</text>
+                        <g font-family="JetBrains Mono" font-size="9" fill="rgba(255,255,255,0.5)" transform="translate(10, 42)">
+                            <text x="0" y="10" fill="#ffffff" font-weight="700">id (PK - INT)</text>
+                            <text x="0" y="24">target_id (FK)</text>
+                            <text x="0" y="38">status (ENUM)</text>
+                            <text x="0" y="52">progress (INT)</text>
+                        </g>
+                    </g>
+
+                    <!-- Table 6: findings (x=70, y=280) -->
+                    <g transform="translate(70, 280)">
+                        <rect x="0" y="0" width="160" height="100" rx="4" fill="#111113" stroke="rgba(255,255,255,0.12)" />
+                        <rect x="0" y="0" width="160" height="25" rx="4" fill="rgba(255,255,255,0.05)" />
+                        <text x="80" y="17" text-anchor="middle" font-family="Outfit" font-weight="600" font-size="11" fill="#ffffff">findings</text>
+                        <g font-family="JetBrains Mono" font-size="9" fill="rgba(255,255,255,0.5)" transform="translate(10, 42)">
+                            <text x="0" y="10" fill="#ffffff" font-weight="700">id (PK - INT)</text>
+                            <text x="0" y="24">scan_job_id (FK)</text>
+                            <text x="0" y="38">severity (ENUM)</text>
+                            <text x="0" y="52">title (VARCHAR)</text>
+                        </g>
+                    </g>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 19: Communication Flow -->
+    <section class="slide diagram-slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">19/42</span>
+                    <h2 class="slide-title">Communication Flow</h2>
+                </div>
+                <span class="slide-tag">Protocols</span>
+            </div>
+            <div class="diag-container reveal" style="padding: 15px;">
+                <svg viewBox="0 0 1000 450" width="100%" height="100%" style="display: block;">
+                    <defs>
+                        <marker id="seqArrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#ffffff" />
+                        </marker>
+                        <marker id="seqArrowBack" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                            <path d="M 8 1.5 L 0 5 L 8 8.5 z" fill="rgba(255,255,255,0.5)" />
+                        </marker>
+                    </defs>
+
+                    <!-- Lifelines -->
+                    <path d="M 180 80 L 180 410" stroke="rgba(255,255,255,0.18)" stroke-width="1.2" stroke-dasharray="4,4" />
+                    <path d="M 500 80 L 500 410" stroke="rgba(255,255,255,0.18)" stroke-width="1.2" stroke-dasharray="4,4" />
+                    <path d="M 820 80 L 820 410" stroke="rgba(255,255,255,0.18)" stroke-width="1.2" stroke-dasharray="4,4" />
+
+                    <!-- Active Execution Bars -->
+                    <rect x="175" y="100" width="10" height="290" rx="2" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1" />
+                    <rect x="495" y="100" width="10" height="270" rx="2" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1" />
+                    <rect x="815" y="160" width="10" height="150" rx="2" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1" />
+
+                    <!-- Lifeline Nodes (Top Headers) -->
+                    <g transform="translate(100, 30)">
+                        <rect x="0" y="0" width="160" height="40" rx="4" fill="#111113" stroke="rgba(255,255,255,0.12)" />
+                        <text x="80" y="24" text-anchor="middle" font-family="Outfit" font-weight="700" font-size="13" fill="#ffffff">Browser Client</text>
+                    </g>
+                    <g transform="translate(420, 30)">
+                        <rect x="0" y="0" width="160" height="40" rx="4" fill="#111113" stroke="rgba(255,255,255,0.12)" />
+                        <text x="80" y="24" text-anchor="middle" font-family="Outfit" font-weight="700" font-size="13" fill="#ffffff">Laravel REST API</text>
+                    </g>
+                    <g transform="translate(740, 30)">
+                        <rect x="0" y="0" width="160" height="40" rx="4" fill="#111113" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+                        <text x="80" y="24" text-anchor="middle" font-family="Outfit" font-weight="700" font-size="13" fill="rgba(255,255,255,0.6)">Docker Containers</text>
+                    </g>
+
+                    <!-- Message Arrows -->
+                    <!-- Msg 1: Client -> API -->
+                    <line x1="185" y1="130" x2="495" y2="130" stroke="#ffffff" stroke-width="1.5" marker-end="url(#seqArrow)" />
+                    <text x="340" y="120" text-anchor="middle" font-family="JetBrains Mono" font-size="11" font-weight="600" fill="#ffffff">POST /api/scan/start</text>
+
+                    <!-- Msg 2: API -> Docker Container -->
+                    <line x1="505" y1="190" x2="815" y2="190" stroke="#ffffff" stroke-width="1.5" marker-end="url(#seqArrow)" />
+                    <text x="660" y="180" text-anchor="middle" font-family="JetBrains Mono" font-size="11" font-weight="600" fill="#ffffff">docker run nmap_scanner</text>
+
+                    <!-- Msg 3: Docker -> API (Logs) -->
+                    <line x1="815" y1="260" x2="505" y2="260" stroke="rgba(255,255,255,0.5)" stroke-dasharray="3,3" stroke-width="1.5" marker-end="url(#seqArrowBack)" />
+                    <text x="660" y="250" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="rgba(255,255,255,0.7)">stream stdout (JSON logs)</text>
+
+                    <!-- Msg 4: API -> Client (WebSocket) -->
+                    <line x1="495" y1="330" x2="185" y2="330" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" marker-end="url(#seqArrowBack)" />
+                    <text x="340" y="320" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="rgba(255,255,255,0.9)">broadcast (scan.progress)</text>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 20: Frontend Module Architecture -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">20/42</span>
+                    <h2 class="slide-title">Frontend Globals Map</h2>
+                </div>
+                <span class="slide-tag">Module Dependencies</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Window Exposer Registry</h3>
+                    <p style="margin-bottom: var(--element-gap);">Every JavaScript module exposes singletons/classes to the global `window` object to establish decoupled cross-module communication:</p>
+                    <table style="width: 100%; font-size: var(--small-size); border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                                <th style="padding: 4px;">File Name</th>
+                                <th style="padding: 4px; font-family: var(--font-mono);">window global</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px dashed var(--border-color);">
+                                <td style="padding: 4px;">api-client.js</td>
+                                <td style="padding: 4px; font-family: var(--font-mono);">APIClient, scannerAPI</td>
+                            </tr>
+                            <tr style="border-bottom: 1px dashed var(--border-color);">
+                                <td style="padding: 4px;">auth.js</td>
+                                <td style="padding: 4px; font-family: var(--font-mono);">authManager, AuthManager</td>
+                            </tr>
+                            <tr style="border-bottom: 1px dashed var(--border-color);">
+                                <td style="padding: 4px;">main.js</td>
+                                <td style="padding: 4px; font-family: var(--font-mono);">apiClient, projectManager</td>
+                            </tr>
+                            <tr style="border-bottom: 1px dashed var(--border-color);">
+                                <td style="padding: 4px;">threat-intel.js</td>
+                                <td style="padding: 4px; font-family: var(--font-mono);">ThreatIntelHub</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="cyber-card">
+                    <h3 class="card-title">Dual Export Convention</h3>
+                    <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">To support in-browser vanilla global rendering while remaining fully testable under Node / Vitest environments, every single module file implements the dual-export pattern:</p>
+                    <pre class="mono" style="font-size: 9px; padding: 10px; background-color: var(--bg-base); border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow-x: auto; color: var(--text-secondary);">
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { APIClient };
+} else {
+    window.APIClient = APIClient;
+}</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 21: Authentication System -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">21/42</span>
+                    <h2 class="slide-title">Authentication System</h2>
+                </div>
+                <span class="slide-tag">Security Entry</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Three-Tier Authentication</h3>
+                    <p style="margin-bottom: var(--element-gap);">Secure entry gates protecting user details and monitored host targets:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>Sanctum Credentials:</strong> Traditional email and password matching.</li>
+                        <li><strong>Social Login:</strong> Integrated Google OAuth redirect callback gates.</li>
+                        <li><strong>TOTP 2FA Layer:</strong> Dual-step visual OTP validation during authentication challenges.</li>
+                        <li><strong>Verification Controls:</strong> Mandatory queue-based email validation routes.</li>
+                    </ul>
+                </div>
+                <div class="screenshot-container">
+                    <img src="presentation_assets/login.png" alt="Login & 2FA Secure Interface" class="zoomable showcase-img">
+                    <div class="zoom-badge">🔍 Click to zoom</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 22: Project & Team Management -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">22/42</span>
+                    <h2 class="slide-title">Project &amp; Team Management</h2>
+                </div>
+                <span class="slide-tag">Collaboration</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Collaborator & Role Controls</h3>
+                    <p style="margin-bottom: var(--element-gap);">Manage target workspaces with security configurations and team hierarchies:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size); margin-bottom: var(--element-gap);">
+                        <li><strong>Owner:</strong> Full project CRUD and member management.</li>
+                        <li><strong>Editor:</strong> Manage targets and start scans; no deletions.</li>
+                        <li><strong>Viewer:</strong> Read-only access to findings and reports.</li>
+                        <li><strong>Collaborator Board:</strong> Track invites and acceptances dynamically.</li>
+                    </ul>
+                </div>
+                <div class="screenshot-container">
+                    <img src="presentation_assets/tab_projects.png" alt="Projects Management Panel" class="zoomable showcase-img">
+                    <div class="zoom-badge">🔍 Click to zoom</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 23: Security Scanning Engine - Backend -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">23/42</span>
+                    <h2 class="slide-title">Docker Scanning Engine (Backend)</h2>
+                </div>
+                <span class="slide-tag">Active Scans</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Docker Container Isolation</h3>
+                    <p style="margin-bottom: var(--element-gap);">Heavy active scanners execute inside sandbox containers on the backend host server. Driven asynchronously via Laravel queue workers:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>port_scan:</strong> Fast target ports discovery via Nmap.</li>
+                        <li><strong>xss_scan:</strong> XSS scanning via OWASP ZAP API proxy.</li>
+                        <li><strong>sql_injection:</strong> Automated injections detection via SQLMap.</li>
+                        <li><strong>ssl_analysis:</strong> Protocol analysis via testssl.sh.</li>
+                        <li><strong>directory_scan:</strong> Fuzzing folders via Gobuster.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card">
+                    <h3 class="card-title" style="font-size: var(--body-size);">12 Dedicated Scanner Drivers</h3>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-family: var(--font-mono); font-size: 10px;">
+                        <div style="border: 1px solid var(--border-color); padding: 4px; text-align: center;">Nmap</div>
+                        <div style="border: 1px solid var(--border-color); padding: 4px; text-align: center;">ZAP XSS</div>
+                        <div style="border: 1px solid var(--border-color); padding: 4px; text-align: center;">SQLMap</div>
+                        <div style="border: 1px solid var(--border-color); padding: 4px; text-align: center;">testssl</div>
+                        <div style="border: 1px solid var(--border-color); padding: 4px; text-align: center;">Gobuster</div>
+                        <div style="border: 1px solid var(--border-color); padding: 4px; text-align: center;">Sublist3r</div>
+                        <div style="border: 1px solid var(--border-color); padding: 4px; text-align: center;">DNSRecon</div>
+                        <div style="border: 1px solid var(--border-color); padding: 4px; text-align: center;">Wappalyzer</div>
+                        <div style="border: 1px solid var(--border-color); padding: 4px; text-align: center;">Crawler</div>
+                        <div style="border: 1px solid var(--border-color); padding: 4px; text-align: center;">WHOIS</div>
+                        <div style="border: 1px solid var(--border-color); padding: 4px; text-align: center;">Nmap -sV</div>
+                        <div style="border: 1px solid var(--border-color); padding: 4px; text-align: center;">Nmap NSE</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 24: Security Scanning Engine - Frontend -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">24/42</span>
+                    <h2 class="slide-title">Client-Side Scanners (Frontend)</h2>
+                </div>
+                <span class="slide-tag">Instant Auditing</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Zero-Lag Active Feeds</h3>
+                    <p style="margin-bottom: var(--element-gap);">Executed directly from the user's browser, bypassing backend queues:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>Shodan Open Ports:</strong> Index public open ports.</li>
+                        <li><strong>UDP Services &amp; Geolocation:</strong> Cloudflare DoH and ip-api.</li>
+                        <li><strong>WHOIS &amp; DNS Records:</strong> Domain registrant metrics.</li>
+                        <li><strong>CORS Proxy Fallbacks:</strong> Backup proxy chain resolver.</li>
+                    </ul>
+                </div>
+                <div class="screenshot-container">
+                    <img src="presentation_assets/tab_security.png" alt="Security Dashboard & Tools" class="zoomable showcase-img">
+                    <div class="zoom-badge">🔍 Click to zoom</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 25: Real-Time Scan Progress -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">25/42</span>
+                    <h2 class="slide-title">Real-Time Scan Progress</h2>
+                </div>
+                <span class="slide-tag">WebSocket UI</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Dynamic Terminal Interface</h3>
+                    <p style="margin-bottom: var(--element-gap);">The scan progress page receives raw output streams from background containers via Reverb WebSockets:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>Live shell updates:</strong> Command outputs feed directly to terminal.</li>
+                        <li><strong>Finding aggregation:</strong> Real-time visual cards feed.</li>
+                        <li><strong>Risk Gauge updates:</strong> Interactive SVG dials updates.</li>
+                        <li><strong>Scan control triggers:</strong> Pause, Resume, or Cancel actions.</li>
+                    </ul>
+                </div>
+                <div class="screenshot-container">
+                    <img src="presentation_assets/dashboard.png" alt="Real-Time Active Scan Progress" class="zoomable showcase-img">
+                    <div class="zoom-badge">🔍 Click to zoom</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 26: Threat Intelligence Hub -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">26/42</span>
+                    <h2 class="slide-title">Threat Intelligence Hub</h2>
+                </div>
+                <span class="slide-tag">IOC Enrichment</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Encrypted Key Vault</h3>
+                    <p style="margin-bottom: var(--element-gap);">To secure third-party search credentials, CyberGuard runs encryption procedures client-side:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>VirusTotal v3 &amp; AbuseIPDB v2:</strong> Malware repute.</li>
+                        <li><strong>URLScan.io &amp; Shodan:</strong> Web screenshot and port lookup.</li>
+                        <li><strong>XOR key ciphers:</strong> Secure client-side key storage.</li>
+                        <li><strong>Consolidated Verdicts:</strong> Unified rating metrics.</li>
+                    </ul>
+                </div>
+                <div class="screenshot-container">
+                    <img src="presentation_assets/tab_threat.png" alt="Threat Intelligence Hub" class="zoomable showcase-img">
+                    <div class="zoom-badge">🔍 Click to zoom</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 27: Web Security Tools -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">27/42</span>
+                    <h2 class="slide-title">Web Security Tools</h2>
+                </div>
+                <span class="slide-tag">Web Audit</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Web Vuln Assessment</h3>
+                    <p style="margin-bottom: var(--element-gap);">Targeted web vulnerability scanners available under the Web Security tab:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>XSS Scanner:</strong> Finds cross-site scripting vulnerabilities.</li>
+                        <li><strong>SSL Certificate Checker:</strong> Reports expiry and cipher support.</li>
+                        <li><strong>HTTP Header Analyzer:</strong> Checks CSP, HSTS, X-Frame.</li>
+                        <li><strong>AI Phishing URL Detector:</strong> Predicts phishing domains.</li>
+                    </ul>
+                </div>
+                <div class="screenshot-container">
+                    <img src="presentation_assets/tab_websec.png" alt="Web Security Scanner Panel" class="zoomable showcase-img">
+                    <div class="zoom-badge">🔍 Click to zoom</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 28: Hash & Cryptographic Tools -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">28/42</span>
+                    <h2 class="slide-title">Cryptographic Hash Tools</h2>
+                </div>
+                <span class="slide-tag">Client Crypto</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Client-Side Processing Only</h3>
+                    <p style="margin-bottom: var(--element-gap);">All hash computations run inside the browser without transmitting credentials to the API:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>Multi-hash generator:</strong> Outputs MD5, SHA-1, SHA-256/512.</li>
+                        <li><strong>Hash Identifier:</strong> Algorithm structure detection.</li>
+                        <li><strong>Password Entropy Analyzer:</strong> Evaluates crack time complexity.</li>
+                        <li><strong>Hash Diff Highlight:</strong> Evaluates visual string differences.</li>
+                    </ul>
+                </div>
+                <div class="screenshot-container">
+                    <img src="presentation_assets/tab_hash.png" alt="Cryptographic Hash Suite" class="zoomable showcase-img">
+                    <div class="zoom-badge">🔍 Click to zoom</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 29: JWT Debugger & Editor -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">29/42</span>
+                    <h2 class="slide-title">JWT Debugger &amp; Editor</h2>
+                </div>
+                <span class="slide-tag">Token Inspector</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Client-Side Token Auditing</h3>
+                    <p style="margin-bottom: var(--element-gap);">A standalone JWT workspace built using CryptoJS for encoding, decoding, and signature generation:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>Visual Color Mapping:</strong> Red (Header), Cyan (Payload), Green (Signature).</li>
+                        <li><strong>Live Signature Signing:</strong> HS256/384/512 signature signatures.</li>
+                        <li><strong>Claims dictionary:</strong> Interactive tooltip hover guides.</li>
+                        <li><strong>Custom formatter:</strong> Real-time syntax highlighter.</li>
+                    </ul>
+                </div>
+                <div class="screenshot-container">
+                    <img src="presentation_assets/tab_jwt.png" alt="JWT Debugger & Signature Validator" class="zoomable showcase-img">
+                    <div class="zoom-badge">🔍 Click to zoom</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 30: OSINT Passive Intelligence -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">30/42</span>
+                    <h2 class="slide-title">OSINT Passive Intelligence</h2>
+                </div>
+                <span class="slide-tag">OSINT Recon</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">6 Passive Recon Modules</h3>
+                    <p style="margin-bottom: var(--element-gap);">Auto-detects query format (domain, IP, username, email) and routes to correct intelligence analyzer:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>crt.sh Subdomains Enumeration:</strong> Subdomains finder.</li>
+                        <li><strong>Wayback captures CDX tool:</strong> Internet archive mapping.</li>
+                        <li><strong>Sherlock profile query:</strong> Social usernames finder.</li>
+                        <li><strong>Email format guesser:</strong> Address permuter patterns.</li>
+                    </ul>
+                </div>
+                <div class="screenshot-container">
+                    <img src="presentation_assets/tab_osint.png" alt="OSINT Target Intelligence Tab" class="zoomable showcase-img">
+                    <div class="zoom-badge">🔍 Click to zoom</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 31: AI Assistant -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">31/42</span>
+                    <h2 class="slide-title">AI Assistant</h2>
+                </div>
+                <span class="slide-tag">AI Copilot</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Context-Aware Guidance</h3>
+                    <p style="margin-bottom: var(--element-gap);">An AI chatbot integrated into the security workspace to explain findings and recommend fixes:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>Scan-aware:</strong> Understands current targets and findings.</li>
+                        <li><strong>Markdown response:</strong> Renders instructions and code blocks.</li>
+                        <li><strong>Session memory:</strong> Remembers chat context.</li>
+                        <li><strong>Mitigation guides:</strong> Explains vulnerabilities.</li>
+                    </ul>
+                </div>
+                <div class="screenshot-container">
+                    <img src="presentation_assets/tab_ai.png" alt="Context-Aware AI Assistant Chat" class="zoomable showcase-img">
+                    <div class="zoom-badge">🔍 Click to zoom</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 32: Report Generation -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">32/42</span>
+                    <h2 class="slide-title">Report Generation</h2>
+                </div>
+                <span class="slide-tag">Reporting</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Client-Side PDF &amp; CSV Exporter</h3>
+                    <p style="margin-bottom: var(--element-gap);">Generates report downloads directly in the browser without exposing data:</p>
+                    <ul class="bullet-list" style="font-size: var(--small-size);">
+                        <li><strong>PDF Layout:</strong> Executive summary, risk ratings, findings table.</li>
+                        <li><strong>Structured CSV:</strong> Raw audit logs and vulnerability columns.</li>
+                        <li><strong>Completion Hooks:</strong> Broadcasts events via WebSockets.</li>
+                        <li><strong>No Server Exposures:</strong> Client-side compile preserves data privacy.</li>
+                    </ul>
+                </div>
+                <div class="screenshot-container">
+                    <img src="presentation_assets/scan_complete.png" alt="Scan Completed Findings & Export PDF Report" class="zoomable showcase-img">
+                    <div class="zoom-badge">🔍 Click to zoom</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 33: Billing & Subscription -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">33/42</span>
+                    <h2 class="slide-title">Billing &amp; Subscription</h2>
+                </div>
+                <span class="slide-tag">SaaS Monetization</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Paymob Payment Gateway</h3>
+                    <p style="margin-bottom: var(--element-gap);">Monetization model built using Egyptian payment processor Paymob (EGP):</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>Checkout modal:</strong> Secure collection of billing details.</li>
+                        <li><strong>Redirect callback:</strong> Handles Paymob status redirects.</li>
+                        <li><strong>Quota controls:</strong> Restricts projects, targets, and monthly scans.</li>
+                        <li><strong>Billing History:</strong> View order logs.</li>
+                    </ul>
+                </div>
+                <div class="screenshot-container">
+                    <img src="presentation_assets/pricing.png" alt="Paymob Pricing & Checkout Panel" class="zoomable showcase-img">
+                    <div class="zoom-badge">🔍 Click to zoom</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 34: Organizations & Multi-Tenancy -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">34/42</span>
+                    <h2 class="slide-title">Organizations &amp; Multi-Tenancy</h2>
+                </div>
+                <span class="slide-tag">IAM Spaces</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Workspace &amp; IAM Isolation</h3>
+                    <p style="margin-bottom: var(--element-gap);">Switch contexts between personal and corporate accounts cleanly:</p>
+                    <ul class="bullet-list" style="font-size: var(--small-size); margin-bottom: var(--element-gap);">
+                        <li><strong>Onboarding Wizard:</strong> Multi-step creation and plan billing flows.</li>
+                        <li><strong>IAM Roles:</strong> Admin, Member, and Billing access controls.</li>
+                        <li><strong>Corporate Email Swap:</strong> Domain-matching verified swaps.</li>
+                        <li><strong>Auto Headers:</strong> Injects <code>X-Organization-Id</code> to client APIs.</li>
+                    </ul>
+                </div>
+                <div class="screenshot-container">
+                    <img src="presentation_assets/organization.png" alt="Organization Onboarding Wizard & Setup" class="zoomable showcase-img">
+                    <div class="zoom-badge">🔍 Click to zoom</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 35: Design System & UI -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">35/42</span>
+                    <h2 class="slide-title">Design System &amp; UI</h2>
+                </div>
+                <span class="slide-tag">Theme Tokens</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Visual Token Variables</h3>
+                    <p style="margin-bottom: var(--element-gap);">Centralized theme configurations defined in `theme-tokens.css` for consistent styling:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>Base colors:</strong> Monochrome palette (#09090b base, #121214 cards, #ffffff accents).</li>
+                        <li><strong>Component classes:</strong> Prefixed with `cyber-*` (e.g. `cyber-btn`, `cyber-card`).</li>
+                        <li><strong>Accessibility:</strong> High-contrast borders, WCAG AA contrast compliance.</li>
+                    </ul>
+                </div>
+                <div class="screenshot-container">
+                    <img src="presentation_assets/landing.png" alt="Animated Landing Page Showcase" class="zoomable showcase-img">
+                    <div class="zoom-badge">🔍 Click to zoom</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 36: Security & Infrastructure -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">36/42</span>
+                    <h2 class="slide-title">Security &amp; Infrastructure</h2>
+                </div>
+                <span class="slide-tag">Target Protection</span>
+            </div>
+            <div class="grid-3 reveal">
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">01</span>
+                        <h3 class="card-title">CORS Bypasses</h3>
+                        <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">Uses server-side proxy overrides to prevent browser blocks when querying external targets:</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 11px; color: var(--text-secondary); margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <li>Proxies requests via backend <code>/api/proxy</code> endpoints.</li>
+                        <li>Strips restricting headers from remote target outputs.</li>
+                        <li>Blocks open relay access by verifying API caller keys.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">02</span>
+                        <h3 class="card-title">SSRF Protection</h3>
+                        <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">Checks and sanitizes target inputs before running scans to prevent injections:</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 11px; color: var(--text-secondary); margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <li>Disallows loopback subnets and private IP ranges.</li>
+                        <li>Sanitizes shell special chars (<code>|</code>, <code>;</code>, <code>&amp;</code>) in commands.</li>
+                        <li>Resolves target host DNS addresses before active scan tasks.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card" style="min-height: 380px;">
+                    <div>
+                        <span class="card-num">03</span>
+                        <h3 class="card-title">Session Protection</h3>
+                        <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">Encrypts API keys, secures client storage items, and isolates sessions:</p>
+                    </div>
+                    <ul class="bullet-list" style="font-size: 11px; color: var(--text-secondary); margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                        <li>Stores Sanctum token using secure local settings.</li>
+                        <li>Clears organization session scopes upon manual logouts.</li>
+                        <li>Automatic user logouts triggered after 2 hours of inactivity.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 37: Testing & Quality -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">37/42</span>
+                    <h2 class="slide-title">Testing &amp; Quality</h2>
+                </div>
+                <span class="slide-tag">Quality Assurance</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">50+ Automated Test Files</h3>
+                    <p style="margin-bottom: var(--element-gap);">We run extensive unit and integration tests using Vitest + Happy-DOM to verify dashboard flows:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>Isolated testing:</strong> Simulates the DOM without requiring a real browser.</li>
+                        <li><strong>Property testing:</strong> Runs fast-check algorithms to validate data normalizers.</li>
+                        <li><strong>Scan integrations:</strong> Verifies scan status changes and WebSocket listeners.</li>
+                        <li><strong>Linter checks:</strong> Auto-verifies theme design compliance.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card" style="font-family: var(--font-mono); font-size: 10px; background-color: var(--bg-base); border: 1px solid var(--border-color);">
+                    <div style="color: var(--success); font-weight: bold;">✓ tests/unit/api-client.test.js (4 tests)</div>
+                    <div style="color: var(--success); font-weight: bold;">✓ tests/unit/auth.test.js (8 tests)</div>
+                    <div style="color: var(--success); font-weight: bold;">✓ tests/unit/organization-settings.test.js (6 tests)</div>
+                    <div style="color: var(--success); font-weight: bold;">✓ tests/integration/scan-lifecycle.test.js (5 tests)</div>
+                    <div style="margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 6px;">
+                        Test files: 53 passed &bull; Tests: 218 passed &bull; Coverage: 92.4%
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 38: Deployment Architecture -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">38/42</span>
+                    <h2 class="slide-title">Deployment Architecture</h2>
+                </div>
+                <span class="slide-tag">SaaS Deployment</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div class="cyber-card">
+                    <h3 class="card-title" style="font-size: var(--body-size);">Static CDN + REST API</h3>
+                    <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">The application runs on a split deployment model designed for scale:</p>
+                    <ul class="bullet-list" style="font-size: var(--small-size);">
+                        <li><strong>Frontend CDN:</strong> Deployed on Vercel with clean URL rewrites.</li>
+                        <li><strong>Backend host:</strong> Laravel 12 API server with Redis and MySQL.</li>
+                        <li><strong>Docker daemon:</strong> Manages active security scanner containers.</li>
+                        <li><strong>ngrok gateway:</strong> Configured for local dev tunnels.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Queue Workers</h3>
+                    <p style="margin-bottom: var(--element-gap);">Active background queue handlers managing tasks:</p>
+                    <pre class="mono" style="font-size: 9px; padding: 10px; background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-secondary); overflow-x: auto;">
+php artisan queue:work redis \
+  --queue=scans,reports,emails</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 39: UI Showcase -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">39/42</span>
+                    <h2 class="slide-title">UI Showcase</h2>
+                </div>
+                <span class="slide-tag">Screenshots</span>
+            </div>
+            <div class="showcase-grid reveal">
+                <div class="showcase-card">
+                    <div class="showcase-img-container">
+                        <img src="presentation_assets/landing.png" alt="Landing Page" class="showcase-img zoomable">
+                        <div class="zoom-badge">🔍 Zoom</div>
+                    </div>
+                    <div class="showcase-label" style="font-size: 10px;">Landing Page</div>
+                </div>
+                <div class="showcase-card">
+                    <div class="showcase-img-container">
+                        <img src="presentation_assets/login.png" alt="Login Page" class="showcase-img zoomable">
+                        <div class="zoom-badge">🔍 Zoom</div>
+                    </div>
+                    <div class="showcase-label" style="font-size: 10px;">Login Page</div>
+                </div>
+                <div class="showcase-card">
+                    <div class="showcase-img-container">
+                        <img src="presentation_assets/tab_projects.png" alt="Projects Workspace" class="showcase-img zoomable">
+                        <div class="zoom-badge">🔍 Zoom</div>
+                    </div>
+                    <div class="showcase-label" style="font-size: 10px;">Projects</div>
+                </div>
+                <div class="showcase-card">
+                    <div class="showcase-img-container">
+                        <img src="presentation_assets/tab_security.png" alt="Security Dashboard" class="showcase-img zoomable">
+                        <div class="zoom-badge">🔍 Zoom</div>
+                    </div>
+                    <div class="showcase-label" style="font-size: 10px;">Security</div>
+                </div>
+                <div class="showcase-card">
+                    <div class="showcase-img-container">
+                        <img src="presentation_assets/dashboard.png" alt="Active Scan Progress" class="showcase-img zoomable">
+                        <div class="zoom-badge">🔍 Zoom</div>
+                    </div>
+                    <div class="showcase-label" style="font-size: 10px;">Scan Progress</div>
+                </div>
+                <div class="showcase-card">
+                    <div class="showcase-img-container">
+                        <img src="presentation_assets/scan_complete.png" alt="Scan Completed Findings" class="showcase-img zoomable">
+                        <div class="zoom-badge">🔍 Zoom</div>
+                    </div>
+                    <div class="showcase-label" style="font-size: 10px;">Scan Results</div>
+                </div>
+                <div class="showcase-card">
+                    <div class="showcase-img-container">
+                        <img src="presentation_assets/tab_websec.png" alt="Web Security Tools" class="showcase-img zoomable">
+                        <div class="zoom-badge">🔍 Zoom</div>
+                    </div>
+                    <div class="showcase-label" style="font-size: 10px;">Web Security</div>
+                </div>
+                <div class="showcase-card">
+                    <div class="showcase-img-container">
+                        <img src="presentation_assets/tab_jwt.png" alt="JWT Debugger" class="showcase-img zoomable">
+                        <div class="zoom-badge">🔍 Zoom</div>
+                    </div>
+                    <div class="showcase-label" style="font-size: 10px;">JWT Debugger</div>
+                </div>
+                <div class="showcase-card">
+                    <div class="showcase-img-container">
+                        <img src="presentation_assets/tab_hash.png" alt="Cryptographic Hash Suite" class="showcase-img zoomable">
+                        <div class="zoom-badge">🔍 Zoom</div>
+                    </div>
+                    <div class="showcase-label" style="font-size: 10px;">Hash Tools</div>
+                </div>
+                <div class="showcase-card">
+                    <div class="showcase-img-container">
+                        <img src="presentation_assets/tab_osint.png" alt="OSINT Lookups" class="showcase-img zoomable">
+                        <div class="zoom-badge">🔍 Zoom</div>
+                    </div>
+                    <div class="showcase-label" style="font-size: 10px;">OSINT</div>
+                </div>
+                <div class="showcase-card">
+                    <div class="showcase-img-container">
+                        <img src="presentation_assets/tab_ai.png" alt="AI Assistant Chat" class="showcase-img zoomable">
+                        <div class="zoom-badge">🔍 Zoom</div>
+                    </div>
+                    <div class="showcase-label" style="font-size: 10px;">AI Assistant</div>
+                </div>
+                <div class="showcase-card">
+                    <div class="showcase-img-container">
+                        <img src="presentation_assets/organization.png" alt="Organization Setup & Onboarding" class="showcase-img zoomable">
+                        <div class="zoom-badge">🔍 Zoom</div>
+                    </div>
+                    <div class="showcase-label" style="font-size: 10px;">Organizations</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 40: Future Work -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">40/42</span>
+                    <h2 class="slide-title">Future Work</h2>
+                </div>
+                <span class="slide-tag">Roadmap</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Planned Enhancements</h3>
+                    <p style="margin-bottom: var(--element-gap);">Future expansion plans for the CyberGuard platform:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li><strong>CI/CD Pipelines:</strong> Native integrations with GitHub Actions and Jenkins.</li>
+                        <li><strong>Ticketing integrations:</strong> Sync findings with Jira and ServiceNow.</li>
+                        <li><strong>Scanner APIs:</strong> Create SDKs for custom third-party integrations.</li>
+                        <li><strong>Enterprise options:</strong> Package for on-premises deployments.</li>
+                    </ul>
+                </div>
+                <div class="cyber-card">
+                    <h3 class="card-title">AI Engine Improvements</h3>
+                    <p style="font-size: var(--small-size); margin-bottom: var(--element-gap);">Planned updates to the AI Assistant module:</p>
+                    <ul class="bullet-list" style="font-size: var(--small-size);">
+                        <li>Integrate advanced models (GPT-4o) for deeper audits.</li>
+                        <li>Implement automatic patch generation for code.</li>
+                        <li>Add conversational walkthroughs for complex findings.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 41: Conclusion -->
+    <section class="slide">
+        <div class="slide-content">
+            <div class="slide-header">
+                <div class="slide-title-group">
+                    <span class="slide-num">41/42</span>
+                    <h2 class="slide-title">Conclusion</h2>
+                </div>
+                <span class="slide-tag">Summary</span>
+            </div>
+            <div class="grid-2 reveal">
+                <div>
+                    <h3 class="card-title" style="margin-bottom: var(--element-gap);">Core Achievements</h3>
+                    <p style="margin-bottom: var(--element-gap);">CyberGuard unifies security scanning, threat intelligence, and client utilities into a single SaaS platform:</p>
+                    <ul class="bullet-list" style="font-size: var(--body-size);">
+                        <li>Reduces security assessment overhead for pentesters.</li>
+                        <li>Lowers technical barriers for students and developers.</li>
+                        <li>Provides real-time feedback with WebSockets.</li>
+                        <li>Secures data with localized client-side ciphers.</li>
+                    </ul>
+                </div>
+                <div class="grid-2">
+                    <div class="cyber-card" style="text-align: center;">
+                        <h4 style="font-size: 2rem; font-weight: 800; line-height: 1;">12</h4>
+                        <span class="mono" style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase;">Docker Tools</span>
+                    </div>
+                    <div class="cyber-card" style="text-align: center;">
+                        <h4 style="font-size: 2rem; font-weight: 800; line-height: 1;">7</h4>
+                        <span class="mono" style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase;">Frontend Tools</span>
+                    </div>
+                    <div class="cyber-card" style="text-align: center;">
+                        <h4 style="font-size: 2rem; font-weight: 800; line-height: 1;">5</h4>
+                        <span class="mono" style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase;">Threat APIs</span>
+                    </div>
+                    <div class="cyber-card" style="text-align: center;">
+                        <h4 style="font-size: 2rem; font-weight: 800; line-height: 1;">8</h4>
+                        <span class="mono" style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase;">Workspaces</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SLIDE 42: Thank You -->
+    <section class="slide">
+        <div class="slide-content" style="align-items: center; justify-content: center; text-align: center;">
+            <div class="reveal">
+                <div class="cyber-badge" style="margin-bottom: var(--element-gap); letter-spacing: 0.1em;">Presentation Concluded</div>
+                <h1 style="font-size: clamp(3rem, 10vw, 6rem); font-weight: 900; line-height: 1; letter-spacing: -0.04em; text-transform: uppercase; margin: var(--element-gap) 0;">THANK YOU</h1>
+                <p class="mono" style="color: var(--text-secondary); font-size: var(--h3-size); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: var(--content-gap);">QUESTIONS &amp; DISCUSSION</p>
+            </div>
+            <div class="reveal" style="display: flex; gap: var(--content-gap); border-top: 1px solid var(--border-color); padding-top: var(--content-gap); margin-top: var(--content-gap);">
+                <div style="text-align: center;">
+                    <span class="mono" style="font-size: var(--small-size); color: var(--text-secondary); text-transform: uppercase;">Project Institution</span>
+                    <strong style="font-size: var(--body-size); display: block; margin-top: 4px;">Beni-Suef National University</strong>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         Presentation Controller & Navigation JS
+         ============================================================ */ -->
+    <script>
+        // High-performance background particle system on canvas
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let particles = [];
+        const particleCount = 45;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.speedX = Math.random() * 0.4 - 0.2;
+                this.speedY = Math.random() * 0.4 - 0.2;
+                this.opacity = Math.random() * 0.5 + 0.15;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x > canvas.width) this.x = 0;
+                else if (this.x < 0) this.x = canvas.width;
+
+                if (this.y > canvas.height) this.y = 0;
+                else if (this.y < 0) this.y = canvas.height;
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            // Draw faint grid connecting lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        initParticles();
+        animateParticles();
+
+        class SlidePresentation {
+            constructor() {
+                this.slides = Array.from(document.querySelectorAll('.slide'));
+                this.navDotsContainer = document.querySelector('.nav-dots');
+                this.progressBar = document.querySelector('.progress-bar');
+                this.currentSlide = 0;
+                this.isTransitioning = false;
+                
+                this.init();
+            }
+
+            init() {
+                // Clear and build navigation dots
+                this.navDotsContainer.innerHTML = '';
+                this.slides.forEach((slide, idx) => {
+                    const dot = document.createElement('div');
+                    dot.classList.add('nav-dot');
+                    if (idx === 0) dot.classList.add('active');
+                    dot.addEventListener('click', () => this.goToSlide(idx));
+                    this.navDotsContainer.appendChild(dot);
+                });
+                
+                this.dots = Array.from(document.querySelectorAll('.nav-dot'));
+
+                // Initialize viewport visibility
+                this.updateSlideVisibility();
+
+                // Setup Navigation Listeners
+                this.setupKeyboardNav();
+                this.setupScrollNav();
+                this.setupTouchNav();
+                this.setupResizeHandler();
+            }
+
+            goToSlide(index) {
+                if (index < 0 || index >= this.slides.length || this.isTransitioning) return;
+                
+                this.isTransitioning = true;
+                this.currentSlide = index;
+                
+                // Scroll to target slide
+                this.slides[index].scrollIntoView({ behavior: 'smooth' });
+                
+                // Update UI elements
+                this.updateSlideVisibility();
+                this.updateProgressBar();
+                this.updateNavDots();
+                
+                setTimeout(() => {
+                    this.isTransitioning = false;
+                }, 700); // Transition buffer matching CSS scroll behavior
+            }
+
+            nextSlide() {
+                this.goToSlide(this.currentSlide + 1);
+            }
+
+            prevSlide() {
+                this.goToSlide(this.currentSlide - 1);
+            }
+
+            updateSlideVisibility() {
+                this.slides.forEach((slide, idx) => {
+                    if (idx === this.currentSlide) {
+                        slide.classList.add('visible');
+                    } else {
+                        slide.classList.remove('visible');
+                    }
+                });
+            }
+
+            updateProgressBar() {
+                const percent = (this.currentSlide / (this.slides.length - 1)) * 100;
+                this.progressBar.style.width = `${percent}%`;
+            }
+
+            updateNavDots() {
+                this.dots.forEach((dot, idx) => {
+                    if (idx === this.currentSlide) {
+                        dot.classList.add('active');
+                    } else {
+                        dot.classList.remove('active');
+                    }
+                });
+            }
+
+            setupKeyboardNav() {
+                document.addEventListener('keydown', (e) => {
+                    // Disable navigation when writing in edit mode or when lightbox is active
+                    if (e.target.getAttribute('contenteditable') === 'true') return;
+                    if (document.getElementById('lightboxOverlay').classList.contains('active')) return;
+
+                    switch (e.key) {
+                        case ' ':
+                        case 'ArrowDown':
+                        case 'PageDown':
+                            e.preventDefault();
+                            this.nextSlide();
+                            break;
+                        case 'ArrowUp':
+                        case 'PageUp':
+                            e.preventDefault();
+                            this.prevSlide();
+                            break;
+                        case 'ArrowRight':
+                            this.nextSlide();
+                            break;
+                        case 'ArrowLeft':
+                            this.prevSlide();
+                            break;
+                        case 'Home':
+                            e.preventDefault();
+                            this.goToSlide(0);
+                            break;
+                        case 'End':
+                            e.preventDefault();
+                            this.goToSlide(this.slides.length - 1);
+                            break;
+                    }
+                });
+            }
+
+            setupScrollNav() {
+                // Use debounce wheel listeners to prevent skipping slides rapidly
+                let wheelTimeout = null;
+                window.addEventListener('wheel', (e) => {
+                    // Skip scroll nav if lightbox is open
+                    if (document.getElementById('lightboxOverlay').classList.contains('active')) return;
+                    
+                    e.preventDefault();
+                    if (wheelTimeout) return;
+                    
+                    wheelTimeout = setTimeout(() => {
+                        if (e.deltaY > 20) {
+                            this.nextSlide();
+                        } else if (e.deltaY < -20) {
+                            this.prevSlide();
+                        }
+                        wheelTimeout = null;
+                    }, 150);
+                }, { passive: false });
+
+                // Direct Scroll Sync (fallback and scrollbar tracking)
+                let scrollTimeout = null;
+                window.addEventListener('scroll', () => {
+                    if (scrollTimeout) clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(() => {
+                        // Find current slide in viewport based on scroll position
+                        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+                        const height = window.innerHeight;
+                        const calculatedIndex = Math.round(scrollTop / height);
+                        
+                        if (calculatedIndex !== this.currentSlide && calculatedIndex >= 0 && calculatedIndex < this.slides.length) {
+                            this.currentSlide = calculatedIndex;
+                            this.updateSlideVisibility();
+                            this.updateProgressBar();
+                            this.updateNavDots();
+                        }
+                    }, 50);
+                });
+            }
+
+            setupTouchNav() {
+                let startY = 0;
+                window.addEventListener('touchstart', (e) => {
+                    startY = e.touches[0].clientY;
+                }, { passive: true });
+
+                window.addEventListener('touchend', (e) => {
+                    if (document.getElementById('lightboxOverlay').classList.contains('active')) return;
+                    
+                    const endY = e.changedTouches[0].clientY;
+                    const deltaY = startY - endY;
+                    
+                    if (Math.abs(deltaY) > 50) { // Swipe threshold
+                        if (deltaY > 0) {
+                            this.nextSlide();
+                        } else {
+                            this.prevSlide();
+                        }
+                    }
+                }, { passive: true });
+            }
+
+            setupResizeHandler() {
+                // Ensure active slide is scrolled into position on window resizing
+                window.addEventListener('resize', () => {
+                    this.slides[this.currentSlide].scrollIntoView({ behavior: 'auto' });
+                });
+            }
+        }
+
+        const presentation = new SlidePresentation();
+
+        // ============================================================
+        // Image Lightbox zoom functionality
+        // ============================================================
+        const lightboxOverlay = document.getElementById('lightboxOverlay');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const lightboxClose = document.getElementById('lightboxClose');
+        const lightboxCaption = document.getElementById('lightboxCaption');
+
+        function initLightbox() {
+            document.querySelectorAll('.zoomable').forEach(img => {
+                // Remove previous event listener to avoid duplicate bindings
+                img.removeEventListener('click', openLightbox);
+                img.addEventListener('click', openLightbox);
+            });
+        }
+
+        function openLightbox(e) {
+            const img = e.currentTarget;
+            lightboxImg.src = img.src;
+            lightboxCaption.innerText = img.alt || 'CyberGuard Screen Preview';
+            lightboxOverlay.classList.add('active');
+        }
+
+        lightboxClose.addEventListener('click', () => {
+            lightboxOverlay.classList.remove('active');
+        });
+
+        lightboxOverlay.addEventListener('click', (e) => {
+            if (e.target === lightboxOverlay) {
+                lightboxOverlay.classList.remove('active');
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && lightboxOverlay.classList.contains('active')) {
+                lightboxOverlay.classList.remove('active');
+            }
+        });
+
+        initLightbox();
+
+        // ============================================================
+        // Presentation Inline Editor Module
+        // ============================================================
+        class PresentationEditor {
+            constructor() {
+                this.isActive = false;
+                this.hotzone = document.querySelector('.edit-hotzone');
+                this.toggleBtn = document.getElementById('editToggle');
+                this.banner = document.querySelector('.edit-banner');
+                this.hideTimeout = null;
+
+                this.init();
+            }
+
+            init() {
+                // Hotzone hover delay management
+                this.hotzone.addEventListener('mouseenter', () => {
+                    clearTimeout(this.hideTimeout);
+                    this.toggleBtn.classList.add('show');
+                });
+                this.hotzone.addEventListener('mouseleave', () => {
+                    this.hideTimeout = setTimeout(() => {
+                        if (!this.isActive) this.toggleBtn.classList.remove('show');
+                    }, 400);
+                });
+
+                this.toggleBtn.addEventListener('mouseenter', () => {
+                    clearTimeout(this.hideTimeout);
+                });
+                this.toggleBtn.addEventListener('mouseleave', () => {
+                    this.hideTimeout = setTimeout(() => {
+                        if (!this.isActive) this.toggleBtn.classList.remove('show');
+                    }, 400);
+                });
+
+                // Activation actions
+                this.toggleBtn.addEventListener('click', () => this.toggleEditMode());
+                this.hotzone.addEventListener('click', () => this.toggleEditMode());
+                
+                // Keyboard shortcut E to toggle
+                document.addEventListener('keydown', (e) => {
+                    if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable')) {
+                        this.toggleEditMode();
+                    }
+                });
+
+                // Intercept Ctrl+S saving to trigger file exporter
+                document.addEventListener('keydown', (e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                        e.preventDefault();
+                        this.exportFile();
+                    }
+                });
+
+                // Load any previously saved content from localStorage
+                this.loadSavedContent();
+            }
+
+            toggleEditMode() {
+                this.isActive = !this.isActive;
+                
+                if (this.isActive) {
+                    document.body.classList.add('edit-active');
+                    this.toggleBtn.classList.add('active');
+                    this.toggleBtn.innerText = '✓ DONE EDITING (E)';
+                    this.banner.classList.add('active');
+                    this.setEditable(true);
+                } else {
+                    document.body.classList.remove('edit-active');
+                    this.toggleBtn.classList.remove('active');
+                    this.toggleBtn.innerText = '✏️ EDIT SLIDES (E)';
+                    this.banner.classList.remove('active');
+                    this.setEditable(false);
+                    this.saveContentToLocal();
+                }
+            }
+
+            setEditable(state) {
+                const targets = document.querySelectorAll('.slide-content h1, .slide-content h2, .slide-content h3, .slide-content h4, .slide-content p, .slide-content li, .slide-content span, .slide-content strong');
+                targets.forEach(el => {
+                    // Skip technical content blocks like pre/code
+                    if (el.tagName === 'PRE' || el.tagName === 'CODE' || el.closest('.seq-diag') || el.closest('.erd-grid') || el.closest('.use-case-diag') || el.closest('.arch-stack')) return;
+                    
+                    if (state) {
+                        el.setAttribute('contenteditable', 'true');
+                    } else {
+                        el.removeAttribute('contenteditable');
+                    }
+                });
+            }
+
+            saveContentToLocal() {
+                const slidesData = [];
+                document.querySelectorAll('.slide').forEach((slide, idx) => {
+                    slidesData.push({
+                        index: idx,
+                        html: slide.innerHTML
+                    });
+                });
+                localStorage.setItem('cyberguard_slides_draft', JSON.stringify(slidesData));
+            }
+
+            loadSavedContent() {
+                const draft = localStorage.getItem('cyberguard_slides_draft');
+                if (draft) {
+                    try {
+                        const slidesData = JSON.parse(draft);
+                        const currentSlides = document.querySelectorAll('.slide');
+                        slidesData.forEach(data => {
+                            if (currentSlides[data.index]) {
+                                currentSlides[data.index].innerHTML = data.html;
+                            }
+                        });
+                        // Re-initialize presentation controls and lightbox with new DOM states
+                        presentation.init();
+                        initLightbox();
+                    } catch(e) {
+                        console.error("Failed to load slides draft: ", e);
+                    }
+                }
+            }
+
+            exportFile() {
+                // Temporarily remove edit classes and editable states so exported files open cleanly
+                const editableEls = Array.from(document.querySelectorAll('[contenteditable]'));
+                editableEls.forEach(el => el.removeAttribute('contenteditable'));
+                document.body.classList.remove('edit-active');
+                
+                this.toggleBtn.classList.remove('active', 'show');
+                this.banner.classList.remove('active');
+
+                // Compile clean html structure
+                const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+                // Restore active editing indicators
+                if (this.isActive) {
+                    document.body.classList.add('edit-active');
+                    editableEls.forEach(el => el.setAttribute('contenteditable', 'true'));
+                    this.toggleBtn.classList.add('active', 'show');
+                    this.banner.classList.add('active');
+                }
+
+                // File download triggers
+                const blob = new Blob([html], { type: 'text/html' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'CyberGuard_Presentation.html';
+                a.click();
+                URL.revokeObjectURL(a.href);
+            }
+        }
+
+        const editor = new PresentationEditor();
+    </script>
+</body>
+</html>
