@@ -349,8 +349,8 @@ describe("OrganizationManager", () => {
 
       await window.organizationManager.deleteOrganization("org-custom");
 
-      expect(window.apiClient.delete).toHaveBeenCalledWith("organizations", {
-        headers: { "X-Organization-Id": "org-custom" },
+      expect(window.apiClient.delete).toHaveBeenCalledWith("organizations/org-custom", {
+        headers: {},
       });
       expect(window.organizationManager.getActiveOrgId()).toBe("org-active");
     });
