@@ -139,11 +139,22 @@ class BillingAPI {
       const apiClient = new APIClient();
       const response = await apiClient.get('/billing/orders');
       
-      // Handle both array response and wrapped response
-      // API might return array directly OR wrapped: {status: 'success', data: [...]}
-      const orders = Array.isArray(response) 
-        ? response 
-        : response.data || response.orders || [];
+      let orders = [];
+      if (Array.isArray(response)) {
+        orders = response;
+      } else if (response) {
+        const data = response.data || response;
+        if (Array.isArray(data)) {
+          orders = data;
+        } else if (data && Array.isArray(data.orders)) {
+          orders = data.orders;
+        } else if (Array.isArray(response.orders)) {
+          orders = response.orders;
+        } else if (data && typeof data === 'object') {
+          const arrayVal = Object.values(data).find(v => Array.isArray(v));
+          orders = arrayVal || [];
+        }
+      }
       
       return orders;
     } catch (error) {

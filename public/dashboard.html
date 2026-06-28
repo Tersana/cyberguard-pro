@@ -4925,8 +4925,12 @@
 
                 try {
                     // Fetch billing history
-                    const orders = await BillingAPI.getOrderHistory();
+                    let orders = await BillingAPI.getOrderHistory();
                     console.log("[BillingHistory] Fetched orders:", orders);
+
+                    if (orders && !Array.isArray(orders)) {
+                        orders = orders.orders || orders.data || [];
+                    }
 
                     // Hide loading
                     loadingEl.classList.add("hidden");
@@ -5089,18 +5093,38 @@
                     // Fetch subscription details
                     let subscription;
                     const activeOrgId = localStorage.getItem("cyberguard_active_org_id");
+
+                    // Fetch all plans to get accurate limits from GET /api/billing/plans
+                    let allPlans = [];
+                    try {
+                        const plansData = await BillingAPI.getPlans();
+                        allPlans = [
+                            ...(plansData.user_plans || []),
+                            ...(plansData.organization_plans || [])
+                        ];
+                    } catch (planError) {
+                        console.error("[Subscription] Error fetching plans from API:", planError);
+                    }
+
                     if (activeOrgId && window.organizationManager) {
                         try {
                             const orgDetails = await window.organizationManager.fetchOrgDetails();
                             const orgSub = orgDetails.organization?.subscription || {};
+                            const planName = orgSub.plan || "free";
+                            
+                            // Find the plan in our fetched plans list to get correct limits
+                            const matchedPlan = allPlans.find(p => p.id.toLowerCase() === planName.toLowerCase());
+                            const matchedLimits = matchedPlan?.limits || {};
+
                             subscription = {
-                                plan: orgSub.plan || "free",
+                                plan: planName,
                                 status: orgSub.status || "active",
                                 expires_at: orgSub.expires_at || null,
                                 limits: {
-                                    max_projects: orgDetails.limits?.max_projects ?? 0,
-                                    max_targets: orgDetails.limits?.max_targets ?? 0,
-                                    max_scans_per_month: orgDetails.limits?.max_scans_per_month ?? 0,
+                                    max_projects: orgDetails.limits?.max_projects ?? matchedLimits.max_projects ?? 0,
+                                    max_targets: orgDetails.limits?.max_targets ?? orgDetails.limits?.max_targets_per_project ?? matchedLimits.max_targets ?? matchedLimits.max_targets_per_project ?? 0,
+                                    max_targets_per_project: orgDetails.limits?.max_targets_per_project ?? orgDetails.limits?.max_targets ?? matchedLimits.max_targets_per_project ?? matchedLimits.max_targets ?? 0,
+                                    max_scans_per_month: orgDetails.limits?.max_scans_per_month ?? matchedLimits.max_scans_per_month ?? 0,
                                 }
                             };
                         } catch (orgError) {
@@ -5108,6 +5132,16 @@
                             // Fallback to personal subscription if org details fetch fails
                             try {
                                 subscription = await BillingAPI.getCurrentSubscription();
+                                const planName = subscription?.plan || "free";
+                                const matchedPlan = allPlans.find(p => p.id.toLowerCase() === planName.toLowerCase());
+                                const matchedLimits = matchedPlan?.limits || {};
+                                
+                                subscription.limits = {
+                                    max_projects: subscription.limits?.max_projects ?? matchedLimits.max_projects ?? 1,
+                                    max_targets: subscription.limits?.max_targets ?? subscription.limits?.max_targets_per_project ?? matchedLimits.max_targets ?? matchedLimits.max_targets_per_project ?? 2,
+                                    max_targets_per_project: subscription.limits?.max_targets_per_project ?? subscription.limits?.max_targets ?? matchedLimits.max_targets_per_project ?? matchedLimits.max_targets ?? 2,
+                                    max_scans_per_month: subscription.limits?.max_scans_per_month ?? matchedLimits.max_scans_per_month ?? 10,
+                                };
                             } catch (subError) {
                                 if (subError.status === 404) {
                                     subscription = {
@@ -5117,6 +5151,7 @@
                                         limits: {
                                             max_projects: 1,
                                             max_targets: 2,
+                                            max_targets_per_project: 2,
                                             max_scans_per_month: 10,
                                         }
                                     };
@@ -5128,6 +5163,16 @@
                     } else {
                         try {
                             subscription = await BillingAPI.getCurrentSubscription();
+                            const planName = subscription?.plan || "free";
+                            const matchedPlan = allPlans.find(p => p.id.toLowerCase() === planName.toLowerCase());
+                            const matchedLimits = matchedPlan?.limits || {};
+
+                            subscription.limits = {
+                                max_projects: subscription.limits?.max_projects ?? matchedLimits.max_projects ?? 1,
+                                max_targets: subscription.limits?.max_targets ?? subscription.limits?.max_targets_per_project ?? matchedLimits.max_targets ?? matchedLimits.max_targets_per_project ?? 2,
+                                max_targets_per_project: subscription.limits?.max_targets_per_project ?? subscription.limits?.max_targets ?? matchedLimits.max_targets_per_project ?? matchedLimits.max_targets ?? 2,
+                                max_scans_per_month: subscription.limits?.max_scans_per_month ?? matchedLimits.max_scans_per_month ?? 10,
+                            };
                         } catch (subError) {
                             if (subError.status === 404) {
                                 subscription = {
@@ -5137,6 +5182,7 @@
                                     limits: {
                                         max_projects: 1,
                                         max_targets: 2,
+                                        max_targets_per_project: 2,
                                         max_scans_per_month: 10,
                                     }
                                 };
