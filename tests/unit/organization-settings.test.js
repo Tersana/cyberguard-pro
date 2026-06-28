@@ -407,6 +407,37 @@ describe("OrganizationSettings", () => {
       expect(renderStepSpy).toHaveBeenCalledWith(3);
     });
 
+    it("clicking Resume Onboarding defaults to step 2 for unknown payment status", async () => {
+      const mockWorkspaces = [
+        { id: "pending-12", name: "Pending Org", corporate_email: "pending@acme.com", subscription: { plan: "starter", status: "pending" } },
+      ];
+      window.apiClient.get.mockImplementation(async (url) => {
+        if (url === "organizations/my-workspaces") {
+          return { organizations: mockWorkspaces };
+        }
+        if (url === "organizations/pending-12/payment/status") {
+          return { payment_status: "some_unknown_status" };
+        }
+        return {};
+      });
+
+      await window.OrganizationSettings.loadSettingsPane();
+
+      const setPendingOrgSpy = vi.spyOn(window.organizationManager, "setPendingOrgId");
+      const openWizardSpy = vi.spyOn(window.OrganizationSettings, "_openOnboardingWizard");
+      const renderStepSpy = vi.spyOn(window.OrganizationSettings, "_renderOnboardingStep");
+
+      const resumeBtn = document.querySelector(".org-resume-btn");
+      expect(resumeBtn).toBeTruthy();
+      resumeBtn.click();
+
+      await new Promise((r) => setTimeout(r, 10));
+
+      expect(setPendingOrgSpy).toHaveBeenCalledWith("pending-12");
+      expect(openWizardSpy).toHaveBeenCalled();
+      expect(renderStepSpy).toHaveBeenCalledWith(2);
+    });
+
     it("clicking Soft Delete on a pending organization calls deleteOrganization and refreshes", async () => {
       const mockWorkspaces = [
         { id: "pending-12", name: "Pending Org", corporate_email: "pending@acme.com", subscription: { plan: "starter", status: "pending" } },
