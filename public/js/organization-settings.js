@@ -1099,20 +1099,35 @@
                 <span class="material-symbols-outlined cyber-plan-icon">groups</span>
                 <div class="cyber-plan-name">Starter</div>
                 <div class="cyber-plan-price">2,999<span> EGP/mo</span></div>
-                <div class="cyber-plan-features">Up to 10 members &bull; 10 projects<br>20 targets/proj &bull; 50 scans/mo</div>
+                <div class="cyber-plan-features">
+                  <div class="cyber-plan-feature-item">Up to <strong>10</strong> members</div>
+                  <div class="cyber-plan-feature-item"><strong>10</strong> projects</div>
+                  <div class="cyber-plan-feature-item"><strong>20</strong> targets/proj</div>
+                  <div class="cyber-plan-feature-item"><strong>50</strong> scans/mo</div>
+                </div>
               </div>
               <div class="cyber-plan-card selected" data-plan-val="pro">
                 <span class="cyber-plan-badge">Popular</span>
                 <span class="material-symbols-outlined cyber-plan-icon">shield_with_heart</span>
                 <div class="cyber-plan-name">Pro</div>
                 <div class="cyber-plan-price">3,999<span> EGP/mo</span></div>
-                <div class="cyber-plan-features">Up to 15 members &bull; 15 projects<br>25 targets/proj &bull; 100 scans/mo</div>
+                <div class="cyber-plan-features">
+                  <div class="cyber-plan-feature-item">Up to <strong>15</strong> members</div>
+                  <div class="cyber-plan-feature-item"><strong>15</strong> projects</div>
+                  <div class="cyber-plan-feature-item"><strong>25</strong> targets/proj</div>
+                  <div class="cyber-plan-feature-item"><strong>100</strong> scans/mo</div>
+                </div>
               </div>
               <div class="cyber-plan-card" data-plan-val="enterprise">
                 <span class="material-symbols-outlined cyber-plan-icon">domain</span>
                 <div class="cyber-plan-name">Enterprise</div>
                 <div class="cyber-plan-price">5,999<span> EGP/mo</span></div>
-                <div class="cyber-plan-features">Up to 50 members &bull; 50 projects<br>100 targets/proj &bull; 500 scans/mo</div>
+                <div class="cyber-plan-features">
+                  <div class="cyber-plan-feature-item">Up to <strong>50</strong> members</div>
+                  <div class="cyber-plan-feature-item"><strong>50</strong> projects</div>
+                  <div class="cyber-plan-feature-item"><strong>100</strong> targets/proj</div>
+                  <div class="cyber-plan-feature-item"><strong>500</strong> scans/mo</div>
+                </div>
               </div>
             </div>
           </div>
