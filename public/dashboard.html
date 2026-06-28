@@ -5180,7 +5180,10 @@
                         maxProjectsEl.textContent = `${subscription.limits.max_projects} Projects`;
                     }
                     if (maxTargetsEl && subscription.limits) {
-                        maxTargetsEl.textContent = `${subscription.limits.max_targets} Targets per Project`;
+                        const targetsLimit = subscription.limits.max_targets_per_project !== undefined
+                            ? subscription.limits.max_targets_per_project
+                            : subscription.limits.max_targets;
+                        maxTargetsEl.textContent = `${targetsLimit} Targets per Project`;
                     }
                     if (maxScansEl && subscription.limits) {
                         maxScansEl.textContent = `${formatNumber(subscription.limits.max_scans_per_month)} Scans per Month`;

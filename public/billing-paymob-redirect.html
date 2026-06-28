@@ -268,6 +268,7 @@
                 
                 // Clean up localStorage
                 localStorage.removeItem('pending_billing_order_id');
+                localStorage.removeItem('pending_billing_plan');
             } else if (isFailure) {
                 // Show failure screen
                 document.getElementById('failure-screen').classList.remove('hidden');
@@ -278,10 +279,12 @@
                 
                 // Clean up localStorage
                 localStorage.removeItem('pending_billing_order_id');
+                localStorage.removeItem('pending_billing_plan');
             } else {
                 // Unknown state - show pending
                 document.getElementById('pending-screen').classList.remove('hidden');
                 localStorage.removeItem('pending_billing_order_id');
+                localStorage.removeItem('pending_billing_plan');
             }
         }
 
@@ -341,9 +344,15 @@
             } else {
                 // Personal subscription flow (Original logic)
                 try {
-                    const subscription = await BillingAPI.pollSubscriptionUntilActive(3000, 5);
+                    const pendingPlan = localStorage.getItem('pending_billing_plan');
+                    const subscription = await BillingAPI.pollSubscriptionUntilActive(3000, 10, pendingPlan);
                     
-                    if (subscription && subscription.status === 'active') {
+                    // Verify that the retrieved active plan matches the plan they just purchased
+                    const isPlanActive = pendingPlan
+                        ? (subscription && subscription.status === 'active' && subscription.plan === pendingPlan)
+                        : (subscription && subscription.status === 'active' && subscription.plan !== 'free');
+                    
+                    if (isPlanActive) {
                         // Hide activation status
                         document.getElementById('activation-status').classList.add('hidden');
                         
