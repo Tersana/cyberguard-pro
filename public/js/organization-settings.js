@@ -439,17 +439,24 @@
               this._openOnboardingWizard();
               
               if (status === "pending_email_verification") {
+                // Email is NOT verified yet — open step 2
                 window.CyberNotify.alert("Please verify your corporate email to proceed.", { type: "info" });
                 this._renderOnboardingStep(2);
               } else if (status === "active") {
+                // Organization is fully active
                 window.CyberNotify.alert("This organization is already active.", { type: "success" });
                 window.organizationManager.setActiveOrg(orgId);
                 window.organizationManager.clearPendingOrgId();
                 this._loadWorkspaceSwitcher();
                 this.loadSettingsPane();
-              } else {
+              } else if (status === "unpaid" || status === "paid") {
+                // Email is verified, proceed to billing/checkout step
                 window.CyberNotify.alert("Email verified! Proceeding to billing details.", { type: "info" });
                 this._renderOnboardingStep(3);
+              } else {
+                // Unknown status — default to step 2 (verification) for safety
+                window.CyberNotify.alert("Resuming onboarding. Please check your email verification status.", { type: "info" });
+                this._renderOnboardingStep(2);
               }
             } catch (err) {
               if (typeof hideLoading === "function") hideLoading();
