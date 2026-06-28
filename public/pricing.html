@@ -190,6 +190,22 @@
             margin-bottom: 1rem;
         }
 
+        /* Plan switcher toggle styles */
+        .plan-switcher-btn {
+            color: var(--cg-text-2) !important;
+            background: transparent !important;
+            transition: all var(--cg-transition-fast) !important;
+        }
+        .plan-switcher-btn:hover:not(.active) {
+            color: var(--cg-text-1) !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+        .plan-switcher-btn.active {
+            background: #ffffff !important;
+            color: #09090b !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        }
+
         /* Plan header */
         .plan-name {
             font-size: 1.35rem;
@@ -714,10 +730,10 @@
         <!-- Plan Switcher Toggle -->
         <div class="plan-switcher-container" style="display: flex; justify-content: center; margin-bottom: 3rem;">
             <div class="plan-switcher" style="display: inline-flex; padding: 4px; background: rgba(30, 41, 59, 0.7); border: 1px solid var(--cg-border); border-radius: 9999px; gap: 4px; box-shadow: var(--cg-shadow-lg);">
-                <button id="btn-personal-plans" class="plan-switcher-btn active" style="padding: 0.6rem 1.5rem; border: none; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all var(--cg-transition-base); background: var(--cg-accent); color: white;" onclick="switchPlanType('personal')">
+                <button id="btn-personal-plans" class="plan-switcher-btn active" style="padding: 0.6rem 1.5rem; border: none; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; cursor: pointer;" onclick="switchPlanType('personal')">
                     Personal Plans
                 </button>
-                <button id="btn-org-plans" class="plan-switcher-btn" style="padding: 0.6rem 1.5rem; border: none; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all var(--cg-transition-base); background: transparent; color: var(--cg-text-2);" onclick="switchPlanType('org')">
+                <button id="btn-org-plans" class="plan-switcher-btn" style="padding: 0.6rem 1.5rem; border: none; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; cursor: pointer;" onclick="switchPlanType('org')">
                     Organization Plans
                 </button>
             </div>
@@ -1003,23 +1019,11 @@
 
             if (type === 'personal') {
                 btnPersonal.classList.add('active');
-                btnPersonal.style.background = 'var(--cg-accent)';
-                btnPersonal.style.color = 'white';
-
                 btnOrg.classList.remove('active');
-                btnOrg.style.background = 'transparent';
-                btnOrg.style.color = 'var(--cg-text-2)';
-
                 renderPlanCards(plansData.user_plans || []);
             } else {
                 btnOrg.classList.add('active');
-                btnOrg.style.background = 'var(--cg-accent)';
-                btnOrg.style.color = 'white';
-
                 btnPersonal.classList.remove('active');
-                btnPersonal.style.background = 'transparent';
-                btnPersonal.style.color = 'var(--cg-text-2)';
-
                 renderPlanCards(plansData.organization_plans || []);
             }
         }
