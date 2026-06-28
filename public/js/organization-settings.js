@@ -518,9 +518,9 @@
 
     _renderUsageMetrics(limits, usage) {
       const metrics = [
-        { label: "Projects", used: usage.projects_count || 0, max: limits.max_projects || 0, color: "from-blue-500 to-indigo-500" },
-        { label: "Scans This Month", used: usage.scans_used || 0, max: limits.max_scans_per_month || 0, color: "from-blue-500 to-cyan-500" },
-        { label: "Team Members", used: usage.members_count || 0, max: limits.max_members || 0, color: "from-violet-500 to-purple-500" },
+        { label: "Projects", used: usage.projects_count || 0, max: limits.max_projects || 0, color: "bg-blue-500" },
+        { label: "Scans This Month", used: usage.scans_used || 0, max: limits.max_scans_per_month || 0, color: "bg-blue-500" },
+        { label: "Team Members", used: usage.members_count || 0, max: limits.max_members || 0, color: "bg-blue-500" },
       ];
 
       const bars = metrics
@@ -533,7 +533,7 @@
                 <span class="text-slate-300 font-medium">${m.used} / ${m.max || "—"}</span>
               </div>
               <div class="w-full bg-[#0a0a0a] rounded-full h-2 overflow-hidden border border-white/5">
-                <div class="bg-gradient-to-r ${m.color} h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(59,130,246,0.3)]"
+                <div class="${m.color} h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(59,130,246,0.3)]"
                      style="width:${pct}%"></div>
               </div>
             </div>`;
