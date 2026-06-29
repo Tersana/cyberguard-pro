@@ -1087,11 +1087,17 @@ class ProjectManager {
   showFieldError(fieldId, message) {
     const inp = document.getElementById(fieldId);
     const errEl = document.getElementById(`${fieldId}-error`);
-    if (inp) inp.classList.add("border-red-500/50");
+    let displayed = false;
+    if (inp) {
+      inp.classList.add("border-red-500/50");
+      displayed = true;
+    }
     if (errEl) {
       errEl.textContent = message;
       errEl.classList.remove("hidden");
+      displayed = true;
     }
+    return displayed;
   }
 
   /** Client-side validation for create/edit forms. */
@@ -1155,10 +1161,31 @@ class ProjectManager {
         );
       await this.renderProjectsList();
     } catch (error) {
-      if (error.status === 422 && error.errors) {
-        error.errors.forEach((e) =>
-          this.showFieldError(`project-${e.field}`, e.message),
-        );
+      if ((error.name === "ValidationError" || error.status === 422) && error.errors) {
+        let shownAny = false;
+        error.errors.forEach((e) => {
+          const fieldId = `project-${e.field}`;
+          let displayed = this.showFieldError(fieldId, e.message);
+          if (!displayed) {
+            // Try hyphenated version
+            displayed = this.showFieldError(fieldId.replace(/_/g, "-"), e.message);
+          }
+          if (displayed) shownAny = true;
+        });
+        if (!shownAny) {
+          let msg = error.message || "Failed to create project.";
+          if (error.errors && error.errors.length > 0) {
+            const limitErr = error.errors.find(e => e.field === "limit" || e.field === "projects" || String(e.message).toLowerCase().includes("limit") || String(e.message).toLowerCase().includes("plan"));
+            if (limitErr) {
+              msg = limitErr.message;
+            } else {
+              msg = error.errors.map(e => e.message).join(" ");
+            }
+          }
+          if (window.CyberNotify) {
+            window.CyberNotify.alert(msg, { type: "error" });
+          }
+        }
       } else {
         if (window.CyberNotify)
           window.CyberNotify.alert(
@@ -1267,11 +1294,17 @@ class ProjectManager {
   showEditFieldError(fieldId, message) {
     const inp = document.getElementById(fieldId);
     const errEl = document.getElementById(`${fieldId}-error`);
-    if (inp) inp.classList.add("border-red-500/50");
+    let displayed = false;
+    if (inp) {
+      inp.classList.add("border-red-500/50");
+      displayed = true;
+    }
     if (errEl) {
       errEl.textContent = message;
       errEl.classList.remove("hidden");
+      displayed = true;
     }
+    return displayed;
   }
 
   async handleEditProjectFormSubmit(event) {
@@ -1318,13 +1351,29 @@ class ProjectManager {
         );
       await this.renderProjectsList();
     } catch (error) {
-      if (error.status === 422 && error.errors) {
-        error.errors.forEach((e) =>
-          this.showEditFieldError(
+      if ((error.name === "ValidationError" || error.status === 422) && error.errors) {
+        let shownAny = false;
+        error.errors.forEach((e) => {
+          const displayed = this.showEditFieldError(
             `edit-project-${e.field.replace(/_/g, "-")}`,
             e.message,
-          ),
-        );
+          );
+          if (displayed) shownAny = true;
+        });
+        if (!shownAny) {
+          let msg = error.message || "Failed to update project.";
+          if (error.errors && error.errors.length > 0) {
+            const limitErr = error.errors.find(e => e.field === "limit" || e.field === "projects" || String(e.message).toLowerCase().includes("limit") || String(e.message).toLowerCase().includes("plan"));
+            if (limitErr) {
+              msg = limitErr.message;
+            } else {
+              msg = error.errors.map(e => e.message).join(" ");
+            }
+          }
+          if (window.CyberNotify) {
+            window.CyberNotify.alert(msg, { type: "error" });
+          }
+        }
       } else if (error.status === 403) {
         if (window.CyberNotify)
           window.CyberNotify.alert(
