@@ -299,7 +299,7 @@
 .settings-avatar-actions-row {
     display: flex;
     align-items: center;
-    gap: var(--cg-space-2.5);
+    gap: var(--cg-space-3);
 }
 
 /* Inline strength analyzer */

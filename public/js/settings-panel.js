@@ -380,7 +380,7 @@ class SettingsPanel {
         if (avatarContainer) {
             const avatarUrl = user.avatar || user.avatarUrl || localStorage.getItem("cyberguard_user_avatar") || "";
             if (avatarUrl) {
-                avatarContainer.innerHTML = `<img src="${escapeHtml(avatarUrl)}" alt="Avatar" class="w-full h-full object-cover">`;
+                avatarContainer.innerHTML = `<img src="${escapeHtml(avatarUrl)}" alt="Avatar" class="w-full h-full object-cover" referrerpolicy="no-referrer">`;
             } else {
                 avatarContainer.innerHTML = `<span class="text-xs font-bold text-white" id="navbarUserInitials">${escapeHtml(initials)}</span>`;
             }
