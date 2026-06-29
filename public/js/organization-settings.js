@@ -465,48 +465,19 @@
           });
         });
 
-        // Bind soft delete pending buttons
-        pane.querySelectorAll(".org-soft-delete-pending-btn").forEach((btn) => {
+        // Bind delete pending organization buttons
+        pane.querySelectorAll(".org-delete-pending-btn").forEach((btn) => {
           btn.addEventListener("click", () => {
             const orgId = btn.getAttribute("data-org-id");
             const orgName = btn.getAttribute("data-org-name");
             
             window.CyberNotify.confirm(
-              `Are you sure you want to move the pending organization "${orgName}" to Trash?`,
+              `Are you sure you want to permanently delete the pending organization "${orgName}"? This action is irreversible.`,
               async (confirmed) => {
                 if (!confirmed) return;
                 try {
-                  await om.deleteOrganization(orgId);
-                  window.CyberNotify.alert("Organization moved to Trash.", { type: "success" });
-                  if (om.getPendingOrgId() === orgId) {
-                    om.clearPendingOrgId();
-                  }
-                  // Reload lists
-                  this._loadWorkspaceSwitcher();
-                  this.loadSettingsPane();
-                } catch (err) {
-                  window.CyberNotify.alert(err.message || "Failed to delete organization.", { type: "error" });
-                }
-              }
-            );
-          });
-        });
-
-        // Bind force delete pending buttons
-        pane.querySelectorAll(".org-force-delete-pending-btn").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const orgId = btn.getAttribute("data-org-id");
-            const orgName = btn.getAttribute("data-org-name");
-            
-            window.CyberNotify.confirm(
-              `Are you sure you want to PERMANENTLY delete the pending organization "${orgName}"? This action is irreversible.`,
-              async (confirmed) => {
-                if (!confirmed) return;
-                try {
-                  // Soft delete first to place in Trash, then force delete
-                  await om.deleteOrganization(orgId);
-                  await om.forceDeleteOrganization(orgId);
-                  window.CyberNotify.alert("Organization permanently deleted.", { type: "success" });
+                  await om.deletePendingOrganization(orgId);
+                  window.CyberNotify.alert("Pending organization deleted successfully.", { type: "success" });
                   if (om.getPendingOrgId() === orgId) {
                     om.clearPendingOrgId();
                   }
@@ -651,16 +622,10 @@
                           data-org-status="${escapeHtml(sub.status || "")}">
                     Resume Onboarding
                   </button>
-                  <button class="cyber-btn-ghost-warning org-soft-delete-pending-btn w-8 h-8 p-0 flex items-center justify-center rounded-lg"
+                  <button class="cyber-btn-ghost-danger org-delete-pending-btn w-8 h-8 p-0 flex items-center justify-center rounded-lg"
                           data-org-id="${escapeHtml(org.id)}"
                           data-org-name="${escapeHtml(org.name)}"
-                          title="Move to Trash">
-                    <span class="material-symbols-outlined text-[16px]">delete</span>
-                  </button>
-                  <button class="cyber-btn-ghost-danger org-force-delete-pending-btn w-8 h-8 p-0 flex items-center justify-center rounded-lg"
-                          data-org-id="${escapeHtml(org.id)}"
-                          data-org-name="${escapeHtml(org.name)}"
-                          title="Delete Permanently">
+                          title="Delete Pending Organization">
                     <span class="material-symbols-outlined text-[16px]">delete_forever</span>
                   </button>
                 </div>

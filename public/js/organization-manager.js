@@ -463,6 +463,30 @@
     }
 
     /**
+     * Permanently delete a pending (non-active) organization (Owner only).
+     * DELETE /api/organizations/{organization_id}/pending
+     * @param {string} organizationId
+     * @returns {Promise<Object>}
+     */
+    async deletePendingOrganization(organizationId) {
+      try {
+        if (typeof showLoading === "function") showLoading("Deleting pending organization…");
+        const response = await window.apiClient.delete(
+          `organizations/${organizationId}/pending`
+        );
+        if (this.getPendingOrgId() === organizationId) {
+          this.clearPendingOrgId();
+        }
+        return response;
+      } catch (error) {
+        console.error("[OrganizationManager] deletePendingOrganization error:", error);
+        throw error;
+      } finally {
+        if (typeof hideLoading === "function") hideLoading();
+      }
+    }
+
+    /**
      * Force delete organization from trash (Owner only).
      * DELETE /api/organizations/{organization_id}/force
      * @param {string} organizationId

@@ -372,6 +372,15 @@ describe("OrganizationManager", () => {
       expect(window.apiClient.post).toHaveBeenCalledWith("organizations/org-88/restore");
       expect(result.message).toBe("Restored");
     });
+
+    it("deletePendingOrganization sends DELETE to /pending", async () => {
+      window.apiClient.delete.mockResolvedValue({ status: "success", message: "Pending organization deleted successfully." });
+
+      const result = await window.organizationManager.deletePendingOrganization("org-99");
+
+      expect(window.apiClient.delete).toHaveBeenCalledWith("organizations/org-99/pending");
+      expect(result.message).toBe("Pending organization deleted successfully.");
+    });
   });
 
   // ─── Team / IAM ────────────────────────────────────────────────

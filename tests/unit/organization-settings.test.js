@@ -341,8 +341,7 @@ describe("OrganizationSettings", () => {
       expect(pane.innerHTML).toContain("Pending Org");
       expect(pane.innerHTML).toContain("pending@acme.com");
       expect(pane.querySelector(".org-resume-btn")).toBeTruthy();
-      expect(pane.querySelector(".org-soft-delete-pending-btn")).toBeTruthy();
-      expect(pane.querySelector(".org-force-delete-pending-btn")).toBeTruthy();
+      expect(pane.querySelector(".org-delete-pending-btn")).toBeTruthy();
     });
 
     it("clicking Resume Onboarding sets pending org ID and opens wizard at step 2 when email is not verified", async () => {
@@ -438,7 +437,7 @@ describe("OrganizationSettings", () => {
       expect(renderStepSpy).toHaveBeenCalledWith(2);
     });
 
-    it("clicking Soft Delete on a pending organization calls deleteOrganization and refreshes", async () => {
+    it("clicking Delete on a pending organization calls deletePendingOrganization and refreshes", async () => {
       const mockWorkspaces = [
         { id: "pending-12", name: "Pending Org", corporate_email: "pending@acme.com", subscription: { plan: "starter", status: "pending" } },
       ];
@@ -451,49 +450,19 @@ describe("OrganizationSettings", () => {
 
       await window.OrganizationSettings.loadSettingsPane();
 
-      const softDeleteSpy = vi.spyOn(window.organizationManager, "deleteOrganization").mockResolvedValue({});
+      const deletePendingSpy = vi.spyOn(window.organizationManager, "deletePendingOrganization").mockResolvedValue({});
       const confirmSpy = vi.spyOn(window.CyberNotify, "confirm").mockImplementation((msg, cb) => cb(true));
       const alertSpy = vi.spyOn(window.CyberNotify, "alert");
 
-      const softDeleteBtn = document.querySelector(".org-soft-delete-pending-btn");
-      expect(softDeleteBtn).toBeTruthy();
-      softDeleteBtn.click();
+      const deleteBtn = document.querySelector(".org-delete-pending-btn");
+      expect(deleteBtn).toBeTruthy();
+      deleteBtn.click();
 
       await new Promise((r) => setTimeout(r, 10));
 
       expect(confirmSpy).toHaveBeenCalled();
-      expect(softDeleteSpy).toHaveBeenCalledWith("pending-12");
-      expect(alertSpy).toHaveBeenCalledWith("Organization moved to Trash.", { type: "success" });
-    });
-
-    it("clicking Force Delete on a pending organization calls deleteOrganization and forceDeleteOrganization", async () => {
-      const mockWorkspaces = [
-        { id: "pending-12", name: "Pending Org", corporate_email: "pending@acme.com", subscription: { plan: "starter", status: "pending" } },
-      ];
-      window.apiClient.get.mockImplementation(async (url) => {
-        if (url === "organizations/my-workspaces") {
-          return { organizations: mockWorkspaces };
-        }
-        return {};
-      });
-
-      await window.OrganizationSettings.loadSettingsPane();
-
-      const softDeleteSpy = vi.spyOn(window.organizationManager, "deleteOrganization").mockResolvedValue({});
-      const forceDeleteSpy = vi.spyOn(window.organizationManager, "forceDeleteOrganization").mockResolvedValue({});
-      const confirmSpy = vi.spyOn(window.CyberNotify, "confirm").mockImplementation((msg, cb) => cb(true));
-      const alertSpy = vi.spyOn(window.CyberNotify, "alert");
-
-      const forceDeleteBtn = document.querySelector(".org-force-delete-pending-btn");
-      expect(forceDeleteBtn).toBeTruthy();
-      forceDeleteBtn.click();
-
-      await new Promise((r) => setTimeout(r, 10));
-
-      expect(confirmSpy).toHaveBeenCalled();
-      expect(softDeleteSpy).toHaveBeenCalledWith("pending-12");
-      expect(forceDeleteSpy).toHaveBeenCalledWith("pending-12");
-      expect(alertSpy).toHaveBeenCalledWith("Organization permanently deleted.", { type: "success" });
+      expect(deletePendingSpy).toHaveBeenCalledWith("pending-12");
+      expect(alertSpy).toHaveBeenCalledWith("Pending organization deleted successfully.", { type: "success" });
     });
 
     it("renders trashed organizations list when workspaces contain deleted orgs", async () => {
