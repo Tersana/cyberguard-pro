@@ -743,6 +743,19 @@ class AuthManager {
       // Use the user data from profile (already includes two_factor_enabled)
       const user = profileResult.user;
 
+      // Preserve locally-stored avatar if the backend didn't return one.
+      // The backend's /api/auth/me may not always include avatar_url
+      // (e.g. Google OAuth photos are stored client-side). Without this
+      // merge, restoreSession() would overwrite the Google avatar with
+      // an empty string on every page load.
+      if (!user.avatarUrl && !user.avatar) {
+        const storedUser = JSON.parse(localStorage.getItem("cyberguard_user") || "{}");
+        const localAvatar = storedUser.avatar || storedUser.avatarUrl || localStorage.getItem("cyberguard_user_avatar") || "";
+        if (localAvatar) {
+          user.avatarUrl = localAvatar;
+        }
+      }
+
       // Save user session
       this.saveUserSession(user);
 
@@ -987,6 +1000,7 @@ class AuthManager {
       this.apiClient.clearToken();
       localStorage.removeItem("cyberguard_user");
       localStorage.removeItem("cyberguard_session");
+      localStorage.removeItem("cyberguard_user_avatar");
 
       // Clear all 2FA-related state to prevent ghost prompts on next login
       localStorage.removeItem("requires_2fa");
