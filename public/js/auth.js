@@ -1111,13 +1111,21 @@ class AuthManager {
           if (!img) {
             img = document.createElement("img");
             img.alt = "Avatar";
-            img.referrerPolicy = "no-referrer";
             img.style.width = "100%";
             img.style.height = "100%";
             img.style.objectFit = "cover";
             img.style.borderRadius = "50%";
             container.appendChild(img);
           }
+          // Always set referrerPolicy BEFORE src to ensure Google CDN
+          // doesn't reject the request due to a Referer header
+          img.referrerPolicy = "no-referrer";
+          img.onerror = function() {
+            // Graceful fallback to initials if external image fails
+            img.style.display = "none";
+            userInitialsEl.textContent = initials;
+            userInitialsEl.style.display = "block";
+          };
           img.src = avatarUrl;
           img.style.display = "block";
           userInitialsEl.style.display = "none";
@@ -1136,13 +1144,21 @@ class AuthManager {
           if (!img) {
             img = document.createElement("img");
             img.alt = "Avatar";
-            img.referrerPolicy = "no-referrer";
             img.style.width = "100%";
             img.style.height = "100%";
             img.style.objectFit = "cover";
             img.style.borderRadius = "50%";
             container.appendChild(img);
           }
+          // Always set referrerPolicy BEFORE src to ensure Google CDN
+          // doesn't reject the request due to a Referer header
+          img.referrerPolicy = "no-referrer";
+          img.onerror = function() {
+            // Graceful fallback to initials if external image fails
+            img.style.display = "none";
+            mobileUserInitialsEl.textContent = initials;
+            mobileUserInitialsEl.style.display = "block";
+          };
           img.src = avatarUrl;
           img.style.display = "block";
           mobileUserInitialsEl.style.display = "none";

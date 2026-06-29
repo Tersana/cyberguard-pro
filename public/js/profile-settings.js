@@ -52,12 +52,7 @@ class ProfileSettings {
             <form id="profile-settings-form" class="space-y-6" onsubmit="return false;">
                 <!-- Avatar Upload Section -->
                 <div class="settings-avatar-section">
-                    <div class="settings-avatar-big" id="profile-avatar-display">
-                        ${this.currentState.avatar 
-                            ? `<img src="${escapeHtml(this.currentState.avatar)}" alt="Avatar Preview" id="profile-avatar-img" referrerpolicy="no-referrer">`
-                            : `<span id="profile-avatar-initials">${escapeHtml(initials)}</span>`
-                        }
-                    </div>
+                    <div class="settings-avatar-big" id="profile-avatar-display"></div>
                     <div class="settings-avatar-actions">
                         <div class="settings-avatar-actions-row">
                             <input type="file" id="profile-photo-input" accept="image/*" class="hidden">
@@ -104,6 +99,9 @@ class ProfileSettings {
                 </div>
             </form>
         `;
+        // Populate avatar via DOM API (createElement) to guarantee
+        // referrerPolicy is set BEFORE src, fixing Google CDN images
+        this.renderAvatarPreview();
     }
 
     setupEventListeners() {
@@ -204,8 +202,27 @@ class ProfileSettings {
         const container = document.getElementById("profile-avatar-display");
         if (!container) return;
 
+        // Clear existing content
+        container.innerHTML = "";
+
         if (this.currentState.avatar) {
-            container.innerHTML = `<img src="${escapeHtml(this.currentState.avatar)}" alt="Avatar Preview" id="profile-avatar-img" referrerpolicy="no-referrer">`;
+            // Use createElement to guarantee referrerPolicy is applied
+            // BEFORE the browser begins fetching the image src.
+            // innerHTML can cause the browser to start loading the src
+            // before processing the referrerpolicy attribute, which makes
+            // Google CDN reject the request with a 403.
+            const img = document.createElement("img");
+            img.id = "profile-avatar-img";
+            img.alt = "Avatar Preview";
+            img.referrerPolicy = "no-referrer"; // Set BEFORE src
+            const self = this;
+            img.onerror = function() {
+                // Graceful fallback to initials if external image fails
+                const initials = self.getInitials(self.currentState.fullName);
+                container.innerHTML = `<span id="profile-avatar-initials">${escapeHtml(initials)}</span>`;
+            };
+            img.src = this.currentState.avatar; // Set src LAST
+            container.appendChild(img);
         } else {
             const initials = this.getInitials(this.currentState.fullName);
             container.innerHTML = `<span id="profile-avatar-initials">${escapeHtml(initials)}</span>`;
