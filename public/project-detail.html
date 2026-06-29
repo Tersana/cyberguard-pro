@@ -5632,15 +5632,29 @@
                         const d = await res.json().catch(() => ({}));
                         const errors = d.errors || {};
                         let shown = false;
-                        Object.entries(errors).forEach(([field, msgs]) => {
-                            const msg = Array.isArray(msgs)
-                                ? msgs.join(". ")
-                                : String(msgs);
-                            showTargetFieldError(`at-${field}`, msg);
-                            shown = true;
-                        });
-                        if (!shown)
-                            notify(d.message || "Validation error.", "error");
+                        if (Array.isArray(errors)) {
+                            errors.forEach(e => {
+                                const displayed = showTargetFieldError(`at-${e.field}`, e.message);
+                                if (displayed) shown = true;
+                            });
+                        } else {
+                            Object.entries(errors).forEach(([field, msgs]) => {
+                                const msg = Array.isArray(msgs)
+                                    ? msgs.join(". ")
+                                    : String(msgs);
+                                const displayed = showTargetFieldError(`at-${field}`, msg);
+                                if (displayed) shown = true;
+                            });
+                        }
+                        if (!shown) {
+                            let msg = d.message || "Validation error.";
+                            if (Array.isArray(errors) && errors.length > 0) {
+                                msg = errors.map(e => e.message).join(". ");
+                            } else if (typeof errors === "object" && Object.keys(errors).length > 0) {
+                                msg = Object.values(errors).flat().join(". ");
+                            }
+                            notify(msg, "error");
+                        }
                         return;
                     }
                     if (!res.ok) {
@@ -5777,15 +5791,29 @@
                         const d = await res.json().catch(() => ({}));
                         const errors = d.errors || {};
                         let shown = false;
-                        Object.entries(errors).forEach(([field, msgs]) => {
-                            const msg = Array.isArray(msgs)
-                                ? msgs.join(". ")
-                                : String(msgs);
-                            showTargetFieldError(`et-${field}`, msg);
-                            shown = true;
-                        });
-                        if (!shown)
-                            notify(d.message || "Validation error.", "error");
+                        if (Array.isArray(errors)) {
+                            errors.forEach(e => {
+                                const displayed = showTargetFieldError(`et-${e.field}`, e.message);
+                                if (displayed) shown = true;
+                            });
+                        } else {
+                            Object.entries(errors).forEach(([field, msgs]) => {
+                                const msg = Array.isArray(msgs)
+                                    ? msgs.join(". ")
+                                    : String(msgs);
+                                const displayed = showTargetFieldError(`et-${field}`, msg);
+                                if (displayed) shown = true;
+                            });
+                        }
+                        if (!shown) {
+                            let msg = d.message || "Validation error.";
+                            if (Array.isArray(errors) && errors.length > 0) {
+                                msg = errors.map(e => e.message).join(". ");
+                            } else if (typeof errors === "object" && Object.keys(errors).length > 0) {
+                                msg = Object.values(errors).flat().join(". ");
+                            }
+                            notify(msg, "error");
+                        }
                         return;
                     }
                     if (!res.ok) {
@@ -5896,11 +5924,17 @@
             function showTargetFieldError(inputId, message) {
                 const errEl = document.getElementById(`${inputId}-error`);
                 const inp = document.getElementById(inputId);
+                let displayed = false;
                 if (errEl) {
                     errEl.textContent = message;
                     errEl.classList.remove("hidden");
+                    displayed = true;
                 }
-                if (inp) inp.classList.add("border-red-400");
+                if (inp) {
+                    inp.classList.add("border-red-400");
+                    displayed = true;
+                }
+                return displayed;
             }
 
             function clearTargetField(inputId) {

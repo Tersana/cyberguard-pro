@@ -614,7 +614,15 @@
       console.log("[ScanManager] /scan/start response:", res.status, data);
 
       if (!res.ok) {
-        notify(data.message || `Failed to start scan (${res.status}).`, "error");
+        let msg = data.message || `Failed to start scan (${res.status}).`;
+        if (data.errors) {
+          if (Array.isArray(data.errors)) {
+            msg = data.errors.map(e => e.message).join(". ");
+          } else if (typeof data.errors === "object") {
+            msg = Object.values(data.errors).flat().join(". ");
+          }
+        }
+        notify(msg, "error");
         return;
       }
 
