@@ -54,7 +54,7 @@ class ProfileSettings {
                 <div class="settings-avatar-section">
                     <div class="settings-avatar-big" id="profile-avatar-display">
                         ${this.currentState.avatar 
-                            ? `<img src="${escapeHtml(this.currentState.avatar)}" alt="Avatar Preview" id="profile-avatar-img">`
+                            ? `<img src="${escapeHtml(this.currentState.avatar)}" alt="Avatar Preview" id="profile-avatar-img" referrerpolicy="no-referrer">`
                             : `<span id="profile-avatar-initials">${escapeHtml(initials)}</span>`
                         }
                     </div>
@@ -205,7 +205,7 @@ class ProfileSettings {
         if (!container) return;
 
         if (this.currentState.avatar) {
-            container.innerHTML = `<img src="${escapeHtml(this.currentState.avatar)}" alt="Avatar Preview" id="profile-avatar-img">`;
+            container.innerHTML = `<img src="${escapeHtml(this.currentState.avatar)}" alt="Avatar Preview" id="profile-avatar-img" referrerpolicy="no-referrer">`;
         } else {
             const initials = this.getInitials(this.currentState.fullName);
             container.innerHTML = `<span id="profile-avatar-initials">${escapeHtml(initials)}</span>`;
