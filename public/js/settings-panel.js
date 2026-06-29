@@ -380,7 +380,22 @@ class SettingsPanel {
         if (avatarContainer) {
             const avatarUrl = user.avatar || user.avatarUrl || localStorage.getItem("cyberguard_user_avatar") || "";
             if (avatarUrl) {
-                avatarContainer.innerHTML = `<img src="${escapeHtml(avatarUrl)}" alt="Avatar" class="w-full h-full object-cover" referrerpolicy="no-referrer">`;
+                // Use createElement to guarantee referrerPolicy is applied
+                // BEFORE the browser begins fetching the image src.
+                // innerHTML can cause the browser to start loading the src
+                // before processing the referrerpolicy attribute, which makes
+                // Google CDN reject the request with a 403.
+                avatarContainer.innerHTML = "";
+                const avatarImg = document.createElement("img");
+                avatarImg.alt = "Avatar";
+                avatarImg.className = "w-full h-full object-cover";
+                avatarImg.referrerPolicy = "no-referrer"; // Set BEFORE src
+                avatarImg.onerror = function() {
+                    // Graceful fallback to initials if external image fails
+                    avatarContainer.innerHTML = `<span class="text-xs font-bold text-white" id="navbarUserInitials">${escapeHtml(initials)}</span>`;
+                };
+                avatarImg.src = avatarUrl; // Set src LAST
+                avatarContainer.appendChild(avatarImg);
             } else {
                 avatarContainer.innerHTML = `<span class="text-xs font-bold text-white" id="navbarUserInitials">${escapeHtml(initials)}</span>`;
             }
