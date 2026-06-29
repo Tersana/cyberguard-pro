@@ -214,6 +214,15 @@
         // ── Save user session ─────────────────────────────────────────
         this._authManager.saveUserSession(userProfile);
 
+        // ── Persist Google avatar URL separately ──────────────────────
+        // The backend's /api/auth/me may not return avatar_url on
+        // subsequent page loads.  Storing it in a dedicated key ensures
+        // restoreSession() can recover it instead of losing it.
+        const googleAvatar = userProfile.avatarUrl || userProfile.avatar || "";
+        if (googleAvatar) {
+          localStorage.setItem("cyberguard_user_avatar", googleAvatar);
+        }
+
         // ── Track successful login ────────────────────────────────────
         if (
           typeof this._authManager.trackLoginAttempt === "function" &&
