@@ -1111,6 +1111,7 @@ class AuthManager {
           if (!img) {
             img = document.createElement("img");
             img.alt = "Avatar";
+            img.referrerPolicy = "no-referrer";
             img.style.width = "100%";
             img.style.height = "100%";
             img.style.objectFit = "cover";
@@ -1135,6 +1136,7 @@ class AuthManager {
           if (!img) {
             img = document.createElement("img");
             img.alt = "Avatar";
+            img.referrerPolicy = "no-referrer";
             img.style.width = "100%";
             img.style.height = "100%";
             img.style.objectFit = "cover";
