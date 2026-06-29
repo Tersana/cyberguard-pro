@@ -390,7 +390,9 @@ class APIClient {
 
       // Add Content-Type for requests with body
       if (data && ["POST", "PUT", "PATCH"].includes(method)) {
-        headers["Content-Type"] = "application/json";
+        if (!(typeof FormData !== "undefined" && data instanceof FormData)) {
+          headers["Content-Type"] = "application/json";
+        }
       }
 
       // Build fetch options — spread fetchExtra (without headers/skipAuth) to avoid overwriting
@@ -402,7 +404,7 @@ class APIClient {
 
       // Add body for POST/PUT/PATCH
       if (data) {
-        fetchOptions.body = JSON.stringify(data);
+        fetchOptions.body = (typeof FormData !== "undefined" && data instanceof FormData) ? data : JSON.stringify(data);
       }
 
       // Apply request interceptors
