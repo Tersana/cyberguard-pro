@@ -291,7 +291,7 @@ class SettingsPanel {
         // Save each dirty tab independently — do NOT short-circuit so all tabs are saved
         if (this.dirtyRegistry.profile) {
             try {
-                const res = window.ProfileSettings.save();
+                const res = await window.ProfileSettings.save();
                 results.push(res !== false);
             } catch (e) {
                 console.error("[SettingsPanel] ProfileSettings.save() threw:", e);

@@ -61,10 +61,9 @@ class ProfileSettings {
                     <div class="settings-avatar-actions">
                         <div class="settings-avatar-actions-row">
                             <input type="file" id="profile-photo-input" accept="image/*" class="hidden">
-                            <button type="button" id="profile-upload-btn" class="cyber-btn-ghost text-xs flex items-center gap-1.5" style="opacity: 0.6; cursor: not-allowed;" disabled>
+                            <button type="button" id="profile-upload-btn" class="cyber-btn-ghost text-xs flex items-center gap-1.5">
                                 <span class="material-symbols-outlined" style="font-size: 1rem;">upload</span>
                                 Upload Photo
-                                <span class="coming-soon-badge">Coming Soon</span>
                             </button>
                             ${this.currentState.avatar 
                                 ? `<button type="button" id="profile-remove-photo-btn" class="cyber-btn-danger text-xs py-1 px-2.5 rounded-lg flex items-center gap-1">
@@ -116,6 +115,14 @@ class ProfileSettings {
         const phoneInput = document.getElementById("profile-phone");
         const photoInput = document.getElementById("profile-photo-input");
         const removePhotoBtn = document.getElementById("profile-remove-photo-btn");
+        const uploadBtn = document.getElementById("profile-upload-btn");
+
+        // Trigger file input click when upload button is clicked
+        if (uploadBtn && photoInput) {
+            uploadBtn.addEventListener("click", () => {
+                photoInput.click();
+            });
+        }
 
         // Listen for input changes to track dirty state
         [nameInput, roleInput, phoneInput].forEach(input => {
@@ -135,7 +142,7 @@ class ProfileSettings {
             }
         });
 
-        // Photo Upload Handling (Mock - is disabled but we construct picker logic just in case backend is enabled)
+        // Photo Upload Handling
         if (photoInput) {
             photoInput.addEventListener("change", (e) => {
                 const file = e.target.files[0];
@@ -150,6 +157,8 @@ class ProfileSettings {
                     CyberNotify.alert("Only image files are allowed.", { type: "error" });
                     return;
                 }
+
+                this.photoFile = file;
 
                 const reader = new FileReader();
                 reader.onload = (event) => {
@@ -174,6 +183,7 @@ class ProfileSettings {
                 (confirmed) => {
                     if (confirmed) {
                         this.currentState.avatar = "";
+                        this.photoFile = null;
                         this.checkDirtyState();
                         this.renderAvatarPreview();
                     }
@@ -183,6 +193,7 @@ class ProfileSettings {
         } else {
             if (confirm("Are you sure you want to remove your profile photo?")) {
                 this.currentState.avatar = "";
+                this.photoFile = null;
                 this.checkDirtyState();
                 this.renderAvatarPreview();
             }
@@ -250,13 +261,44 @@ class ProfileSettings {
         }));
     }
 
-    save() {
+    async save() {
         if (!this.currentState.fullName) {
             CyberNotify.alert("Display Name is required.", { type: "error" });
             return false;
         }
 
         try {
+            if (typeof showLoading === "function") {
+                showLoading("Saving profile...");
+            }
+
+            // 1. Upload photo if selected
+            if (this.photoFile) {
+                const formData = new FormData();
+                formData.append("avatar", this.photoFile);
+
+                // Setup header Accept: application/json for avatar upload as specified
+                const avatarResponse = await window.apiClient.post("/user/profile/avatar", formData, {
+                    headers: { "Accept": "application/json" }
+                });
+
+                // Extract avatar URL
+                const newAvatarUrl = avatarResponse.avatar || 
+                                     avatarResponse.avatar_url || 
+                                     avatarResponse.url || 
+                                     (avatarResponse.data && (avatarResponse.data.avatar || avatarResponse.data.avatar_url));
+
+                if (newAvatarUrl) {
+                    this.currentState.avatar = newAvatarUrl;
+                }
+            }
+
+            // 2. Call profile update API (PUT or PATCH /user/profile)
+            await window.apiClient.put("/user/profile", {
+                full_name: this.currentState.fullName,
+                job_title: this.currentState.jobTitle
+            });
+
             const user = window.authManager.getCurrentUser() || {};
             
             // Update in-memory user
@@ -265,7 +307,7 @@ class ProfileSettings {
             user.jobTitle = this.currentState.jobTitle;
             user.phoneNumber = this.currentState.phoneNumber;
             
-            // Save avatar reference locally (simulate file upload endpoint draft)
+            // Save avatar reference locally
             if (this.currentState.avatar) {
                 localStorage.setItem("cyberguard_user_avatar", this.currentState.avatar);
                 user.avatar = this.currentState.avatar;
@@ -291,13 +333,20 @@ class ProfileSettings {
 
             // Reset initial state to new state
             this.initialState = { ...this.currentState };
+            this.photoFile = null; // Clear chosen file
             this.checkDirtyState();
 
+            if (typeof hideLoading === "function") {
+                hideLoading();
+            }
             CyberNotify.alert("Profile updated successfully.", { type: "success" });
             return true;
         } catch (e) {
+            if (typeof hideLoading === "function") {
+                hideLoading();
+            }
             console.error("Failed to save profile changes:", e);
-            CyberNotify.alert("An error occurred while saving profile.", { type: "error" });
+            CyberNotify.alert(e.message || "An error occurred while saving profile.", { type: "error" });
             return false;
         }
     }
