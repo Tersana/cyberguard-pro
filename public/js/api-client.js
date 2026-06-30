@@ -756,48 +756,52 @@ function withLoading(asyncFn, options = {}) {
   async function getScanStatus(scanJobId) {
     if (!scanJobId) throw new Error("scanJobId is required");
     if (typeof scanJobId === "string" && scanJobId.startsWith("frontend_")) {
+      // Always read fresh from localStorage so that fields written by other
+      // functions (acquireProgressPageLock, addCompletedFrontendTool, etc.)
+      // on the same page are immediately visible — no stale in-memory cache.
+      let storedScan = null;
+      try {
+        const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+        if (storedScansRaw) {
+          const storedScans = JSON.parse(storedScansRaw);
+          storedScan = storedScans.find(s => s.id === scanJobId);
+        }
+      } catch (_) {}
+
+      if (storedScan) {
+        // Keep in-memory cache in sync for callers that reference it directly
+        mockFrontendScans[scanJobId] = storedScan;
+        return storedScan;
+      }
+
+      // Not in localStorage yet — fall back to in-memory or create a stub
       if (!mockFrontendScans[scanJobId]) {
-        // Try to load from localStorage first!
-        let storedScan = null;
+        let targetValue = "Local Target";
+        let targetId = "mock-target-id";
         try {
-          const storedScansRaw = localStorage.getItem("cg_frontend_scans");
-          if (storedScansRaw) {
-            const storedScans = JSON.parse(storedScansRaw);
-            storedScan = storedScans.find(s => s.id === scanJobId);
+          const pendingRaw = sessionStorage.getItem("cg_pending_scan");
+          if (pendingRaw) {
+            const pending = JSON.parse(pendingRaw);
+            if (pending.sessionId === scanJobId) {
+              targetValue = pending.targetValue || targetValue;
+              targetId = pending.targetId || targetId;
+            }
           }
         } catch (_) {}
 
-        if (storedScan) {
-          mockFrontendScans[scanJobId] = storedScan;
-        } else {
-          // Fallback to generating a new running one if not found in history
-          let targetValue = "Local Target";
-          let targetId = "mock-target-id";
-          try {
-            const pendingRaw = sessionStorage.getItem("cg_pending_scan");
-            if (pendingRaw) {
-              const pending = JSON.parse(pendingRaw);
-              if (pending.sessionId === scanJobId) {
-                targetValue = pending.targetValue || targetValue;
-                targetId = pending.targetId || targetId;
-              }
-            }
-          } catch (_) {}
-
-          mockFrontendScans[scanJobId] = {
-            id: scanJobId,
-            status: "running",
-            target: {
-              id: targetId,
-              value: targetValue
-            },
-            driver_id: ["NETWORK_ANALYSIS"],
-            selected_frontend_tools: [],
-            completed_frontend_tools: [],
-            created_at: new Date().toISOString(),
-            finished_at: null
-          };
-        }
+        mockFrontendScans[scanJobId] = {
+          id: scanJobId,
+          status: "running",
+          target: {
+            id: targetId,
+            value: targetValue
+          },
+          driver_id: ["NETWORK_ANALYSIS"],
+          selected_frontend_tools: [],
+          completed_frontend_tools: [],
+          created_at: new Date().toISOString(),
+          finished_at: null
+        };
       }
       return mockFrontendScans[scanJobId];
     }

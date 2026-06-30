@@ -254,9 +254,9 @@
     const completedCount = originalSelectedTools.length - selectedTools.length;
 
     for (let i = 0; i < totalTools; i++) {
-      // Check if cancelled/paused or preempted by another tab
+      // Check if the scan was cancelled or paused before running next tool
       const currentScanState = await window.scannerAPI.getScanStatus(scanJobId);
-      if (currentScanState.status !== "running" || currentScanState.active_tab_id !== window.scannerAPI.tabId) {
+      if (currentScanState.status !== "running") {
         break;
       }
 
@@ -292,9 +292,9 @@
       }
     }
 
-    // Verify if all tools completed
+    // Verify if all tools completed and mark the scan done
     const finalScanState = await window.scannerAPI.getScanStatus(scanJobId);
-    if (finalScanState.status === "running" && finalScanState.active_tab_id === window.scannerAPI.tabId) {
+    if (finalScanState.status === "running") {
       const updatedCompleted = finalScanState.completed_frontend_tools || [];
       const stillRemaining = originalSelectedTools.filter(t => !updatedCompleted.includes(t));
       if (stillRemaining.length === 0) {
