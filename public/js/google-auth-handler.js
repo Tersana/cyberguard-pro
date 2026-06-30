@@ -163,10 +163,35 @@
           };
         }
 
+        // ── Extract avatar_url from redirect URL if backend provides it ─
+        // Some backends encode the Google avatar directly in the redirect URL
+        // (e.g. ?avatar_url=... or ?user=<base64-json>) so it's available
+        // without a second round-trip. Capture it before cleaning URL params.
+        const urlAvatarUrl =
+          params.get("avatar_url") ||
+          params.get("user_avatar") ||
+          params.get("photo_url") ||
+          "";
+
+        // Also try base64-encoded user object (?user=<base64-json>)
+        let urlUserData = null;
+        const encodedUser = params.get("user");
+        if (encodedUser) {
+          try {
+            urlUserData = JSON.parse(atob(encodedUser));
+          } catch (_) {
+            // Not base64 JSON – ignore
+          }
+        }
+
         // ── Save token ────────────────────────────────────────────────
         this._apiClient.setToken(token);
 
-        // ── Fetch user profile from backend ───────────────────────────
+        // ── Fetch user profile from /auth/me ──────────────────────────
+        // Note: /auth/me may NOT include avatar_url for Google users
+        // (it is only returned in the initial Google callback JSON response,
+        // which is inaccessible because the backend redirects the browser).
+        // We supplement it below using URL params or localStorage.
         let userProfile;
         try {
           const profileResponse = await this._apiClient.get("auth/me");
@@ -211,6 +236,23 @@
           };
         }
 
+        // ── Merge avatar from all available sources ───────────────────
+        // Priority: /auth/me response > URL param > base64 user param > localStorage
+        if (!userProfile.avatarUrl?.trim() && !userProfile.avatar?.trim()) {
+          const avatarFromUrl =
+            urlAvatarUrl ||
+            urlUserData?.avatar_url ||
+            urlUserData?.avatar ||
+            localStorage.getItem("cyberguard_user_avatar") ||
+            "";
+
+          if (avatarFromUrl) {
+            userProfile.avatarUrl = avatarFromUrl;
+            userProfile.avatar = avatarFromUrl;
+            console.log("[GoogleAuth] Avatar merged from URL/localStorage:", avatarFromUrl.substring(0, 60) + "...");
+          }
+        }
+
         // ── Save user session ─────────────────────────────────────────
         this._authManager.saveUserSession(userProfile);
 
@@ -221,6 +263,12 @@
         const googleAvatar = userProfile.avatarUrl || userProfile.avatar || "";
         if (googleAvatar) {
           localStorage.setItem("cyberguard_user_avatar", googleAvatar);
+          console.log("[GoogleAuth] Google avatar persisted to localStorage.");
+        } else {
+          console.warn("[GoogleAuth] No avatar_url returned from /auth/me or URL params. " +
+            "The backend's GET /api/auth/google/callback returns avatar_url in data.user, " +
+            "but /auth/me may not include it. Consider having the backend also pass " +
+            "avatar_url as a query param in the /google-callback redirect URL.");
         }
 
         // ── Track successful login ────────────────────────────────────
