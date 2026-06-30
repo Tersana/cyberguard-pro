@@ -59,6 +59,41 @@ const DashboardTabManager = {
       this.initializeTab(this.currentTab);
     }
     
+    // Listen for organization context changes to dynamically reload tab contents
+    document.addEventListener("cyberguard:orgContextChanged", () => {
+      console.log("DashboardTabManager: org context changed, refreshing workspace tabs");
+      
+      // Invalidate initialization status of other workspace-scoped tabs so they reload when clicked
+      const workspaceTabs = ['projects', 'billing-history'];
+      workspaceTabs.forEach(tabId => {
+        if (this.currentTab !== tabId) {
+          this.tabInitialized[tabId] = false;
+        }
+      });
+      
+      // Refresh the currently active tab if it displays workspace-scoped details
+      if (this.currentTab === 'projects') {
+        if (window.projectManager && typeof window.projectManager.renderProjectsList === 'function') {
+          window.projectManager.renderProjectsList();
+        }
+      } else if (this.currentTab === 'security-dashboard') {
+        if (typeof window.loadSecurityDashboard === 'function') {
+          window.loadSecurityDashboard();
+        }
+      } else if (this.currentTab === 'billing-history') {
+        if (typeof window.loadBillingHistory === 'function') {
+          window.loadBillingHistory();
+        }
+      }
+      
+      // Refresh settings panel if it is currently open on organization settings tab
+      if (window.SettingsPanel && window.SettingsPanel.isOpen && window.SettingsPanel.activeTabId === 'org-settings') {
+        if (window.OrganizationSettings && typeof window.OrganizationSettings.loadSettingsPane === 'function') {
+          window.OrganizationSettings.loadSettingsPane();
+        }
+      }
+    });
+
     console.log('DashboardTabManager: Initialization complete');
   },
   
