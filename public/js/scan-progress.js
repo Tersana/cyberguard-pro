@@ -164,7 +164,14 @@
     };
 
     // Run them sequentially
-    for (const toolId of selectedTools) {
+    const totalTools = selectedTools.length;
+    for (let i = 0; i < totalTools; i++) {
+      const toolId = selectedTools[i];
+      const progressPercent = Math.round((i / totalTools) * 100);
+      if (window.scannerAPI && typeof window.scannerAPI.updateFrontendScanProgress === "function") {
+        window.scannerAPI.updateFrontendScanProgress(scanJobId, progressPercent);
+      }
+
       appendTerminalSystem(`Initialising ${toolId.replace("net-", "").replace("frontend-", "").toUpperCase().replace("-", " ")}…`);
       try {
         if (toolId === "net-port-scanner" || toolId === "frontend-port-scanner") {
@@ -184,6 +191,10 @@
         console.error(`[Tool Error] ${toolId}:`, err);
         appendTerminalLine(`[ERROR] [${toolId}] Execution failed: ${err.message}`);
       }
+    }
+
+    if (window.scannerAPI && typeof window.scannerAPI.updateFrontendScanProgress === "function") {
+      window.scannerAPI.updateFrontendScanProgress(scanJobId, 100);
     }
 
     appendTerminalSystem("All selected network analysis tools completed.");

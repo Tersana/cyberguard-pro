@@ -886,16 +886,19 @@ function withLoading(asyncFn, options = {}) {
   }
 
   // Local helper to update status and timestamps in localStorage persistence
-  function updateFrontendScanInLocalStorage(scanJobId, status, finishedAt = null) {
+  function updateFrontendScanInLocalStorage(scanJobId, status, finishedAt = null, progress = null) {
     try {
       const storedScansRaw = localStorage.getItem("cg_frontend_scans");
       if (storedScansRaw) {
         const storedScans = JSON.parse(storedScansRaw);
         const scan = storedScans.find(s => s.id === scanJobId);
         if (scan) {
-          scan.status = status;
+          if (status) scan.status = status;
           if (finishedAt) {
             scan.finished_at = finishedAt;
+          }
+          if (progress !== null) {
+            scan.progress = progress;
           }
           localStorage.setItem("cg_frontend_scans", JSON.stringify(storedScans));
         }
@@ -990,6 +993,29 @@ function withLoading(asyncFn, options = {}) {
     updateFrontendScanInLocalStorage(scanJobId, "completed", mockFrontendScans[scanJobId].finished_at);
   }
 
+  function updateFrontendScanProgress(scanJobId, progress) {
+    if (!mockFrontendScans[scanJobId]) {
+      // Try to load it first
+      let storedScan = null;
+      try {
+        const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+        if (storedScansRaw) {
+          const storedScans = JSON.parse(storedScansRaw);
+          storedScan = storedScans.find(s => s.id === scanJobId);
+        }
+      } catch (_) {}
+
+      mockFrontendScans[scanJobId] = storedScan || {
+        id: scanJobId,
+        status: "running",
+        driver_id: ["NETWORK_ANALYSIS"],
+        created_at: new Date().toISOString(),
+      };
+    }
+    mockFrontendScans[scanJobId].progress = progress;
+    updateFrontendScanInLocalStorage(scanJobId, null, null, progress);
+  }
+
   function addFrontendFinding(scanJobId, finding) {
     if (!mockFrontendFindings[scanJobId]) {
       // Try to load from localStorage first
@@ -1062,6 +1088,7 @@ function withLoading(asyncFn, options = {}) {
     continueScan,
     cancelScan,
     completeFrontendScan,
+    updateFrontendScanProgress,
     addFrontendFinding,
     addFrontendLog,
   };
