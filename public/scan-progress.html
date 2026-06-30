@@ -922,6 +922,134 @@
             </div>
         </div>
 
+        <!-- ─── Finding Details Modal (Glassmorphic) ───────────────────────── -->
+        <div
+            id="finding-detail-modal"
+            class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="finding-detail-modal-title"
+            onclick="if (event.target === this) hideFindingDetailModal()"
+        >
+            <div class="cyber-card w-full max-w-2xl rounded-2xl overflow-hidden border border-white/10 flex flex-col max-h-[85vh] shadow-2xl relative transition-all duration-300 transform scale-95 opacity-0" id="finding-detail-modal-content">
+                <!-- Header with colored top border according to severity -->
+                <div class="absolute top-0 left-0 right-0 h-1" id="fd-severity-top-bar"></div>
+                
+                <!-- Modal Header -->
+                <div class="flex items-start justify-between p-6 pb-4 border-b border-[var(--cg-border)] bg-[var(--cg-bg-surface)]/80 backdrop-blur-md mt-1">
+                    <div class="space-y-1.5 flex-1 min-w-0 pr-4">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span id="fd-severity-badge" class="severity-badge">HIGH</span>
+                            <span id="fd-status-badge" class="finding-status"></span>
+                            <span id="fd-cvss-badge" class="cvss-badge hidden"></span>
+                            <span id="fd-driver" class="text-xs font-mono text-slate-400 bg-slate-900/50 px-2 py-0.5 rounded border border-white/5"></span>
+                        </div>
+                        <h3 id="finding-detail-modal-title" class="text-lg font-bold text-white leading-snug break-words"></h3>
+                    </div>
+                    <button 
+                        onclick="hideFindingDetailModal()" 
+                        class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors flex-shrink-0"
+                        aria-label="Close details"
+                    >
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Modal Body (Scrollable) -->
+                <div class="p-6 space-y-5 overflow-y-auto flex-1 bg-[var(--cg-bg-base)]/40 text-sm">
+                    <!-- Description Block -->
+                    <div id="fd-desc-section" class="space-y-2">
+                        <div class="finding-section-label">Description</div>
+                        <div class="bg-[var(--cg-bg-surface)] border border-[var(--cg-border)] rounded-xl p-4">
+                            <div id="fd-description" class="text-slate-300 leading-relaxed break-words whitespace-pre-wrap select-text"></div>
+                        </div>
+                    </div>
+
+                    <!-- Affected URL Block -->
+                    <div id="fd-url-section" class="space-y-2">
+                        <div class="finding-section-label">Affected URL</div>
+                        <div class="flex items-center gap-2 bg-[var(--cg-bg-surface)] border border-[var(--cg-border)] rounded-xl p-3 pr-2">
+                            <div class="flex-1 min-w-0 font-mono text-xs text-[var(--cg-info)] break-all select-all select-text" id="fd-url-text"></div>
+                            <div class="flex items-center gap-1.5 flex-shrink-0">
+                                <a id="fd-url-link" href="#" target="_blank" rel="noopener" class="text-slate-400 hover:text-[var(--cg-info)] p-1.5 rounded hover:bg-white/5 transition-colors" title="Open URL in new tab">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                    </svg>
+                                </a>
+                                <button onclick="copyToClipboard('fd-url-text', this)" class="text-slate-400 hover:text-white p-1.5 rounded hover:bg-white/5 transition-colors" title="Copy URL">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CVSS Vector Block -->
+                    <div id="fd-vector-section" class="space-y-2">
+                        <div class="finding-section-label">CVSS Vector</div>
+                        <div class="flex items-center gap-2 bg-[var(--cg-bg-surface)] border border-[var(--cg-border)] rounded-xl p-3 pr-2">
+                            <code id="fd-vector-text" class="flex-1 font-mono text-xs text-slate-300 break-all select-all select-text"></code>
+                            <button onclick="copyToClipboard('fd-vector-text', this)" class="text-slate-400 hover:text-white p-1.5 rounded hover:bg-white/5 transition-colors flex-shrink-0" title="Copy CVSS Vector">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Proof Block -->
+                    <div id="fd-proof-section" class="space-y-2">
+                        <div class="finding-section-label">Proof of Concept</div>
+                        <div class="relative bg-slate-950 border border-[var(--cg-border)] rounded-xl p-4">
+                            <pre class="overflow-x-auto text-xs font-mono text-emerald-400 select-all select-text whitespace-pre-wrap break-all" id="fd-proof"></pre>
+                            <button onclick="copyToClipboard('fd-proof', this)" class="absolute top-2 right-2 text-slate-500 hover:text-white p-1.5 rounded hover:bg-white/5 transition-colors" title="Copy Proof">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Remediation Block -->
+                    <div id="fd-remediation-section" class="space-y-2">
+                        <div class="finding-section-label text-[var(--cg-accent)]">Remediation</div>
+                        <div class="bg-[rgba(167,139,250,0.03)] border border-[rgba(167,139,250,0.15)] rounded-xl p-4 space-y-2">
+                            <p id="fd-remediation" class="text-slate-300 leading-relaxed break-words whitespace-pre-wrap select-text"></p>
+                        </div>
+                    </div>
+
+                    <!-- Tags Block -->
+                    <div id="fd-tags-section" class="space-y-2">
+                        <div class="finding-section-label">Tags</div>
+                        <div id="fd-tags" class="flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-between p-6 border-t border-[var(--cg-border)] bg-[var(--cg-bg-surface)]/80 backdrop-blur-md">
+                    <div class="flex items-center gap-1 text-xs text-slate-500 font-mono">
+                        <span>Vulnerability ID:</span>
+                        <span id="fd-id" class="text-slate-400 select-all select-text font-bold"></span>
+                        <button onclick="copyToClipboard('fd-id', this)" class="text-slate-500 hover:text-white p-1 rounded hover:bg-white/5 transition-colors" title="Copy Full ID">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <button 
+                        type="button" 
+                        onclick="hideFindingDetailModal()" 
+                        class="cyber-btn-ghost px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/5 transition-colors text-slate-300 hover:text-white"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- ─── Scripts ───────────────────────────────────────────────────── -->
         <script src="/js/cyber-notify.js"></script>
         <script src="/js/api-client.js"></script>
