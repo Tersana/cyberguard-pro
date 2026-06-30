@@ -86,12 +86,18 @@ const CyberNotify = {
     return ICON_MAP[type] || ICON_MAP["info"];
   },
 
+  _hideTimeout: null,
+
   _hide() {
     const modal = document.getElementById("cyber-notify-modal");
     if (!modal) return;
     modal.classList.remove("cyber-notify-open");
-    setTimeout(() => {
+    if (this._hideTimeout) {
+      clearTimeout(this._hideTimeout);
+    }
+    this._hideTimeout = setTimeout(() => {
       modal.classList.add("hidden");
+      this._hideTimeout = null;
     }, 300);
     this._currentCallback = null;
   },
@@ -106,6 +112,11 @@ const CyberNotify = {
     if (!modal || !iconEl || !msgEl || !confirmBtn || !cancelBtn) {
       console.error("CyberNotify: Required DOM elements not found");
       return;
+    }
+
+    if (this._hideTimeout) {
+      clearTimeout(this._hideTimeout);
+      this._hideTimeout = null;
     }
 
     // Dynamic creation of text input for prompt mode if not present

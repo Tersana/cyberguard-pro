@@ -73,17 +73,6 @@ class AccountSettings {
                     </h5>
                     <p class="desc">Irreversible account actions. Please exercise caution when performing these actions.</p>
 
-                    <!-- Export Data -->
-                    <div class="settings-danger-action-row">
-                        <div class="settings-danger-action-info">
-                            <h5>Export My Data</h5>
-                            <p>Download a consolidated JSON dump containing all your projects, target mappings, and scan reports history.</p>
-                        </div>
-                        <button type="button" class="cyber-btn-ghost text-xs py-2 px-4 rounded-lg flex items-center gap-1.5" style="opacity: 0.65; cursor: not-allowed;" disabled>
-                            Export Data
-                            <span class="coming-soon-badge">Coming Soon</span>
-                        </button>
-                    </div>
 
                     <!-- Delete Account -->
                     <div class="settings-danger-action-row">
