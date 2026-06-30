@@ -483,7 +483,9 @@
             year: "numeric", month: "short", day: "numeric",
           })
         : "—";
-      return `<tr class="sp-table-row">
+      const fId = f.id || `${f.title}::${f.severity}`;
+      const escapedFId = fId.replace(/'/g, "\\'");
+      return `<tr class="sp-table-row cursor-pointer" onclick="window.showFindingDetailModal('${escapedFId}')">
         <td class="sp-td sp-td--title">${escHtml(f.title || "Untitled Finding")}</td>
         <td class="sp-td"><span class="sp-sev-badge sp-sev-${sev}">${escHtml(sev.toUpperCase())}</span></td>
         <td class="sp-td"><span class="sp-status-pill sp-status-${escHtml(f.status || "open")}">${escHtml((f.status || "open").toUpperCase())}</span></td>
@@ -794,6 +796,799 @@
     stopAllPolling();
     teardownWebSocket();
   });
+
+  window.addEventListener("beforeunload", () => {
+    stopAllPolling();
+    teardownWebSocket();
+  });
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     FINDINGS DETAILS MODAL & FORMATTERS
+  ═══════════════════════════════════════════════════════════════════════ */
+  const escapeHtml = escHtml;
+
+  function getCVSSSeverity(score) {
+    const s = parseFloat(score);
+    if (isNaN(s)) return 'none';
+    if (s === 0) return 'none';
+    if (s < 4.0) return 'low';
+    if (s < 7.0) return 'medium';
+    if (s < 9.0) return 'high';
+    return 'critical';
+  }
+
+  function getPortRisk(port) {
+    const high = [21, 23, 445, 1433, 3389, 5900, 6379, 27017, 9200];
+    const med = [22, 25, 80, 3306, 5432, 8080];
+    if (high.includes(port)) return 'high';
+    if (med.includes(port)) return 'medium';
+    return 'low';
+  }
+
+  function formatIPGeolocationHtml(text) {
+    if (!text) return '';
+    const lines = text.split('\n');
+    let html = '<div class="ip-geo-container mt-4 space-y-6">';
+    let currentSection = null;
+    let currentItems = [];
+    const sections = [];
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      if (trimmed.includes('Location Details') || trimmed.includes('Network Information') || trimmed.includes('Regional Details') || trimmed.includes('Security Information')) {
+        if (currentSection) {
+          sections.push({ name: currentSection, items: currentItems });
+        }
+        currentSection = trimmed.replace(/[📍🌐🕐🔒]/g, '').replace(/:$/, '').trim();
+        currentItems = [];
+      } else if (trimmed.includes(':') && currentSection) {
+        const colonIdx = trimmed.indexOf(':');
+        const key = trimmed.substring(0, colonIdx).trim();
+        const val = trimmed.substring(colonIdx + 1).trim();
+        currentItems.push({ key, val });
+      }
+    });
+    if (currentSection) {
+      sections.push({ name: currentSection, items: currentItems });
+    }
+    const iconMap = {
+      'Location Details': `<svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>`,
+      'Network Information': `<svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3s-4.5 4.03-4.5 9 2.015 9 4.5 9Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12c0 5.385 4.365 9.75 9.75 9.75s9.75-4.365 9.75-9.75S17.385 2.25 12 2.25 2.25 6.615 2.25 12Z"/></svg>`,
+      'Regional Details': `<svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>`,
+      'Security Information': `<svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>`
+    };
+    const cardColors = {
+      'Location Details': 'border-indigo-500/20 bg-indigo-500/5',
+      'Network Information': 'border-emerald-500/20 bg-emerald-500/5',
+      'Regional Details': 'border-amber-500/20 bg-amber-500/5',
+      'Security Information': 'border-rose-500/20 bg-rose-500/5'
+    };
+    html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+    sections.forEach(section => {
+      const icon = iconMap[section.name] || '';
+      const colorCls = cardColors[section.name] || 'border-white/10 bg-white/5';
+      html += `
+        <div class="ip-geo-card p-4 rounded-xl border ${colorCls} transition-all duration-200 hover:border-white/20">
+          <div class="flex items-center gap-2 mb-3 pb-2 border-b border-white/5">
+            ${icon}
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-200">${escapeHtml(section.name)}</span>
+          </div>
+          <div class="space-y-2">
+      `;
+      section.items.forEach(item => {
+        html += `
+          <div class="flex justify-between items-center text-[11px] font-mono py-0.5">
+            <span class="text-slate-400 select-none">${escapeHtml(item.key)}</span>
+            <span class="text-slate-200 font-bold text-right">${escapeHtml(item.val)}</span>
+          </div>
+        `;
+      });
+      html += `
+          </div>
+        </div>
+      `;
+    });
+    html += '</div></div>';
+    return html;
+  }
+
+  function formatReverseDNSHtml(text) {
+    if (!text) return '';
+    const cleanText = text.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2600-\u26FF]|\uD83E[\uDD10-\uDDFF]|[\uFE0F]/g, '').trim();
+    const lines = cleanText.split('\n').map(l => l.trim()).filter(Boolean);
+    let ip = '';
+    let service = '';
+    let provider = '';
+    let type = '';
+    let hostnames = [];
+    let note = '';
+    let isParsingHostnames = false;
+    lines.forEach(line => {
+      if (line.includes('IP:')) {
+        ip = line.split('IP:')[1].trim();
+        isParsingHostnames = false;
+      } else if (line.startsWith('Service:')) {
+        service = line.split('Service:')[1].trim();
+        isParsingHostnames = false;
+      } else if (line.startsWith('Provider:')) {
+        provider = line.split('Provider:')[1].trim();
+        isParsingHostnames = false;
+      } else if (line.startsWith('Type:')) {
+        type = line.split('Type:')[1].trim();
+        isParsingHostnames = false;
+      } else if (line.startsWith('Hostname(s):') || line.startsWith('Hostname:')) {
+        isParsingHostnames = true;
+      } else if (isParsingHostnames && line.startsWith('-')) {
+        hostnames.push(line.replace(/^-/, '').trim());
+      } else {
+        note = note ? note + '\n' + line.trim() : line.trim();
+        isParsingHostnames = false;
+      }
+    });
+    const cardColorCls = 'border-emerald-500/20 bg-emerald-500/5';
+    const icon = `<svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3s-4.5 4.03-4.5 9 2.015 9 4.5 9Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12c0 5.385 4.365 9.75 9.75 9.75s9.75-4.365 9.75-9.75S17.385 2.25 12 2.25 2.25 6.615 2.25 12Z"/></svg>`;
+    let html = `
+      <div class="rev-dns-container mt-4 space-y-4">
+        <div class="rev-dns-card p-5 rounded-xl border ${cardColorCls} transition-all duration-200 hover:border-white/20">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-white/5">
+            ${icon}
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-200">Reverse DNS Analysis</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+    `;
+    if (ip) {
+      html += `<div class="flex justify-between items-center text-[11px] font-mono py-1 border-b border-white/5 md:border-none"><span class="text-slate-400 select-none">IP Address</span><span class="text-slate-200 font-bold text-right">${escapeHtml(ip)}</span></div>`;
+    }
+    if (service) {
+      html += `<div class="flex justify-between items-center text-[11px] font-mono py-1 border-b border-white/5 md:border-none"><span class="text-slate-400 select-none">Service</span><span class="text-slate-200 font-bold text-right">${escapeHtml(service)}</span></div>`;
+    }
+    if (provider) {
+      html += `<div class="flex justify-between items-center text-[11px] font-mono py-1 border-b border-white/5 md:border-none"><span class="text-slate-400 select-none">Provider</span><span class="text-slate-200 font-bold text-right">${escapeHtml(provider)}</span></div>`;
+    }
+    if (type) {
+      html += `<div class="flex justify-between items-center text-[11px] font-mono py-1 border-b border-white/5 md:border-none"><span class="text-slate-400 select-none">Type</span><span class="text-slate-200 font-bold text-right">${escapeHtml(type)}</span></div>`;
+    }
+    if (hostnames.length > 0) {
+      html += `
+        <div class="flex justify-between items-start text-[11px] font-mono py-1 md:col-span-2 border-t border-white/5 mt-2 pt-2">
+          <span class="text-slate-400 select-none">Hostname(s)</span>
+          <div class="text-slate-200 font-bold text-right space-y-1">
+            ${hostnames.map(h => `<div class="bg-white/5 px-2 py-0.5 rounded border border-white/10 text-[10px] text-slate-200 inline-block ml-1">${escapeHtml(h)}</div>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+    html += `</div>`;
+    if (note) {
+      html += `
+        <div class="mt-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-start gap-2.5 text-xs text-blue-300">
+          <svg class="w-4 h-4 text-blue-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>
+          <div class="font-sans leading-relaxed whitespace-pre-wrap">${escapeHtml(note)}</div>
+        </div>
+      `;
+    }
+    html += `</div></div>`;
+    return html;
+  }
+
+  function formatWhoisHtml(text) {
+    if (!text) return '';
+    const cleanText = text.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2600-\u26FF]|\uD83E[\uDD10-\uDDFF]|[\uFE0F]/g, '').trim();
+    const lines = cleanText.split('\n');
+    const sections = [];
+    let currentSection = null;
+    let currentItems = [];
+    let lastItem = null;
+    let title = '';
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      if (/^[─=\-_\s]+$/.test(trimmed)) return;
+      if (trimmed.includes('WHOIS DATA')) {
+        title = trimmed;
+        return;
+      }
+      const leadingSpaces = line.length - line.trimStart().length;
+      if (trimmed.includes(':')) {
+        const colonIdx = trimmed.indexOf(':');
+        const key = trimmed.substring(0, colonIdx).trim();
+        const val = trimmed.substring(colonIdx + 1).trim();
+        lastItem = { key, val: [val] };
+        currentItems.push(lastItem);
+      } else {
+        if (leadingSpaces > 8 && lastItem) {
+          lastItem.val.push(trimmed);
+        } else {
+          if (currentSection) {
+            sections.push({ name: currentSection, items: currentItems });
+          }
+          currentSection = trimmed;
+          currentItems = [];
+          lastItem = null;
+        }
+      }
+    });
+    if (currentSection) {
+      sections.push({ name: currentSection, items: currentItems });
+    }
+    const iconMap = {
+      'Location': `<svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>`,
+      'Network': `<svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3s-4.5 4.03-4.5 9 2.015 9 4.5 9Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12c0 5.385 4.365 9.75 9.75 9.75s9.75-4.365 9.75-9.75S17.385 2.25 12 2.25 2.25 6.615 2.25 12Z"/></svg>`,
+      'Security': `<svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>`,
+      'Registration': `<svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>`,
+      'Status': `<svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581a1.44 1.44 0 0 0 2.037 0l4.318-4.318a1.44 1.44 0 0 0 0-2.037L10.01 3.659A2.25 2.25 0 0 0 8.42 3H9.568Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 7.5h.008v.008H6V7.5Z"/></svg>`,
+      'DNS': `<svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 0 1-3-3m3 3a3 3 0 0 0 3 3m13.5-3a3 3 0 0 1 3-3m-3 3a3 3 0 0 0-3 3m0-12h.008v.008H12V5.25Zm0 2.25h.008v.008H12V7.5Zm0 2.25h.008v.008H12V9.75ZM3 11.25a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3m0 0v-6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v6Zm3 3a3 3 0 0 0-3 3v2.25a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3V17.25a3 3 0 0 0-3-3H6Z"/></svg>`
+    };
+    const cardColors = {
+      'Location': 'border-indigo-500/20 bg-indigo-500/5',
+      'Network': 'border-emerald-500/20 bg-emerald-500/5',
+      'Security': 'border-rose-500/20 bg-rose-500/5',
+      'Registration': 'border-indigo-500/20 bg-indigo-500/5',
+      'Status': 'border-amber-500/20 bg-amber-500/5',
+      'DNS': 'border-purple-500/20 bg-purple-500/5'
+    };
+    const defaultIcon = `<svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/></svg>`;
+    let html = '<div class="whois-container mt-4 space-y-6">';
+    if (title) {
+      html += `
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-500/10 border border-slate-500/20 text-xs font-mono text-slate-300 w-fit select-none">
+          <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.637 10.637z"/></svg>
+          <span>${escapeHtml(title)}</span>
+        </div>
+      `;
+    }
+    html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+    sections.forEach(section => {
+      const icon = iconMap[section.name] || defaultIcon;
+      const colorCls = cardColors[section.name] || 'border-slate-500/20 bg-slate-500/5';
+      html += `
+        <div class="whois-card p-4 rounded-xl border ${colorCls} transition-all duration-200 hover:border-white/20">
+          <div class="flex items-center gap-2 mb-3 pb-2 border-b border-white/5">
+            ${icon}
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-200">${escapeHtml(section.name)}</span>
+          </div>
+          <div class="space-y-2">
+      `;
+      section.items.forEach(item => {
+        if (item.val.length === 1) {
+          html += `
+            <div class="flex justify-between items-center text-[11px] font-mono py-0.5">
+              <span class="text-slate-400 select-none">${escapeHtml(item.key)}</span>
+              <span class="text-slate-200 font-bold text-right">${escapeHtml(item.val[0])}</span>
+            </div>
+          `;
+        } else {
+          html += `
+            <div class="flex flex-col text-[11px] font-mono py-1 border-t border-white/5 first:border-none mt-1">
+              <span class="text-slate-400 select-none mb-1">${escapeHtml(item.key)}</span>
+              <div class="flex flex-wrap gap-1 justify-end">
+                ${item.val.map(v => `<span class="bg-white/5 px-2 py-0.5 rounded border border-white/10 text-[10px] text-slate-200 ml-1">${escapeHtml(v)}</span>`).join('')}
+              </div>
+            </div>
+          `;
+        }
+      });
+      html += `</div></div>`;
+    });
+    html += '</div></div>';
+    return html;
+  }
+
+  function formatUdpPortScanHtml(text) {
+    if (!text) return '';
+    const lines = text.split('\n').map(l => l.trimEnd());
+    let hostname = '';
+    let completedAt = '';
+    let method = '';
+    let workingServices = [];
+    let failedServices = [];
+    let limitations = [];
+    let summary = {};
+    let currentSection = '';
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      if (trimmed.includes('Results for')) {
+        hostname = trimmed.split('Results for')[1].trim();
+        return;
+      }
+      if (trimmed.startsWith('Test completed at')) {
+        completedAt = trimmed.split('Test completed at')[1].trim();
+        return;
+      }
+      if (trimmed.startsWith('Method:')) {
+        method = trimmed.split('Method:')[1].trim();
+        return;
+      }
+      if (trimmed.includes('WORKING UDP SERVICES:')) {
+        currentSection = 'working';
+        return;
+      }
+      if (trimmed.includes('FAILED/UNAVAILABLE UDP SERVICES:')) {
+        currentSection = 'failed';
+        return;
+      }
+      if (trimmed.includes('LIMITATIONS')) {
+        currentSection = 'limitations';
+        return;
+      }
+      if (trimmed.includes('SUMMARY:')) {
+        currentSection = 'summary';
+        return;
+      }
+      if (currentSection === 'working') {
+        if (trimmed.startsWith('Port') || trimmed.startsWith('----')) return;
+        if (line.startsWith('        ') || line.startsWith('\t') || trimmed.startsWith('Details:')) {
+          if (workingServices.length > 0) {
+            const details = trimmed.replace(/^Details:\s*/, '');
+            workingServices[workingServices.length - 1].details = details;
+          }
+        } else {
+          const parts = trimmed.split(/\s{2,}/);
+          if (parts.length >= 2) {
+            const port = parts[0];
+            const service = parts[1];
+            const protocol = parts[2] || 'UDP';
+            const response = parts[3] || 'N/A';
+            const status = parts[4] || 'Responding';
+            workingServices.push({ port, service, protocol, response, status, details: '' });
+          }
+        }
+      } else if (currentSection === 'failed') {
+        const dashIndex = trimmed.indexOf('-');
+        if (dashIndex !== -1) {
+          const servicePart = trimmed.substring(0, dashIndex).trim();
+          const error = trimmed.substring(dashIndex + 1).trim();
+          const spaceIndex = servicePart.indexOf(' ');
+          let portProto = servicePart;
+          let serviceName = 'Unknown';
+          if (spaceIndex !== -1) {
+            portProto = servicePart.substring(0, spaceIndex).trim();
+            serviceName = servicePart.substring(spaceIndex + 1).trim();
+          }
+          failedServices.push({ portProto, service: serviceName, error });
+        } else {
+          failedServices.push({ portProto: trimmed, service: 'Unknown', error: 'Service unavailable' });
+        }
+      } else if (currentSection === 'limitations') {
+        limitations.push(trimmed.replace(/^-\s*/, ''));
+      } else if (currentSection === 'summary') {
+        if (trimmed.includes(':')) {
+          const [k, v] = trimmed.split(':').map(s => s.trim());
+          summary[k] = v;
+        }
+      }
+    });
+    let html = '<div class="udp-scan-container mt-4 space-y-6">';
+    html += `
+      <div class="p-4 rounded-xl border border-blue-500/20 bg-blue-500/5 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div class="text-[10px] uppercase font-bold tracking-wider text-blue-400 select-none">Target Host</div>
+          <div class="text-sm font-mono font-bold text-slate-100">${escapeHtml(hostname || 'Target Host')}</div>
+        </div>
+        ${completedAt ? `<div><div class="text-[10px] uppercase font-bold tracking-wider text-slate-400 select-none">Scan Time</div><div class="text-xs font-mono text-slate-300">${escapeHtml(completedAt)}</div></div>` : ''}
+        ${method ? `<div><div class="text-[10px] uppercase font-bold tracking-wider text-slate-400 select-none">Scan Method</div><div class="text-xs text-slate-300">${escapeHtml(method)}</div></div>` : ''}
+      </div>
+    `;
+    if (workingServices.length > 0) {
+      html += `<div><h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 select-none">Working Services</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
+      workingServices.forEach(srv => {
+        html += `
+          <div class="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/30 transition-all">
+            <div class="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-white/5">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span class="text-xs font-mono font-bold text-slate-200">${escapeHtml(srv.service)}</span>
+              </div>
+              <span class="bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px] font-mono text-emerald-400 font-bold">${escapeHtml(srv.port)}/${escapeHtml(srv.protocol)}</span>
+            </div>
+            <div class="space-y-1.5 text-[11px] font-mono">
+              <div class="flex justify-between"><span class="text-slate-400 select-none">Latency:</span><span class="text-slate-200 font-semibold">${escapeHtml(srv.response)}</span></div>
+              <div class="flex justify-between"><span class="text-slate-400 select-none">Status:</span><span class="text-slate-200 font-semibold">${escapeHtml(srv.status)}</span></div>
+              ${srv.details ? `<div class="text-slate-400 border-t border-white/5 pt-1 mt-1 text-[10px] italic">${escapeHtml(srv.details)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      });
+      html += `</div></div>`;
+    } else {
+      html += `<div class="p-4 rounded-xl border border-slate-500/10 bg-slate-500/5 text-center text-xs text-slate-400 py-6">No active UDP services detected responding on target.</div>`;
+    }
+    if (failedServices.length > 0) {
+      html += `<div><h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 select-none">Unavailable / Filtered Ports</h4><div class="bg-slate-500/5 border border-white/5 rounded-xl divide-y divide-white/5 overflow-hidden">`;
+      failedServices.forEach(srv => {
+        html += `
+          <div class="p-3 flex items-center justify-between gap-4 text-xs font-mono">
+            <div class="flex items-center gap-2">
+              <span class="bg-white/5 border border-white/10 px-2 py-0.5 rounded text-[10px] text-slate-400 font-bold">${escapeHtml(srv.portProto)}</span>
+              <span class="font-bold text-slate-300">${escapeHtml(srv.service)}</span>
+            </div>
+            <span class="text-slate-500 text-[11px]">${escapeHtml(srv.error)}</span>
+          </div>
+        `;
+      });
+      html += `</div></div>`;
+    }
+    html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+    if (limitations.length > 0) {
+      html += `
+        <div class="p-4 rounded-xl border border-amber-500/15 bg-amber-500/5">
+          <div class="flex items-center gap-2 mb-2">
+            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-200 select-none">Browser Constraints</span>
+          </div>
+          <ul class="list-disc pl-4 text-[10px] text-slate-400 space-y-1 font-mono">${limitations.map(lim => `<li>${escapeHtml(lim)}</li>`).join('')}</ul>
+        </div>
+      `;
+    }
+    if (Object.keys(summary).length > 0) {
+      html += `
+        <div class="p-4 rounded-xl border border-slate-500/20 bg-slate-500/5 flex flex-col justify-between">
+          <div class="flex items-center gap-2 mb-3">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v5.25c0 .621-.504 1.125-1.125 1.125h-2.25A1.125 1.125 0 013 18.375v-5.25zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125v-9.75zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v14.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-200 select-none">Test Summary</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-white/5 border border-white/5 p-2 rounded-lg"><div class="text-xs font-mono font-bold text-slate-100">${escapeHtml(summary['Total services tested'] || '0')}</div><div class="text-[9px] text-slate-500 uppercase tracking-wider">Tested</div></div>
+            <div class="bg-emerald-500/5 border border-emerald-500/10 p-2 rounded-lg"><div class="text-xs font-mono font-bold text-emerald-400">${escapeHtml(summary['Working services'] || '0')}</div><div class="text-[9px] text-slate-500 uppercase tracking-wider">Working</div></div>
+            <div class="bg-rose-500/5 border border-rose-500/10 p-2 rounded-lg"><div class="text-xs font-mono font-bold text-rose-400">${escapeHtml(summary['Failed/Unavailable'] || '0')}</div><div class="text-[9px] text-slate-500 uppercase tracking-wider">Failed</div></div>
+          </div>
+        </div>
+      `;
+    }
+    html += '</div></div>';
+    return html;
+  }
+
+  function formatTcpPortScanHtml(text) {
+    if (!text) return '';
+    const trimmed = text.trim();
+    if (trimmed.includes('\n')) {
+      const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
+      let ip = '';
+      let org = '';
+      let location = '';
+      let os = '';
+      let hostnames = '';
+      let ports = [];
+      let vulns = '';
+      let duration = '';
+      let isParsingPorts = false;
+      lines.forEach(line => {
+        if (line.includes('IP:')) ip = line.split('IP:')[1].trim();
+        else if (line.includes('Organization:')) org = line.split('Organization:')[1].trim();
+        else if (line.includes('Location:')) location = line.split('Location:')[1].trim();
+        else if (line.includes('OS:')) os = line.split('OS:')[1].trim();
+        else if (line.includes('Hostnames:')) hostnames = line.split('Hostnames:')[1].trim();
+        else if (line.includes('Open Ports & Services:') || line.includes('Open Ports')) {
+          isParsingPorts = true;
+        } else if (line.includes('Vulnerabilities:')) {
+          vulns = line.split('Vulnerabilities:')[1].trim();
+          isParsingPorts = false;
+        } else if (line.includes('Scan duration:') || line.includes('duration:')) {
+          duration = line.split('duration:')[1].trim();
+          isParsingPorts = false;
+        } else if (isParsingPorts && line.startsWith('-')) {
+          ports.push(line.replace(/^-/, '').trim());
+        }
+      });
+      let html = '<div class="tcp-scan-container mt-4 space-y-4">';
+      html += `
+        <div class="p-4 rounded-xl border border-blue-500/20 bg-blue-500/5">
+          <div class="text-[10px] uppercase font-bold tracking-wider text-blue-400 mb-3 select-none">Host Intelligence</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-xs font-mono">
+            <div class="flex justify-between py-0.5 border-b border-white/5 md:border-none"><span class="text-slate-400">Target IP</span><span class="text-slate-200 font-bold">${escapeHtml(ip || '—')}</span></div>
+            <div class="flex justify-between py-0.5 border-b border-white/5 md:border-none"><span class="text-slate-400">Organization</span><span class="text-slate-200 font-bold">${escapeHtml(org || '—')}</span></div>
+            <div class="flex justify-between py-0.5 border-b border-white/5 md:border-none"><span class="text-slate-400">Location</span><span class="text-slate-200 font-bold">${escapeHtml(location || '—')}</span></div>
+            <div class="flex justify-between py-0.5 border-b border-white/5 md:border-none"><span class="text-slate-400">Operating System</span><span class="text-slate-200 font-bold">${escapeHtml(os || '—')}</span></div>
+            ${hostnames ? `<div class="flex justify-between py-0.5 md:col-span-2 border-t border-white/5 mt-1 pt-1"><span class="text-slate-400">Hostnames</span><span class="text-slate-200 font-bold text-right">${escapeHtml(hostnames)}</span></div>` : ''}
+          </div>
+        </div>
+      `;
+      if (ports.length > 0) {
+        html += `<div><h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 select-none">Open Ports Detected</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-3">`;
+        ports.forEach(p => {
+          let portNum = '—';
+          let srvName = 'Unknown';
+          let latency = '';
+          const latencyMatch = p.match(/\(Latency:\s*([^)]+)\)/i);
+          if (latencyMatch) latency = latencyMatch[1];
+          const cleanP = p.replace(/\(Latency:[^)]+\)/gi, '').trim();
+          const dashIndex = cleanP.indexOf('-');
+          if (dashIndex !== -1) {
+            portNum = cleanP.substring(0, dashIndex).trim();
+            srvName = cleanP.substring(dashIndex + 1).trim();
+          } else {
+            portNum = cleanP;
+          }
+          const numericPort = parseInt(portNum);
+          const risk = isNaN(numericPort) ? 'low' : getPortRisk(numericPort);
+          const riskColorMap = {
+            high: 'border-rose-500/20 bg-rose-500/5 text-rose-400',
+            medium: 'border-amber-500/20 bg-amber-500/5 text-amber-400',
+            low: 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400'
+          };
+          const borderBgClass = riskColorMap[risk] || 'border-slate-500/20 bg-slate-500/5 text-slate-400';
+          html += `
+            <div class="p-3.5 rounded-xl border ${borderBgClass} flex items-center justify-between gap-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></div>
+                <div class="font-mono">
+                  <span class="text-xs font-bold text-slate-200">Port ${escapeHtml(portNum)}</span>
+                  <span class="text-[10px] text-slate-400 block">${escapeHtml(srvName)}</span>
+                </div>
+              </div>
+              <div class="text-right font-mono">
+                <span class="text-[9px] uppercase tracking-wider font-bold block opacity-75">${risk} Risk</span>
+                ${latency ? `<span class="text-[10px] text-slate-400">${escapeHtml(latency)}</span>` : ''}
+              </div>
+            </div>
+          `;
+        });
+        html += '</div></div>';
+      } else {
+        html += `<div class="p-4 rounded-xl border border-slate-500/10 bg-slate-500/5 text-center text-xs text-slate-400 py-6">No open TCP ports detected.</div>`;
+      }
+      if (vulns || duration) {
+        html += `
+          <div class="grid grid-cols-2 gap-4 text-center text-xs font-mono pt-2">
+            ${vulns ? `<div class="p-2 border border-rose-500/15 bg-rose-500/5 rounded-lg"><div class="font-bold text-rose-400">${escapeHtml(vulns)}</div><div class="text-[9px] text-slate-500 uppercase tracking-wider mt-0.5">Vulnerabilities</div></div>` : ''}
+            ${duration ? `<div class="p-2 border border-slate-500/15 bg-slate-500/5 rounded-lg"><div class="font-bold text-slate-300">${escapeHtml(duration)}</div><div class="text-[9px] text-slate-500 uppercase tracking-wider mt-0.5">Duration</div></div>` : ''}
+          </div>
+        `;
+      }
+      html += '</div>';
+      return html;
+    }
+    if (trimmed.toLowerCase().includes('open')) {
+      const portMatch = trimmed.match(/Port\s+(\d+)/i);
+      const serviceMatch = trimmed.match(/-\s*([^(]+)/);
+      const latencyMatch = trimmed.match(/\(Latency:\s*([^)]+)\)/i);
+      const portNum = portMatch ? portMatch[1] : '—';
+      const service = serviceMatch ? serviceMatch[1].trim() : 'Unknown';
+      const latency = latencyMatch ? latencyMatch[1] : '';
+      const numericPort = parseInt(portNum);
+      const risk = isNaN(numericPort) ? 'low' : getPortRisk(numericPort);
+      const riskColorMap = {
+        high: 'border-rose-500/20 bg-rose-500/5 text-rose-400',
+        medium: 'border-amber-500/20 bg-amber-500/5 text-amber-400',
+        low: 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400'
+      };
+      const borderBgClass = riskColorMap[risk] || 'border-slate-500/20 bg-slate-500/5 text-slate-400';
+      return `
+        <div class="tcp-scan-container mt-4">
+          <div class="p-5 rounded-xl border ${borderBgClass} flex items-center justify-between gap-4 transition-all hover:border-white/10">
+            <div class="flex items-center gap-3">
+              <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.4)] animate-pulse"></div>
+              <div>
+                <div class="font-mono text-sm font-bold text-slate-200">Port ${escapeHtml(portNum)} is OPEN</div>
+                <div class="text-xs text-slate-400 font-mono mt-0.5">Service: ${escapeHtml(service)}</div>
+              </div>
+            </div>
+            <div class="text-right font-mono">
+              <span class="bg-white/5 border border-white/10 px-2 py-0.5 rounded text-[10px] font-bold text-slate-300 uppercase tracking-wider select-none">${escapeHtml(risk)} Risk</span>
+              ${latency ? `<span class="text-xs text-slate-400 block mt-1">${escapeHtml(latency)}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    const isFail = trimmed.toLowerCase().includes('fail') || trimmed.toLowerCase().includes('error');
+    const borderBgClass = isFail ? 'border-rose-500/20 bg-rose-500/5 text-rose-300' : 'border-blue-500/20 bg-blue-500/5 text-blue-300';
+    const icon = isFail ? `
+      <svg class="w-4 h-4 text-rose-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z"/></svg>` : `
+      <svg class="w-4 h-4 text-blue-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12v-.008z"/></svg>`;
+    return `
+      <div class="tcp-scan-container mt-4">
+        <div class="p-4 rounded-xl border ${borderBgClass} flex items-start gap-2.5 text-xs">
+          ${icon}
+          <div class="font-sans leading-relaxed whitespace-pre-wrap">${escapeHtml(trimmed)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function showFindingDetailModal(findingId) {
+    const finding = allFindings.find(f => String(f.id || `${f.title}::${f.severity}`) === String(findingId));
+    if (!finding) return;
+
+    document.getElementById('finding-detail-modal-title').textContent = finding.title || 'Untitled Finding';
+    
+    const driverEl = document.getElementById('fd-driver');
+    if (finding.driver_id) {
+      driverEl.textContent = finding.driver_id;
+      driverEl.classList.remove('hidden');
+    } else {
+      driverEl.classList.add('hidden');
+    }
+
+    const sev = (finding.severity || 'info').toLowerCase();
+    const topBar = document.getElementById('fd-severity-top-bar');
+    const sevColors = {
+      critical: 'var(--cg-danger)',
+      high: '#F97316',
+      medium: 'var(--cg-warning)',
+      low: 'var(--cg-info)',
+      info: 'var(--cg-text-3)'
+    };
+    if (topBar) topBar.style.backgroundColor = sevColors[sev] || 'var(--cg-text-3)';
+
+    const sevBadge = document.getElementById('fd-severity-badge');
+    if (sevBadge) {
+      sevBadge.textContent = sev.toUpperCase();
+      sevBadge.className = `severity-badge sev-${sev}`;
+    }
+
+    const cvssBadge = document.getElementById('fd-cvss-badge');
+    if (cvssBadge) {
+      if (finding.cvss_score) {
+        cvssBadge.textContent = `CVSS ${finding.cvss_score}`;
+        cvssBadge.className = `cvss-badge cvss-${getCVSSSeverity(finding.cvss_score)}`;
+        cvssBadge.classList.remove('hidden');
+      } else {
+        cvssBadge.classList.add('hidden');
+      }
+    }
+
+    const statusBadge = document.getElementById('fd-status-badge');
+    const status = (finding.status || 'open').toLowerCase();
+    if (statusBadge) {
+      statusBadge.textContent = status.toUpperCase();
+      statusBadge.className = `finding-status status-${status}`;
+    }
+
+    const descSection = document.getElementById('fd-desc-section');
+    const descText = document.getElementById('fd-description');
+    if (descText && finding.description) {
+      const isIPGeo = (finding.driver_id === 'IP_GEOLOCATION' || (finding.title && finding.title.includes('Geolocation')));
+      const isReverseDNS = (finding.driver_id === 'REVERSE_DNS' || (finding.title && finding.title.includes('Reverse DNS')));
+      const isWhois = (finding.driver_id === 'WHOIS_LOOKUP' || (finding.title && finding.title.includes('WHOIS')));
+      const isUdpScan = (finding.driver_id === 'UDP_PORT_SCAN' || (finding.title && (finding.title.includes('UDP Services') || finding.title.includes('UDP Port') || finding.title.includes('UDP Service'))));
+      const isTcpScan = (finding.driver_id === 'TCP_PORT_SCAN' || (finding.title && (finding.title.includes('TCP Connectivity') || finding.title.includes('TCP Port') || finding.title.includes('TCP Service'))));
+
+      if (isIPGeo) {
+        descText.className = "select-text text-sm w-full";
+        descText.innerHTML = formatIPGeolocationHtml(finding.description);
+      } else if (isReverseDNS) {
+        descText.className = "select-text text-sm w-full";
+        descText.innerHTML = formatReverseDNSHtml(finding.description);
+      } else if (isWhois) {
+        descText.className = "select-text text-sm w-full";
+        descText.innerHTML = formatWhoisHtml(finding.description);
+      } else if (isUdpScan) {
+        descText.className = "select-text text-sm w-full";
+        descText.innerHTML = formatUdpPortScanHtml(finding.description);
+      } else if (isTcpScan) {
+        descText.className = "select-text text-sm w-full";
+        descText.innerHTML = formatTcpPortScanHtml(finding.description);
+      } else {
+        descText.className = "text-slate-300 leading-relaxed break-words whitespace-pre-wrap select-text";
+        descText.textContent = finding.description;
+      }
+      if (descSection) descSection.classList.remove('hidden');
+    } else if (descSection) {
+      descSection.classList.add('hidden');
+    }
+
+    const urlSection = document.getElementById('fd-url-section');
+    const urlText = document.getElementById('fd-url-text');
+    const urlLink = document.getElementById('fd-url-link');
+    if (urlSection && urlText && urlLink) {
+      if (finding.affected_url) {
+        urlText.textContent = finding.affected_url;
+        urlLink.href = finding.affected_url;
+        urlSection.classList.remove('hidden');
+      } else {
+        urlSection.classList.add('hidden');
+      }
+    }
+
+    const vectorSection = document.getElementById('fd-vector-section');
+    const vectorText = document.getElementById('fd-vector-text');
+    if (vectorSection && vectorText) {
+      if (finding.cvss_vector) {
+        vectorText.textContent = finding.cvss_vector;
+        vectorSection.classList.remove('hidden');
+      } else {
+        vectorSection.classList.add('hidden');
+      }
+    }
+
+    const proofSection = document.getElementById('fd-proof-section');
+    const proofText = document.getElementById('fd-proof');
+    if (proofSection && proofText) {
+      if (finding.proof) {
+        proofText.textContent = finding.proof;
+        proofSection.classList.remove('hidden');
+      } else {
+        proofSection.classList.add('hidden');
+      }
+    }
+
+    const remSection = document.getElementById('fd-remediation-section');
+    const remText = document.getElementById('fd-remediation');
+    if (remSection && remText) {
+      if (finding.remediation) {
+        remText.textContent = finding.remediation;
+        remSection.classList.remove('hidden');
+      } else {
+        remSection.classList.add('hidden');
+      }
+    }
+
+    const tagsSection = document.getElementById('fd-tags-section');
+    const tagsContainer = document.getElementById('fd-tags');
+    if (tagsSection && tagsContainer) {
+      tagsContainer.innerHTML = '';
+      if (finding.tags && finding.tags.length) {
+        finding.tags.forEach(tag => {
+          const span = document.createElement('span');
+          span.className = 'finding-tag';
+          span.textContent = tag;
+          tagsContainer.appendChild(span);
+        });
+        tagsSection.classList.remove('hidden');
+      } else {
+        tagsSection.classList.add('hidden');
+      }
+    }
+
+    const idEl = document.getElementById('fd-id');
+    if (idEl) idEl.textContent = finding.id || '';
+
+    const modal = document.getElementById('finding-detail-modal');
+    const modalContent = document.getElementById('finding-detail-modal-content');
+    if (modal && modalContent) {
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+      }, 10);
+    }
+  }
+
+  function hideFindingDetailModal() {
+    const modal = document.getElementById('finding-detail-modal');
+    const modalContent = document.getElementById('finding-detail-modal-content');
+    if (!modal) return;
+    if (modalContent) {
+      modalContent.classList.remove('scale-100', 'opacity-100');
+      modalContent.classList.add('scale-95', 'opacity-0');
+    }
+    setTimeout(() => {
+      modal.classList.add('hidden');
+    }, 150);
+  }
+
+  function copyToClipboard(textOrId, btn) {
+    if (!textOrId) return;
+    let text = textOrId;
+    if (typeof textOrId === 'string' && (textOrId.startsWith('fd-') || textOrId.startsWith('ep-'))) {
+      const el = document.getElementById(textOrId);
+      if (el) {
+        text = el.textContent || el.value || '';
+      }
+    }
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      if (btn) {
+        const origHTML = btn.innerHTML;
+        btn.innerHTML = `<svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>`;
+        btn.classList.add("text-emerald-400");
+        btn.classList.add("bg-emerald-500/10");
+        setTimeout(() => {
+          btn.innerHTML = origHTML;
+          btn.classList.remove("text-emerald-400");
+          btn.classList.remove("bg-emerald-500/10");
+        }, 2000);
+      }
+    });
+  }
+
+  // Expose finding modal handlers globally on window
+  window.showFindingDetailModal = showFindingDetailModal;
+  window.hideFindingDetailModal = hideFindingDetailModal;
+  window.copyToClipboard = copyToClipboard;
 
   /* ─── Expose select functions to HTML onclick attributes ─────────────── */
   window._scanProgress = {
