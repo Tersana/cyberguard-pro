@@ -516,6 +516,15 @@
     // Frontend-only scan bypass logic
     if (_selected.size === 0 && selectedFrontendTools.size > 0) {
       try {
+        const activeProjectId = typeof _projectId !== "undefined" ? _projectId : null;
+        let triggerUser = "Local Scanner";
+        try {
+          const userRaw = localStorage.getItem("cyberguard_user");
+          if (userRaw) {
+            const user = JSON.parse(userRaw);
+            triggerUser = user.full_name || user.name || user.email || triggerUser;
+          }
+        } catch (_) {}
         const sessionId = "frontend_" + Math.random().toString(36).substring(2, 11);
         closeScanModal();
 

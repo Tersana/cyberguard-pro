@@ -199,4 +199,45 @@ describe('ScanManager Scanner Filtering', () => {
     expect(html).not.toContain('net-reverse-dns');
     expect(html).not.toContain('net-whois-lookup');
   });
+
+  it('should start a frontend-only scan without ReferenceError and save project_id', async () => {
+    // Set target on scanState
+    const mockBtn = document.createElement('button');
+    mockBtn.dataset.tid = 't1';
+    mockBtn.dataset.lbl = 'Test Label';
+    mockBtn.dataset.val = 'example.com';
+    mockBtn.dataset.typ = 'domain';
+    await window.ScanManager.openScanModal(mockBtn);
+
+    // Select a frontend tool
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = 'net-port-scanner';
+    checkbox.checked = true;
+    
+    // Simulate checking a frontend scanner
+    window.ScanManager._onFrontendCheckbox(checkbox);
+
+    // Mock _projectId global
+    window._projectId = 'p_test_123';
+
+    // Mock notify
+    window.notify = vi.fn();
+
+    // Trigger startScan
+    await window.ScanManager.startScan();
+
+    // Verify localStorage has registered the scan with correct project_id
+    const storedScansRaw = window.localStorage.getItem('cg_frontend_scans');
+    expect(storedScansRaw).not.toBeNull();
+    const storedScans = JSON.parse(storedScansRaw);
+    expect(storedScans.length).toBeGreaterThan(0);
+    expect(storedScans[0].project_id).toBe('p_test_123');
+
+    // Verify sessionStorage has pending scan info with projectId
+    const pendingRaw = window.sessionStorage.getItem('cg_pending_scan');
+    expect(pendingRaw).not.toBeNull();
+    const pending = JSON.parse(pendingRaw);
+    expect(pending.projectId).toBe('p_test_123');
+  });
 });
