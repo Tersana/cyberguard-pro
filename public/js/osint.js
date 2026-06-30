@@ -68,6 +68,33 @@ async function fetchWithProxy(targetUrl, fetchOptions = {}) {
   }
   let lastError = null;
 
+  // 1. Try local proxy first for GET requests (highly reliable, bypasses CORS completely)
+  const method = fetchOptions.method || 'GET';
+  if (method.toUpperCase() === 'GET') {
+    try {
+      const localProxyUrl = `/api/proxy?url=${encodeURIComponent(targetUrl)}`;
+      const response = await fetch(localProxyUrl, fetchOptions);
+      if (response.ok) {
+        const data = await response.json();
+        const targetStatus = data.status?.http_code || 200;
+        if ((targetStatus >= 200 && targetStatus < 300) || targetStatus === 404) {
+          return new Response(data.contents, {
+            status: targetStatus,
+            headers: new Headers(data.headers || {})
+          });
+        }
+        console.warn(`Local proxy target returned non-success status ${targetStatus}. Trying public CORS proxies...`);
+      }
+      console.warn(`Local proxy returned status ${response.status}. Trying public CORS proxies...`);
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        throw err;
+      }
+      console.warn('Local proxy failed, falling back to public CORS proxies:', err);
+    }
+  }
+
+  // 2. Fallback to public CORS proxy chain
   for (const proxy of CORS_PROXIES) {
     try {
       const proxiedUrl = proxy.encode

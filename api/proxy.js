@@ -6,12 +6,41 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Forward incoming request headers while ignoring host/connection/Vercel-specific headers
+    const headers = {};
+    const ignoredHeaders = [
+      'host',
+      'connection',
+      'origin',
+      'referer',
+      'cookie',
+      'sec-ch-ua',
+      'sec-ch-ua-mobile',
+      'sec-ch-ua-platform',
+      'sec-fetch-dest',
+      'sec-fetch-mode',
+      'sec-fetch-site',
+      'x-forwarded-for',
+      'x-forwarded-proto',
+      'x-vercel-id',
+      'x-vercel-ip-country'
+    ];
+
+    Object.keys(req.headers).forEach(key => {
+      if (!ignoredHeaders.includes(key.toLowerCase())) {
+        headers[key] = req.headers[key];
+      }
+    });
+
+    // Ensure User-Agent is present
+    if (!headers['user-agent']) {
+      headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+    }
+
     // Perform server-side fetch bypassing CORS
     const response = await fetch(targetUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8'
-      }
+      method: req.method,
+      headers: headers
     });
 
     const html = await response.text();
