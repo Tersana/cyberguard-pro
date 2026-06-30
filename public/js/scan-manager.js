@@ -527,8 +527,10 @@
         scanState.finishedAt     = null;
         scanCompleted            = false;
 
-        const activeProjectId = (typeof _projectId !== "undefined") ? _projectId : "";
-        const triggerUser = localStorage.getItem("cyberguard_user_name") || "Mohamed Gamal";
+        const toolNames = Array.from(selectedFrontendTools).map(tId => {
+          const found = NETWORK_ANALYSIS_TOOLS.find(tool => tool.id === tId);
+          return found ? found.name : "Network Tool";
+        });
 
         const newScanRecord = {
           id: sessionId,
@@ -538,7 +540,7 @@
           started_at: scanState.startedAt,
           created_at: scanState.startedAt,
           finished_at: null,
-          driver_id: ["NETWORK_ANALYSIS"],
+          driver_id: toolNames.length > 0 ? toolNames : ["NETWORK_ANALYSIS"],
           target: {
             id: scanState.targetId,
             value: scanState.targetValue

@@ -36,6 +36,47 @@
   };
 
   /**
+   * Retrieve active scans stored locally from frontend-only runs
+   */
+  function getLocalActiveScans() {
+    try {
+      const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+      if (!storedScansRaw) return [];
+      
+      const storedScans = JSON.parse(storedScansRaw);
+      // Return scans that are currently running or pending
+      return storedScans.filter(scan => scan.status === "running" || scan.status === "pending");
+    } catch (e) {
+      console.warn("[SecurityDashboard] Failed to read local active scans:", e);
+      return [];
+    }
+  }
+
+  /**
+   * Merge local active frontend scans into the retrieved metrics payload
+   */
+  function mergeLocalActiveScans(metrics) {
+    if (!metrics) return;
+
+    if (!metrics.active_scans) {
+      metrics.active_scans = { count: 0, scans: [] };
+    }
+    if (!Array.isArray(metrics.active_scans.scans)) {
+      metrics.active_scans.scans = [];
+    }
+
+    const localActive = getLocalActiveScans();
+    if (localActive.length === 0) return;
+
+    // Avoid duplicating scans that might already exist in the list
+    const existingIds = new Set(metrics.active_scans.scans.map(s => String(s.id)));
+    const newLocalScans = localActive.filter(s => !existingIds.has(String(s.id)));
+
+    metrics.active_scans.scans = [...newLocalScans, ...metrics.active_scans.scans];
+    metrics.active_scans.count = metrics.active_scans.scans.length;
+  }
+
+  /**
    * Main loader: Called when tab is activated or refreshed
    */
   async function loadSecurityDashboard() {
@@ -71,6 +112,7 @@
       }
 
       dashboardState.metrics = metricsRes.data;
+      mergeLocalActiveScans(dashboardState.metrics);
       dashboardState.targets = targetsRes?.targets || [];
 
       // 3. Render all dashboard views
@@ -284,7 +326,7 @@
           const hS = cur; const hE = cur + highPct; cur = hE;
           const mS = cur; const mE = cur + medPct; cur = mE;
           const lS = cur; const lE = cur + lowPct; cur = lE;
-          const iS = 100;
+          const iS = cur; const iE = 100;
 
           donutEl.style.background = `conic-gradient(
             #ef4444 ${cS}% ${cE}%,
@@ -518,13 +560,16 @@
 
     container.innerHTML = activeScans.map(scan => {
       const progress = scan.progress ?? 35;
-      const scanType = scan.driver_id || scan.type || "Analysis";
+      let scanType = scan.driver_id || scan.type || "Analysis";
+      if (Array.isArray(scanType)) {
+        scanType = scanType.join(", ");
+      }
       const startText = scan.created_at || scan.timestamp || new Date().toISOString();
 
       return `
-        <div class="active-scan-row bg-white/[0.01]" data-scan-id="${scan.id}">
+        <div class="active-scan-row bg-white/[0.01] cursor-pointer hover:bg-white/[0.03] transition-all duration-200" data-scan-id="${scan.id}" onclick="window.dashboardNavigateToScan('${scan.id}')">
           <div class="scan-info">
-            <div class="scan-target-name">${scan.target_name || scan.target?.name || "Local Scan"}</div>
+            <div class="scan-target-name">${scan.target_name || scan.target?.name || scan.target?.value || scan.metadata?.target_name || "Local Scan"}</div>
             <div class="scan-meta">
               <span class="scan-type font-mono text-[10px]">${scanType}</span>
               <span class="scan-started font-mono">Started ${formatRelativeTime(startText)}</span>
@@ -758,6 +803,7 @@
           const metricsRes = await window.apiClient.get("/dashboard/metrics");
           if (metricsRes.status === "success" && metricsRes.data) {
             dashboardState.metrics = metricsRes.data;
+            mergeLocalActiveScans(dashboardState.metrics);
             renderActiveScans(metricsRes.data.active_scans);
           }
         } catch (e) {
@@ -936,5 +982,8 @@
   // Expose loadSecurityDashboard to window globally
   window.loadSecurityDashboard = loadSecurityDashboard;
   window.stopActiveScansPolling = stopActiveScansPolling;
+  window.dashboardNavigateToScan = function (scanId) {
+    window.location.assign(`/scan/${scanId}`);
+  };
 
 })();
