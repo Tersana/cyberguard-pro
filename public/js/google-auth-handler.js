@@ -295,11 +295,13 @@
       }
       // Minimal fallback if data-normalizer.js is not loaded
       if (!rawUser || typeof rawUser !== "object") return null;
+      const avatarUrl = rawUser.avatar_url || rawUser.avatarUrl || rawUser.avatar || "";
       return {
         id: rawUser.id || null,
         email: rawUser.email || "",
         fullName: rawUser.full_name || rawUser.name || "",
-        avatarUrl: rawUser.avatar_url || rawUser.avatarUrl || "",
+        avatarUrl: avatarUrl,
+        avatar: avatarUrl,
         authProvider: rawUser.auth_provider || rawUser.authProvider || "google",
         emailVerified: rawUser.email_verified ?? !!rawUser.email_verified_at,
         emailVerifiedAt: rawUser.email_verified_at || null,

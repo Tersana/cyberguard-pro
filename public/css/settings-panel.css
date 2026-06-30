@@ -924,6 +924,7 @@
     width: 32px;
     height: 32px;
     border-radius: var(--cg-radius-full);
+    overflow: hidden;
     background: var(--cg-bg-elevated);
     border: 1px solid var(--cg-border-subtle);
     display: flex;

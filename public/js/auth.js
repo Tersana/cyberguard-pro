@@ -748,11 +748,13 @@ class AuthManager {
       // (e.g. Google OAuth photos are stored client-side). Without this
       // merge, restoreSession() would overwrite the Google avatar with
       // an empty string on every page load.
-      if (!user.avatarUrl && !user.avatar) {
+      // Treat empty strings as falsy so backend returning "" still uses local avatar.
+      if (!user.avatarUrl?.trim() && !user.avatar?.trim()) {
         const storedUser = JSON.parse(localStorage.getItem("cyberguard_user") || "{}");
         const localAvatar = storedUser.avatar || storedUser.avatarUrl || localStorage.getItem("cyberguard_user_avatar") || "";
         if (localAvatar) {
           user.avatarUrl = localAvatar;
+          user.avatar = localAvatar;
         }
       }
 

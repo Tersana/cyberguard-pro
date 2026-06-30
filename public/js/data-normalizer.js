@@ -54,8 +54,11 @@ function normalizeUserData(userData) {
     // Preferences object with default
     preferences: userData.preferences || {},
 
-    // Google authentication fields
-    avatarUrl: userData.avatar_url || userData.avatarUrl || '',
+    // Google authentication / profile picture fields.
+    // Preserve both avatar and avatarUrl so every downstream consumer
+    // can find the URL regardless of which key name it checks.
+    avatarUrl: userData.avatar_url || userData.avatarUrl || userData.avatar || '',
+    avatar:    userData.avatar_url || userData.avatarUrl || userData.avatar || '',
     authProvider: userData.auth_provider || userData.authProvider || 'local',
     emailVerifiedAt: userData.email_verified_at || userData.emailVerifiedAt || null
   };
