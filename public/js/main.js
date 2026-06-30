@@ -9646,6 +9646,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tcp-scan-results")?.remove();
 
     setTCPScanState("scanning", target);
+    const scanStartTime = Date.now();
 
     appendActivityEvent({
       type: "system",
@@ -9686,12 +9687,12 @@ document.addEventListener("DOMContentLoaded", () => {
           message: `Port ${port} OPEN`,
           detail: service,
         });
-        // Use Shodan format so parsePortResult groups them correctly in the accordion
+        // Log as 'info' to avoid individual finding popups
         logResult(
           new Date(),
           "TCP Port Scan",
           `Port ${port} is OPEN - ${service}`,
-          "success",
+          "info",
         );
       });
     } else {
@@ -9710,11 +9711,12 @@ document.addEventListener("DOMContentLoaded", () => {
         message: `${result.vulns.length} known CVE${result.vulns.length !== 1 ? "s" : ""} found`,
         detail: topCves + more,
       });
+      // Log as 'info' to avoid separate finding popups
       logResult(
         new Date(),
         "TCP Port Scan",
         `⚠ ${result.vulns.length} known CVE${result.vulns.length !== 1 ? "s" : ""}: ${topCves}${more}`,
-        "danger",
+        "info",
       );
     }
 
@@ -9728,6 +9730,35 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     renderShodanResults(result, target);
+
+    // Group all results to a single summary log / finding to avoid separate findings popups
+    if (!result.error) {
+      const portLines = result.ports.map((port) => {
+        const service = getServiceName(port);
+        return `- Port ${port} - ${service}`;
+      }).join("\n");
+
+      const durationMs = Date.now() - scanStartTime;
+      const cvesCount = result.vulns ? result.vulns.length : 0;
+      
+      const summaryText = `[SCAN COMPLETE] TCP port scan completed for ${target}:\n\n` +
+        `Host Information:\n` +
+        ` - IP: ${result.ip || target}\n` +
+        ` - Organization: Unknown organization\n` +
+        ` - Location: Unknown location\n` +
+        ` - OS: Unknown\n` +
+        ` - Hostnames: ${result.hostnames && result.hostnames.length > 0 ? result.hostnames.join(", ") : "None"}\n\n` +
+        `Open Ports & Services:\n` +
+        (portLines ? `${portLines}` : ` - No open ports found`) + `\n\n` +
+        `Vulnerabilities: ${cvesCount}\n` +
+        `Scan Statistics:\n` +
+        ` - Total ports: ${result.ports.length}\n` +
+        ` - Services detected: ${result.ports.length}\n` +
+        ` - Scan duration: ${durationMs}ms\n` +
+        ` - Data freshness: ${new Date().toISOString()}`;
+        
+      logResult(new Date(), "TCP Port Scan", summaryText, cvesCount > 0 || result.ports.length > 0 ? "danger" : "success");
+    }
   }
 
   // REAL UDP Connectivity Test - Using Browser APIs
@@ -9805,11 +9836,12 @@ document.addEventListener("DOMContentLoaded", () => {
               ", ",
             )}`,
           });
+          // Log as 'info' to avoid separate finding popups
           logResult(
             new Date(),
             "UDP Port Scan",
             `✅ DNS (UDP 53) - Service responding (${responseTime}ms)`,
-            "success",
+            "info",
           );
         } else {
           failedServices.push({
@@ -9865,11 +9897,12 @@ document.addEventListener("DOMContentLoaded", () => {
             status: "Time Service Available",
             details: `Current time: ${timeData.datetime}`,
           });
+          // Log as 'info' to avoid separate finding popups
           logResult(
             new Date(),
             "UDP Port Scan",
             `✅ NTP/Time (UDP 123) - Time service responding (${responseTime}ms)`,
-            "success",
+            "info",
           );
         } else {
           failedServices.push({
@@ -9923,11 +9956,12 @@ document.addEventListener("DOMContentLoaded", () => {
               connection.effectiveType || "unknown"
             }, Downlink: ${connection.downlink || "unknown"}Mbps`,
           });
+          // Log as 'info' to avoid separate finding popups
           logResult(
             new Date(),
             "UDP Port Scan",
             `✅ DHCP (UDP 67/68) - Network connection indicates DHCP usage`,
-            "success",
+            "info",
           );
         } else {
           logResult(
@@ -9969,11 +10003,12 @@ document.addEventListener("DOMContentLoaded", () => {
           status: "Local network discovery possible",
           details: "mDNS/.local domain accessible",
         });
+        // Log as 'info' to avoid separate finding popups
         logResult(
           new Date(),
           "UDP Port Scan",
           `✅ mDNS (UDP 5353) - Local network discovery working`,
-          "success",
+          "info",
         );
       } catch (error) {
         failedServices.push({
