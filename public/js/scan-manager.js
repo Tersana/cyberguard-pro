@@ -550,6 +550,8 @@
           created_at: scanState.startedAt,
           finished_at: null,
           driver_id: toolNames.length > 0 ? toolNames : ["NETWORK_ANALYSIS"],
+          selected_frontend_tools: Array.from(selectedFrontendTools),
+          completed_frontend_tools: [],
           target: {
             id: scanState.targetId,
             value: scanState.targetValue

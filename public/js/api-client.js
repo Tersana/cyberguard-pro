@@ -792,6 +792,8 @@ function withLoading(asyncFn, options = {}) {
               value: targetValue
             },
             driver_id: ["NETWORK_ANALYSIS"],
+            selected_frontend_tools: [],
+            completed_frontend_tools: [],
             created_at: new Date().toISOString(),
             finished_at: null
           };
@@ -1076,6 +1078,272 @@ function withLoading(asyncFn, options = {}) {
     }
   }
 
+  function addCompletedFrontendTool(scanJobId, toolId) {
+    if (!mockFrontendScans[scanJobId]) {
+      let storedScan = null;
+      try {
+        const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+        if (storedScansRaw) {
+          const storedScans = JSON.parse(storedScansRaw);
+          storedScan = storedScans.find(s => s.id === scanJobId);
+        }
+      } catch (_) {}
+
+      mockFrontendScans[scanJobId] = storedScan || {
+        id: scanJobId,
+        status: "running",
+        driver_id: ["NETWORK_ANALYSIS"],
+        created_at: new Date().toISOString(),
+      };
+    }
+    if (!mockFrontendScans[scanJobId].completed_frontend_tools) {
+      mockFrontendScans[scanJobId].completed_frontend_tools = [];
+    }
+    if (!mockFrontendScans[scanJobId].completed_frontend_tools.includes(toolId)) {
+      mockFrontendScans[scanJobId].completed_frontend_tools.push(toolId);
+    }
+
+    try {
+      const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+      if (storedScansRaw) {
+        const storedScans = JSON.parse(storedScansRaw);
+        const scan = storedScans.find(s => s.id === scanJobId);
+        if (scan) {
+          if (!scan.completed_frontend_tools) scan.completed_frontend_tools = [];
+          if (!scan.completed_frontend_tools.includes(toolId)) {
+            scan.completed_frontend_tools.push(toolId);
+          }
+          localStorage.setItem("cg_frontend_scans", JSON.stringify(storedScans));
+        }
+      }
+    } catch (e) {
+      console.error("[APIClient] Failed to save completed frontend tool to localStorage:", e);
+    }
+  }
+
+  // ── Background Scan Execution & Tab Coordination ───────────────────────
+  const tabId = "tab_" + Math.random().toString(36).substring(2, 11);
+  let backgroundScanInterval = null;
+  let backgroundHeartbeatInterval = null;
+  let activeBackgroundScanId = null;
+
+  function initBackgroundScanner() {
+    if (typeof window === "undefined" || !window.location) return;
+    if (window.location.pathname.includes("/scan/")) {
+      return; // Handled by scan-progress.js directly
+    }
+
+    // Check every 3 seconds for active running scans
+    backgroundScanInterval = setInterval(checkAndRunBackgroundScans, 3000);
+    checkAndRunBackgroundScans();
+  }
+
+  async function checkAndRunBackgroundScans() {
+    if (activeBackgroundScanId) return;
+
+    try {
+      const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+      if (!storedScansRaw) return;
+
+      const storedScans = JSON.parse(storedScansRaw);
+      const runningScan = storedScans.find(s => s.status === "running");
+      if (!runningScan) return;
+
+      const scanJobId = runningScan.id;
+      const now = Date.now();
+      const lockAcquired = acquireScanLock(runningScan, now);
+      if (!lockAcquired) return;
+
+      activeBackgroundScanId = scanJobId;
+      startHeartbeat(scanJobId);
+
+      await runBackgroundScan(runningScan);
+    } catch (e) {
+      console.error("[APIClient] Error in checkAndRunBackgroundScans:", e);
+      cleanupBackgroundScanState();
+    }
+  }
+
+  function acquireScanLock(scan, now) {
+    const activeTab = scan.active_tab_id;
+    const lastHb = scan.last_heartbeat || 0;
+
+    if (!activeTab || activeTab === tabId || (now - lastHb) > 6000) {
+      scan.active_tab_id = tabId;
+      scan.last_heartbeat = now;
+
+      try {
+        const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+        if (storedScansRaw) {
+          const storedScans = JSON.parse(storedScansRaw);
+          const idx = storedScans.findIndex(s => s.id === scan.id);
+          if (idx !== -1) {
+            storedScans[idx].active_tab_id = tabId;
+            storedScans[idx].last_heartbeat = now;
+            localStorage.setItem("cg_frontend_scans", JSON.stringify(storedScans));
+            return true;
+          }
+        }
+      } catch (_) {}
+    }
+    return false;
+  }
+
+  function startHeartbeat(scanJobId) {
+    stopHeartbeat();
+    backgroundHeartbeatInterval = setInterval(() => {
+      try {
+        const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+        if (!storedScansRaw) return;
+        const storedScans = JSON.parse(storedScansRaw);
+        const scan = storedScans.find(s => s.id === scanJobId);
+
+        if (!scan || scan.status !== "running" || scan.active_tab_id !== tabId) {
+          stopHeartbeat();
+          cleanupBackgroundScanState();
+          return;
+        }
+
+        scan.last_heartbeat = Date.now();
+        localStorage.setItem("cg_frontend_scans", JSON.stringify(storedScans));
+      } catch (_) {}
+    }, 2000);
+  }
+
+  function stopHeartbeat() {
+    if (backgroundHeartbeatInterval) {
+      clearInterval(backgroundHeartbeatInterval);
+      backgroundHeartbeatInterval = null;
+    }
+  }
+
+  function cleanupBackgroundScanState() {
+    activeBackgroundScanId = null;
+    stopHeartbeat();
+  }
+
+  async function runBackgroundScan(scan) {
+    const scanJobId = scan.id;
+    const targetValue = scan.target?.value || "unknown";
+    const selectedTools = scan.selected_frontend_tools || [];
+    const completedTools = scan.completed_frontend_tools || [];
+    const remainingTools = selectedTools.filter(t => !completedTools.includes(t));
+
+    if (remainingTools.length === 0) {
+      completeFrontendScan(scanJobId);
+      cleanupBackgroundScanState();
+      return;
+    }
+
+    try {
+      await ensureNetworkToolsLoaded();
+    } catch (e) {
+      console.error("[APIClient] Failed to load network analysis tools for background scan:", e);
+      cleanupBackgroundScanState();
+      return;
+    }
+
+    window.onFrontendToolLog = function (msg, scanner) {
+      addFrontendLog(scanJobId, `[INFO] [${scanner}] ${msg}`);
+    };
+
+    window.onFrontendToolStatus = function (statusText) {
+      addFrontendLog(scanJobId, `[SYS] ${statusText}`);
+    };
+
+    window.onFrontendToolResult = function ({ timestamp, feature, message, status, details }) {
+      let badge = "[INFO]";
+      if (status === "danger" || status === "threat") badge = "[ERROR]";
+      else if (status === "warning") badge = "[WARN]";
+      else if (status === "success" || status === "safe") badge = "[LIVE]";
+
+      const logLine = `${badge} [${feature}] ${message}`;
+      addFrontendLog(scanJobId, logLine);
+
+      if (status === "danger" || status === "threat" || status === "success" || status === "safe" || message.includes("COMPLETE") || message.includes("Detailed")) {
+        const severity = (status === "danger" || status === "threat") ? "high" : (status === "warning" ? "medium" : "info");
+        const finding = {
+          id: `net-${feature.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}`,
+          title: `${feature}: Analysis Complete`,
+          severity: severity,
+          status: "open",
+          driver_id: feature.toUpperCase().replace(/\s+/g, "_"),
+          description: message,
+          created_at: new Date().toISOString()
+        };
+        addFrontendFinding(scanJobId, finding);
+      }
+    };
+
+    addFrontendLog(scanJobId, `[SYS] Resuming scan in background. Remaining tools: ${remainingTools.length}`);
+
+    const originalSelectedTools = scan.selected_frontend_tools || remainingTools;
+
+    for (let i = 0; i < remainingTools.length; i++) {
+      const currentScanState = await getScanStatus(scanJobId);
+      if (currentScanState.status !== "running" || currentScanState.active_tab_id !== tabId) {
+        break;
+      }
+
+      const toolId = remainingTools[i];
+      const completedCount = originalSelectedTools.length - remainingTools.length;
+      const progressPercent = Math.round(((completedCount + i) / originalSelectedTools.length) * 100);
+      updateFrontendScanProgress(scanJobId, progressPercent);
+
+      addFrontendLog(scanJobId, `[SYS] Initialising ${toolId.replace("net-", "").replace("frontend-", "").toUpperCase().replace("-", " ")}…`);
+
+      try {
+        if (toolId === "net-port-scanner" || toolId === "frontend-port-scanner") {
+          await window.portScan(targetValue);
+        } else if (toolId === "net-tcp-connectivity" || toolId === "frontend-tcp-connectivity") {
+          await window.realTcpPortScan(targetValue);
+        } else if (toolId === "net-udp-services" || toolId === "frontend-udp-services") {
+          await window.realUdpConnectivityTest(targetValue);
+        } else if (toolId === "net-ip-geolocation" || toolId === "frontend-ip-geolocation") {
+          await window.ipGeolocation(targetValue);
+        } else if (toolId === "net-reverse-dns" || toolId === "frontend-reverse-dns") {
+          await window.reverseDns(targetValue);
+        } else if (toolId === "net-whois-lookup" || toolId === "frontend-whois-lookup") {
+          await window.whoisLookup(targetValue);
+        }
+      } catch (err) {
+        console.error(`[Background Tool Error] ${toolId}:`, err);
+        addFrontendLog(scanJobId, `[ERROR] [${toolId}] Execution failed: ${err.message}`);
+      }
+
+      addCompletedFrontendTool(scanJobId, toolId);
+    }
+
+    const finalScanState = await getScanStatus(scanJobId);
+    if (finalScanState.status === "running" && finalScanState.active_tab_id === tabId) {
+      const updatedCompleted = finalScanState.completed_frontend_tools || [];
+      const stillRemaining = originalSelectedTools.filter(t => !updatedCompleted.includes(t));
+      if (stillRemaining.length === 0) {
+        updateFrontendScanProgress(scanJobId, 100);
+        addFrontendLog(scanJobId, "[SYS] All selected network analysis tools completed.");
+        completeFrontendScan(scanJobId);
+      }
+    }
+
+    cleanupBackgroundScanState();
+  }
+
+  function ensureNetworkToolsLoaded() {
+    if (window.portScan && window.whoisLookup && window.ipGeolocation) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+      let script = document.querySelector('script[src*="network-analysis-tools.js"]');
+      if (!script) {
+        script = document.createElement("script");
+        script.src = "/js/network-analysis-tools.js";
+        document.head.appendChild(script);
+      }
+      script.addEventListener("load", () => resolve());
+      script.addEventListener("error", (e) => reject(e));
+    });
+  }
+
   /* ── Expose on window ─────────────────────────────────────────────────── */
   window.scannerAPI = {
     getAvailableScanners,
@@ -1091,7 +1359,12 @@ function withLoading(asyncFn, options = {}) {
     updateFrontendScanProgress,
     addFrontendFinding,
     addFrontendLog,
+    addCompletedFrontendTool,
+    tabId,
   };
+
+  // Start background scanner after DOM and scripts have initialized
+  setTimeout(initBackgroundScanner, 1000);
 })();
 
 // Transient in-memory storage for user API keys

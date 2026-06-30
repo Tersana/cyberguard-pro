@@ -124,15 +124,20 @@
       }
 
       // Check if there are any pending frontend tools to execute
+      let launchedFrontendScan = false;
       try {
         const pendingRaw = sessionStorage.getItem("cg_pending_scan");
         if (pendingRaw) {
           const pending = JSON.parse(pendingRaw);
           if (pending.sessionId === scanJobId && pending.selectedFrontendTools?.length > 0) {
+            launchedFrontendScan = true;
             const toolsToRun = pending.selectedFrontendTools;
             // Remove them from sessionStorage so they don't execute again on page refresh
             pending.selectedFrontendTools = [];
             sessionStorage.setItem("cg_pending_scan", JSON.stringify(pending));
+
+            // Acquire lock and execute
+            acquireProgressPageLock(scanJobId);
 
             // Execute the tools asynchronously
             setTimeout(() => {
@@ -142,6 +147,27 @@
         }
       } catch (err) {
         console.error("[ScanProgress] Failed to run pending frontend tools:", err);
+      }
+
+      if (!launchedFrontendScan && typeof scanJobId === "string" && scanJobId.startsWith("frontend_") && currentStatus === "running") {
+        acquireProgressPageLock(scanJobId);
+
+        const targetValue = (scanSession && scanSession.target && scanSession.target.value) || "unknown";
+        const selectedTools = (scanSession && scanSession.selected_frontend_tools) || [];
+        const completedTools = (scanSession && scanSession.completed_frontend_tools) || [];
+        const remainingTools = selectedTools.filter(t => !completedTools.includes(t));
+
+        if (remainingTools.length > 0) {
+          setTimeout(() => {
+            runFrontendTools(remainingTools, targetValue, true);
+          }, 1000);
+        } else {
+          // If no remaining tools, mark completed
+          if (window.scannerAPI && typeof window.scannerAPI.completeFrontendScan === "function") {
+            window.scannerAPI.completeFrontendScan(scanJobId);
+          }
+          onScanComplete({ status: "completed" });
+        }
       }
 
     } catch (err) {
@@ -160,8 +186,12 @@
   }
 
   // Execute selected network analysis tools
-  async function runFrontendTools(selectedTools, targetValue) {
-    appendTerminalSystem("Starting selected network analysis tools…");
+  async function runFrontendTools(selectedTools, targetValue, isResume = false) {
+    if (!isResume) {
+      appendTerminalSystem("Starting selected network analysis tools…");
+    } else {
+      appendTerminalSystem("Resuming remaining network analysis tools…");
+    }
 
     // Define custom hooks to route tools' outputs into the progress page UI
     window.onFrontendToolLog = function (msg, scanner) {
@@ -202,9 +232,18 @@
 
     // Run them sequentially
     const totalTools = selectedTools.length;
+    const originalSelectedTools = (scanSession && scanSession.selected_frontend_tools) || selectedTools;
+    const completedCount = originalSelectedTools.length - selectedTools.length;
+
     for (let i = 0; i < totalTools; i++) {
+      // Check if cancelled/paused or preempted by another tab
+      const currentScanState = await window.scannerAPI.getScanStatus(scanJobId);
+      if (currentScanState.status !== "running" || currentScanState.active_tab_id !== window.scannerAPI.tabId) {
+        break;
+      }
+
       const toolId = selectedTools[i];
-      const progressPercent = Math.round((i / totalTools) * 100);
+      const progressPercent = Math.round(((completedCount + i) / originalSelectedTools.length) * 100);
       if (window.scannerAPI && typeof window.scannerAPI.updateFrontendScanProgress === "function") {
         window.scannerAPI.updateFrontendScanProgress(scanJobId, progressPercent);
       }
@@ -228,21 +267,67 @@
         console.error(`[Tool Error] ${toolId}:`, err);
         appendTerminalLine(`[ERROR] [${toolId}] Execution failed: ${err.message}`);
       }
-    }
 
-    if (window.scannerAPI && typeof window.scannerAPI.updateFrontendScanProgress === "function") {
-      window.scannerAPI.updateFrontendScanProgress(scanJobId, 100);
-    }
-
-    appendTerminalSystem("All selected network analysis tools completed.");
-
-    // Mark scan completed
-    if (typeof scanJobId === "string" && scanJobId.startsWith("frontend_")) {
-      if (window.scannerAPI && typeof window.scannerAPI.completeFrontendScan === "function") {
-        window.scannerAPI.completeFrontendScan(scanJobId);
+      // Mark tool completed
+      if (window.scannerAPI && typeof window.scannerAPI.addCompletedFrontendTool === "function") {
+        window.scannerAPI.addCompletedFrontendTool(scanJobId, toolId);
       }
-      onScanComplete({ status: "completed" });
     }
+
+    // Verify if all tools completed
+    const finalScanState = await window.scannerAPI.getScanStatus(scanJobId);
+    if (finalScanState.status === "running" && finalScanState.active_tab_id === window.scannerAPI.tabId) {
+      const updatedCompleted = finalScanState.completed_frontend_tools || [];
+      const stillRemaining = originalSelectedTools.filter(t => !updatedCompleted.includes(t));
+      if (stillRemaining.length === 0) {
+        if (window.scannerAPI && typeof window.scannerAPI.updateFrontendScanProgress === "function") {
+          window.scannerAPI.updateFrontendScanProgress(scanJobId, 100);
+        }
+
+        appendTerminalSystem("All selected network analysis tools completed.");
+
+        if (typeof scanJobId === "string" && scanJobId.startsWith("frontend_")) {
+          if (window.scannerAPI && typeof window.scannerAPI.completeFrontendScan === "function") {
+            window.scannerAPI.completeFrontendScan(scanJobId);
+          }
+          onScanComplete({ status: "completed" });
+        }
+      }
+    }
+  }
+
+  let progressHeartbeatInterval = null;
+
+  function acquireProgressPageLock(scanJobId) {
+    try {
+      const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+      if (storedScansRaw) {
+        const storedScans = JSON.parse(storedScansRaw);
+        const scan = storedScans.find(s => s.id === scanJobId);
+        if (scan) {
+          scan.active_tab_id = window.scannerAPI.tabId;
+          scan.last_heartbeat = Date.now();
+          localStorage.setItem("cg_frontend_scans", JSON.stringify(storedScans));
+        }
+      }
+    } catch (_) {}
+
+    if (progressHeartbeatInterval) clearInterval(progressHeartbeatInterval);
+    progressHeartbeatInterval = setInterval(() => {
+      try {
+        const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+        if (!storedScansRaw) return;
+        const storedScans = JSON.parse(storedScansRaw);
+        const scan = storedScans.find(s => s.id === scanJobId);
+        if (scan && scan.status === "running") {
+          scan.active_tab_id = window.scannerAPI.tabId;
+          scan.last_heartbeat = Date.now();
+          localStorage.setItem("cg_frontend_scans", JSON.stringify(storedScans));
+        } else {
+          clearInterval(progressHeartbeatInterval);
+        }
+      } catch (_) {}
+    }, 2000);
   }
 
   /* ═══════════════════════════════════════════════════════════════════════

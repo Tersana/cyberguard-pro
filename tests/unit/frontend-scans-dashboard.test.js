@@ -95,6 +95,29 @@ describe('Frontend Scans Dashboard Integration', () => {
       const scans = JSON.parse(window.localStorage.getItem('cg_frontend_scans'));
       expect(scans[0].progress).toBe(45);
     });
+
+    it('should expose addCompletedFrontendTool and update completed frontend tools in local storage', async () => {
+      expect(window.scannerAPI.addCompletedFrontendTool).toBeTypeOf('function');
+      expect(window.scannerAPI.tabId).toBeTypeOf('string');
+
+      const mockScanId = 'frontend_abc123';
+      const mockScan = {
+        id: mockScanId,
+        status: 'running',
+        selected_frontend_tools: ['net-port-scanner'],
+        completed_frontend_tools: []
+      };
+
+      window.localStorage.setItem('cg_frontend_scans', JSON.stringify([mockScan]));
+
+      window.scannerAPI.addCompletedFrontendTool(mockScanId, 'net-port-scanner');
+
+      const scans = JSON.parse(window.localStorage.getItem('cg_frontend_scans'));
+      expect(scans[0].completed_frontend_tools).toContain('net-port-scanner');
+
+      const status = await window.scannerAPI.getScanStatus(mockScanId);
+      expect(status.completed_frontend_tools).toContain('net-port-scanner');
+    });
   });
 
   describe('security-dashboard.js merge and render logic', () => {
