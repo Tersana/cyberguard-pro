@@ -575,15 +575,11 @@
           }));
         } catch (_) {}
 
-        if (window.LiveScanConsole) {
-          notify("Scan started — live console opened at bottom", "success");
-          window.LiveScanConsole.startSession(sessionId, scanState.targetValue, scanState.targetId);
-        } else {
-          notify("Scan started — opening progress view…", "success");
-          setTimeout(() => {
-            window.location.href = `/scan/${sessionId}`;
-          }, 600);
-        }
+        notify("Scan started — opening progress view…", "success");
+
+        setTimeout(() => {
+          window.location.href = `/scan/${sessionId}`;
+        }, 600);
       } catch (err) {
         console.error("[ScanManager] startScan frontend-only error:", err);
         notify(err.message || "Failed to start scan.", "error");
@@ -666,15 +662,12 @@
         }));
       } catch (_) {}
 
-      if (window.LiveScanConsole) {
-        notify("Scan started — live console opened at bottom", "success");
-        window.LiveScanConsole.startSession(sessionId, scanState.targetValue, scanState.targetId);
-      } else {
-        notify("Scan started — opening progress view…", "success");
-        setTimeout(() => {
-          window.location.href = `/scan/${sessionId}`;
-        }, 600);
-      }
+      notify("Scan started — opening progress view…", "success");
+
+      // Small delay so the toast is visible before navigation
+      setTimeout(() => {
+        window.location.href = `/scan/${sessionId}`;
+      }, 600);
 
     } catch (err) {
       console.error("[ScanManager] startScan error:", err);
