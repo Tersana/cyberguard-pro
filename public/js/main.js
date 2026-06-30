@@ -11163,11 +11163,64 @@ document.addEventListener("DOMContentLoaded", () => {
         el.classList.toggle("active", el.dataset.scanId === scanId);
       });
 
-      this.renderCurrentToolView();
+      this.loadedHistoryItem = item;
+      this.switchTool('summary', false);
+
+      // Compute total issues for the loaded history item to update global Summary Bar
+      let totalIssues = 0;
+      if (item.headersResults) {
+        totalIssues += item.headersResults.results.filter(r => r.result.status === 'missing' || r.result.status === 'misconfigured').length;
+      }
+      if (item.linksResults) {
+        totalIssues += item.linksResults.results.broken.length + item.linksResults.results.mixed.length;
+      }
+      if (item.emailResults) {
+        totalIssues += item.emailResults.checks.filter(c => c.status === 'missing' || c.status === 'warning').length;
+      }
+      // SSL check issues
+      const sslLatest = item.resultsData.filter(r => r.feature === 'SSL/TLS Check');
+      if (sslLatest.length > 0) {
+        const res = sslLatest[sslLatest.length - 1];
+        let failedChecks = 0;
+        if (res && res.details && res.details.evidence) {
+          try {
+            const ev = JSON.parse(res.details.evidence);
+            failedChecks = (ev["Certificate Status Checks"] || []).filter(c => c.includes('FAILED')).length;
+          } catch(e) {}
+        }
+        totalIssues += failedChecks;
+      }
+      // Phishing risk
+      const phishingLatest = item.resultsData.filter(r => r.feature === 'URL Phishing Analyzer');
+      if (phishingLatest.length > 0) {
+        const res = phishingLatest[phishingLatest.length - 1];
+        if (res && (res.status === 'threat' || res.status === 'warning')) {
+          totalIssues += 1;
+        }
+      }
+      // DNS Spoof warnings
+      const dnsLatest = item.resultsData.filter(r => r.feature === 'DNS Spoof Check');
+      if (dnsLatest.length > 0) {
+        const res = dnsLatest[dnsLatest.length - 1];
+        let warningsCount = 0;
+        if (res && res.details && res.details.description) {
+          const warnings = res.details.description.match(/🚨|⚠️/g) || [];
+          warningsCount = warnings.length;
+        }
+        totalIssues += warningsCount;
+      }
+
+      if (typeof updateSummaryBar === 'function') {
+        updateSummaryBar(totalIssues, "--", item.target);
+      }
+
       updateResultsStats();
       _dispatchRiskGaugeUpdate();
 
-      CyberNotify.alert(`Loaded scan results for ${item.target}`, { type: 'success' });
+      // Show non-blocking toast instead of blocking dialog
+      if (typeof ExecutionController !== 'undefined' && typeof ExecutionController.showToast === 'function') {
+        ExecutionController.showToast(`Loaded scan results for ${item.target}`);
+      }
     },
 
     clearScanHistory() {
@@ -11214,6 +11267,13 @@ document.addEventListener("DOMContentLoaded", () => {
     updateAuditorFilterControls(toolId) {
       const container = document.getElementById('wa-filter-controls-container');
       if (!container) return;
+
+      if (toolId === 'summary') {
+        container.innerHTML = '';
+        container.style.display = 'none';
+        return;
+      }
+      container.style.display = '';
 
       this.activeFilters = this.activeFilters || new Set();
       this.activeFilters.clear();
@@ -11418,6 +11478,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Update right panel header titles
       const toolNames = {
+        summary: 'Audit Session Summary',
         headers: 'HTTP Security Headers Analysis',
         links: 'Link Scanner & Mixed Content',
         email: 'Email Security Policy Audit',
@@ -11426,6 +11487,7 @@ document.addEventListener("DOMContentLoaded", () => {
         'dns-spoof': 'DNS Spoofing Detection'
       };
       const toolDescs = {
+        summary: 'Consolidated overview of all auditing modules run for this target',
         headers: 'Analyze security headers and get an A-F grade',
         links: 'Audit webpage links for mixed content and broken resources',
         email: 'Audit SPF and DMARC DNS records to detect email spoofing vulnerabilities',
@@ -11452,6 +11514,11 @@ document.addEventListener("DOMContentLoaded", () => {
     renderCurrentToolView() {
       const bodyEl = document.getElementById('wa-results-body');
       if (!bodyEl) return;
+
+      if (this.activeToolId === 'summary') {
+        this.renderSummaryView();
+        return;
+      }
 
       // Check current tool's session status or results
       const statusEl = document.getElementById(`wa-tool-status-${this.activeToolId}`);
@@ -11544,6 +11611,269 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       
       this.updateCountBadges();
+    },
+
+    renderSummaryView() {
+      const bodyEl = document.getElementById('wa-results-body');
+      if (!bodyEl) return;
+      
+      const item = this.loadedHistoryItem;
+      if (!item) {
+        bodyEl.innerHTML = `<div class="text-slate-400 text-center py-8">No scan selected.</div>`;
+        return;
+      }
+
+      const displayTarget = item.target.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      
+      const tools = [
+        { id: 'headers', name: 'HTTP Headers', desc: 'Security header analysis & grading' },
+        { id: 'links', name: 'Link Scanner', desc: 'Broken links & mixed content' },
+        { id: 'email', name: 'Email Security', desc: 'SPF & DMARC spoofing checks' },
+        { id: 'ssl', name: 'SSL / TLS Certificate', desc: 'Validate cert chain & ciphers' },
+        { id: 'phishing', name: 'URL Phishing Analyzer', desc: 'ML model phishing score' },
+        { id: 'dns-spoof', name: 'DNS Spoofing Detection', desc: 'AI multi-resolver checks' }
+      ];
+
+      let cardsHtml = '';
+      let totalIssues = 0;
+      let toolsRunCount = 0;
+      let hasDanger = false;
+      let hasWarning = false;
+
+      tools.forEach(tool => {
+        const status = item.toolStates[tool.id] || 'idle';
+        let statusText = 'Not Run';
+        let badgeClass = 'bg-slate-800 text-slate-400 border border-slate-700';
+        let detailText = 'This module was not enabled for this scan.';
+        let cardClickAction = '';
+        let showDetailsBtn = false;
+
+        if (status === 'running') {
+          statusText = 'Running';
+          badgeClass = 'bg-blue-500/10 text-blue-400 border border-blue-500/30 animate-pulse';
+          detailText = 'Scan in progress...';
+        } else if (status === 'error') {
+          statusText = 'Error';
+          badgeClass = 'bg-red-500/10 text-red-400 border border-red-500/30';
+          detailText = 'An error occurred during execution.';
+        } else if (status === 'done') {
+          toolsRunCount++;
+          cardClickAction = `onclick="window.WebAuditing.switchTool('${tool.id}')"`;
+          showDetailsBtn = true;
+          
+          if (tool.id === 'headers' && item.headersResults) {
+            const missing = item.headersResults.results.filter(r => r.result.status === 'missing').length;
+            const misconfigured = item.headersResults.results.filter(r => r.result.status === 'misconfigured').length;
+            const grade = item.headersResults.grade || 'F';
+            const score = Math.round(item.headersResults.score || 0);
+            totalIssues += missing + misconfigured;
+
+            if (missing > 0) {
+              statusText = 'Issues Found';
+              badgeClass = 'bg-red-500/10 text-red-400 border border-red-500/30';
+              hasDanger = true;
+            } else if (misconfigured > 0) {
+              statusText = 'Warnings';
+              badgeClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
+              hasWarning = true;
+            } else {
+              statusText = 'Secure';
+              badgeClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+            }
+            detailText = `Grade: <span class="font-bold text-white">${grade}</span> (Score: ${score}/100). ${missing} missing, ${misconfigured} misconfigured headers.`;
+          } 
+          
+          else if (tool.id === 'links' && item.linksResults) {
+            const broken = item.linksResults.results.broken.length;
+            const mixed = item.linksResults.results.mixed.length;
+            totalIssues += broken + mixed;
+
+            if (broken > 0) {
+              statusText = 'Critical';
+              badgeClass = 'bg-red-500/10 text-red-400 border border-red-500/30';
+              hasDanger = true;
+            } else if (mixed > 0) {
+              statusText = 'Mixed Content';
+              badgeClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
+              hasWarning = true;
+            } else {
+              statusText = 'Clean';
+              badgeClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+            }
+            detailText = `${broken} broken links, ${mixed} mixed content links detected.`;
+          } 
+          
+          else if (tool.id === 'email' && item.emailResults) {
+            const missing = item.emailResults.checks.filter(c => c.status === 'missing').length;
+            const weak = item.emailResults.checks.filter(c => c.status === 'warning').length;
+            totalIssues += missing + weak;
+
+            if (missing > 0) {
+              statusText = 'Vulnerable';
+              badgeClass = 'bg-red-500/10 text-red-400 border border-red-500/30';
+              hasDanger = true;
+            } else if (weak > 0) {
+              statusText = 'Weak Policy';
+              badgeClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
+              hasWarning = true;
+            } else {
+              statusText = 'Secure';
+              badgeClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+            }
+            detailText = `SPF & DMARC: ${missing} missing defenses, ${weak} weak policies.`;
+          } 
+          
+          else if (tool.id === 'ssl') {
+            const latest = item.resultsData.filter(r => r.feature === 'SSL/TLS Check');
+            const result = latest.length > 0 ? latest[latest.length - 1] : null;
+            let failedChecks = 0;
+            if (result && result.details && result.details.evidence) {
+              try {
+                const ev = JSON.parse(result.details.evidence);
+                failedChecks = (ev["Certificate Status Checks"] || []).filter(c => c.includes('FAILED')).length;
+              } catch(e) {}
+            }
+            totalIssues += failedChecks;
+
+            if (failedChecks > 0 || (result && result.status === 'threat')) {
+              statusText = 'Vulnerable';
+              badgeClass = 'bg-red-500/10 text-red-400 border border-red-500/30';
+              hasDanger = true;
+            } else if (result && result.status === 'warning') {
+              statusText = 'Warning';
+              badgeClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
+              hasWarning = true;
+            } else {
+              statusText = 'Secure';
+              badgeClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+            }
+            detailText = failedChecks > 0 ? `${failedChecks} certificate validation checks failed.` : 'Certificate chain is valid and encryption strength is secure.';
+          } 
+          
+          else if (tool.id === 'phishing') {
+            const latest = item.resultsData.filter(r => r.feature === 'URL Phishing Analyzer');
+            const result = latest.length > 0 ? latest[latest.length - 1] : null;
+            let prob = 0;
+            if (result) {
+              prob = parseFloat(result.message.match(/Probability:\s*([\d.]+)%/)?.[1] || 0);
+            }
+
+            if (result && result.status === 'threat') {
+              statusText = 'Phishing Risk';
+              badgeClass = 'bg-red-500/10 text-red-400 border border-red-500/30';
+              hasDanger = true;
+              totalIssues += 1;
+            } else if (result && result.status === 'warning') {
+              statusText = 'Suspicious';
+              badgeClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
+              hasWarning = true;
+              totalIssues += 1;
+            } else {
+              statusText = 'Safe';
+              badgeClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+            }
+            detailText = `Phishing Probability: <span class="font-bold text-white">${prob}%</span>. Domain heuristics checked.`;
+          } 
+          
+          else if (tool.id === 'dns-spoof') {
+            const latest = item.resultsData.filter(r => r.feature === 'DNS Spoof Check');
+            const result = latest.length > 0 ? latest[latest.length - 1] : null;
+            let warningsCount = 0;
+            if (result && result.details && result.details.description) {
+              const warnings = result.details.description.match(/🚨|⚠️/g) || [];
+              warningsCount = warnings.length;
+            }
+            totalIssues += warningsCount;
+
+            if (result && result.status === 'threat') {
+              statusText = 'Spoof Risk';
+              badgeClass = 'bg-red-500/10 text-red-400 border border-red-500/30';
+              hasDanger = true;
+            } else if (result && result.status === 'warning' || warningsCount > 0) {
+              statusText = 'Warnings';
+              badgeClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/30';
+              hasWarning = true;
+            } else {
+              statusText = 'Secure';
+              badgeClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+            }
+            detailText = warningsCount > 0 ? `${warningsCount} resolver anomalies/warnings detected.` : 'DNS records and Nameservers match perfectly across resolvers.';
+          }
+        }
+
+        cardsHtml += `
+          <div class="p-4 rounded-xl border border-white/5 bg-slate-900/40 hover:bg-slate-900/80 hover:border-purple-500/30 transition-all duration-300 flex flex-col justify-between group ${cardClickAction ? 'cursor-pointer' : 'opacity-60'}" ${cardClickAction}>
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="text-sm font-semibold text-slate-200 group-hover:text-purple-400 transition-colors">${escapeHtml(tool.name)}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase ${badgeClass}">${statusText}</span>
+              </div>
+              <p class="text-[11px] text-slate-400 leading-relaxed mb-4">${detailText}</p>
+            </div>
+            ${showDetailsBtn ? `
+              <div class="flex items-center justify-between text-[11px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors mt-auto font-sans">
+                <span>View Details</span>
+                <svg class="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"></path>
+                </svg>
+              </div>
+            ` : `
+              <div class="text-[11px] text-slate-600 italic mt-auto">Not audited</div>
+            `}
+          </div>
+        `;
+      });
+
+      let overallStatus = 'SECURE';
+      let overallColorClass = 'text-emerald-400';
+      let overallBgClass = 'rgba(16,185,129,0.1)';
+      let overallBorderClass = 'border-emerald-500/30';
+
+      if (hasDanger) {
+        overallStatus = 'VULNERABLE';
+        overallColorClass = 'text-red-400';
+        overallBgClass = 'rgba(239,68,68,0.1)';
+        overallBorderClass = 'border-red-500/30';
+      } else if (hasWarning) {
+        overallStatus = 'WARNING';
+        overallColorClass = 'text-amber-400';
+        overallBgClass = 'rgba(245,158,11,0.1)';
+        overallBorderClass = 'border-amber-500/30';
+      }
+
+      bodyEl.innerHTML = `
+        <!-- Overview Header Card -->
+        <div class="p-6 rounded-xl border ${overallBorderClass} mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" style="background: ${overallBgClass};">
+          <div>
+            <div class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-1">Session Target</div>
+            <h2 class="text-lg font-bold text-white font-mono truncate max-w-md sm:max-w-xl">${escapeHtml(displayTarget)}</h2>
+            <div class="text-xs text-slate-400 mt-1">Audit conducted on ${item.timestamp}</div>
+          </div>
+          <div class="flex items-center gap-6">
+            <div class="text-left sm:text-right">
+              <div class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Total Issues</div>
+              <div class="text-2xl font-black text-white">${totalIssues}</div>
+            </div>
+            <div class="text-left sm:text-right">
+              <div class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Modules Run</div>
+              <div class="text-2xl font-black text-white">${toolsRunCount}/6</div>
+            </div>
+            <div class="px-4 py-2 rounded-lg border ${overallBorderClass} bg-slate-900/60 text-center shrink-0">
+              <div class="text-[9px] uppercase tracking-wider text-slate-500 font-bold">Security Status</div>
+              <div class="text-sm font-black ${overallColorClass} tracking-wide">${overallStatus}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--cg-text-3);margin-bottom:14px">
+          Audit Module Summary
+        </div>
+
+        <!-- Modules Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          ${cardsHtml}
+        </div>
+      `;
     },
 
     getLatestResultForFeature(featureName) {
