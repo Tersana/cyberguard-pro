@@ -843,7 +843,8 @@
           message: `Port ${port} OPEN`,
           detail: detailText,
         });
-        logResult(new Date(), "TCP Port Scan", `Port ${port} is OPEN - ${detailText}`, "success");
+        // Log as 'info' so it outputs in terminal but does not spawn individual finding popup records
+        logResult(new Date(), "TCP Port Scan", `Port ${port} is OPEN - ${detailText}`, "info");
       });
     } else {
       const msg = result.message || "No open ports found on target.";
@@ -860,11 +861,12 @@
         message: `${result.vulns.length} known CVEs found`,
         detail: topCves + more,
       });
+      // Log as 'info' to avoid duplicate finding popups
       logResult(
         new Date(),
         "TCP Port Scan",
         `[WARN] ${result.vulns.length} known CVEs: ${topCves}${more}`,
-        "danger",
+        "info",
       );
     }
 
@@ -878,6 +880,42 @@
     }
 
     renderShodanResults(result, target);
+
+    // Group all results to a single summary log / finding to avoid separate findings popups
+    if (!result.error) {
+      const portLines = result.ports.map((port) => {
+        const service = getServiceName(port);
+        let detailText = service;
+        if (result.source === "Live TCP Scan" && result.details) {
+          const detail = result.details.find(d => d.port === port);
+          if (detail) {
+            detailText += ` (Latency: ${detail.latency}ms)`;
+          }
+        }
+        return `- Port ${port} - ${detailText}`;
+      }).join("\n");
+
+      const durationMs = Date.now() - scanStartTime;
+      const cvesCount = result.vulns ? result.vulns.length : 0;
+      
+      const summaryText = `[SCAN COMPLETE] TCP port scan completed for ${target}:\n\n` +
+        `Host Information:\n` +
+        ` - IP: ${result.ip || target}\n` +
+        ` - Organization: Unknown organization\n` +
+        ` - Location: Unknown location\n` +
+        ` - OS: Unknown\n` +
+        ` - Hostnames: ${result.hostnames && result.hostnames.length > 0 ? result.hostnames.join(", ") : "None"}\n\n` +
+        `Open Ports & Services:\n` +
+        (portLines ? `${portLines}` : ` - No open ports found`) + `\n\n` +
+        `Vulnerabilities: ${cvesCount}\n` +
+        `Scan Statistics:\n` +
+        ` - Total ports: ${result.ports.length}\n` +
+        ` - Services detected: ${result.ports.length}\n` +
+        ` - Scan duration: ${durationMs}ms\n` +
+        ` - Data freshness: ${new Date().toISOString()}`;
+        
+      logResult(new Date(), "TCP Port Scan", summaryText, cvesCount > 0 || result.ports.length > 0 ? "danger" : "success");
+    }
   }
 
   // ===== 3. UDP SERVICES =====
@@ -926,7 +964,8 @@
                   status: "Service Responding",
                   details: `Live UDP reply received in ${res.latency}ms`
                 });
-                logResult(new Date(), "UDP Port Scan", `[OK] ${serviceName} (UDP ${res.port}) - Service responding (${res.latency}ms)`, "success");
+                // Log as 'info' so it outputs in terminal but does not spawn individual finding popup records
+                logResult(new Date(), "UDP Port Scan", `[OK] ${serviceName} (UDP ${res.port}) - Service responding (${res.latency}ms)`, "info");
               } else {
                 failedServices.push({
                   port: res.port,
@@ -966,7 +1005,8 @@
               status: "DNS Resolution Working",
               details: `Resolved to ${dnsData.Answer.map((a) => a.data).join(", ")}`,
             });
-            logResult(new Date(), "UDP Port Scan", `[OK] DNS (UDP 53) - Service responding (${responseTime}ms)`, "success");
+            // Log as 'info' to avoid individual finding popups
+            logResult(new Date(), "UDP Port Scan", `[OK] DNS (UDP 53) - Service responding (${responseTime}ms)`, "info");
           } else {
             failedServices.push({ port: 53, service: "DNS", error: "DNS resolution failed" });
             logResult(new Date(), "UDP Port Scan", `[FAIL] DNS (UDP 53) - Service not responding`, "info");
@@ -1001,7 +1041,8 @@
               status: "Time Service Available",
               details: `Current time: ${timeData.datetime}`,
             });
-            logResult(new Date(), "UDP Port Scan", `[OK] NTP/Time (UDP 123) - Time service responding (${responseTime}ms)`, "success");
+            // Log as 'info' to avoid individual finding popups
+            logResult(new Date(), "UDP Port Scan", `[OK] NTP/Time (UDP 123) - Time service responding (${responseTime}ms)`, "info");
           } else {
             failedServices.push({ port: 123, service: "NTP", error: "Time service unavailable" });
             logResult(new Date(), "UDP Port Scan", `[FAIL] NTP (UDP 123) - Time service not available`, "info");
@@ -1028,7 +1069,8 @@
               status: "Network Connection Active",
               details: `Type: ${connection.effectiveType || "unknown"}, Downlink: ${connection.downlink || "unknown"}Mbps`,
             });
-            logResult(new Date(), "UDP Port Scan", `[OK] DHCP (UDP 67/68) - Network connection indicates DHCP usage`, "success");
+            // Log as 'info' to avoid individual finding popups
+            logResult(new Date(), "UDP Port Scan", `[OK] DHCP (UDP 67/68) - Network connection indicates DHCP usage`, "info");
           } else {
             logResult(new Date(), "UDP Port Scan", `[INFO] DHCP (UDP 67/68) - Network connection info unavailable`, "info");
           }
@@ -1057,7 +1099,8 @@
             status: "Local network discovery possible",
             details: "mDNS/.local domain accessible",
           });
-          logResult(new Date(), "UDP Port Scan", `[OK] mDNS (UDP 5353) - Local network discovery working`, "success");
+          // Log as 'info' to avoid individual finding popups
+          logResult(new Date(), "UDP Port Scan", `[OK] mDNS (UDP 5353) - Local network discovery working`, "info");
         } catch (error) {
           failedServices.push({ port: 5353, service: "mDNS", error: "Local discovery not available" });
           logResult(new Date(), "UDP Port Scan", `[FAIL] mDNS (UDP 5353) - Local network discovery failed`, "info");

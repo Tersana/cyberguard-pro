@@ -1177,13 +1177,31 @@
           </svg>
           <span class="text-xs font-bold uppercase tracking-wider text-slate-200">Shodan Host Intelligence</span>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-xs font-mono">
-          <div class="flex justify-between py-0.5 border-b border-white/5 md:border-none"><span class="text-slate-400">Target IP</span><span class="text-slate-200 font-bold">${escapeHtml(ip || '—')}</span></div>
-          <div class="flex justify-between py-0.5 border-b border-white/5 md:border-none"><span class="text-slate-400">Organization</span><span class="text-slate-200 font-bold">${escapeHtml(org || '—')}</span></div>
-          <div class="flex justify-between py-0.5 border-b border-white/5 md:border-none"><span class="text-slate-400">ISP</span><span class="text-slate-200 font-bold">${escapeHtml(isp || '—')}</span></div>
-          <div class="flex justify-between py-0.5 border-b border-white/5 md:border-none"><span class="text-slate-400">Location</span><span class="text-slate-200 font-bold">${escapeHtml(location || '—')}</span></div>
-          <div class="flex justify-between py-0.5 border-b border-white/5 md:border-none"><span class="text-slate-400">Operating System</span><span class="text-slate-200 font-bold">${escapeHtml(os || '—')}</span></div>
-          <div class="flex justify-between py-0.5 border-b border-white/5 md:border-none"><span class="text-slate-400">Hostnames</span><span class="text-slate-200 font-bold text-right truncate max-w-[200px]" title="${escapeHtml(hostnames)}">${escapeHtml(hostnames || '—')}</span></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs font-mono">
+          <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-white/[0.02] border border-white/5">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-sans select-none">Target IP</span>
+            <span class="text-slate-200 font-bold break-all">${escapeHtml(ip || '—')}</span>
+          </div>
+          <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-white/[0.02] border border-white/5">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-sans select-none">Location</span>
+            <span class="text-slate-200 font-bold">${escapeHtml(location || '—')}</span>
+          </div>
+          <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-white/[0.02] border border-white/5">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-sans select-none">Operating System</span>
+            <span class="text-slate-200 font-bold">${escapeHtml(os || '—')}</span>
+          </div>
+          <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-white/[0.02] border border-white/5">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-sans select-none">ISP</span>
+            <span class="text-slate-200 font-bold">${escapeHtml(isp || '—')}</span>
+          </div>
+          <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-white/[0.02] border border-white/5 sm:col-span-2 md:col-span-2">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-sans select-none">Organization</span>
+            <span class="text-slate-200 font-bold break-words">${escapeHtml(org || '—')}</span>
+          </div>
+          <div class="flex flex-col gap-1.5 p-3 rounded-lg bg-white/[0.02] border border-white/5 col-span-1 sm:col-span-2 md:col-span-3">
+            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-sans select-none">Hostnames</span>
+            <span class="text-slate-200 font-bold break-all">${escapeHtml(hostnames || '—')}</span>
+          </div>
         </div>
       </div>
     `;
