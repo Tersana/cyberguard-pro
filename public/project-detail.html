@@ -6712,6 +6712,24 @@
                         }
                     });
 
+                    const matchToolFilter = (findingTool, filterVal) => {
+                        if (!findingTool || !filterVal || filterVal === 'all') return true;
+                        const normTool = findingTool.toUpperCase().replace(/[_-]/g, '_');
+                        const normFilter = filterVal.toUpperCase().replace(/[_-]/g, '_');
+                        if (normTool === normFilter) return true;
+
+                        const equivalents = {
+                            'PORT_SCANNER': ['PORT_SCANNER', 'SHODAN_SCANNER'],
+                            'TCP_CONNECTIVITY': ['TCP_CONNECTIVITY', 'TCP_PORT_SCAN'],
+                            'UDP_SERVICES': ['UDP_SERVICES', 'UDP_PORT_SCAN']
+                        };
+
+                        if (equivalents[normFilter]) {
+                            return equivalents[normFilter].includes(normTool);
+                        }
+                        return false;
+                    };
+
                     // Filter local findings using active severity, status, and tool filters
                     if (_currentSeverityFilter && _currentSeverityFilter !== 'all') {
                         localFindingsList = localFindingsList.filter(f => (f.severity || '').toLowerCase() === _currentSeverityFilter.toLowerCase());
@@ -6722,7 +6740,7 @@
                     if (_currentToolFilter && _currentToolFilter !== 'all') {
                         localFindingsList = localFindingsList.filter(f => {
                             const toolName = f.tool || f.driver_id || '';
-                            return toolName.toLowerCase() === _currentToolFilter.toLowerCase();
+                            return matchToolFilter(toolName, _currentToolFilter);
                         });
                     }
 
