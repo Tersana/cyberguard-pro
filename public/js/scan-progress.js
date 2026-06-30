@@ -62,6 +62,43 @@
 
       renderHeader(scanSession);
       renderControlButtons(currentStatus);
+
+      // Update Back Button to return to project targets tab
+      try {
+        let projectId = scanSession.project_id || (scanSession.project && scanSession.project.id);
+        
+        // Fallback 1: check cg_frontend_scans in localStorage
+        if (!projectId && typeof scanJobId === "string" && scanJobId.startsWith("frontend_")) {
+          const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+          if (storedScansRaw) {
+            const storedScans = JSON.parse(storedScansRaw);
+            const foundScan = storedScans.find(s => s.id === scanJobId);
+            if (foundScan) {
+              projectId = foundScan.project_id;
+            }
+          }
+        }
+
+        // Fallback 2: check cg_pending_scan in sessionStorage
+        if (!projectId) {
+          const pendingRaw = sessionStorage.getItem("cg_pending_scan");
+          if (pendingRaw) {
+            const pending = JSON.parse(pendingRaw);
+            if (pending.sessionId === scanJobId) {
+              projectId = pending.projectId;
+            }
+          }
+        }
+
+        if (projectId) {
+          const backBtn = document.getElementById("sp-back-btn");
+          if (backBtn) {
+            backBtn.href = `/project-detail?id=${projectId}&tab=targets`;
+          }
+        }
+      } catch (err) {
+        console.warn("[ScanProgress] Failed to set back button href:", err);
+      }
       hideSkeleton();
 
       // Load initial findings
