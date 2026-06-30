@@ -727,17 +727,7 @@
             <p>Select the perfect plan for your needs. All plans include core scanning features — upgrade anytime.</p>
         </section>
 
-        <!-- Plan Switcher Toggle -->
-        <div class="plan-switcher-container" style="display: flex; justify-content: center; margin-bottom: 3rem;">
-            <div class="plan-switcher" style="display: inline-flex; padding: 4px; background: rgba(30, 41, 59, 0.7); border: 1px solid var(--cg-border); border-radius: 9999px; gap: 4px; box-shadow: var(--cg-shadow-lg);">
-                <button id="btn-personal-plans" class="plan-switcher-btn active" style="padding: 0.6rem 1.5rem; border: none; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; cursor: pointer;" onclick="switchPlanType('personal')">
-                    Personal Plans
-                </button>
-                <button id="btn-org-plans" class="plan-switcher-btn" style="padding: 0.6rem 1.5rem; border: none; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; cursor: pointer;" onclick="switchPlanType('org')">
-                    Organization Plans
-                </button>
-            </div>
-        </div>
+
 
         <!-- Plans Grid -->
         <section id="plans-grid" class="plans-grid">
@@ -1007,26 +997,7 @@
             }
         }
 
-        /**
-         * Switch active plan type between Personal and Organization plans
-         */
-        function switchPlanType(type) {
-            if (activePlanType === type) return;
-            activePlanType = type;
 
-            const btnPersonal = document.getElementById('btn-personal-plans');
-            const btnOrg = document.getElementById('btn-org-plans');
-
-            if (type === 'personal') {
-                btnPersonal.classList.add('active');
-                btnOrg.classList.remove('active');
-                renderPlanCards(plansData.user_plans || []);
-            } else {
-                btnOrg.classList.add('active');
-                btnPersonal.classList.remove('active');
-                renderPlanCards(plansData.organization_plans || []);
-            }
-        }
 
         /**
          * Normalize plan name for comparison
