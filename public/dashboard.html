@@ -5138,9 +5138,9 @@
                                 
                                 subscription.limits = {
                                     max_projects: subscription.limits?.max_projects ?? matchedLimits.max_projects ?? 1,
-                                    max_targets: subscription.limits?.max_targets ?? subscription.limits?.max_targets_per_project ?? matchedLimits.max_targets ?? matchedLimits.max_targets_per_project ?? 2,
-                                    max_targets_per_project: subscription.limits?.max_targets_per_project ?? subscription.limits?.max_targets ?? matchedLimits.max_targets_per_project ?? matchedLimits.max_targets ?? 2,
-                                    max_scans_per_month: subscription.limits?.max_scans_per_month ?? matchedLimits.max_scans_per_month ?? 10,
+                                    max_targets: subscription.limits?.max_targets ?? subscription.limits?.max_targets_per_project ?? matchedLimits.max_targets ?? matchedLimits.max_targets_per_project ?? 3,
+                                    max_targets_per_project: subscription.limits?.max_targets_per_project ?? subscription.limits?.max_targets ?? matchedLimits.max_targets_per_project ?? matchedLimits.max_targets ?? 3,
+                                    max_scans_per_month: subscription.limits?.max_scans_per_month ?? matchedLimits.max_scans_per_month ?? 20,
                                 };
                             } catch (subError) {
                                 if (subError.status === 404) {
@@ -5150,9 +5150,9 @@
                                         expires_at: null,
                                         limits: {
                                             max_projects: 1,
-                                            max_targets: 2,
-                                            max_targets_per_project: 2,
-                                            max_scans_per_month: 10,
+                                            max_targets: 3,
+                                            max_targets_per_project: 3,
+                                            max_scans_per_month: 20,
                                         }
                                     };
                                 } else {
@@ -5169,9 +5169,9 @@
 
                             subscription.limits = {
                                 max_projects: subscription.limits?.max_projects ?? matchedLimits.max_projects ?? 1,
-                                max_targets: subscription.limits?.max_targets ?? subscription.limits?.max_targets_per_project ?? matchedLimits.max_targets ?? matchedLimits.max_targets_per_project ?? 2,
-                                max_targets_per_project: subscription.limits?.max_targets_per_project ?? subscription.limits?.max_targets ?? matchedLimits.max_targets_per_project ?? matchedLimits.max_targets ?? 2,
-                                max_scans_per_month: subscription.limits?.max_scans_per_month ?? matchedLimits.max_scans_per_month ?? 10,
+                                max_targets: subscription.limits?.max_targets ?? subscription.limits?.max_targets_per_project ?? matchedLimits.max_targets ?? matchedLimits.max_targets_per_project ?? 3,
+                                max_targets_per_project: subscription.limits?.max_targets_per_project ?? subscription.limits?.max_targets ?? matchedLimits.max_targets_per_project ?? matchedLimits.max_targets ?? 3,
+                                max_scans_per_month: subscription.limits?.max_scans_per_month ?? matchedLimits.max_scans_per_month ?? 20,
                             };
                         } catch (subError) {
                             if (subError.status === 404) {
@@ -5181,9 +5181,9 @@
                                     expires_at: null,
                                     limits: {
                                         max_projects: 1,
-                                        max_targets: 2,
-                                        max_targets_per_project: 2,
-                                        max_scans_per_month: 10,
+                                        max_targets: 3,
+                                        max_targets_per_project: 3,
+                                        max_scans_per_month: 20,
                                     }
                                 };
                             } else {

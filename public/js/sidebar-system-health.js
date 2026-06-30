@@ -111,8 +111,8 @@ const SidebarSystemHealth = {
               expires_at: null,
               limits: {
                 max_projects: 1,
-                max_targets: 2,
-                max_scans_per_month: 10
+                max_targets: 3,
+                max_scans_per_month: 20
               }
             };
             window.currentSubscription = subscription;
@@ -140,8 +140,8 @@ const SidebarSystemHealth = {
           limits.maxScansPerMonth = 100;
         } else if (plan === "free") {
           limits.maxProjects = 1;
-          limits.maxTargets = 2;
-          limits.maxScansPerMonth = 10;
+          limits.maxTargets = 3;
+          limits.maxScansPerMonth = 20;
         }
       }
 
