@@ -140,4 +140,21 @@ describe('Scan Progress Findings Clickable Modal Integration', () => {
     await new Promise(resolve => setTimeout(resolve, 200));
     expect(modal.classList.contains('hidden')).toBe(true);
   });
+
+  it('should update the back button URL to target project targets tab when project_id is present', async () => {
+    // Evaluate scan-progress.js
+    const spScript = document.createElement('script');
+    spScript.textContent = scanProgressCode;
+    document.body.appendChild(spScript);
+
+    // Manually trigger DOMContentLoaded
+    document.dispatchEvent(new window.Event('DOMContentLoaded'));
+
+    // Wait for async initialization
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    const backBtn = document.getElementById('sp-back-btn');
+    expect(backBtn).not.toBeNull();
+    expect(backBtn.getAttribute('href')).toBe('/project-detail?id=p1&tab=targets');
+  });
 });

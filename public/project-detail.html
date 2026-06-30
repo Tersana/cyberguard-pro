@@ -3294,7 +3294,12 @@
                 window.apiClient = _apiClient;
 
                 initializeAllowedTools();
-                loadProject(isOwnedHint);
+                loadProject(isOwnedHint).then(() => {
+                    const tabParam = params.get("tab");
+                    if (tabParam && ["overview", "team", "settings", "targets", "findings", "scans"].includes(tabParam)) {
+                        switchDetailTab(tabParam);
+                    }
+                });
 
                 // Instantiate custom date pickers on settings page inputs
                 if (typeof window.CyberDatePicker !== "undefined") {
