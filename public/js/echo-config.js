@@ -113,22 +113,85 @@
       }
     };
 
-    // Initialize subscription immediately if session exists
+    // Global background organization settings subscription state
+    var orgChannel = null;
+
+    var subscribeToOrgEvents = function () {
+      if (orgChannel) {
+        var oldOrgId = orgChannel.name.replace("private-organization.", "");
+        console.log("[Echo] Leaving old org channel:", oldOrgId);
+        window.echoInstance.leave("organization." + oldOrgId);
+        orgChannel = null;
+      }
+
+      var activeOrgId = localStorage.getItem("cyberguard_active_org_id");
+      if (!activeOrgId || !window.echoInstance) return;
+
+      console.log("[Echo] Subscribing to org channel: private-organization." + activeOrgId);
+      try {
+        orgChannel = window.echoInstance.private("organization." + activeOrgId);
+
+        var refreshEvents = [
+          '.member.added',
+          '.member.updated',
+          '.member.removed',
+          '.invitation.created',
+          '.invitation.accepted',
+          '.invitation.cancelled'
+        ];
+
+        refreshEvents.forEach(function (evt) {
+          orgChannel.listen(evt, function (data) {
+            console.log("[Echo] Org event received:", evt, data);
+            
+            // Reload settings pane if open on organization tab
+            if (window.SettingsPanel && window.SettingsPanel.isOpen && window.SettingsPanel.activeTabId === 'org-settings') {
+              if (window.OrganizationSettings && typeof window.OrganizationSettings.loadSettingsPane === 'function') {
+                window.OrganizationSettings.loadSettingsPane();
+              }
+            }
+
+            // Show a notification alert if data contains a message
+            if (window.CyberNotify && data && data.message) {
+              window.CyberNotify.alert(data.message, { type: 'info' });
+            }
+          });
+        });
+      } catch (e) {
+        console.warn("[Echo] Error establishing organization channel:", e);
+      }
+    };
+
+    var unsubscribeFromOrgEvents = function () {
+      if (orgChannel && window.echoInstance) {
+        var activeOrgId = localStorage.getItem("cyberguard_active_org_id");
+        if (activeOrgId) {
+          console.log("[Echo] Leaving org channel:", activeOrgId);
+          window.echoInstance.leave("organization." + activeOrgId);
+        }
+        orgChannel = null;
+      }
+    };
+
+    // Initialize subscriptions immediately if session exists
     subscribeToUserNotifications();
+    subscribeToOrgEvents();
 
     // Listen to session changes
     window.addEventListener("userLoggedIn", function () {
-      console.log("[Echo] userLoggedIn event, establishing WebSocket auth headers & subscription");
+      console.log("[Echo] userLoggedIn event, establishing WebSocket auth headers & subscriptions");
       var token = localStorage.getItem("cyberguard_jwt");
       if (window.echoInstance && window.echoInstance.options && window.echoInstance.options.auth) {
         window.echoInstance.options.auth.headers.Authorization = token ? "Bearer " + token : "";
       }
       subscribeToUserNotifications();
+      subscribeToOrgEvents();
     });
 
     window.addEventListener("userLoggedOut", function () {
-      console.log("[Echo] userLoggedOut event, clearing WebSocket subscription");
+      console.log("[Echo] userLoggedOut event, clearing WebSocket subscriptions");
       unsubscribeFromUserNotifications();
+      unsubscribeFromOrgEvents();
     });
 
     // Listen to workspace context changes to update X-Organization-Id dynamically
@@ -138,6 +201,8 @@
         window.echoInstance.options.auth.headers['X-Organization-Id'] = newOrgId;
         console.log("[Echo] Dynamic active organization header updated to:", newOrgId);
       }
+      // Re-establish organization subscription channel dynamically
+      subscribeToOrgEvents();
     });
 
   } catch (err) {

@@ -3325,6 +3325,42 @@
                 });
             }
 
+            // ─── Project Real-time WebSocket Sync ─────────────────────────────────────
+            let projectChannel = null;
+
+            function subscribeToProjectWS(projectId) {
+                if (!window.echoInstance || !projectId) return;
+
+                // Teardown any existing project subscription
+                if (projectChannel) {
+                    const oldProjId = projectChannel.name.replace("private-project.", "");
+                    console.log(`[ProjectWS] Leaving old project channel: private-project.${oldProjId}`);
+                    try {
+                        window.echoInstance.leave(`project.${oldProjId}`);
+                    } catch (_) {}
+                    projectChannel = null;
+                }
+
+                console.log(`[ProjectWS] Subscribing to project channel: private-project.${projectId}`);
+                try {
+                    projectChannel = window.echoInstance.private(`project.${projectId}`);
+
+                    projectChannel.listen(".project.updated", (event) => {
+                        console.log(`[ProjectWS] Received project update:`, event);
+                        
+                        // Dynamically refresh project sub-resources
+                        if (typeof loadTeam === "function") {
+                            loadTeam();
+                        }
+                        if (typeof loadTargets === "function") {
+                            loadTargets();
+                        }
+                    });
+                } catch (err) {
+                    console.warn(`[ProjectWS] Error establishing project WebSocket subscription:`, err);
+                }
+            }
+
             // ─── Load Project ─────────────────────────────────────────────────────────
             async function loadProject(isOwnedHint) {
                 try {
@@ -3379,6 +3415,9 @@
                     loadScansCount();
                     loadProjectFindings();
                     loadProjectRiskScore();
+
+                    // Subscribe to real-time project updates via WebSockets
+                    subscribeToProjectWS(_projectId);
                 } catch (err) {
                     showError(
                         "Network Error",
