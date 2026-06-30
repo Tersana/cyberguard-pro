@@ -5342,7 +5342,7 @@
                 });
 
                 // Listen for organization context changes
-                window.addEventListener("cyberguard:orgContextChanged", () => {
+                document.addEventListener("cyberguard:orgContextChanged", () => {
                     console.log(
                         "[Subscription] Organization context changed, reloading subscription...",
                     );
