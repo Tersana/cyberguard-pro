@@ -62,6 +62,10 @@ function decryptApiKey(encryptedKey) {
  * @returns {Promise<Response>} The fetch Response
  */
 async function fetchWithProxy(targetUrl, fetchOptions = {}) {
+  // Inject AbortController signal if active in OSINT module
+  if (typeof OSINT !== 'undefined' && OSINT.activeAbortController && !fetchOptions.signal) {
+    fetchOptions.signal = OSINT.activeAbortController.signal;
+  }
   let lastError = null;
 
   for (const proxy of CORS_PROXIES) {
@@ -100,6 +104,9 @@ async function fetchWithProxy(targetUrl, fetchOptions = {}) {
       console.warn(`Proxy ${proxy.url} failed with status ${response.status}. Trying next proxy...`);
       lastError = new Error(`Proxy status: ${response.status}`);
     } catch (err) {
+      if (err.name === 'AbortError') {
+        throw err;
+      }
       console.warn(`CORS proxy failed (${proxy.url}):`, err.message);
       lastError = err;
     }
@@ -125,6 +132,7 @@ const OSINT = {
   // Active status tracker
   isRunningAll: false,
   activeTool: 'subdomain',
+  activeAbortController: null,
 
   // Scan history (persisted in localStorage)
   scanHistory: [],
@@ -145,6 +153,11 @@ const OSINT = {
     const runAllBtn = document.getElementById('osint-run-all-btn');
     if (runAllBtn) {
       runAllBtn.addEventListener('click', () => this.runAllTools());
+    }
+
+    const stopBtn = document.getElementById('osint-stop-btn');
+    if (stopBtn) {
+      stopBtn.addEventListener('click', () => this.stopAllTools());
     }
 
     const clearAllBtn = document.getElementById('osint-clear-all-btn');
@@ -192,6 +205,52 @@ const OSINT = {
     this.selectTool('subdomain');
     this.updateReportButtonState();
     console.log('OSINT Module: Initialization complete');
+  },
+
+  /**
+   * Toggle visual state of the scanning buttons
+   */
+  setScanningState(isScanning) {
+    const runBtn = document.getElementById('osint-run-all-btn');
+    const stopBtn = document.getElementById('osint-stop-btn');
+    if (runBtn && stopBtn) {
+      if (isScanning) {
+        runBtn.classList.add('hidden');
+        stopBtn.classList.remove('hidden');
+      } else {
+        runBtn.classList.remove('hidden');
+        stopBtn.classList.add('hidden');
+      }
+    }
+  },
+
+  /**
+   * Stop all active recon tools immediately
+   */
+  stopAllTools() {
+    this.log('Passive reconnaissance scan stopped by user.', 'info');
+    if (this.activeAbortController) {
+      this.activeAbortController.abort();
+      this.activeAbortController = null;
+    }
+    this.isRunningAll = false;
+    this.setScanningState(false);
+
+    // Set all currently scanning or idle tools to stopped state
+    const tools = ['subdomain', 'dns', 'ip', 'wayback', 'username', 'emailformat'];
+    tools.forEach(toolId => {
+      const dot = document.getElementById(`osint-status-dot-${toolId}`);
+      if (dot && (dot.classList.contains('scanning') || dot.classList.contains('idle'))) {
+        this.setStatus(toolId, 'idle');
+        const resultsContainer = document.getElementById(`osint-${toolId}-results`);
+        if (resultsContainer && (resultsContainer.innerHTML.includes('cyber-spinner') || resultsContainer.innerHTML.includes('osint-loading'))) {
+          this.setErrorState(
+            `osint-${toolId}-results`,
+            'Scan was stopped by the user.'
+          );
+        }
+      }
+    });
   },
 
   /**
@@ -508,6 +567,8 @@ const OSINT = {
     }
 
     this.isRunningAll = true;
+    this.setScanningState(true);
+    this.activeAbortController = new AbortController();
     
     // Auto-fill fields if not done
     this.handleGlobalInput(globalVal);
@@ -566,20 +627,42 @@ const OSINT = {
         CyberNotify.alert('No enabled modules with valid inputs found. Verify target format and checkboxes.', { type: 'warning' });
       } catch (e) { /* CyberNotify unavailable */ }
       this.isRunningAll = false;
+      this.setScanningState(false);
+      this.activeAbortController = null;
       return;
     }
 
-    await Promise.all(promises);
-    this.isRunningAll = false;
-
-    this.log(`Multi-module scan completed for target: ${globalVal}`, 'success');
-
-    // Save this multi-module scan to history
-    this.saveCurrentScanToHistory(globalVal, 'Multi-module scan');
-
     try {
-        CyberNotify.alert('All reconnaissance processes completed.', { type: 'success' });
-    } catch (e) { /* CyberNotify unavailable */ }
+      await Promise.all(promises);
+      this.isRunningAll = false;
+      this.setScanningState(false);
+      this.activeAbortController = null;
+
+      this.log(`Multi-module scan completed for target: ${globalVal}`, 'success');
+
+      // Save this multi-module scan to history
+      this.saveCurrentScanToHistory(globalVal, 'Multi-module scan');
+
+      try {
+          CyberNotify.alert('All reconnaissance processes completed.', { type: 'success' });
+      } catch (e) { /* CyberNotify unavailable */ }
+    } catch (err) {
+      this.isRunningAll = false;
+      this.setScanningState(false);
+      this.activeAbortController = null;
+
+      if (err.name === 'AbortError') {
+        this.log('Multi-module passive reconnaissance scan was stopped by user.', 'warning');
+        try {
+            CyberNotify.alert('Scan stopped by user.', { type: 'info' });
+        } catch (e) { /* CyberNotify unavailable */ }
+      } else {
+        this.log(`Multi-module scan failed: ${err.message}`, 'error');
+        try {
+            CyberNotify.alert(`Scan failed: ${err.message}`, { type: 'error' });
+        } catch (e) { /* CyberNotify unavailable */ }
+      }
+    }
   },
 
   // =========================================================================
@@ -602,146 +685,176 @@ const OSINT = {
 
     if (!this.isRunningAll) {
       this.selectTool('subdomain');
+      this.setScanningState(true);
+      this.activeAbortController = new AbortController();
     }
     this.setStatus('subdomain', 'scanning');
     this.log(`Starting subdomain reconnaissance for: ${domain}`, 'scanning');
 
     this.setLoadingState(containerId, 'Querying Certificate Transparency logs...');
 
-    let subdomainsSet = new Set();
-    let querySuccessful = false;
-
-    // Phase 1: Try crt.sh
     try {
-      const url = `https://crt.sh/?q=%.${domain}&output=json`;
-      const response = await fetchWithProxy(url);
-      if (!response.ok) {
-        throw new Error(`Status ${response.status}`);
-      }
+      let subdomainsSet = new Set();
+      let querySuccessful = false;
 
-      const text = await response.text();
-      const trimmedText = text.trim();
-      if (trimmedText.startsWith('<') || !trimmedText.startsWith('[')) {
-        throw new Error('Invalid JSON format (HTML/Error message received)');
-      }
-
-      const rawData = JSON.parse(trimmedText);
-      if (!Array.isArray(rawData)) {
-        throw new Error('Response payload is not an array');
-      }
-
-      // Extract unique domain names
-      rawData.forEach(item => {
-        if (item.name_value) {
-          const names = item.name_value.split('\n');
-          names.forEach(name => {
-            const cleanName = name.trim().toLowerCase();
-            if (cleanName && cleanName.endsWith(domain)) {
-              const formattedName = cleanName.replace(/^\*\./, '');
-              subdomainsSet.add(formattedName);
-            }
-          });
-        }
-      });
-      
-      querySuccessful = true;
-    } catch (crtErr) {
-      console.warn('Subdomain finder: crt.sh query failed, attempting HackerTarget fallback...', crtErr);
-      this.log(`crt.sh query failed/blocked. Attempting HackerTarget fallback...`, 'warning');
-    }
-
-    // Phase 2: If crt.sh failed, try HackerTarget fallback
-    if (!querySuccessful) {
+      // Phase 1: Try crt.sh
       try {
-        this.setLoadingState(containerId, 'crt.sh overloaded. Querying HackerTarget DNS cache...');
-        const url = `https://api.hackertarget.com/hostsearch/?q=${domain}`;
+        const url = `https://crt.sh/?q=%.${domain}&output=json`;
         const response = await fetchWithProxy(url);
         if (!response.ok) {
           throw new Error(`Status ${response.status}`);
         }
 
         const text = await response.text();
-        const trimmed = text.trim();
-        if (trimmed.startsWith('<') || trimmed.includes('error') || trimmed.includes('API count exceeded')) {
-          throw new Error('API limit reached or invalid response');
+        const trimmedText = text.trim();
+        if (trimmedText.startsWith('<') || !trimmedText.startsWith('[')) {
+          throw new Error('Invalid JSON format (HTML/Error message received)');
         }
 
-        const lines = trimmed.split('\n');
-        lines.forEach(line => {
-          const parts = line.split(',');
-          if (parts[0]) {
-            const cleanSub = parts[0].trim().toLowerCase();
-            if (cleanSub && cleanSub.endsWith(domain)) {
-              subdomainsSet.add(cleanSub);
-            }
+        const rawData = JSON.parse(trimmedText);
+        if (!Array.isArray(rawData)) {
+          throw new Error('Response payload is not an array');
+        }
+
+        // Extract unique domain names
+        rawData.forEach(item => {
+          if (item.name_value) {
+            const names = item.name_value.split('\n');
+            names.forEach(name => {
+              const cleanName = name.trim().toLowerCase();
+              if (cleanName && cleanName.endsWith(domain)) {
+                const formattedName = cleanName.replace(/^\*\./, '');
+                subdomainsSet.add(formattedName);
+              }
+            });
           }
         });
-
+        
         querySuccessful = true;
-      } catch (fallbackErr) {
-        console.error('Subdomain finder: Fallback query failed as well:', fallbackErr);
+      } catch (crtErr) {
+        if (crtErr.name === 'AbortError') throw crtErr;
+        console.warn('Subdomain finder: crt.sh query failed, attempting HackerTarget fallback...', crtErr);
+        this.log(`crt.sh query failed/blocked. Attempting HackerTarget fallback...`, 'warning');
       }
-    }
 
-    // Phase 3: Handle outcomes
-    if (!querySuccessful) {
-      this.setStatus('subdomain', 'failed');
-      this.log(`Subdomain discovery failed for ${domain}. Upstream services are unresponsive.`, 'error');
-      this.setErrorState(
-        containerId, 
-        'Unable to retrieve subdomain logs. Upstream services (crt.sh and HackerTarget) are currently unresponsive or rate-limiting queries. Please try again later.'
-      );
-      return;
-    }
+      // Phase 2: If crt.sh failed, try HackerTarget fallback
+      if (!querySuccessful) {
+        try {
+          this.setLoadingState(containerId, 'crt.sh overloaded. Querying HackerTarget DNS cache...');
+          const url = `https://api.hackertarget.com/hostsearch/?q=${domain}`;
+          const response = await fetchWithProxy(url);
+          if (!response.ok) {
+            throw new Error(`Status ${response.status}`);
+          }
 
-    const sortedSubdomains = Array.from(subdomainsSet).sort();
+          const text = await response.text();
+          const trimmed = text.trim();
+          if (trimmed.startsWith('<') || trimmed.includes('error') || trimmed.includes('API count exceeded')) {
+            throw new Error('API limit reached or invalid response');
+          }
 
-    // Store state
-    this.results.subdomains = {
-      target: domain,
-      data: sortedSubdomains
-    };
+          const lines = trimmed.split('\n');
+          lines.forEach(line => {
+            const parts = line.split(',');
+            if (parts[0]) {
+              const cleanSub = parts[0].trim().toLowerCase();
+              if (cleanSub && cleanSub.endsWith(domain)) {
+                subdomainsSet.add(cleanSub);
+              }
+            }
+          });
 
-    this.updateReportButtonState();
-    this.setStatus('subdomain', 'success');
-    this.log(`Subdomain discovery completed. Found ${sortedSubdomains.length} unique subdomains for ${domain}`, 'success');
+          querySuccessful = true;
+        } catch (fallbackErr) {
+          if (fallbackErr.name === 'AbortError') throw fallbackErr;
+          console.error('Subdomain finder: Fallback query failed as well:', fallbackErr);
+        }
+      }
 
-    // Render layout
-    const resultsContainer = document.getElementById(containerId);
-    if (!resultsContainer) return;
+      // Phase 3: Handle outcomes
+      if (!querySuccessful) {
+        this.setStatus('subdomain', 'failed');
+        this.log(`Subdomain discovery failed for ${domain}. Upstream services are unresponsive.`, 'error');
+        this.setErrorState(
+          containerId, 
+          'Unable to retrieve subdomain logs. Upstream services (crt.sh and HackerTarget) are currently unresponsive or rate-limiting queries. Please try again later.'
+        );
+        if (!this.isRunningAll) {
+          this.setScanningState(false);
+          this.activeAbortController = null;
+        }
+        return;
+      }
 
-    if (sortedSubdomains.length === 0) {
+      const sortedSubdomains = Array.from(subdomainsSet).sort();
+
+      // Store state
+      this.results.subdomains = {
+        target: domain,
+        data: sortedSubdomains
+      };
+
+      this.updateReportButtonState();
+      this.setStatus('subdomain', 'success');
+      this.log(`Subdomain discovery completed. Found ${sortedSubdomains.length} unique subdomains for ${domain}`, 'success');
+
+      // Render layout
+      const resultsContainer = document.getElementById(containerId);
+      if (!resultsContainer) return;
+
+      if (sortedSubdomains.length === 0) {
+        resultsContainer.innerHTML = `
+          <div class="osint-empty-state">
+            <span>No subdomains found for ${escapeHtml(domain)}</span>
+          </div>
+        `; // security-audit-ignore
+        if (!this.isRunningAll) {
+          this.setScanningState(false);
+          this.activeAbortController = null;
+        }
+        return;
+      }
+
+      let listHtml = '';
+      sortedSubdomains.forEach(sub => {
+        listHtml += `
+          <div class="osint-subdomain-item">
+            <span class="osint-subdomain-icon inline-block mr-1.5"><svg class="w-3.5 h-3.5 text-blue-400 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 0.875rem; height: 0.875rem;"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg></span>
+            <span class="osint-subdomain-name">${escapeHtml(sub)}</span>
+            <button class="osint-item-copy" onclick="OSINT.copyToClipboard('${escapeHtml(sub)}')" title="Copy Subdomain">
+              <span class="material-symbols-outlined" style="font-size: 1rem;">content_copy</span>
+            </button>
+          </div>
+        `;
+      });
+
       resultsContainer.innerHTML = `
-        <div class="osint-empty-state">
-          <span>No subdomains found for ${escapeHtml(domain)}</span>
+        <div class="osint-results-header">
+          <span class="osint-results-count">Discovered: <strong>${sortedSubdomains.length}</strong> unique domains</span>
+        </div>
+        <div class="osint-subdomain-list">
+          ${listHtml}
         </div>
       `; // security-audit-ignore
-      return;
+
+      if (!this.isRunningAll) {
+        this.saveCurrentScanToHistory(domain, `Subdomain: ${domain}`);
+        this.setScanningState(false);
+        this.activeAbortController = null;
+      }
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        this.setStatus('subdomain', 'idle');
+        this.setErrorState(containerId, 'Scan was stopped by the user.');
+      } else {
+        this.setStatus('subdomain', 'failed');
+        this.setErrorState(containerId, `Error: ${err.message}`);
+      }
+      if (!this.isRunningAll) {
+        this.setScanningState(false);
+        this.activeAbortController = null;
+      }
     }
-
-    let listHtml = '';
-    sortedSubdomains.forEach(sub => {
-      listHtml += `
-        <div class="osint-subdomain-item">
-          <span class="osint-subdomain-icon inline-block mr-1.5"><svg class="w-3.5 h-3.5 text-blue-400 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 0.875rem; height: 0.875rem;"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg></span>
-          <span class="osint-subdomain-name">${escapeHtml(sub)}</span>
-          <button class="osint-item-copy" onclick="OSINT.copyToClipboard('${escapeHtml(sub)}')" title="Copy Subdomain">
-            <span class="material-symbols-outlined" style="font-size: 1rem;">content_copy</span>
-          </button>
-        </div>
-      `;
-    });
-
-    resultsContainer.innerHTML = `
-      <div class="osint-results-header">
-        <span class="osint-results-count">Discovered: <strong>${sortedSubdomains.length}</strong> unique domains</span>
-      </div>
-      <div class="osint-subdomain-list">
-        ${listHtml}
-      </div>
-    `; // security-audit-ignore
-
-    if (!this.isRunningAll) this.saveCurrentScanToHistory(domain, `Subdomain: ${domain}`);
   },
 
   // =========================================================================
@@ -764,6 +877,8 @@ const OSINT = {
 
     if (!this.isRunningAll) {
       this.selectTool('dns');
+      this.setScanningState(true);
+      this.activeAbortController = new AbortController();
     }
     this.setStatus('dns', 'scanning');
     this.log(`Querying DNS records via Cloudflare DoH for: ${domain}`, 'scanning');
@@ -779,7 +894,8 @@ const OSINT = {
           const response = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=${type}`, {
             headers: {
               'Accept': 'application/dns-json'
-            }
+            },
+            ...(OSINT.activeAbortController ? { signal: OSINT.activeAbortController.signal } : {})
           });
           if (response.ok) {
             const data = await response.json();
@@ -792,6 +908,7 @@ const OSINT = {
             results[type] = [];
           }
         } catch (e) {
+          if (e.name === 'AbortError') throw e;
           console.warn(`DNS lookup failed for type ${type}:`, e);
           results[type] = [];
         }
@@ -819,6 +936,10 @@ const OSINT = {
             <span>No DNS records returned for ${escapeHtml(domain)}</span>
           </div>
         `; // security-audit-ignore
+        if (!this.isRunningAll) {
+          this.setScanningState(false);
+          this.activeAbortController = null;
+        }
         return;
       }
 
@@ -861,13 +982,26 @@ const OSINT = {
         </div>
       `; // security-audit-ignore
 
-      if (!this.isRunningAll) this.saveCurrentScanToHistory(domain, `DNS: ${domain}`);
+      if (!this.isRunningAll) {
+        this.saveCurrentScanToHistory(domain, `DNS: ${domain}`);
+        this.setScanningState(false);
+        this.activeAbortController = null;
+      }
 
     } catch (err) {
-      console.error('DNS record resolution error:', err);
-      this.setStatus('dns', 'failed');
-      this.log(`DNS resolution failed for ${domain}: ${err.message}`, 'error');
-      this.setErrorState(containerId, `Failed resolving DNS records. (${err.message})`);
+      if (err.name === 'AbortError') {
+        this.setStatus('dns', 'idle');
+        this.setErrorState(containerId, 'Scan was stopped by the user.');
+      } else {
+        console.error('DNS record resolution error:', err);
+        this.setStatus('dns', 'failed');
+        this.log(`DNS resolution failed for ${domain}: ${err.message}`, 'error');
+        this.setErrorState(containerId, `Failed resolving DNS records. (${err.message})`);
+      }
+      if (!this.isRunningAll) {
+        this.setScanningState(false);
+        this.activeAbortController = null;
+      }
     }
   },
 
@@ -891,6 +1025,8 @@ const OSINT = {
 
     if (!this.isRunningAll) {
       this.selectTool('ip');
+      this.setScanningState(true);
+      this.activeAbortController = new AbortController();
     }
     this.setStatus('ip', 'scanning');
     this.log(`Gathering IP intelligence for target: ${target}`, 'scanning');
@@ -904,7 +1040,8 @@ const OSINT = {
         this.log(`Resolving target domain ${target} to IP...`, 'info');
         // Resolve target domain to IP
         const dnsResp = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(target)}&type=A`, {
-          headers: { 'Accept': 'application/dns-json' }
+          headers: { 'Accept': 'application/dns-json' },
+          ...(OSINT.activeAbortController ? { signal: OSINT.activeAbortController.signal } : {})
         });
         if (dnsResp.ok) {
           const dnsData = await dnsResp.json();
@@ -964,6 +1101,7 @@ const OSINT = {
             this.log(`AbuseIPDB reputation query completed. Abuse confidence score: ${abuseData.abuseConfidenceScore || 0}%`, (abuseData.abuseConfidenceScore || 0) > 0 ? 'warning' : 'success');
           }
         } catch (e) {
+          if (e.name === 'AbortError') throw e;
           console.warn('AbuseIPDB reputation query failed:', e);
           this.log(`AbuseIPDB reputation query failed: ${e.message}`, 'warning');
         }
@@ -1050,13 +1188,26 @@ const OSINT = {
         ${abuseHtml}
       `;
 
-      if (!this.isRunningAll) this.saveCurrentScanToHistory(target, `IP: ${target}`);
+      if (!this.isRunningAll) {
+        this.saveCurrentScanToHistory(target, `IP: ${target}`);
+        this.setScanningState(false);
+        this.activeAbortController = null;
+      }
 
     } catch (err) {
-      console.error('IP Intelligence query error:', err);
-      this.setStatus('ip', 'failed');
-      this.log(`IP intelligence query failed for ${target}: ${err.message}`, 'error');
-      this.setErrorState(containerId, `Failed compiling geolocation and reputation. (${err.message})`);
+      if (err.name === 'AbortError') {
+        this.setStatus('ip', 'idle');
+        this.setErrorState(containerId, 'Scan was stopped by the user.');
+      } else {
+        console.error('IP Intelligence query error:', err);
+        this.setStatus('ip', 'failed');
+        this.log(`IP intelligence query failed for ${target}: ${err.message}`, 'error');
+        this.setErrorState(containerId, `Failed compiling geolocation and reputation. (${err.message})`);
+      }
+      if (!this.isRunningAll) {
+        this.setScanningState(false);
+        this.activeAbortController = null;
+      }
     }
   },
 
@@ -1080,11 +1231,15 @@ const OSINT = {
 
     if (!this.isRunningAll) {
       this.selectTool('wayback');
+      this.setScanningState(true);
+      this.activeAbortController = new AbortController();
     }
     this.setStatus('wayback', 'scanning');
     this.log(`Querying archive registries for target URL: ${target}`, 'scanning');
 
     this.setLoadingState(containerId, 'Retrieving archival snapshots...');
+
+    try {
 
     let closest = null;
     let snapshots = [];
@@ -1105,6 +1260,7 @@ const OSINT = {
         }
       }
     } catch (availErr) {
+      if (availErr.name === 'AbortError') throw availErr;
       console.warn('Wayback Machine: Availability API query failed, attempting CDX history API...', availErr);
       this.log(`Wayback availability check failed, attempting CDX lookup...`, 'warning');
     }
@@ -1145,6 +1301,7 @@ const OSINT = {
         }
       }
     } catch (cdxErr) {
+      if (cdxErr.name === 'AbortError') throw cdxErr;
       console.warn('Wayback Machine: CDX history API query failed...', cdxErr);
     }
 
@@ -1261,7 +1418,24 @@ const OSINT = {
       </div>
     `; // security-audit-ignore
 
-    if (!this.isRunningAll) this.saveCurrentScanToHistory(target, `Wayback: ${target}`);
+      if (!this.isRunningAll) {
+        this.saveCurrentScanToHistory(target, `Wayback: ${target}`);
+        this.setScanningState(false);
+        this.activeAbortController = null;
+      }
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        this.setStatus('wayback', 'idle');
+        this.setErrorState(containerId, 'Scan was stopped by the user.');
+      } else {
+        this.setStatus('wayback', 'failed');
+        this.setErrorState(containerId, `Error: ${err.message}`);
+      }
+      if (!this.isRunningAll) {
+        this.setScanningState(false);
+        this.activeAbortController = null;
+      }
+    }
   },
 
   // =========================================================================
@@ -1284,6 +1458,8 @@ const OSINT = {
 
     if (!this.isRunningAll) {
       this.selectTool('username');
+      this.setScanningState(true);
+      this.activeAbortController = new AbortController();
     }
     this.setStatus('username', 'scanning');
     this.log(`Initiating platform profile probe for username: ${username}`, 'scanning');
@@ -1336,8 +1512,9 @@ const OSINT = {
     });
     gridInner.innerHTML = initialCards; // security-audit-ignore
 
-    const matchedPlatforms = [];
-    let completedCount = 0;
+    try {
+      const matchedPlatforms = [];
+      let completedCount = 0;
     
     // Batch processing: check 3 platforms in parallel to prevent rate limits
     const checkBatch = async (batch) => {
@@ -1358,6 +1535,7 @@ const OSINT = {
             found = true;
           }
         } catch (e) {
+          if (e.name === 'AbortError') throw e;
           // If proxy fails or blocks, default to active match link to verify manually
           console.warn(`Profile validation failed for platform ${platform.name}:`, e.message);
           found = null; // Unverified
@@ -1417,10 +1595,21 @@ const OSINT = {
     // Run platform verification in sequential batches
     const batchSize = 3;
     for (let i = 0; i < platforms.length; i += batchSize) {
+      if (this.activeAbortController?.signal.aborted) {
+        throw new DOMException('Aborted', 'AbortError');
+      }
       const batch = platforms.slice(i, i + batchSize).map((p, idx) => ({ platform: p, index: i + idx }));
       await checkBatch(batch);
       // Brief sleep between batches
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(resolve, 200);
+        if (this.activeAbortController) {
+          this.activeAbortController.signal.addEventListener('abort', () => {
+            clearTimeout(timeoutId);
+            reject(new DOMException('Aborted', 'AbortError'));
+          });
+        }
+      });
     }
 
     // Store state
@@ -1441,8 +1630,25 @@ const OSINT = {
     `;
     resultsContainer.appendChild(noteEl);
 
-    if (!this.isRunningAll) this.saveCurrentScanToHistory(username, `Username: ${username}`);
-  },
+    if (!this.isRunningAll) {
+      this.saveCurrentScanToHistory(username, `Username: ${username}`);
+      this.setScanningState(false);
+      this.activeAbortController = null;
+    }
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      this.setStatus('username', 'idle');
+      this.setErrorState(containerId, 'Scan was stopped by the user.');
+    } else {
+      this.setStatus('username', 'failed');
+      this.setErrorState(containerId, `Error: ${err.message}`);
+    }
+    if (!this.isRunningAll) {
+      this.setScanningState(false);
+      this.activeAbortController = null;
+    }
+  }
+},
 
   // =========================================================================
   // TOOL 7: EMAIL FORMAT GUESSER
