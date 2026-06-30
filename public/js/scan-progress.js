@@ -150,23 +150,41 @@
       }
 
       if (!launchedFrontendScan && typeof scanJobId === "string" && scanJobId.startsWith("frontend_") && currentStatus === "running") {
-        acquireProgressPageLock(scanJobId);
+        // Check if a background tab is actively running (fresh heartbeat from another tab)
+        const now = Date.now();
+        const lastHb = (scanSession && scanSession.last_heartbeat) || 0;
+        const activeTabId = scanSession && scanSession.active_tab_id;
+        const isBackgroundActivelyRunning =
+          activeTabId &&
+          activeTabId !== window.scannerAPI.tabId &&
+          (now - lastHb) < 6000;
 
-        const targetValue = (scanSession && scanSession.target && scanSession.target.value) || "unknown";
-        const selectedTools = (scanSession && scanSession.selected_frontend_tools) || [];
-        const completedTools = (scanSession && scanSession.completed_frontend_tools) || [];
-        const remainingTools = selectedTools.filter(t => !completedTools.includes(t));
-
-        if (remainingTools.length > 0) {
-          setTimeout(() => {
-            runFrontendTools(remainingTools, targetValue, true);
-          }, 1000);
+        if (isBackgroundActivelyRunning) {
+          // Background tab is running — just watch it. Start a live log refresh
+          // so the terminal displays logs being written to localStorage by the background.
+          appendTerminalSystem("Scan is running in background — displaying live progress…");
+          startBackgroundLogPolling(scanJobId);
         } else {
-          // If no remaining tools, mark completed
-          if (window.scannerAPI && typeof window.scannerAPI.completeFrontendScan === "function") {
-            window.scannerAPI.completeFrontendScan(scanJobId);
+          // No active background tab (stale heartbeat). Take over execution.
+          acquireProgressPageLock(scanJobId);
+
+          const targetValue = (scanSession && scanSession.target && scanSession.target.value) || "unknown";
+          const selectedTools = (scanSession && scanSession.selected_frontend_tools) || [];
+          const completedTools = (scanSession && scanSession.completed_frontend_tools) || [];
+          const remainingTools = selectedTools.filter(t => !completedTools.includes(t));
+
+          if (remainingTools.length > 0) {
+            appendTerminalSystem("Resuming remaining network analysis tools…");
+            setTimeout(() => {
+              runFrontendTools(remainingTools, targetValue, true);
+            }, 1000);
+          } else {
+            // All tools done — mark completed
+            if (window.scannerAPI && typeof window.scannerAPI.completeFrontendScan === "function") {
+              window.scannerAPI.completeFrontendScan(scanJobId);
+            }
+            onScanComplete({ status: "completed" });
           }
-          onScanComplete({ status: "completed" });
         }
       }
 
@@ -636,6 +654,71 @@
   function stopAllPolling() {
     stopStatusPolling();
     stopFindingsPolling();
+    stopBackgroundLogPolling();
+  }
+
+  /* ─── Background Log Polling (for when background tab is executing) ─── */
+  let bgLogPollHandle = null;
+  let bgLogSeenCount = 0;
+
+  function startBackgroundLogPolling(jobId) {
+    stopBackgroundLogPolling();
+    bgLogSeenCount = terminalLines; // don't re-show logs already displayed
+    bgLogPollHandle = setInterval(async () => {
+      try {
+        // Refresh the scan record from localStorage
+        const storedScansRaw = localStorage.getItem("cg_frontend_scans");
+        if (!storedScansRaw) return;
+        const storedScans = JSON.parse(storedScansRaw);
+        const scan = storedScans.find(s => s.id === jobId);
+        if (!scan) return;
+
+        // Display any new logs written by the background tab
+        const logs = Array.isArray(scan.logs) ? scan.logs : [];
+        if (logs.length > bgLogSeenCount) {
+          const newLogs = logs.slice(bgLogSeenCount);
+          newLogs.forEach(line => appendTerminalLineRaw(line));
+          bgLogSeenCount = logs.length;
+        }
+
+        // If the background tab finishes, stop polling and update UI
+        if (scan.status !== "running") {
+          stopBackgroundLogPolling();
+          renderControlButtons(scan.status);
+          stopAllPolling();
+          await loadFindings();
+        }
+
+        // If the background tab's heartbeat goes stale mid-run, take over
+        const now = Date.now();
+        const lastHb = scan.last_heartbeat || 0;
+        const activeTabId = scan.active_tab_id;
+        const isStale = !activeTabId || (activeTabId !== window.scannerAPI.tabId && (now - lastHb) > 6000);
+        if (isStale && scan.status === "running") {
+          stopBackgroundLogPolling();
+          acquireProgressPageLock(jobId);
+          const selectedTools = scan.selected_frontend_tools || [];
+          const completedTools = scan.completed_frontend_tools || [];
+          const remaining = selectedTools.filter(t => !completedTools.includes(t));
+          const targetValue = (scan.target && scan.target.value) || "unknown";
+          if (remaining.length > 0) {
+            appendTerminalSystem("Background tab stopped — resuming here…");
+            runFrontendTools(remaining, targetValue, true);
+          } else {
+            if (window.scannerAPI && typeof window.scannerAPI.completeFrontendScan === "function") {
+              window.scannerAPI.completeFrontendScan(jobId);
+            }
+            onScanComplete({ status: "completed" });
+          }
+        }
+      } catch (e) {
+        console.warn("[ScanProgress] Background log poll error:", e);
+      }
+    }, 2000);
+  }
+
+  function stopBackgroundLogPolling() {
+    if (bgLogPollHandle) { clearInterval(bgLogPollHandle); bgLogPollHandle = null; }
   }
 
   /* ═══════════════════════════════════════════════════════════════════════
