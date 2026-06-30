@@ -18,7 +18,8 @@
     scans: [],
     findings: [],
     isLoading: false,
-    refreshInterval: null
+    refreshInterval: null,
+    activeChannels: {}
   };
 
   // Third-party chart and animation states
@@ -487,6 +488,23 @@
 
     const activeScans = activeScansPayload?.scans || [];
 
+    // Sync WebSocket subscriptions
+    const newActiveScanIds = new Set(activeScans.map(s => String(s.id)));
+    
+    // Unsubscribe from channels that are no longer active
+    Object.keys(dashboardState.activeChannels).forEach(scanId => {
+      if (!newActiveScanIds.has(scanId)) {
+        unsubscribeFromScanWS(scanId);
+      }
+    });
+
+    // Subscribe to new active scans
+    activeScans.forEach(scan => {
+      if (scan.id && !dashboardState.activeChannels[scan.id]) {
+        subscribeToScanWS(scan.id);
+      }
+    });
+
     if (activeScans.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
@@ -504,7 +522,7 @@
       const startText = scan.created_at || scan.timestamp || new Date().toISOString();
 
       return `
-        <div class="active-scan-row bg-white/[0.01]">
+        <div class="active-scan-row bg-white/[0.01]" data-scan-id="${scan.id}">
           <div class="scan-info">
             <div class="scan-target-name">${scan.target_name || scan.target?.name || "Local Scan"}</div>
             <div class="scan-meta">
@@ -637,6 +655,96 @@
     }
   }
 
+  /* ── WebSocket Real-Time Active Scans ────────────────────────────────── */
+
+  function subscribeToScanWS(scanId) {
+    if (!window.echoInstance || dashboardState.activeChannels[scanId]) return;
+    
+    console.log(`[SecurityDashboardWS] Subscribing to scan.${scanId}`);
+    try {
+      const channelName = `scan.${scanId}`;
+      const channel = window.echoInstance.channel(channelName);
+      dashboardState.activeChannels[scanId] = channel;
+
+      const pusher = window.echoInstance.connector?.pusher;
+      if (pusher) {
+        _attachDashboardGlobalHandler(pusher, channelName, scanId, 0);
+      }
+    } catch (err) {
+      console.warn(`[SecurityDashboardWS] Error subscribing to scan.${scanId}:`, err);
+    }
+  }
+
+  function _attachDashboardGlobalHandler(pusher, channelName, scanId, attempt) {
+    if (attempt > 10) return;
+    const ch = pusher.channel(channelName);
+    if (!ch) {
+      setTimeout(() => _attachDashboardGlobalHandler(pusher, channelName, scanId, attempt + 1), 500);
+      return;
+    }
+
+    ch.bind_global((eventName, eventData) => {
+      if (eventName.startsWith("pusher:") || eventName.startsWith("pusher_internal:")) return;
+
+      const normalized = eventName.replace(/^\./, "").toLowerCase();
+      console.log(`[SecurityDashboardWS] Event for scan.${scanId}: "${eventName}"`, eventData);
+
+      if (normalized === "scan.status") {
+        const progress = eventData?.progress || eventData?.scan_session?.progress;
+        if (progress !== undefined) {
+          updateScanProgressInUI(scanId, progress);
+        }
+        const status = eventData?.status || eventData?.scan_session?.status;
+        if (status === "completed" || status === "failed" || status === "cancelled") {
+          handleWSScanComplete(scanId);
+        }
+      } else if (
+        normalized === "scan-completed" ||
+        normalized === "scan-finished" ||
+        normalized === "scan-done" ||
+        normalized === "job-completed"
+      ) {
+        handleWSScanComplete(scanId);
+      }
+    });
+  }
+
+  function updateScanProgressInUI(scanId, progress) {
+    const row = document.querySelector(`.active-scan-row[data-scan-id="${scanId}"]`);
+    if (row) {
+      const fill = row.querySelector('.scan-progress-fill');
+      const text = row.querySelector('.scan-progress-text');
+      if (fill) fill.style.width = `${progress}%`;
+      if (text) text.textContent = `${progress}%`;
+    }
+  }
+
+  function handleWSScanComplete(scanId) {
+    console.log(`[SecurityDashboardWS] Scan completed: ${scanId}. Triggering metrics reload.`);
+    unsubscribeFromScanWS(scanId);
+    
+    // Trigger dynamic reload of the entire security dashboard metrics
+    if (typeof loadSecurityDashboard === "function") {
+      loadSecurityDashboard();
+    }
+  }
+
+  function unsubscribeFromScanWS(scanId) {
+    if (dashboardState.activeChannels[scanId]) {
+      console.log(`[SecurityDashboardWS] Unsubscribing from scan.${scanId}`);
+      try {
+        window.echoInstance.leaveChannel(`scan.${scanId}`);
+      } catch (_) {}
+      delete dashboardState.activeChannels[scanId];
+    }
+  }
+
+  function unsubscribeAllScanWS() {
+    Object.keys(dashboardState.activeChannels).forEach(scanId => {
+      unsubscribeFromScanWS(scanId);
+    });
+  }
+
   /* ── Auto-refresh / polling logic ────────────────────────────────────── */
 
   function startActiveScansPolling() {
@@ -666,6 +774,7 @@
       clearInterval(dashboardState.refreshInterval);
       dashboardState.refreshInterval = null;
     }
+    unsubscribeAllScanWS();
   }
 
   /* ── Skeleton Loading States ─────────────────────────────────────────── */
