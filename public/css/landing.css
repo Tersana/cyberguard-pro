@@ -3103,13 +3103,14 @@ body::before {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #fafafa;
+  background: #27272a;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 14px;
-  color: #09090b;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
 }
 
