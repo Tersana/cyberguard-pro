@@ -41,6 +41,9 @@
   var REVERB_SCHEME = cfg.REVERB_SCHEME  || "https";
 
   try {
+    var jwtToken = localStorage.getItem("cyberguard_jwt");
+    var activeOrgId = localStorage.getItem("cyberguard_active_org_id");
+
     window.echoInstance = new window.Echo.default({
       broadcaster:       "reverb",
       key:               REVERB_KEY,
@@ -49,6 +52,14 @@
       wssPort:           REVERB_PORT,
       forceTLS:          REVERB_SCHEME === "https",
       enabledTransports: ["ws", "wss"],
+      authEndpoint:      REVERB_SCHEME + "://" + REVERB_HOST + "/api/broadcasting/auth",
+      auth: {
+        headers: {
+          Authorization: jwtToken ? "Bearer " + jwtToken : "",
+          "X-Organization-Id": activeOrgId || "",
+          "ngrok-skip-browser-warning": "true"
+        }
+      }
     });
 
     console.log(
@@ -59,6 +70,76 @@
       "tls:",
       REVERB_SCHEME === "https"
     );
+
+    // Global background user notifications subscription state
+    var userNotificationChannel = null;
+
+    var subscribeToUserNotifications = function () {
+      if (userNotificationChannel) return; // Already subscribed
+
+      var userRaw = localStorage.getItem("cyberguard_user");
+      if (!userRaw || !window.echoInstance) return;
+
+      try {
+        var user = JSON.parse(userRaw);
+        if (user && user.id) {
+          console.log("[Echo] Subscribing to notifications for user ID:", user.id);
+          userNotificationChannel = window.echoInstance.private("user." + user.id);
+          userNotificationChannel.listen('.notification', function (event) {
+            console.log("[Echo] Received background notification:", event);
+            if (window.CyberNotify && event.message) {
+              window.CyberNotify.alert(event.message, { type: event.type || 'info' });
+            }
+          });
+        }
+      } catch (e) {
+        console.warn("[Echo] Error establishing user notifications channel:", e);
+      }
+    };
+
+    var unsubscribeFromUserNotifications = function () {
+      if (userNotificationChannel && window.echoInstance) {
+        var userRaw = localStorage.getItem("cyberguard_user");
+        if (userRaw) {
+          try {
+            var user = JSON.parse(userRaw);
+            if (user && user.id) {
+              console.log("[Echo] Leaving notifications channel for user ID:", user.id);
+              window.echoInstance.leave("user." + user.id);
+            }
+          } catch (_) {}
+        }
+        userNotificationChannel = null;
+      }
+    };
+
+    // Initialize subscription immediately if session exists
+    subscribeToUserNotifications();
+
+    // Listen to session changes
+    window.addEventListener("userLoggedIn", function () {
+      console.log("[Echo] userLoggedIn event, establishing WebSocket auth headers & subscription");
+      var token = localStorage.getItem("cyberguard_jwt");
+      if (window.echoInstance && window.echoInstance.options && window.echoInstance.options.auth) {
+        window.echoInstance.options.auth.headers.Authorization = token ? "Bearer " + token : "";
+      }
+      subscribeToUserNotifications();
+    });
+
+    window.addEventListener("userLoggedOut", function () {
+      console.log("[Echo] userLoggedOut event, clearing WebSocket subscription");
+      unsubscribeFromUserNotifications();
+    });
+
+    // Listen to workspace context changes to update X-Organization-Id dynamically
+    document.addEventListener("cyberguard:orgContextChanged", function (event) {
+      var newOrgId = event.detail?.organizationId || localStorage.getItem("cyberguard_active_org_id") || "";
+      if (window.echoInstance && window.echoInstance.options && window.echoInstance.options.auth) {
+        window.echoInstance.options.auth.headers['X-Organization-Id'] = newOrgId;
+        console.log("[Echo] Dynamic active organization header updated to:", newOrgId);
+      }
+    });
+
   } catch (err) {
     console.error("[Echo] Failed to create Echo instance:", err);
   }
