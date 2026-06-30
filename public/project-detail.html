@@ -1100,28 +1100,6 @@
             .findings-stat-card.low      .stat-num { color: var(--cg-info); text-shadow: 0 0 10px rgba(14, 165, 233, 0.15); }
             .findings-stat-card.info     .stat-num { color: var(--cg-text-2); }
 
-            /* ── Live Scan Console Bottom Drawer ── */
-            #live-scan-console {
-                height: 400px;
-                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            }
-            #live-scan-console.minimized {
-                transform: translateY(calc(100% - 46px)) !important;
-            }
-            .scan-pulse-dot {
-                display: inline-block;
-                width: 8px;
-                height: 8px;
-                background-color: var(--cg-success);
-                border-radius: 50%;
-                box-shadow: 0 0 8px var(--cg-success);
-                animation: scan-pulse 1.5s infinite;
-            }
-            @keyframes scan-pulse {
-                0% { opacity: 0.4; }
-                50% { opacity: 1; }
-                100% { opacity: 0.4; }
-            }
         </style>
         <!-- Third-party Libraries (GSAP) -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -3250,7 +3228,6 @@
 
         <script src="js/network-analysis-tools.js"></script>
         <script src="js/scan-manager.js"></script>
-        <script src="js/live-scan-console.js"></script>
 
         <script>
             "use strict";
@@ -8637,67 +8614,6 @@
                 if (c) c.innerHTML = `<div class="findings-empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><h4>Select a Target</h4><p>Go to the Targets tab and select a target to view its findings.</p></div>`;
             }
         </script>
-
-        <!-- Live Scan Console Bottom Drawer -->
-        <div id="live-scan-console" class="fixed bottom-0 left-0 right-0 z-50 bg-slate-950/80 border-t border-white/10 backdrop-blur-md shadow-2xl transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] translate-y-full max-h-[400px] flex flex-col">
-            <!-- Console Header / Bar -->
-            <div class="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-slate-900/40 select-none cursor-pointer" id="live-scan-console-header">
-                <div class="flex items-center gap-3">
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    <span class="font-semibold text-xs tracking-wider text-slate-200 uppercase" id="live-console-title">Live Scan Output</span>
-                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-slate-400" id="live-console-target">—</span>
-                    
-                    <!-- Dropdown select switcher -->
-                    <select id="live-console-scan-select" class="bg-white/5 border border-white/10 rounded px-2 py-0.5 text-[10px] font-mono text-slate-300 focus:outline-none focus:border-purple-500 hidden">
-                    </select>
-                </div>
-                <div class="flex items-center gap-4">
-                    <!-- Progress percentage -->
-                    <div class="flex items-center gap-2">
-                        <div class="w-24 bg-white/5 h-1.5 rounded-full overflow-hidden">
-                            <div class="bg-emerald-500 h-full w-0 transition-all duration-300" id="live-console-progress-fill"></div>
-                        </div>
-                        <span class="text-xs font-mono text-slate-300" id="live-console-progress-text">0%</span>
-                    </div>
-                    <!-- Minimize / Close controls -->
-                    <div class="flex items-center gap-2 text-slate-400">
-                        <button id="live-console-toggle-btn" class="hover:text-white transition p-1">
-                            <span class="material-symbols-outlined text-lg">keyboard_arrow_down</span>
-                        </button>
-                        <button id="live-console-close-btn" class="hover:text-white transition p-1">
-                            <span class="material-symbols-outlined text-lg">close</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Console Content -->
-            <div class="flex-1 flex overflow-hidden bg-slate-950/90 font-mono text-xs text-slate-300" id="live-scan-console-body">
-                <!-- Terminal Logs -->
-                <div class="flex-1 p-4 overflow-y-auto scrollbar-none space-y-1" id="live-console-terminal">
-                    <div class="text-slate-500">[System] Initializing live log streaming...</div>
-                </div>
-                <!-- Right Panel: Session Info & Findings -->
-                <div class="w-72 border-l border-white/5 bg-slate-900/20 p-4 overflow-y-auto flex flex-col gap-3 font-sans">
-                    <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Scan Session Info</div>
-                    <div class="space-y-1.5 text-slate-400 text-[11px]">
-                        <div class="flex justify-between"><span>Session ID:</span><span class="font-mono text-slate-300" id="live-console-session-id">—</span></div>
-                        <div class="flex justify-between"><span>Status:</span><span class="font-mono text-slate-300" id="live-console-status">pending</span></div>
-                    </div>
-                    <div class="border-t border-white/5 my-1"></div>
-                    <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Discovered Vulnerabilities</div>
-                    <div class="flex-1 flex flex-col justify-center items-center py-4 text-center text-slate-500" id="live-console-findings-empty">
-                        <span class="material-symbols-outlined text-xl mb-1 text-emerald-400/75">gpp_good</span>
-                        <span class="text-[10px]">No issues discovered yet</span>
-                    </div>
-                    <div class="flex-1 hidden space-y-1.5 overflow-y-auto" id="live-console-findings-list">
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- CyberNotify Modal -->
         <div
