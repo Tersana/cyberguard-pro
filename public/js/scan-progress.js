@@ -1097,6 +1097,207 @@
     return html;
   }
 
+  function formatShodanScannerHtml(text) {
+    if (!text) return '';
+    const lines = text.split('\n').map(l => l.trim());
+    
+    let ip = '';
+    let org = '';
+    let isp = '';
+    let location = '';
+    let os = '';
+    let hostnames = '';
+    const ports = [];
+    const stats = {};
+    let vulnerabilities = 0;
+    
+    let currentSection = '';
+    
+    lines.forEach(line => {
+      if (!line) return;
+      
+      if (line.includes('Host Information:')) {
+        currentSection = 'host';
+        return;
+      }
+      if (line.includes('Open Ports & Services:') || line.includes('Open Ports:')) {
+        currentSection = 'ports';
+        return;
+      }
+      if (line.includes('Scan Statistics:')) {
+        currentSection = 'stats';
+        return;
+      }
+      if (line.startsWith('Vulnerabilities:')) {
+        const val = line.split('Vulnerabilities:')[1].trim();
+        vulnerabilities = parseInt(val) || 0;
+        return;
+      }
+      
+      if (currentSection === 'host') {
+        if (line.startsWith('- IP:')) ip = line.split('- IP:')[1].trim();
+        else if (line.startsWith('- Organization:')) org = line.split('- Organization:')[1].trim();
+        else if (line.startsWith('- ISP:')) isp = line.split('- ISP:')[1].trim();
+        else if (line.startsWith('- Location:')) location = line.split('- Location:')[1].trim();
+        else if (line.startsWith('- OS:')) os = line.split('- OS:')[1].trim();
+        else if (line.startsWith('- Hostnames:')) hostnames = line.split('- Hostnames:')[1].trim();
+      } else if (currentSection === 'ports') {
+        if (line.startsWith('-')) {
+          const cleanLine = line.substring(1).trim();
+          const portMatch = cleanLine.match(/^(\d+)(?:\s*-\s*([^(]+))?(?:\s*\(([^)]+)\))?/);
+          if (portMatch) {
+            const portNum = portMatch[1];
+            const srvName = (portMatch[2] || 'Unknown').trim();
+            const details = (portMatch[3] || '').trim();
+            ports.push({ port: portNum, service: srvName, details: details });
+          }
+        }
+      } else if (currentSection === 'stats') {
+        if (line.startsWith('-')) {
+          const cleanLine = line.substring(1).trim();
+          if (cleanLine.includes(':')) {
+            const parts = cleanLine.split(':');
+            const k = parts[0].trim();
+            const v = parts.slice(1).join(':').trim();
+            stats[k] = v;
+          }
+        }
+      }
+    });
+
+    let html = '<div class="shodan-scan-container mt-4 space-y-6">';
+    
+    // Host Information Card (matching IP Geo style)
+    html += `
+      <div class="ip-geo-card p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 transition-all duration-200 hover:border-white/20">
+        <div class="flex items-center gap-2 mb-3 pb-2 border-b border-white/5">
+          <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12c0 5.385 4.365 9.75 9.75 9.75s9.75-4.365 9.75-9.75S17.385 2.25 12 2.25 2.25 6.615 2.25 12Z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18M3 12h18"/>
+          </svg>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-200">Shodan Host Intelligence</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-xs font-mono">
+          <div class="flex justify-between py-0.5 border-b border-white/5 md:border-none"><span class="text-slate-400">Target IP</span><span class="text-slate-200 font-bold">${escapeHtml(ip || '—')}</span></div>
+          <div class="flex justify-between py-0.5 border-b border-white/5 md:border-none"><span class="text-slate-400">Organization</span><span class="text-slate-200 font-bold">${escapeHtml(org || '—')}</span></div>
+          <div class="flex justify-between py-0.5 border-b border-white/5 md:border-none"><span class="text-slate-400">ISP</span><span class="text-slate-200 font-bold">${escapeHtml(isp || '—')}</span></div>
+          <div class="flex justify-between py-0.5 border-b border-white/5 md:border-none"><span class="text-slate-400">Location</span><span class="text-slate-200 font-bold">${escapeHtml(location || '—')}</span></div>
+          <div class="flex justify-between py-0.5 border-b border-white/5 md:border-none"><span class="text-slate-400">Operating System</span><span class="text-slate-200 font-bold">${escapeHtml(os || '—')}</span></div>
+          <div class="flex justify-between py-0.5 border-b border-white/5 md:border-none"><span class="text-slate-400">Hostnames</span><span class="text-slate-200 font-bold text-right truncate max-w-[200px]" title="${escapeHtml(hostnames)}">${escapeHtml(hostnames || '—')}</span></div>
+        </div>
+      </div>
+    `;
+
+    // Open Ports Detected Card / Grid
+    if (ports.length > 0) {
+      html += `
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 select-none">Open Ports Detected</h4>
+            <span class="bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded text-[10px] font-mono text-indigo-400 font-bold">${ports.length} Open</span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+      `;
+      ports.forEach(p => {
+        const portNum = parseInt(p.port);
+        const risk = isNaN(portNum) ? 'low' : getPortRisk(portNum);
+        const riskColorMap = {
+          high: 'border-rose-500/20 bg-rose-500/5 text-rose-400 hover:border-rose-500/40',
+          medium: 'border-amber-500/20 bg-amber-500/5 text-amber-400 hover:border-amber-500/40',
+          low: 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:border-emerald-500/40'
+        };
+        const borderBgClass = riskColorMap[risk] || 'border-slate-500/20 bg-slate-500/5 text-slate-400 hover:border-white/20';
+        
+        html += `
+          <div class="p-3 rounded-xl border ${borderBgClass} flex flex-col justify-between gap-2 transition-all duration-200">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono font-bold text-slate-100">Port ${escapeHtml(p.port)}</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>
+            </div>
+            <div class="font-mono">
+              <span class="text-[10px] text-slate-400 block truncate" title="${escapeHtml(p.service)}">${escapeHtml(p.service)}</span>
+              ${p.details ? `<span class="text-[9px] text-rose-400 block truncate mt-0.5 font-semibold" title="${escapeHtml(p.details)}">${escapeHtml(p.details)}</span>` : ''}
+            </div>
+          </div>
+        `;
+      });
+      html += '</div></div>';
+    } else {
+      html += `
+        <div class="p-6 rounded-xl border border-slate-500/10 bg-slate-500/5 text-center text-xs text-slate-400">
+          No open ports or services found in Shodan database.
+        </div>
+      `;
+    }
+
+    // Vulnerability Alert and Statistics Grid
+    html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+    
+    // Vulnerability box
+    if (vulnerabilities > 0) {
+      html += `
+        <div class="p-4 rounded-xl border border-rose-500/25 bg-rose-500/5 flex items-center gap-3">
+          <div class="p-2 bg-rose-500/10 rounded-lg text-rose-400 shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="text-xs font-bold uppercase tracking-wider text-rose-400 select-none">Vulnerabilities Detected</div>
+            <div class="text-lg font-mono font-bold text-slate-100 mt-0.5">${vulnerabilities} Potential CVEs</div>
+          </div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 flex items-center gap-3">
+          <div class="p-2 bg-emerald-500/10 rounded-lg text-emerald-400 shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="text-xs font-bold uppercase tracking-wider text-emerald-400 select-none">Vulnerability Status</div>
+            <div class="text-sm font-bold text-slate-200 mt-0.5">No vulnerabilities listed in host report.</div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Statistics box
+    const totalPorts = stats['Total ports'] || stats['Services detected'] || ports.length;
+    const duration = stats['Scan duration'] || '—';
+    const freshness = stats['Data freshness'] || stats['Last update'] || '—';
+    
+    html += `
+      <div class="p-4 rounded-xl border border-slate-500/20 bg-slate-500/5 flex flex-col justify-between">
+        <div class="flex items-center gap-2 mb-3">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v5.25c0 .621-.504 1.125-1.125 1.125h-2.25A1.125 1.125 0 013 18.375v-5.25zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125v-9.75zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v14.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/>
+          </svg>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-200 select-none">Scan Statistics</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2 text-center font-mono">
+          <div class="bg-white/5 border border-white/5 p-2 rounded-lg">
+            <div class="text-xs font-bold text-slate-100">${escapeHtml(String(totalPorts))}</div>
+            <div class="text-[8px] text-slate-500 uppercase tracking-wider">Ports</div>
+          </div>
+          <div class="bg-white/5 border border-white/5 p-2 rounded-lg">
+            <div class="text-xs font-bold text-slate-100">${escapeHtml(duration)}</div>
+            <div class="text-[8px] text-slate-500 uppercase tracking-wider">Duration</div>
+          </div>
+          <div class="bg-white/5 border border-white/5 p-2 rounded-lg">
+            <div class="text-xs font-bold text-slate-100 truncate" title="${escapeHtml(freshness)}">${escapeHtml(freshness.split('T')[0] || freshness)}</div>
+            <div class="text-[8px] text-slate-500 uppercase tracking-wider">Freshness</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    html += '</div></div>';
+    return html;
+  }
+
   function formatReverseDNSHtml(text) {
     if (!text) return '';
     const cleanText = text.replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2600-\u26FF]|\uD83E[\uDD10-\uDDFF]|[\uFE0F]/g, '').trim();
@@ -1645,13 +1846,17 @@
     const descSection = document.getElementById('fd-desc-section');
     const descText = document.getElementById('fd-description');
     if (descText && finding.description) {
+      const isShodan = (finding.driver_id === 'SHODAN_SCANNER' || (finding.title && (finding.title.includes('Shodan') || finding.title.includes('Port Scanner'))));
       const isIPGeo = (finding.driver_id === 'IP_GEOLOCATION' || (finding.title && finding.title.includes('Geolocation')));
       const isReverseDNS = (finding.driver_id === 'REVERSE_DNS' || (finding.title && finding.title.includes('Reverse DNS')));
       const isWhois = (finding.driver_id === 'WHOIS_LOOKUP' || (finding.title && finding.title.includes('WHOIS')));
       const isUdpScan = (finding.driver_id === 'UDP_PORT_SCAN' || (finding.title && (finding.title.includes('UDP Services') || finding.title.includes('UDP Port') || finding.title.includes('UDP Service'))));
       const isTcpScan = (finding.driver_id === 'TCP_PORT_SCAN' || (finding.title && (finding.title.includes('TCP Connectivity') || finding.title.includes('TCP Port') || finding.title.includes('TCP Service'))));
 
-      if (isIPGeo) {
+      if (isShodan) {
+        descText.className = "select-text text-sm w-full";
+        descText.innerHTML = formatShodanScannerHtml(finding.description);
+      } else if (isIPGeo) {
         descText.className = "select-text text-sm w-full";
         descText.innerHTML = formatIPGeolocationHtml(finding.description);
       } else if (isReverseDNS) {
