@@ -653,7 +653,13 @@ class AuthManager {
       const response = await this.apiClient.get("auth/me");
 
       // Normalize user data
-      const normalizedUser = this.normalizeUserData(response.user || response);
+      // API shape can be: { user: {} } or { data: { user: {} } } or { data: {} }
+      const rawUser =
+        response.data?.user ||
+        response.user ||
+        response.data ||
+        response;
+      const normalizedUser = this.normalizeUserData(rawUser);
 
       return {
         success: true,
