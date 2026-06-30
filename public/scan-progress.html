@@ -46,6 +46,92 @@
                Tokens from theme-tokens.css; all colors via var(--cg-*)
             ═══════════════════════════════════════════════════════════ */
 
+             /* ---- Finding Modal Header Badges ---- */
+            .severity-badge {
+                display: inline-flex;
+                align-items: center;
+                padding: 3px 10px;
+                border-radius: 20px;
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+                flex-shrink: 0;
+            }
+            .severity-badge.sev-critical { background: rgba(248,113,113,0.15); color: var(--cg-danger); }
+            .severity-badge.sev-high     { background: rgba(249,115,22,0.15);  color: #F97316; }
+            .severity-badge.sev-medium   { background: rgba(251,191,36,0.15);  color: var(--cg-warning); }
+            .severity-badge.sev-low      { background: rgba(56,189,248,0.15);  color: var(--cg-info); }
+            .severity-badge.sev-info     { background: rgba(148,163,184,0.12); color: var(--cg-text-2); }
+
+            .finding-status {
+                display: inline-flex;
+                align-items: center;
+                font-size: 11px;
+                font-weight: 700;
+                padding: 3px 10px;
+                border-radius: 20px;
+                letter-spacing: 0.5px;
+                border: 1px solid transparent;
+            }
+            .finding-status.status-open {
+                background: rgba(251, 191, 36, 0.12) !important;
+                color: var(--cg-warning) !important;
+                border: 1px solid rgba(251, 191, 36, 0.25) !important;
+            }
+            .finding-status.status-closed {
+                background: rgba(52, 211, 153, 0.12) !important;
+                color: var(--cg-success) !important;
+                border: 1px solid rgba(52, 211, 153, 0.25) !important;
+            }
+            .finding-status.status-in_progress {
+                background: rgba(59, 130, 246, 0.12) !important;
+                color: var(--cg-info) !important;
+                border: 1px solid rgba(59, 130, 246, 0.25) !important;
+            }
+            .finding-status.status-resolved {
+                background: rgba(52, 211, 153, 0.12) !important;
+                color: var(--cg-success) !important;
+                border: 1px solid rgba(52, 211, 153, 0.25) !important;
+            }
+            .finding-status.status-false_positive {
+                background: rgba(148, 163, 184, 0.12) !important;
+                color: var(--cg-text-3) !important;
+                border: 1px solid rgba(148, 163, 184, 0.2) !important;
+            }
+
+            .cvss-badge {
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                font-weight: 700;
+                font-family: monospace;
+            }
+            .cvss-badge.cvss-critical { background: rgba(248,113,113,0.12); color: var(--cg-danger); }
+            .cvss-badge.cvss-high     { background: rgba(249,115,22,0.12);  color: #F97316; }
+            .cvss-badge.cvss-medium   { background: rgba(251,191,36,0.12);  color: var(--cg-warning); }
+            .cvss-badge.cvss-low      { background: rgba(56,189,248,0.12);  color: var(--cg-info); }
+            .cvss-badge.cvss-none     { background: rgba(148,163,184,0.1);  color: var(--cg-text-2); }
+
+            .finding-section-label {
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 1px;
+                color: var(--cg-text-3);
+                text-transform: uppercase;
+                margin-bottom: 6px;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+            .finding-tag {
+                padding: 3px 8px;
+                background: var(--cg-bg-elevated);
+                border: 1px solid var(--cg-border-subtle);
+                border-radius: 20px;
+                font-size: 11px;
+                color: var(--cg-text-3);
+            }
+
             /* ── Layout ──────────────────────────────────────────────── */
             .sp-page {
                 min-height: 100vh;
