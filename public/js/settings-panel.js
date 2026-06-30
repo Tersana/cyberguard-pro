@@ -388,13 +388,19 @@ class SettingsPanel {
                 avatarContainer.innerHTML = "";
                 const avatarImg = document.createElement("img");
                 avatarImg.alt = "Avatar";
-                avatarImg.className = "w-full h-full object-cover";
+                avatarImg.id = "navbar-avatar-img";
                 avatarImg.referrerPolicy = "no-referrer"; // Set BEFORE src
+                // Inline styles guarantee correct rendering regardless of CSS framework
+                avatarImg.style.width = "100%";
+                avatarImg.style.height = "100%";
+                avatarImg.style.objectFit = "cover";
+                avatarImg.style.borderRadius = "50%";
+                avatarImg.style.display = "block";
                 avatarImg.onerror = function() {
                     // Graceful fallback to initials if external image fails
                     avatarContainer.innerHTML = `<span class="text-xs font-bold text-white" id="navbarUserInitials">${escapeHtml(initials)}</span>`;
                 };
-                avatarImg.src = avatarUrl; // Set src LAST
+                avatarImg.src = avatarUrl.trim(); // Set src LAST
                 avatarContainer.appendChild(avatarImg);
             } else {
                 avatarContainer.innerHTML = `<span class="text-xs font-bold text-white" id="navbarUserInitials">${escapeHtml(initials)}</span>`;

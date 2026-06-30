@@ -215,6 +215,11 @@ class ProfileSettings {
             img.id = "profile-avatar-img";
             img.alt = "Avatar Preview";
             img.referrerPolicy = "no-referrer"; // Set BEFORE src
+            img.style.width = "100%";
+            img.style.height = "100%";
+            img.style.objectFit = "cover";
+            img.style.borderRadius = "50%";
+            img.style.display = "block";
             const self = this;
             img.onerror = function() {
                 // Graceful fallback to initials if external image fails
