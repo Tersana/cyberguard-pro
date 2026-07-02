@@ -358,10 +358,40 @@
     _set("sp-target-name", target.value || "Unknown Target");
     
     let displayId = s.id || "";
+    let shortId;
     if (displayId.startsWith("frontend_")) {
-      displayId = displayId.replace("frontend_", "");
+      const randPart = displayId.replace("frontend_", "").substring(0, 6).toUpperCase();
+      let prefix = "SCAN";
+      const tools = s.selected_frontend_tools || [];
+      const drivers = Array.isArray(s.driver_id) ? s.driver_id : (s.driver_id ? [s.driver_id] : []);
+      
+      if (tools.length === 1) {
+        const tId = tools[0];
+        if (tId === "net-port-scanner") prefix = "PORT";
+        else if (tId === "net-tcp-connectivity") prefix = "TCP";
+        else if (tId === "net-udp-services") prefix = "UDP";
+        else if (tId === "net-ip-geolocation") prefix = "GEO";
+        else if (tId === "net-reverse-dns") prefix = "RDNS";
+        else if (tId === "net-whois-lookup") prefix = "WHOIS";
+      } else if (tools.length > 1) {
+        prefix = "NET";
+      } else if (drivers.length === 1) {
+        const drv = drivers[0];
+        if (drv === "Port Scanner") prefix = "PORT";
+        else if (drv === "TCP Connectivity") prefix = "TCP";
+        else if (drv === "UDP Services") prefix = "UDP";
+        else if (drv === "IP Geolocation") prefix = "GEO";
+        else if (drv === "Reverse DNS") prefix = "RDNS";
+        else if (drv === "WHOIS Lookup") prefix = "WHOIS";
+        else if (drv === "NETWORK_ANALYSIS") prefix = "NET";
+      } else if (drivers.length > 1) {
+        prefix = "NET";
+      }
+      shortId = `${prefix}-${randPart}`;
+    } else {
+      shortId = displayId.substring(0, 8).toUpperCase();
     }
-    _set("sp-scan-id-short", displayId.substring(0, 8).toUpperCase());
+    _set("sp-scan-id-short", shortId);
 
     // Started at
     if (s.started_at) {
