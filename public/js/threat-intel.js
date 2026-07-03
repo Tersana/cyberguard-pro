@@ -1111,7 +1111,7 @@ const ThreatIntelHub = {
       });
     }
     
-    // Event delegation for dynamically created "View Details" buttons
+    // Event delegation for dynamically created "View Details" buttons and Tabs
     const sourceCardsContainer = document.getElementById('threat-intel-source-cards');
     if (sourceCardsContainer) {
       sourceCardsContainer.addEventListener('click', (event) => {
@@ -1120,6 +1120,16 @@ const ThreatIntelHub = {
           const sourceName = detailsBtn.dataset.source;
           if (sourceName) {
             UIRenderer.toggleDetails(sourceName);
+          }
+          return;
+        }
+        
+        const tabBtn = event.target.closest('.details-tab-btn');
+        if (tabBtn) {
+          const sourceName = tabBtn.dataset.source;
+          const tabName = tabBtn.dataset.tab;
+          if (sourceName && tabName) {
+            UIRenderer.switchTab(tabBtn, sourceName, tabName);
           }
         }
       });
@@ -1550,8 +1560,23 @@ const UIRenderer = {
               <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
             </svg>
           </button>
-          <div class="source-details hidden bg-black/30 border border-white/10 rounded-lg p-4 mt-3 overflow-y-auto" style="max-height: 300px;">
-            <pre class="text-xs font-mono text-slate-300 whitespace-pre-wrap">${this.escapeHtml(JSON.stringify(sourceData.rawData, null, 2))}</pre>
+          
+          <div class="source-details hidden bg-slate-950/40 border border-white/10 rounded-lg p-4 mt-3 overflow-y-auto" style="max-height: 500px;">
+            <!-- Tab Headers -->
+            <div class="flex border-b border-white/10 pb-2 mb-4 text-xs">
+              <button class="details-tab-btn border-b-2 border-cyan-500 text-cyan-400 font-semibold px-3 py-1 mr-2 focus:outline-none" data-source="${this.escapeHtml(sourceName)}" data-tab="visual">Visual Details</button>
+              <button class="details-tab-btn border-b-2 border-transparent text-slate-400 font-semibold px-3 py-1 hover:text-slate-200 focus:outline-none" data-source="${this.escapeHtml(sourceName)}" data-tab="raw">Raw JSON</button>
+            </div>
+            
+            <!-- Visual Content -->
+            <div class="tab-content-visual text-sm text-slate-300 space-y-4">
+              ${this.renderVisualDetails(sourceName, sourceData.rawData)}
+            </div>
+            
+            <!-- Raw JSON Content -->
+            <div class="tab-content-raw hidden">
+              <pre class="text-xs font-mono text-slate-300 whitespace-pre-wrap">${this.escapeHtml(JSON.stringify(sourceData.rawData, null, 2))}</pre>
+            </div>
           </div>
         </div>
       `;
@@ -1576,16 +1601,28 @@ const UIRenderer = {
                 <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
               </svg>
             </button>
-            <div class="source-details hidden bg-black/30 border border-white/10 rounded-lg p-4 mt-3 overflow-y-auto" style="max-height: 300px;">
-              <pre class="text-xs font-mono text-slate-300 whitespace-pre-wrap">${this.escapeHtml(JSON.stringify(sourceData.rawData, null, 2))}</pre>
+            
+            <div class="source-details hidden bg-slate-950/40 border border-white/10 rounded-lg p-4 mt-3 overflow-y-auto" style="max-height: 500px;">
+              <!-- Tab Headers -->
+              <div class="flex border-b border-white/10 pb-2 mb-4 text-xs">
+                <button class="details-tab-btn border-b-2 border-cyan-500 text-cyan-400 font-semibold px-3 py-1 mr-2 focus:outline-none" data-source="${this.escapeHtml(sourceName)}" data-tab="visual">Visual Details</button>
+                <button class="details-tab-btn border-b-2 border-transparent text-slate-400 font-semibold px-3 py-1 hover:text-slate-200 focus:outline-none" data-source="${this.escapeHtml(sourceName)}" data-tab="raw">Raw JSON</button>
+              </div>
+              
+              <!-- Visual Content -->
+              <div class="tab-content-visual text-sm text-slate-300 space-y-4">
+                ${this.renderVisualDetails(sourceName, sourceData.rawData)}
+              </div>
+              
+              <!-- Raw JSON Content -->
+              <div class="tab-content-raw hidden">
+                <pre class="text-xs font-mono text-slate-300 whitespace-pre-wrap">${this.escapeHtml(JSON.stringify(sourceData.rawData, null, 2))}</pre>
+              </div>
             </div>
           ` : ''}
         </div>
       `;
     }
-    
-    // Event listener is handled by event delegation in bindEventListeners()
-    // No need to bind individual listeners here
   },
   
   /**
