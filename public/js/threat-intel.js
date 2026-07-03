@@ -13,7 +13,7 @@ const URLSCAN_BASE_URL = 'https://urlscan.io/api/v1';
 // (API-Key, x-apikey etc.); allorigins and cors.lol do NOT forward custom
 // headers so they only work for unauthenticated / public GET requests.
 const CORS_PROXIES = [
-  { url: 'https://corsproxy.io/?url=',          encode: true },
+  { url: 'https://corsproxy.io/?',          encode: true },
   { url: 'https://api.allorigins.win/raw?url=', encode: true },
   { url: 'https://cors.lol/?url=',              encode: true },
 ];
@@ -67,7 +67,9 @@ async function fetchWithProxy(targetUrl, fetchOptions = {}) {
       }
 
       if (response.status === 404) {
-        return response;
+        console.warn(`Proxy ${proxy.url} returned 404. Trying next proxy instead of treating it as an upstream API response...`);
+        lastError = new Error('Proxy returned 404 for proxied request');
+        continue;
       }
 
       if (response.status === 401 || response.status === 403) {
