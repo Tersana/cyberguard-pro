@@ -15088,22 +15088,38 @@ Always align dashboard actions with what the user requests! Explain briefly what
         streamMsg.element.remove();
       }
       console.error("[AI Assistant] Error handling query:", err);
-      
-      // Attempt local offline fallback on failure
-      const fallbackReply = await processOfflineMessage(text);
-      const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}\uFE0F\uFE0E]/gu;
-      const cleanFallback = fallbackReply.replace(emojiRegex, "");
-      appendMessage(
-        "ai",
-        `<div class="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg mb-3">
-          <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-          <div>
-            <strong class="text-amber-400 block text-xs">API Connection failed. Operating in offline fallback:</strong>
-            <div class="mt-1">${cleanFallback}</div>
-          </div>
-        </div>`
-      );
-      conversationHistory.push({ role: "assistant", content: cleanFallback });
+
+      // Distinguish rate-limit errors from general failures
+      if (err && err.name === "RateLimitError") {
+        const retrySeconds = err.retryAfter ? Math.ceil(err.retryAfter) : 30;
+        appendMessage(
+          "ai",
+          `<div class="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg mb-3">
+            <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <div>
+              <strong class="text-amber-400 block text-xs">Rate Limited — Too Many Requests</strong>
+              <div class="mt-1">The AI provider is temporarily rate-limiting requests. Please wait <strong>~${retrySeconds}s</strong> and try again. If this keeps happening, consider switching to a different model or adding your own API key in Settings.</div>
+            </div>
+          </div>`
+        );
+        conversationHistory.push({ role: "assistant", content: `[Rate limited — retry in ~${retrySeconds}s]` });
+      } else {
+        // Attempt local offline fallback on non-rate-limit failure
+        const fallbackReply = await processOfflineMessage(text);
+        const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}\uFE0F\uFE0E]/gu;
+        const cleanFallback = fallbackReply.replace(emojiRegex, "");
+        appendMessage(
+          "ai",
+          `<div class="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg mb-3">
+            <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <div>
+              <strong class="text-amber-400 block text-xs">API Connection failed. Operating in offline fallback:</strong>
+              <div class="mt-1">${cleanFallback}</div>
+            </div>
+          </div>`
+        );
+        conversationHistory.push({ role: "assistant", content: cleanFallback });
+      }
 
       // Save state
       if (currentChatId && chatSessions[currentChatId]) {
@@ -15115,6 +15131,63 @@ Always align dashboard actions with what the user requests! Explain briefly what
     } finally {
       setWaiting(false);
     }
+  }
+
+  // ─── RATE LIMIT HELPERS ──────────────────────────────────────────
+  class RateLimitError extends Error {
+    constructor(message, retryAfter) {
+      super(message);
+      this.name = "RateLimitError";
+      this.retryAfter = retryAfter;
+    }
+  }
+
+  /**
+   * Retry-aware fetch wrapper with exponential backoff for 429 responses.
+   * Retries up to `maxRetries` times, respecting Retry-After headers.
+   */
+  async function fetchWithRetry(url, options, maxRetries = 3) {
+    let lastError;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      const res = await fetch(url, options);
+
+      if (res.ok) return res;
+
+      // Non-429 error — fail immediately, no retry
+      if (res.status !== 429) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody?.error?.message || `HTTP ${res.status}`);
+      }
+
+      // 429 — calculate backoff
+      const retryAfterHeader = res.headers.get("Retry-After");
+      let waitMs;
+      if (retryAfterHeader) {
+        const retryAfterSec = parseFloat(retryAfterHeader);
+        waitMs = (isNaN(retryAfterSec) ? Math.pow(2, attempt) : retryAfterSec) * 1000;
+      } else {
+        // Exponential backoff: 1s, 2s, 4s
+        waitMs = Math.pow(2, attempt) * 1000;
+      }
+
+      // Cap wait at 10 seconds
+      waitMs = Math.min(waitMs, 10000);
+
+      console.warn(`[AI Assistant] Rate limited (429). Retry ${attempt + 1}/${maxRetries} in ${waitMs}ms...`);
+
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, waitMs));
+      } else {
+        // Final attempt exhausted — throw RateLimitError
+        const errBody = await res.json().catch(() => ({}));
+        const retryAfterSec = retryAfterHeader ? parseFloat(retryAfterHeader) : waitMs / 1000;
+        lastError = new RateLimitError(
+          errBody?.error?.message || `Rate limited (HTTP 429) after ${maxRetries} retries`,
+          isNaN(retryAfterSec) ? waitMs / 1000 : retryAfterSec
+        );
+      }
+    }
+    throw lastError;
   }
 
   // ─── DYNAMIC REST API CALLS ──────────────────────────────────────
@@ -15135,7 +15208,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
       stream: isStream
     });
 
-    const res = await fetch(url, {
+    const fetchOptions = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -15144,12 +15217,9 @@ Always align dashboard actions with what the user requests! Explain briefly what
         "X-Title": "CyberGuard"
       },
       body
-    });
+    };
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `HTTP ${res.status}`);
-    }
+    const res = await fetchWithRetry(url, fetchOptions, 3);
 
     if (isStream && res.body && typeof res.body.getReader === "function") {
       const reader = res.body.getReader();
@@ -15224,19 +15294,14 @@ Always align dashboard actions with what the user requests! Explain briefly what
       max_tokens: 2048
     });
 
-    const res = await fetch(url, {
+    const res = await fetchWithRetry(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`
       },
       body
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `HTTP ${res.status}`);
-    }
+    }, 3);
 
     const data = await res.json();
     return (
