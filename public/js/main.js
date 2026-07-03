@@ -15371,8 +15371,28 @@ Always align dashboard actions with what the user requests! Explain briefly what
       executeWorkflowSteps(actions);
     }
 
-    // Strip actions from rendered bubble so details look premium
-    return text.replace(/\[\[ACTION:.*?\]\]/g, "");
+    // Replace generate_report action with an inline PDF viewer link card
+    let resultText = text;
+    if (resultText.includes("generate_report")) {
+      const reportCard = `
+<div class="ai-pdf-report-card mt-3 p-3 bg-purple-950/40 border border-purple-500/25 rounded-lg flex items-center justify-between gap-3 select-none">
+  <div class="flex items-center gap-2.5">
+    <span class="material-symbols-outlined text-purple-400 text-[20px]">picture_as_pdf</span>
+    <div class="flex flex-col text-left">
+      <span class="text-xs text-slate-200 font-semibold leading-none">Security Assessment Report</span>
+      <span class="text-[10px] text-slate-400 mt-1">Compiled PDF Vulnerability Telemetry</span>
+    </div>
+  </div>
+  <button class="ai-wizard-btn flex items-center gap-1.5 !text-[11px] !px-3 !py-1.5 !m-0 !bg-purple-600/20 hover:!bg-purple-600/40 border border-purple-500/30" onclick="window.CyberGuardAIChat.reopenPDFReport(); return false;">
+    <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+    Open Report
+  </button>
+</div>`;
+      resultText = resultText.replace(/\[\[ACTION:\s*generate_report\([^)]*\)\]\]/g, reportCard);
+    }
+
+    // Strip remaining actions from rendered bubble so details look premium
+    return resultText.replace(/\[\[ACTION:.*?\]\]/g, "");
   }
 
   async function generatePDFReport() {
@@ -16609,6 +16629,10 @@ Or save your OpenRouter key in my settings configurations at the top right!`;
       } catch (e) {
         console.error("Copy failed:", e);
       }
+    },
+
+    reopenPDFReport: function() {
+      generatePDFReport();
     }
   };
 
