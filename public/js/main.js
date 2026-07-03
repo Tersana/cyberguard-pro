@@ -14149,7 +14149,11 @@ Always align dashboard actions with what the user requests! Explain briefly what
   // Preset model configurations
   const MODEL_PRESETS = {
     openrouter: [
-      { value: "openai/gpt-oss-120b:free", text: "GPT-OSS 120B (Free Recommended)" },
+      { value: "openai/gpt-oss-120b:free", text: "GPT-OSS 120B (Free)" },
+      { value: "google/gemini-2.5-flash:free", text: "Gemini 2.5 Flash (Free)" },
+      { value: "meta-llama/llama-3.1-8b-instruct:free", text: "Llama 3.1 8B (Free)" },
+      { value: "google/gemini-2.5-flash", text: "Gemini 2.5 Flash (Paid)" },
+      { value: "openai/gpt-4o-mini", text: "GPT-4o Mini (Paid)" },
       { value: "custom", text: "Custom Model..." }
     ]
   };
@@ -14496,11 +14500,17 @@ Always align dashboard actions with what the user requests! Explain briefly what
     // Toggle key visual container based on provider
     keyContainer.classList.remove("hidden");
 
-    promptInput.value = localStorage.getItem("cg_ai_system_prompt") || "";
+    if (promptInput) {
+      promptInput.value = localStorage.getItem("cg_ai_system_prompt") || "";
+    }
     
     const temp = localStorage.getItem("cg_ai_temp") || "0.7";
-    tempInput.value = temp;
-    tempValue.textContent = temp;
+    if (tempInput) {
+      tempInput.value = temp;
+    }
+    if (tempValue) {
+      tempValue.textContent = temp;
+    }
   }
 
   function populateModelPresets(provider) {
@@ -14668,6 +14678,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
             if (window.CyberNotify) {
               window.CyberNotify.alert("Failed to save API key to server.", { type: "error" });
             }
+            return;
           } finally {
             if (typeof hideLoading === "function") {
               hideLoading();
@@ -14675,8 +14686,12 @@ Always align dashboard actions with what the user requests! Explain briefly what
           }
         }
         
-        localStorage.setItem("cg_ai_system_prompt", promptInput.value.trim());
-        localStorage.setItem("cg_ai_temp", tempInput.value);
+        if (promptInput) {
+          localStorage.setItem("cg_ai_system_prompt", promptInput.value.trim());
+        }
+        if (tempInput) {
+          localStorage.setItem("cg_ai_temp", tempInput.value);
+        }
 
         loadConfigurations();
         updateEngineLabel();
