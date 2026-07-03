@@ -4012,6 +4012,86 @@ body.authenticated #guest-notice {
   font-size: 13px !important;
 }
 
+/* Expand AI bubble size when containing a markdown table for premium readability */
+.ai-msg-bubble:has(table) {
+  max-width: 90% !important;
+  width: 100% !important;
+}
+
+/* CyberGuard Premium Markdown Table Styling */
+.cyber-table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin: 14px 0;
+  border-radius: var(--cg-radius-md);
+  border: 1px solid var(--cg-border);
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.cyber-markdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+.cyber-markdown-table th {
+  background: rgba(139, 92, 246, 0.12); /* Subtle violet background */
+  color: #a78bfa; /* Violet accent matching --cg-accent */
+  font-weight: 600;
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--cg-border);
+  text-transform: uppercase;
+  font-size: 0.74rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.cyber-markdown-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--cg-text-2);
+  vertical-align: top;
+  line-height: 1.6;
+}
+
+.cyber-markdown-table tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Set comfortable minimum column widths to prevent vertical wrapping of text */
+.cyber-markdown-table th:first-child,
+.cyber-markdown-table td:first-child {
+  min-width: 180px;
+  font-weight: 700;
+  color: var(--cg-text-1);
+}
+
+.cyber-markdown-table th:nth-child(2),
+.cyber-markdown-table td:nth-child(2) {
+  min-width: 280px;
+}
+
+.cyber-markdown-table th:last-child,
+.cyber-markdown-table td:last-child {
+  min-width: 280px;
+}
+
+/* Nested lists inside cells styling */
+.cyber-markdown-table td ul {
+  margin: 4px 0 0 0;
+  padding-left: 18px;
+  list-style-type: disc;
+}
+
+.cyber-markdown-table td li {
+  margin: 6px 0 !important;
+  line-height: 1.5;
+  color: var(--cg-text-2);
+}
+
 
 
 
