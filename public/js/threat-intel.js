@@ -1105,7 +1105,13 @@ const ThreatIntelHub = {
           if (!isNaN(index) && ThreatIntelState.searchHistory[index]) {
             const item = ThreatIntelState.searchHistory[index];
             searchInput.value = item.input;
-            this.performSearch(item.input);
+            
+            // If the item has saved scan results, display them directly instead of performing a new scan
+            if (item.sources && item.verdictDetails) {
+              this.showSavedResults(item);
+            } else {
+              this.performSearch(item.input);
+            }
           }
         }
       });
@@ -1355,6 +1361,8 @@ const ThreatIntelHub = {
         input: sanitizedInput,
         inputType: inputType,
         verdict: verdict.status,
+        verdictDetails: verdict,
+        sources: ThreatIntelState.sources,
         timestamp: verdict.timestamp
       });
       
@@ -1454,6 +1462,57 @@ const ThreatIntelHub = {
         } catch (error) {
           console.error('ThreatIntelHub: Error clearing history:', error);
         }
+      }
+    }
+  },
+
+  /**
+   * Display saved scan results from history directly in the UI.
+   * Prevents performing a new redundant API scan.
+   * @param {Object} item - Saved search history item containing results
+   */
+  showSavedResults(item) {
+    try {
+      console.log('ThreatIntelHub: Showing saved results for:', item.input);
+      
+      // Update ThreatIntelState
+      ThreatIntelState.currentSearch = {
+        input: item.input,
+        inputType: item.inputType
+      };
+      ThreatIntelState.verdict = item.verdictDetails;
+      ThreatIntelState.sources = item.sources;
+      
+      // Update UI - Verdict Card
+      UIRenderer.renderVerdictCard(item.verdictDetails);
+      
+      // Update UI - Source Cards
+      if (item.sources.virustotal) {
+        UIRenderer.renderSourceCard('virustotal', item.sources.virustotal);
+      } else {
+        UIRenderer.renderIdleState('virustotal');
+      }
+      
+      if (item.sources.abuseipdb) {
+        UIRenderer.renderSourceCard('abuseipdb', item.sources.abuseipdb);
+      } else {
+        UIRenderer.renderIdleState('abuseipdb');
+      }
+      
+      if (item.sources.urlscan) {
+        UIRenderer.renderSourceCard('urlscan', item.sources.urlscan);
+      } else {
+        UIRenderer.renderIdleState('urlscan');
+      }
+      
+      // Show success notification
+      if (typeof CyberNotify !== 'undefined') {
+        CyberNotify.alert('Loaded saved scan results', { type: 'success' });
+      }
+    } catch (error) {
+      console.error('ThreatIntelHub: Error displaying saved results:', error);
+      if (typeof CyberNotify !== 'undefined') {
+        CyberNotify.alert('Failed to load saved scan results', { type: 'error' });
       }
     }
   }
@@ -1624,7 +1683,283 @@ const UIRenderer = {
       `;
     }
   },
-  
+
+  /**
+   * Switch active tab in details panel
+   */
+  switchTab(btn, sourceName, tabName) {
+    const parent = btn.closest('.source-details');
+    if (!parent) return;
+    
+    // Update button states
+    const tabs = parent.querySelectorAll('.details-tab-btn');
+    tabs.forEach(t => {
+      if (t === btn) {
+        t.classList.add('border-cyan-500', 'text-cyan-400');
+        t.classList.remove('border-transparent', 'text-slate-400');
+      } else {
+        t.classList.remove('border-cyan-500', 'text-cyan-400');
+        t.classList.add('border-transparent', 'text-slate-400');
+      }
+    });
+    
+    // Update contents
+    const visualContent = parent.querySelector('.tab-content-visual');
+    const rawContent = parent.querySelector('.tab-content-raw');
+    
+    if (tabName === 'visual') {
+      visualContent?.classList.remove('hidden');
+      rawContent?.classList.add('hidden');
+    } else {
+      visualContent?.classList.add('hidden');
+      rawContent?.classList.remove('hidden');
+    }
+  },
+
+  /**
+   * Render custom visual HTML for different scan sources
+   */
+  renderVisualDetails(sourceName, rawData) {
+    if (!rawData) return '<div class="text-slate-400 text-xs">No details available.</div>';
+    
+    if (sourceName === 'virustotal') {
+      const attrs = rawData.data?.attributes || {};
+      const stats = attrs.last_analysis_stats || {};
+      const total = Object.values(stats).reduce((a, b) => a + b, 0) || 1;
+      const maliciousPercent = Math.round((stats.malicious || 0) / total * 100);
+      
+      const engines = attrs.last_analysis_results || {};
+      const maliciousEngines = Object.keys(engines).filter(eng => engines[eng]?.category === 'malicious');
+      
+      return `
+        <div class="space-y-4">
+          <!-- Detection Bar -->
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">Threat Detection Rate</span>
+              <span class="font-mono text-red-400 font-bold">${stats.malicious || 0}/${total} Scanners Flagged</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden flex">
+              <div class="bg-red-500" style="width: ${maliciousPercent}%"></div>
+              <div class="bg-slate-700" style="width: ${100 - maliciousPercent}%"></div>
+            </div>
+          </div>
+
+          <!-- Attributes Grid -->
+          <div class="grid grid-cols-2 gap-3 text-xs bg-slate-900/40 p-3 rounded-lg border border-white/5">
+            <div>
+              <span class="text-slate-500 block">ISP / ASN Owner</span>
+              <span class="text-slate-200 font-semibold truncate block" title="${this.escapeHtml(attrs.as_owner || 'N/A')}">${this.escapeHtml(attrs.as_owner || 'N/A')}</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">ASN</span>
+              <span class="text-slate-200 font-semibold font-mono block">${this.escapeHtml(attrs.asn || 'N/A')}</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Network</span>
+              <span class="text-slate-200 font-semibold font-mono block">${this.escapeHtml(attrs.network || 'N/A')}</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Reputation</span>
+              <span class="font-semibold block ${attrs.reputation < 0 ? 'text-red-400' : 'text-green-400'}">${attrs.reputation ?? 0}</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Country</span>
+              <span class="text-slate-200 font-semibold block">${this.escapeHtml(attrs.country || 'N/A')}</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Stats</span>
+              <span class="text-slate-400 block font-mono text-[10px]">
+                Harmless: ${stats.harmless ?? 0} | Suspicious: ${stats.suspicious ?? 0}
+              </span>
+            </div>
+          </div>
+
+          <!-- Detections List -->
+          ${maliciousEngines.length > 0 ? `
+            <div class="space-y-1">
+              <span class="text-xs text-slate-400">Flagging Engines:</span>
+              <div class="flex flex-wrap gap-1">
+                ${maliciousEngines.map(eng => `<span class="bg-red-950/50 border border-red-500/30 text-red-400 text-[10px] px-2 py-0.5 rounded font-mono">${this.escapeHtml(eng)}</span>`).join('')}
+              </div>
+            </div>
+          ` : `
+            <div class="text-xs text-green-400 flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+              No engines flagged this resource as malicious.
+            </div>
+          `}
+        </div>
+      `;
+    }
+    
+    if (sourceName === 'abuseipdb') {
+      const data = rawData.data || {};
+      const score = data.abuseConfidenceScore ?? 0;
+      
+      let scoreColor = 'text-green-400';
+      let scoreBg = 'bg-green-500';
+      if (score > 70) { scoreColor = 'text-red-500'; scoreBg = 'bg-red-500'; }
+      else if (score > 30) { scoreColor = 'text-orange-400'; scoreBg = 'bg-orange-500'; }
+      else if (score > 10) { scoreColor = 'text-yellow-400'; scoreBg = 'bg-yellow-500'; }
+
+      const categoriesMap = {
+        1: 'DNS Compromise', 2: 'DNS Poisoning', 3: 'Fraud Web', 4: 'DDoS Attack',
+        5: 'FTP Bruteforce', 6: 'Ping of Death', 7: 'Phishing', 8: 'Fraud VoIP',
+        9: 'Open Proxy', 10: 'Web Spam', 11: 'Email Spam', 12: 'Blog Spam',
+        13: 'VPN IP', 14: 'Port Scan', 15: 'Hacking', 16: 'SQL Injection',
+        17: 'Spoofing', 18: 'Brute-Force', 19: 'Bad Web Bot', 20: 'Exploited Host',
+        21: 'Web App Attack', 22: 'SSH', 23: 'IoT Targeting'
+      };
+
+      const reports = data.reports || [];
+
+      return `
+        <div class="space-y-4">
+          <!-- Reputation Score Bar -->
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs">
+              <span class="text-slate-400">Abuse Confidence Score</span>
+              <span class="font-mono font-bold ${scoreColor}">${score}%</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+              <div class="${scoreBg} h-2" style="width: ${score}%"></div>
+            </div>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="grid grid-cols-2 gap-3 text-xs bg-slate-900/40 p-3 rounded-lg border border-white/5">
+            <div>
+              <span class="text-slate-500 block">ISP</span>
+              <span class="text-slate-200 font-semibold truncate block" title="${this.escapeHtml(data.isp || 'N/A')}">${this.escapeHtml(data.isp || 'N/A')}</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Domain</span>
+              <span class="text-slate-200 font-semibold font-mono truncate block" title="${this.escapeHtml(data.domain || 'N/A')}">${this.escapeHtml(data.domain || 'N/A')}</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Usage Type</span>
+              <span class="text-slate-200 font-semibold truncate block" title="${this.escapeHtml(data.usageType || 'N/A')}">${this.escapeHtml(data.usageType || 'N/A')}</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Location</span>
+              <span class="text-slate-200 font-semibold block">${this.escapeHtml(data.countryName || 'N/A')} (${this.escapeHtml(data.countryCode || 'N/A')})</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Total Reports</span>
+              <span class="text-slate-200 font-semibold block">${data.totalReports ?? 0} (from ${data.numDistinctUsers ?? 0} users)</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Tor Exit Node</span>
+              <span class="block font-semibold ${data.isTor ? 'text-orange-400' : 'text-slate-400'}">${data.isTor ? 'Yes' : 'No'}</span>
+            </div>
+          </div>
+
+          <!-- Reports Comments -->
+          <div class="space-y-2">
+            <span class="text-xs text-slate-400 font-semibold block">Recent Abuse Reports (${reports.length}):</span>
+            ${reports.length > 0 ? `
+              <div class="space-y-2 max-h-48 overflow-y-auto pr-1 select-text">
+                ${reports.map(rep => {
+                  const date = new Date(rep.reportedAt).toLocaleDateString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+                  const catBadges = (rep.categories || []).map(catId => {
+                    const name = categoriesMap[catId] || `Cat ${catId}`;
+                    return `<span class="bg-slate-800 text-slate-300 text-[9px] px-1 py-0.5 rounded mr-1 font-mono">${this.escapeHtml(name)}</span>`;
+                  }).join('');
+                  
+                  return `
+                    <div class="bg-black/20 p-2.5 rounded border border-white/5 space-y-1.5">
+                      <div class="flex justify-between items-center text-[10px]">
+                        <span class="text-slate-400 font-mono">${date}</span>
+                        <div class="flex flex-wrap">${catBadges}</div>
+                      </div>
+                      <p class="text-xs text-slate-300 font-sans italic whitespace-pre-wrap break-all">${this.escapeHtml(rep.comment || '(No comment)')}</p>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            ` : `
+              <div class="text-xs text-green-400">No recent reports found in AbuseIPDB.</div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+    
+    if (sourceName === 'urlscan') {
+      const page = rawData.page || {};
+      const stats = rawData.stats || {};
+      const task = rawData.task || {};
+      const verdicts = rawData.verdicts?.overall || {};
+      
+      const screenshot = rawData.screenshot || task.screenshotURL || '';
+      
+      return `
+        <div class="space-y-4">
+          <!-- Verdict info -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs text-slate-400">Status:</span>
+              <span class="text-xs font-bold px-2 py-0.5 rounded ${verdicts.malicious ? 'bg-red-950 text-red-400 border border-red-500/30' : 'bg-green-950 text-green-400 border border-green-500/30'}">
+                ${verdicts.malicious ? 'Malicious' : 'Clean'}
+              </span>
+            </div>
+            ${verdicts.score !== undefined ? `
+              <div class="text-xs">
+                <span class="text-slate-400">Risk Score:</span>
+                <span class="font-mono font-bold ${verdicts.score > 50 ? 'text-red-400' : 'text-green-400'}">${verdicts.score}/100</span>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Page Details Grid -->
+          <div class="grid grid-cols-2 gap-3 text-xs bg-slate-900/40 p-3 rounded-lg border border-white/5">
+            <div class="col-span-2">
+              <span class="text-slate-500 block">Scan URL</span>
+              <span class="text-slate-200 font-semibold font-mono truncate block select-all" title="${this.escapeHtml(task.url || 'N/A')}">${this.escapeHtml(task.url || 'N/A')}</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Domain</span>
+              <span class="text-slate-200 font-semibold truncate block" title="${this.escapeHtml(page.domain || 'N/A')}">${this.escapeHtml(page.domain || 'N/A')}</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Server IP</span>
+              <span class="text-slate-200 font-semibold font-mono block">${this.escapeHtml(page.ip || 'N/A')}</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">ASN Name</span>
+              <span class="text-slate-200 font-semibold truncate block" title="${this.escapeHtml(page.asnname || 'N/A')}">${this.escapeHtml(page.asnname || 'N/A')}</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Location</span>
+              <span class="text-slate-200 font-semibold block">${this.escapeHtml(page.country || 'N/A')} (${this.escapeHtml(page.city || 'N/A')})</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Unique IPs</span>
+              <span class="text-slate-200 font-semibold block">${stats.uniqIPs ?? 0} IPs</span>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Console Warnings</span>
+              <span class="text-slate-200 font-semibold block">${stats.consoleMsgs ?? 0} / ${stats.securityWarnings ?? 0}</span>
+            </div>
+          </div>
+
+          <!-- Screenshot preview if available -->
+          ${screenshot ? `
+            <div class="space-y-1">
+              <span class="text-xs text-slate-400 block">Site Screenshot:</span>
+              <div class="rounded-lg overflow-hidden border border-white/10 shadow-lg bg-black/40">
+                <img src="${this.escapeHtml(screenshot)}" alt="Scan screenshot" class="w-full h-auto object-cover max-h-48 cursor-zoom-in" onclick="window.open('${this.escapeHtml(screenshot)}', '_blank')"/>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    return '<div class="text-slate-400 text-xs">Unknown source type.</div>';
+  },
+
   /**
    * Show loading state for a source
    * @param {string} sourceName - 'virustotal', 'abuseipdb', or 'urlscan'
