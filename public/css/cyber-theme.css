@@ -1590,6 +1590,17 @@ body.authenticated #guest-notice {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     box-shadow: none !important;
 }
+.ai-send-btn.ai-stop-active {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #f87171 !important;
+    border-color: rgba(239, 68, 68, 0.4) !important;
+}
+.ai-send-btn.ai-stop-active:hover {
+    background: rgba(239, 68, 68, 0.3) !important;
+    color: #ffffff !important;
+    border-color: rgba(239, 68, 68, 0.7) !important;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.45) !important;
+}
 .ai-send-btn:hover:not(:disabled) {
     background: rgba(59, 130, 246, 0.25) !important;
     color: #ffffff !important;

@@ -14207,6 +14207,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
   // ─── STATE ──────────────────────────────────────────────────────
   let conversationHistory = []; // { role: "user"|"assistant", content: string }
   let isWaiting = false;
+  let activeAbortController = null;
   let currentChatId = null;
   let chatSessions = {};
 
@@ -14966,8 +14967,13 @@ Always align dashboard actions with what the user requests! Explain briefly what
 
   // ─── SEND MESSAGE ───────────────────────────────────────────────
   async function handleSend() {
+    if (isWaiting) {
+      stopGeneration();
+      return;
+    }
+
     const text = inputEl.value.trim();
-    if (!text || isWaiting) return;
+    if (!text) return;
 
     if (!currentChatId) {
       createNewChatSession(text);
@@ -15000,6 +15006,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
     const typingId = showTyping();
     setWaiting(true);
     let streamMsg = null;
+    activeAbortController = new AbortController();
 
     try {
       let reply;
@@ -15089,8 +15096,20 @@ Always align dashboard actions with what the user requests! Explain briefly what
       }
       console.error("[AI Assistant] Error handling query:", err);
 
-      // Distinguish rate-limit errors from general failures
-      if (err && err.name === "RateLimitError") {
+      // Handle user interruption
+      if (err && err.name === "AbortError") {
+        appendMessage(
+          "ai",
+          `<div class="flex items-start gap-2 bg-slate-500/10 border border-slate-500/20 p-3 rounded-lg mb-3">
+            <span class="material-symbols-outlined text-slate-400 flex-shrink-0 mt-0.5 text-[20px]">stop_circle</span>
+            <div>
+              <strong class="text-slate-400 block text-xs">Response Interrupted</strong>
+              <div class="mt-1 text-slate-400 text-xs">Generation was stopped by the user.</div>
+            </div>
+          </div>`
+        );
+        conversationHistory.push({ role: "assistant", content: `[Response stopped by user]` });
+      } else if (err && err.name === "RateLimitError") {
         const retrySeconds = err.retryAfter ? Math.ceil(err.retryAfter) : 30;
         appendMessage(
           "ai",
@@ -15129,6 +15148,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
         renderChatHistoryList();
       }
     } finally {
+      activeAbortController = null;
       setWaiting(false);
     }
   }
@@ -15216,7 +15236,8 @@ Always align dashboard actions with what the user requests! Explain briefly what
         "HTTP-Referer": window.location.href,
         "X-Title": "CyberGuard"
       },
-      body
+      body,
+      signal: activeAbortController ? activeAbortController.signal : undefined
     };
 
     const res = await fetchWithRetry(url, fetchOptions, 3);
@@ -15300,7 +15321,8 @@ Always align dashboard actions with what the user requests! Explain briefly what
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`
       },
-      body
+      body,
+      signal: activeAbortController ? activeAbortController.signal : undefined
     }, 3);
 
     const data = await res.json();
@@ -15353,7 +15375,8 @@ Always align dashboard actions with what the user requests! Explain briefly what
     return text.replace(/\[\[ACTION:.*?\]\]/g, "");
   }
 
-  function generatePDFReport() {
+  async function generatePDFReport() {
+    // Open the window synchronously first to bypass browser popup blockers
     const reportWindow = window.open("", "_blank");
     if (!reportWindow) {
       if (window.CyberNotify) {
@@ -15364,47 +15387,210 @@ Always align dashboard actions with what the user requests! Explain briefly what
       return;
     }
 
-    const threats = (resultsData || []).filter(r => r.status === "threat");
-    const warnings = (resultsData || []).filter(r => r.status === "warning");
-    const safe = (resultsData || []).filter(r => r.status === "safe");
-
-    const threatsHtml = threats.map(r => `
-      <div class="card threat">
-        <div class="card-header">
-          <span class="badge threat">CRITICAL THREAT</span>
-          <strong>${r.tool}</strong>
+    // Show a high-fidelity loader inside the popup window while fetching findings
+    reportWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Generating CyberGuard Report...</title>
+        <style>
+          body {
+            background: #090d16;
+            color: #f8fafc;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+          }
+          .loader-container {
+            text-align: center;
+          }
+          .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(147, 51, 234, 0.2);
+            border-top-color: #a855f7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+          }
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+          h2 { margin: 0 0 8px; font-weight: 600; color: #a855f7; }
+          p { margin: 0; color: #94a3b8; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="loader-container">
+          <div class="spinner"></div>
+          <h2>Generating CyberGuard Security Report</h2>
+          <p>Gathering active scan results and project findings...</p>
         </div>
-        <p class="card-msg">${r.message}</p>
-        ${r.details ? `<pre class="card-details">${typeof r.details === 'string' ? r.details : JSON.stringify(r.details, null, 2)}</pre>` : ''}
-      </div>
-    `).join("");
+      </body>
+      </html>
+    `);
+    reportWindow.document.close();
 
-    const warningsHtml = warnings.map(r => `
-      <div class="card warning">
-        <div class="card-header">
-          <span class="badge warning">WARNING</span>
-          <strong>${r.tool}</strong>
-        </div>
-        <p class="card-msg">${r.message}</p>
-        ${r.details ? `<pre class="card-details">${typeof r.details === 'string' ? r.details : JSON.stringify(r.details, null, 2)}</pre>` : ''}
-      </div>
-    `).join("");
+    function escapeHtml(text) {
+      if (text == null) return "";
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
 
-    const safeHtml = safe.map(r => `
-      <div class="card safe">
-        <div class="card-header">
-          <span class="badge safe">VERIFIED SAFE</span>
-          <strong>${r.tool}</strong>
+    const threats = [];
+    const warnings = [];
+    const safe = [];
+    let reportTitleTarget = currentScanTarget || "Global Dashboard Workspace";
+
+    // 1. Gather resultsData (local web scanning results)
+    const localThreats = (resultsData || []).filter(r => r.status === "threat");
+    const localWarnings = (resultsData || []).filter(r => r.status === "warning");
+    const localSafe = (resultsData || []).filter(r => r.status === "safe");
+
+    localThreats.forEach(r => {
+      threats.push({
+        type: "Local Scan",
+        tool: r.tool || "Web Security Analyzer",
+        title: r.message || "Critical threat detected",
+        description: r.details || "Active threat identified on targets.",
+        severity: "CRITICAL THREAT"
+      });
+    });
+
+    localWarnings.forEach(r => {
+      warnings.push({
+        type: "Local Scan",
+        tool: r.tool || "Web Security Analyzer",
+        title: r.message || "Warning detected",
+        description: r.details || "Security warning that should be reviewed.",
+        severity: "WARNING"
+      });
+    });
+
+    localSafe.forEach(r => {
+      safe.push({
+        type: "Local Scan",
+        tool: r.tool || "Web Security Analyzer",
+        title: r.message || "Verified Safe",
+        description: r.details || "No anomalies detected.",
+        severity: "VERIFIED SAFE"
+      });
+    });
+
+    // 2. Fetch project findings from backend dynamically
+    if (window.projectManager && window.projectManager.projects && window.projectManager.projects.length > 0) {
+      try {
+        const projects = window.projectManager.projects;
+        const fetchPromises = projects.map(async (proj) => {
+          let allProjFindings = [];
+          let page = 1;
+          let lastPage = 1;
+
+          while (page <= lastPage) {
+            try {
+              const res = await window.apiClient.get(`/projects/${proj.id}/findings?page=${page}`);
+              let arr = [];
+              let lastPageVal = page;
+
+              if (Array.isArray(res)) {
+                arr = res;
+              } else if (res && res.findings) {
+                const findingsObj = res.findings;
+                if (Array.isArray(findingsObj.data)) {
+                  arr = findingsObj.data;
+                  lastPageVal = findingsObj.last_page || page;
+                } else if (Array.isArray(findingsObj)) {
+                  arr = findingsObj;
+                }
+              } else if (res && res.data) {
+                arr = Array.isArray(res.data) ? res.data : [];
+                lastPageVal = res.last_page || page;
+              }
+
+              allProjFindings = allProjFindings.concat(arr);
+              if (lastPageVal > lastPage) lastPage = lastPageVal;
+              if (page >= lastPage) break;
+              page++;
+            } catch (err) {
+              console.error(`[PDF Generator] Fetch findings failed for project ${proj.id} page ${page}:`, err);
+              break;
+            }
+          }
+          return allProjFindings.map(f => ({ ...f, projectName: proj.name }));
+        });
+
+        const allFindingsArrays = await Promise.all(fetchPromises);
+        const allProjectFindings = allFindingsArrays.flat();
+
+        allProjectFindings.forEach(f => {
+          const status = (f.status || "open").toLowerCase();
+          const sev = (f.severity || "info").toLowerCase();
+          const cve = f.cve_id ? ` [${f.cve_id}]` : "";
+          const cvss = f.cvss_score ? ` (CVSS: ${f.cvss_score})` : "";
+          
+          const item = {
+            type: `Project: ${f.projectName}`,
+            tool: (f.tool || f.driver_id || "Vulnerability Scanner") + cve + cvss,
+            title: f.title || "Untitled Finding",
+            description: f.description || f.details || "No details provided.",
+            severity: sev.toUpperCase()
+          };
+
+          if (status === "open" || status === "in_progress") {
+            if (sev === "critical" || sev === "high") {
+              threats.push(item);
+            } else if (sev === "medium" || sev === "low") {
+              warnings.push(item);
+            } else {
+              safe.push(item);
+            }
+          } else {
+            // Resolved or false positive goes into safe/info list
+            item.severity = `RESOLVED (${item.severity})`;
+            safe.push(item);
+          }
+        });
+
+        if (projects.length === 1) {
+          reportTitleTarget = `${projects[0].name} (Project Workspace)`;
+        } else {
+          reportTitleTarget = `${projects.length} Active Projects Workspace`;
+        }
+      } catch (e) {
+        console.error("[PDF Generator] Error fetching project findings:", e);
+      }
+    }
+
+    const renderCard = (item, cls) => `
+      <div class="card ${cls}">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <span class="badge ${cls}">${escapeHtml(item.severity)}</span>
+            <strong style="margin-left: 8px;">${escapeHtml(item.tool)}</strong>
+          </div>
+          <span style="font-size: 11px; font-weight: 600; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">${escapeHtml(item.type)}</span>
         </div>
-        <p class="card-msg">${r.message}</p>
+        <p class="card-msg" style="margin-top: 8px; font-weight: 600;">${escapeHtml(item.title)}</p>
+        <p class="card-desc" style="margin-top: 6px; font-size: 13px; color: #475569; white-space: pre-wrap; line-height: 1.45;">${escapeHtml(item.description)}</p>
       </div>
-    `).join("");
+    `;
+
+    const threatsHtml = threats.map(r => renderCard(r, "threat")).join("");
+    const warningsHtml = warnings.map(r => renderCard(r, "warning")).join("");
+    const safeHtml = safe.map(r => renderCard(r, "safe")).join("");
 
     const html = `
 <!DOCTYPE html>
 <html>
 <head>
-  <title>CyberGuard Vulnerability Report - ${currentScanTarget || 'Telemetry'}</title>
+  <title>CyberGuard Vulnerability Report - ${escapeHtml(reportTitleTarget)}</title>
   <style>
     body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -15506,16 +15692,6 @@ Always align dashboard actions with what the user requests! Explain briefly what
       font-size: 14px;
       color: #334155;
     }
-    .card-details {
-      background: #0f172a;
-      color: #f8fafc;
-      padding: 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      overflow-x: auto;
-      margin: 12px 0 0 0;
-      font-family: monospace;
-    }
     @media print {
       body { padding: 0; background: none; }
       .print-btn { display: none; }
@@ -15526,7 +15702,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
   <div class="header">
     <div>
       <h1>CyberGuard Assessment Report</h1>
-      <p>Target: <strong>${currentScanTarget || 'Global Dashboard Workspace'}</strong> | Generated: ${new Date().toLocaleString()}</p>
+      <p>Target: <strong>${escapeHtml(reportTitleTarget)}</strong> | Generated: ${new Date().toLocaleString()}</p>
     </div>
     <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
   </div>
@@ -15547,17 +15723,17 @@ Always align dashboard actions with what the user requests! Explain briefly what
   </div>
 
   ${threats.length > 0 ? `
-    <h2 class="section-title">Critical Threats</h2>
+    <h2 class="section-title">Critical Threats (${threats.length})</h2>
     ${threatsHtml}
   ` : ''}
 
   ${warnings.length > 0 ? `
-    <h2 class="section-title">Warnings & Recommendations</h2>
+    <h2 class="section-title">Warnings & Recommendations (${warnings.length})</h2>
     ${warningsHtml}
   ` : ''}
 
   ${safe.length > 0 ? `
-    <h2 class="section-title">Verified Safe Elements</h2>
+    <h2 class="section-title">Verified Safe Elements (${safe.length})</h2>
     ${safeHtml}
   ` : ''}
 
@@ -15570,6 +15746,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
 </html>
     `;
 
+    reportWindow.document.open();
     reportWindow.document.write(html);
     reportWindow.document.close();
   }
@@ -16634,8 +16811,29 @@ Or save your OpenRouter key in my settings configurations at the top right!`;
 
   function setWaiting(val) {
     isWaiting = val;
-    sendBtn.disabled = val;
-    inputEl.disabled = val;
+    
+    const SEND_ICON_HTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" /></svg>`;
+    const STOP_ICON_HTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px;"><rect x="5" y="5" width="14" height="14" rx="2" /></svg>`;
+
+    if (val) {
+      sendBtn.classList.add("ai-stop-active");
+      sendBtn.innerHTML = STOP_ICON_HTML;
+      sendBtn.title = "Stop generating";
+      sendBtn.setAttribute("aria-label", "Stop generating");
+    } else {
+      sendBtn.classList.remove("ai-stop-active");
+      sendBtn.innerHTML = SEND_ICON_HTML;
+      sendBtn.title = "Send message";
+      sendBtn.setAttribute("aria-label", "Send message");
+    }
+  }
+
+  function stopGeneration() {
+    if (activeAbortController) {
+      activeAbortController.abort();
+      activeAbortController = null;
+    }
+    setWaiting(false);
   }
 
   // Premium Code Highlighter
