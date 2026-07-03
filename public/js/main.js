@@ -14056,6 +14056,71 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem("cg_ai_temp", "0.7");
   }
 
+  // ─── LOCAL SECURITY KNOWLEDGE BASE (RAG-LITE) ───────────────────
+  const SECURITY_KNOWLEDGE_BASE = {
+    ssl_tls: {
+      title: "SSL/TLS Hardening Guidance",
+      keywords: ["ssl", "tls", "certificate", "https", "cipher", "tls1.0", "tls1.1", "tls1.2", "tls1.3", "encryption"],
+      content: "SSL/TLS Hardening: Exclusively enforce TLS 1.2 and TLS 1.3. Fully deprecate SSLv3, TLS 1.0, and TLS 1.1 to mitigate POODLE and BEAST attacks. Use secure cipher suites prioritizing ephemeral Diffie-Hellman keys for forward secrecy (e.g., ECDHE-RSA-AES128-GCM-SHA256). Ensure SSL certificates are kept valid, redirect all Port 80 HTTP traffic to Port 443 HTTPS, and enable HSTS (HTTP Strict Transport Security) with preloading."
+    },
+    phishing: {
+      title: "Phishing Detection & Analysis",
+      keywords: ["phish", "phishing", "spoof", "homoglyph", "typosquat", "suspicious domain", "url analysis"],
+      content: "Phishing & Spoofing Indicators: Typo-spoofing uses lookalike characters (homoglyphs) to trick users (e.g., using Cyrillic 'а' in place of Latin 'a'). Urgent calls-to-action (e.g., 'verify account within 24 hours') create stress to bypass skepticism. Malicious links lack HTTPS or use unusual TLDs (.xyz, .top). Always inspect URL structures, check certificate domains, and query VirusTotal or URLScan.io for reputation scores."
+    },
+    jwt: {
+      title: "JWT Security Standards",
+      keywords: ["jwt", "token", "json web token", "hs256", "rs256", "signature", "payload", "claims", "alg none"],
+      content: "JWT Security Best Practices: Never accept 'alg': 'none' headers. Prefer asymmetric RS256/ES256 algorithms over symmetric HS256 to keep signing keys private to authorization servers. When HS256 is used, enforce high-entropy secrets (256+ bits). Always validate standard claims: expiration ('exp'), not-before ('nbf'), and audience ('aud'). Store JWT tokens securely (HttpOnly cookies) rather than localStorage to prevent XSS theft."
+    },
+    ports: {
+      title: "Port Hardening Guide",
+      keywords: ["port", "ports", "scan", "scanner", "nmap", "tcp", "udp", "service", "ftp", "ssh", "telnet", "mysql", "3306", "22", "21", "23"],
+      content: "Port Security Hardening: Close all unused ports. Enforce key-based authentication for SSH on Port 22 and disable password logins. Deprecate cleartext protocols: replace FTP (Port 21) and Telnet (Port 23) with SFTP/SSH. Bind databases (e.g., MySQL on Port 3306) strictly to localhost (127.0.0.1) and never expose database ports publicly. Use firewalls and fail2ban to rate-limit access."
+    },
+    crypto: {
+      title: "Cryptography & Hashing",
+      keywords: ["hash", "hashing", "crypto", "md5", "sha1", "sha256", "entropy", "password strength", "salt", "bcrypt", "argon2"],
+      content: "Hashing & Cryptographic Guidance: MD5 and SHA-1 have known collision vulnerabilities; never use them for integrity or password storage. For file integrity, use SHA-256 or SHA-512. For password hashing, enforce slow salted hashes like Argon2id or bcrypt to block GPU brute-force attacks. Calculate password strength in entropy bits: S = L * log2(N), aiming for a minimum of 80 bits (military grade)."
+    },
+    threat_intel: {
+      title: "Threat Intelligence Guidance",
+      keywords: ["threat", "intel", "blacklist", "abuse", "abuseipdb", "virustotal", "ip reputation", "reputation", "indicator", "ioc"],
+      content: "Threat Intelligence & IP Reputation: Check indicators of compromise (IoCs) against aggregator databases like AbuseIPDB, VirusTotal, and URLScan.io. An IP address with high abuse reports or detection counts should be blacklisted in firewalls. Monitor egress traffic for connections to known malicious Command & Control (C2) servers or domains listed in threat feeds."
+    },
+    owasp: {
+      title: "OWASP Top 10 Guide",
+      keywords: ["owasp", "top 10", "vulnerability", "xss", "ssrf", "injection", "broken access", "misconfiguration"],
+      content: "OWASP Top 10 Risk Remediation:\n1. Broken Access Control: Enforce strict server-side authorization checks.\n2. Cryptographic Failures: Protect data-at-rest and in-transit with modern TLS/AES.\n3. Injection (SQLi, XSS): Enforce parametrized queries and sanitize/contextually-encode output.\n4. Insecure Design: Implement threat modeling.\n5. Security Misconfiguration: Hardened default configs.\n6. Vulnerable Components: Scan dependencies.\n7. Identification Failures: Multi-factor authentication.\n8. Integrity Failures: Digital signatures on updates.\n9. Logging Failures: Centralized real-time alerts.\n10. SSRF: Validate destination hostnames against a strict whitelist."
+    }
+  };
+
+  function retrieveKnowledgeContext(query) {
+    if (!query) return "";
+    const q = query.toLowerCase();
+    let bestMatch = null;
+    let maxScore = 0;
+
+    for (const key in SECURITY_KNOWLEDGE_BASE) {
+      const entry = SECURITY_KNOWLEDGE_BASE[key];
+      let score = 0;
+      for (const kw of entry.keywords) {
+        if (q.includes(kw)) {
+          score += 1;
+        }
+      }
+      if (score > maxScore) {
+        maxScore = score;
+        bestMatch = entry;
+      }
+    }
+
+    if (bestMatch && maxScore >= 1) {
+      return `\n\n[RELEVANT SECURITY REFERENCE KNOWLEDGE: ${bestMatch.title}]\n${bestMatch.content}`;
+    }
+    return "";
+  }
+
   const SYSTEM_PROMPT = `You are CyberGuard AI, a premium, elite cybersecurity copilot built directly into the CyberGuard Security Dashboard.
 Your primary role is to help security engineers, developers, and administrators understand and operate the dashboard's tools:
 - Security Dashboard: Main telemetry, charts, and metrics overview.
@@ -14099,10 +14164,14 @@ You can operate the dashboard for the user! To perform dashboard operations, app
    - isSelected is "true" to select it, or "false" to deselect it.
 7. Select ONLY one tool in its tab (deselecting all other tools in that tab): [[ACTION: select_only_tool(toolId)]]
    - toolId is one of the tool IDs listed above.
+8. Chain multiple actions sequentially with visual delays: [[ACTION: chain_workflow(jsonString)]]
+   - jsonString is a JSON array of step objects, e.g., [{"action": "switch_tab", "args": ["web-security"]}, {"action": "select_only_tool", "args": ["phishing-btn"]}, {"action": "run_scan", "args": ["web", "example.com"]}]
+9. Generate PDF report from findings: [[ACTION: generate_report()]]
 
 Examples:
 - "Sure! I will switch you to the JWT tab now. [[ACTION: switch_tab(\"jwt-debugger\")]]"
 - "Let me load up example.com and run a web scan for you. [[ACTION: run_scan(\"web\", \"example.com\")]]"
+- "I will compile a comprehensive vulnerability assessment report for you. [[ACTION: generate_report()]]"
 - "I'll run a phishing analysis for example.com. I'm switching to the Web Auditing tab, selecting only Phishing, and starting the scan. [[ACTION: switch_tab(\"web-security\")]] [[ACTION: select_only_tool(\"phishing-btn\")]] [[ACTION: run_scan(\"web\", \"example.com\")]]"
 
 Always align dashboard actions with what the user requests! Explain briefly what action you are taking. Use the dashboard state context provided in the prompt to make intelligent context-aware replies.`;
@@ -14425,8 +14494,17 @@ Always align dashboard actions with what the user requests! Explain briefly what
       const threats = resultsData.filter(r => r.status === "threat").length;
       const warnings = resultsData.filter(r => r.status === "warning").length;
       const safe = resultsData.filter(r => r.status === "safe").length;
-      const list = resultsData.slice(0, 10).map(r => `[${r.status.toUpperCase()}] ${r.tool}: ${r.message.slice(0, 80)}`).join("\n");
-      findingsDetails = `Current findings count: ${resultsData.length} (${threats} threats, ${warnings} warnings, ${safe} safe). Visible details:\n${list}`;
+      const list = resultsData.slice(0, 20).map(r => {
+        let detailStr = `[${r.status.toUpperCase()}] ${r.tool}: ${r.message}`;
+        if (r.details) {
+          try {
+            const rawDetails = typeof r.details === "string" ? r.details : JSON.stringify(r.details);
+            detailStr += `\n  Details: ${rawDetails.slice(0, 300)}`;
+          } catch (e) {}
+        }
+        return detailStr;
+      }).join("\n");
+      findingsDetails = `Current findings count: ${resultsData.length} (${threats} threats, ${warnings} warnings, ${safe} safe). Structured findings details:\n${list}`;
     }
 
     let userDetails = "Guest User (Offline sandbox)";
@@ -14440,13 +14518,43 @@ Always align dashboard actions with what the user requests! Explain briefly what
       if (!pane.classList.contains("hidden")) currentTab = pane.id;
     });
 
+    let activeTabInputs = "";
+    if (currentTab === "jwt-debugger") {
+      const jwtToken = document.getElementById("jwt-decoder-token")?.value || "";
+      const jwtSecret = document.getElementById("jwt-decoder-secret")?.value || "";
+      if (jwtToken) {
+        activeTabInputs += `\n- Current input JWT Token in Decoder: ${jwtToken.slice(0, 200)}...`;
+      }
+      if (jwtSecret) {
+        activeTabInputs += `\n- Current input JWT Secret in Decoder: [Configured]`;
+      }
+    } else if (currentTab === "hash-tools") {
+      const hashInput = document.getElementById("ht-hash-input")?.value || "";
+      const pwdInput = document.getElementById("ht-password-input")?.value || "";
+      const idInput = document.getElementById("ht-identifier-input")?.value || "";
+      if (hashInput) {
+        activeTabInputs += `\n- Current Hashing generator input: "${hashInput}"`;
+      }
+      if (pwdInput) {
+        activeTabInputs += `\n- Current Password strength analyzer input: "${pwdInput}"`;
+      }
+      if (idInput) {
+        activeTabInputs += `\n- Current Hash Identifier input: "${idInput}"`;
+      }
+    } else if (currentTab === "threat-intel") {
+      const threatInput = document.getElementById("threat-intel-search-input")?.value || "";
+      if (threatInput) {
+        activeTabInputs += `\n- Current Threat Intel Search target: "${threatInput}"`;
+      }
+    }
+
     return `
 [REAL-TIME DASHBOARD CONTEXT]
 - Active Tab: ${currentTab}
 - ${userDetails}
 - ${targetDetails}
 - ${projectDetails}
-- ${findingsDetails}
+- ${findingsDetails}${activeTabInputs}
 `;
   }
 
@@ -14465,7 +14573,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
     const masked = keyInfo.masked || "";
     
     if (hasKey) {
-      keyInput.placeholder = masked || "Configured (API Key)";
+      keyInput.placeholder = "Enter new key to update...";
       keyInput.value = "";
     } else {
       keyInput.placeholder = "Enter API key...";
@@ -14746,17 +14854,113 @@ Always align dashboard actions with what the user requests! Explain briefly what
       });
     }
 
-    // Suggestion chips
-    document.querySelectorAll(".ai-chip").forEach((chip) => {
-      chip.addEventListener("click", () => {
-        const q = chip.dataset.question;
-        if (q && !isWaiting) {
-          inputEl.value = q;
-          handleSend();
-          // Hide chips container after sending
-          if (suggestEl) suggestEl.parentElement.style.display = "none";
-        }
+    // ─── DYNAMIC SUGGESTION CHIPS ──────────────────────────────────
+    const tabChips = {
+      "security-dashboard": [
+        { icon: "search", label: "Available tools", question: "What tools are available on this dashboard?" },
+        { icon: "analytics", label: "Summarize dashboard metrics", question: "Explain the active scan metrics and current security posture on my dashboard" }
+      ],
+      "osint": [
+        { icon: "explore", label: "Run all OSINT", question: "Run all OSINT recon tools on my current target" },
+        { icon: "fingerprint", label: "Wayback Archive check", question: "Search the Wayback Machine archive for history on example.com" }
+      ],
+      "web-security": [
+        { icon: "verified_user", label: "Check SSL Certificate", question: "Check the SSL/TLS configuration of my current target" },
+        { icon: "phishing", label: "Phishing vulnerability analysis", question: "Run phishing audit and check reputation for example.com" }
+      ],
+      "hash-tools": [
+        { icon: "lock", label: "Hash generator help", question: "How do I generate SHA-256 and MD5 hashes here?" },
+        { icon: "password", label: "Calculate password entropy", question: "How is the password strength score and bits of entropy calculated?" }
+      ],
+      "jwt-debugger": [
+        { icon: "fingerprint", label: "Decode active JWT token", question: "Decode the current JWT token, verify its claims, and check for signature anomalies" },
+        { icon: "edit", label: "Sign new custom JWT", question: "How do I sign a new custom JWT using HS256 algorithm?" }
+      ],
+      "threat-intel": [
+        { icon: "shield_lock", label: "IP reputation lookup", question: "Perform a Threat Intelligence lookup on IP 8.8.8.8" },
+        { icon: "history", label: "AbuseIPDB check history", question: "Show me how to search the blacklists history feed" }
+      ],
+      "projects": [
+        { icon: "assignment", label: "Manage security projects", question: "How do I create projects, add scan target hosts, and invite team collaborators?" }
+      ]
+    };
+
+    function renderDynamicSuggestionChips() {
+      if (!suggestEl) return;
+      suggestEl.innerHTML = "";
+
+      let currentTab = "security-dashboard";
+      document.querySelectorAll(".tab-pane").forEach(pane => {
+        if (!pane.classList.contains("hidden")) currentTab = pane.id;
       });
+
+      const target = currentScanTarget || "";
+      const chipsList = [];
+
+      // Check if we have active scan findings
+      if (resultsData && resultsData.length > 0) {
+        chipsList.push({
+          icon: "summarize",
+          label: "Summarize findings",
+          question: "Summarize the active threat scan results findings table and prioritize vulnerabilities."
+        });
+      }
+
+      const defaultChips = [
+        { icon: "search", label: "Available tools", question: "What tools are available on this dashboard?" }
+      ];
+
+      const specificChips = tabChips[currentTab] || defaultChips;
+      chipsList.push(...specificChips);
+
+      // Dynamic target replacement in questions
+      const finalChips = chipsList.slice(0, 5).map(chip => {
+        let q = chip.question;
+        let label = chip.label;
+        if (target) {
+          q = q.replace(/example\.com/g, target).replace(/current target/g, target);
+          label = label.replace(/current target/g, target);
+        }
+        return { ...chip, question: q, label };
+      });
+
+      finalChips.forEach(chip => {
+        const btn = document.createElement("button");
+        btn.className = "ai-chip";
+        btn.type = "button";
+        btn.dataset.question = chip.question;
+        
+        const span = document.createElement("span");
+        span.className = "material-symbols-outlined";
+        span.textContent = chip.icon;
+
+        btn.appendChild(span);
+        btn.appendChild(document.createTextNode(" " + chip.label));
+
+        btn.addEventListener("click", () => {
+          if (!isWaiting) {
+            inputEl.value = chip.question;
+            handleSend();
+            if (suggestEl) suggestEl.parentElement.style.display = "none";
+          }
+        });
+
+        suggestEl.appendChild(btn);
+      });
+    }
+
+    // Initialize chips
+    renderDynamicSuggestionChips();
+
+    // Hook listeners
+    document.addEventListener("tabSwitched", () => {
+      renderDynamicSuggestionChips();
+    });
+    document.addEventListener("cyberguard:scanResult", () => {
+      renderDynamicSuggestionChips();
+    });
+    document.addEventListener("cyberguard:scanStart", () => {
+      renderDynamicSuggestionChips();
     });
   }
 
@@ -14795,6 +14999,7 @@ Always align dashboard actions with what the user requests! Explain briefly what
     // Show typing indicators
     const typingId = showTyping();
     setWaiting(true);
+    let streamMsg = null;
 
     try {
       let reply;
@@ -14823,20 +15028,36 @@ Always align dashboard actions with what the user requests! Explain briefly what
       if (isOfflineMode) {
         // Run interactive offline fallback
         reply = await processOfflineMessage(text);
+        removeTyping(typingId);
       } else {
+        const knowledgeCtx = retrieveKnowledgeContext(text);
+
         // Query official REST integrations
         if (prov === "openrouter") {
           const sysContext = gatherSystemContext();
-          const targetSystemPrompt = `${fullSystemPrompt}\n\n${sysContext}`;
-          reply = await callOpenRouterAPI(text, targetSystemPrompt, activeKey, activeModel, temp);
+          const targetSystemPrompt = `${fullSystemPrompt}\n\n${sysContext}${knowledgeCtx}`;
+          reply = await callOpenRouterAPI(text, targetSystemPrompt, activeKey, activeModel, temp, (chunkText) => {
+            if (typingId) {
+              removeTyping(typingId);
+            }
+            if (!streamMsg) {
+              streamMsg = appendStreamingMessage("ai");
+            }
+            const cleanChunk = chunkText.replace(/\[\[ACTION:.*?\]\]/g, "").replace(/\[\[ACTION:.*$/g, "");
+            const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}\uFE0F\uFE0E]/gu;
+            const finalClean = cleanChunk.replace(emojiRegex, "");
+            streamMsg.update(finalClean);
+          });
+          if (typingId) {
+            removeTyping(typingId);
+          }
         } else if (prov === "groq") {
           const sysContext = gatherSystemContext();
-          const targetSystemPrompt = `${fullSystemPrompt}\n\n${sysContext}`;
+          const targetSystemPrompt = `${fullSystemPrompt}\n\n${sysContext}${knowledgeCtx}`;
           reply = await callGroqAPI(text, targetSystemPrompt, activeKey, activeModel, temp);
+          removeTyping(typingId);
         }
       }
-
-      removeTyping(typingId);
 
       // Process autopilot actions embedded in text
       const parsedReply = parseAndExecuteAutopilot(reply);
@@ -14846,7 +15067,11 @@ Always align dashboard actions with what the user requests! Explain briefly what
       const cleanReply = parsedReply.replace(emojiRegex, "");
 
       // Render response
-      appendMessage("ai", cleanReply);
+      if (streamMsg) {
+        streamMsg.finish(cleanReply);
+      } else {
+        appendMessage("ai", cleanReply);
+      }
       conversationHistory.push({ role: "assistant", content: cleanReply });
 
       // Save state
@@ -14858,7 +15083,10 @@ Always align dashboard actions with what the user requests! Explain briefly what
       }
 
     } catch (err) {
-      removeTyping(typingId);
+      if (typingId) removeTyping(typingId);
+      if (streamMsg && streamMsg.element) {
+        streamMsg.element.remove();
+      }
       console.error("[AI Assistant] Error handling query:", err);
       
       // Attempt local offline fallback on failure
@@ -14890,19 +15118,21 @@ Always align dashboard actions with what the user requests! Explain briefly what
   }
 
   // ─── DYNAMIC REST API CALLS ──────────────────────────────────────
-  async function callOpenRouterAPI(message, systemPrompt, apiKey, model, temp) {
+  async function callOpenRouterAPI(message, systemPrompt, apiKey, model, temp, onChunk) {
     const url = "https://openrouter.ai/api/v1/chat/completions";
     
     const messages = [
       { role: "system", content: systemPrompt },
-      ...conversationHistory.slice(-10)
+      ...conversationHistory.slice(-20)
     ];
 
+    const isStream = typeof onChunk === "function";
     const body = JSON.stringify({
       model: model || "openai/gpt-oss-120b:free",
       messages,
       temperature: temp,
-      max_tokens: 1024
+      max_tokens: model.includes(":free") ? 2048 : 4096,
+      stream: isStream
     });
 
     const res = await fetch(url, {
@@ -14921,11 +15151,62 @@ Always align dashboard actions with what the user requests! Explain briefly what
       throw new Error(err?.error?.message || `HTTP ${res.status}`);
     }
 
-    const data = await res.json();
-    return (
-      data.choices?.[0]?.message?.content?.trim() ||
-      "OpenRouter failed to provide a response candidate."
-    );
+    if (isStream && res.body && typeof res.body.getReader === "function") {
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+      let fullResponseText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop(); // Keep the last incomplete line in the buffer
+
+        for (const line of lines) {
+          const cleanLine = line.trim();
+          if (!cleanLine) continue;
+          if (cleanLine === "data: [DONE]") continue;
+
+          if (cleanLine.startsWith("data: ")) {
+            try {
+              const rawJson = cleanLine.slice(6);
+              const parsed = JSON.parse(rawJson);
+              const chunkText = parsed.choices?.[0]?.delta?.content || "";
+              if (chunkText) {
+                fullResponseText += chunkText;
+                onChunk(fullResponseText);
+              }
+            } catch (e) {
+              console.warn("Error parsing stream chunk:", e, cleanLine);
+            }
+          }
+        }
+      }
+      
+      // Process final buffer if any
+      if (buffer && buffer.startsWith("data: ")) {
+        try {
+          const rawJson = buffer.slice(6);
+          const parsed = JSON.parse(rawJson);
+          const chunkText = parsed.choices?.[0]?.delta?.content || "";
+          if (chunkText) {
+            fullResponseText += chunkText;
+            onChunk(fullResponseText);
+          }
+        } catch (e) {}
+      }
+
+      return fullResponseText;
+    } else {
+      const data = await res.json();
+      return (
+        data.choices?.[0]?.message?.content?.trim() ||
+        "OpenRouter failed to provide a response candidate."
+      );
+    }
   }
 
   async function callGroqAPI(message, systemPrompt, apiKey, model, temp) {
@@ -14933,14 +15214,14 @@ Always align dashboard actions with what the user requests! Explain briefly what
     
     const messages = [
       { role: "system", content: systemPrompt },
-      ...conversationHistory.slice(-10)
+      ...conversationHistory.slice(-20)
     ];
 
     const body = JSON.stringify({
       model: model || "llama-3.1-8b-instant",
       messages,
       temperature: temp,
-      max_tokens: 1024
+      max_tokens: 2048
     });
 
     const res = await fetch(url, {
@@ -14966,36 +15247,269 @@ Always align dashboard actions with what the user requests! Explain briefly what
 
   // ─── AUTOPILOT TAGS PROCESSOR ───────────────────────────────────
   function parseAndExecuteAutopilot(text) {
+    if (!text) return "";
     const actionRegex = /\[\[ACTION:\s*(\w+)\((.*?)\)\]\]/g;
     let match;
-    let cleanedText = text;
+    const actions = [];
 
-    // Parse and execute actions
+    // Parse actions
     while ((match = actionRegex.exec(text)) !== null) {
       const actionName = match[1];
       const argsStr = match[2];
-      executeAutopilotAction(actionName, argsStr);
+      
+      let args;
+      if (actionName === "chain_workflow") {
+        let s = argsStr.trim();
+        if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+          s = s.slice(1, -1);
+        }
+        s = s.replace(/\\"/g, '"').replace(/\\'/g, "'");
+        args = [s];
+      } else {
+        args = argsStr.split(",").map(arg => {
+          let s = arg.trim();
+          if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+            s = s.slice(1, -1);
+          }
+          return s;
+        });
+      }
+
+      actions.push({ action: actionName, args, rawArgsStr: argsStr });
+    }
+
+    if (actions.length === 1) {
+      executeAutopilotAction(actions[0].action, actions[0].args);
+    } else if (actions.length > 1) {
+      executeWorkflowSteps(actions);
     }
 
     // Strip actions from rendered bubble so details look premium
-    cleanedText = cleanedText.replace(/\[\[ACTION:.*?\]\]/g, "");
-    return cleanedText;
+    return text.replace(/\[\[ACTION:.*?\]\]/g, "");
   }
 
-  function executeAutopilotAction(actionName, argsStr) {
-    const args = argsStr.split(",").map(arg => {
-      let s = arg.trim();
-      if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
-        s = s.slice(1, -1);
+  function generatePDFReport() {
+    const reportWindow = window.open("", "_blank");
+    if (!reportWindow) {
+      if (window.CyberNotify) {
+        window.CyberNotify.alert("Popup blocked! Please allow popups to download your PDF report.", { type: "error" });
+      } else {
+        alert("Popup blocked! Please allow popups to download your PDF report.");
       }
-      return s;
-    });
+      return;
+    }
 
-    console.log(`[Autopilot Engine] Executing command: ${actionName} with parameters:`, args);
+    const threats = (resultsData || []).filter(r => r.status === "threat");
+    const warnings = (resultsData || []).filter(r => r.status === "warning");
+    const safe = (resultsData || []).filter(r => r.status === "safe");
 
-    // Show visual overlay toast
-    showAutopilotToast(actionName, args);
+    const threatsHtml = threats.map(r => `
+      <div class="card threat">
+        <div class="card-header">
+          <span class="badge threat">CRITICAL THREAT</span>
+          <strong>${r.tool}</strong>
+        </div>
+        <p class="card-msg">${r.message}</p>
+        ${r.details ? `<pre class="card-details">${typeof r.details === 'string' ? r.details : JSON.stringify(r.details, null, 2)}</pre>` : ''}
+      </div>
+    `).join("");
 
+    const warningsHtml = warnings.map(r => `
+      <div class="card warning">
+        <div class="card-header">
+          <span class="badge warning">WARNING</span>
+          <strong>${r.tool}</strong>
+        </div>
+        <p class="card-msg">${r.message}</p>
+        ${r.details ? `<pre class="card-details">${typeof r.details === 'string' ? r.details : JSON.stringify(r.details, null, 2)}</pre>` : ''}
+      </div>
+    `).join("");
+
+    const safeHtml = safe.map(r => `
+      <div class="card safe">
+        <div class="card-header">
+          <span class="badge safe">VERIFIED SAFE</span>
+          <strong>${r.tool}</strong>
+        </div>
+        <p class="card-msg">${r.message}</p>
+      </div>
+    `).join("");
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CyberGuard Vulnerability Report - ${currentScanTarget || 'Telemetry'}</title>
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: #1e293b;
+      background: #ffffff;
+      line-height: 1.5;
+      padding: 40px;
+    }
+    .header {
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      color: #0f172a;
+    }
+    .header p {
+      margin: 5px 0 0 0;
+      color: #64748b;
+      font-size: 14px;
+    }
+    .print-btn {
+      padding: 8px 16px;
+      background: #0f172a;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.15s ease;
+    }
+    .print-btn:hover {
+      background: #1e293b;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .summary-card {
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      text-align: center;
+      background: #f8fafc;
+    }
+    .summary-card.threats { border-top: 4px solid #ef4444; }
+    .summary-card.warnings { border-top: 4px solid #f59e0b; }
+    .summary-card.safe { border-top: 4px solid #10b981; }
+    .summary-card h3 { margin: 0; font-size: 12px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; }
+    .summary-card p { margin: 8px 0 0 0; font-size: 28px; font-weight: 700; }
+    .section-title {
+      font-size: 16px;
+      color: #0f172a;
+      margin-top: 40px;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .card {
+      padding: 16px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 15px;
+      background: #f8fafc;
+      page-break-inside: avoid;
+    }
+    .card.threat { border-left: 4px solid #ef4444; }
+    .card.warning { border-left: 4px solid #f59e0b; }
+    .card.safe { border-left: 4px solid #10b981; }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #ffffff;
+      text-transform: uppercase;
+    }
+    .badge.threat { background: #ef4444; }
+    .badge.warning { background: #f59e0b; }
+    .badge.safe { background: #10b981; }
+    .card-msg {
+      margin: 0;
+      font-size: 14px;
+      color: #334155;
+    }
+    .card-details {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      overflow-x: auto;
+      margin: 12px 0 0 0;
+      font-family: monospace;
+    }
+    @media print {
+      body { padding: 0; background: none; }
+      .print-btn { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>CyberGuard Assessment Report</h1>
+      <p>Target: <strong>${currentScanTarget || 'Global Dashboard Workspace'}</strong> | Generated: ${new Date().toLocaleString()}</p>
+    </div>
+    <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-card threats">
+      <h3>Critical Threats</h3>
+      <p style="color:#ef4444;">${threats.length}</p>
+    </div>
+    <div class="summary-card warnings">
+      <h3>Warnings</h3>
+      <p style="color:#f59e0b;">${warnings.length}</p>
+    </div>
+    <div class="summary-card safe">
+      <h3>Verified Safe</h3>
+      <p style="color:#10b981;">${safe.length}</p>
+    </div>
+  </div>
+
+  ${threats.length > 0 ? `
+    <h2 class="section-title">Critical Threats</h2>
+    ${threatsHtml}
+  ` : ''}
+
+  ${warnings.length > 0 ? `
+    <h2 class="section-title">Warnings & Recommendations</h2>
+    ${warningsHtml}
+  ` : ''}
+
+  ${safe.length > 0 ? `
+    <h2 class="section-title">Verified Safe Elements</h2>
+    ${safeHtml}
+  ` : ''}
+
+  <script>
+    window.onload = function() {
+      setTimeout(function() { window.print(); }, 500);
+    }
+  </script>
+</body>
+</html>
+    `;
+
+    reportWindow.document.write(html);
+    reportWindow.document.close();
+  }
+
+  function executeIndividualAction(actionName, args) {
     try {
       switch (actionName) {
         case "switch_tab": {
@@ -15171,11 +15685,58 @@ Always align dashboard actions with what the user requests! Explain briefly what
           if (btn) btn.click();
           break;
         }
+        case "generate_report": {
+          generatePDFReport();
+          break;
+        }
+        case "chain_workflow": {
+          try {
+            const steps = JSON.parse(args[0]);
+            if (Array.isArray(steps)) {
+              executeWorkflowSteps(steps);
+            }
+          } catch (e) {
+            console.error("[Autopilot Engine] Failed to parse chain_workflow steps:", e);
+          }
+          break;
+        }
         default:
           console.warn(`[Autopilot Engine] Unknown action selector: ${actionName}`);
       }
     } catch (e) {
-      console.error("[Autopilot Engine] Failed to dispatch action:", e);
+      console.error("[Autopilot Engine] Failed to execute individual action:", e);
+    }
+  }
+
+  async function executeWorkflowSteps(steps) {
+    if (!Array.isArray(steps)) return;
+    for (const step of steps) {
+      const actionName = step.action;
+      const args = step.args || [];
+      console.log(`[Autopilot Workflow] Running step: ${actionName} with args:`, args);
+      showAutopilotToast(actionName, args);
+      executeIndividualAction(actionName, args);
+      
+      // Visual transition delay between steps
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+
+  function executeAutopilotAction(actionName, args) {
+    console.log(`[Autopilot Engine] Dispatching command: ${actionName} with parameters:`, args);
+    showAutopilotToast(actionName, args);
+
+    if (actionName === "chain_workflow") {
+      try {
+        const steps = JSON.parse(args[0]);
+        if (Array.isArray(steps)) {
+          executeWorkflowSteps(steps);
+        }
+      } catch (e) {
+        console.error("Failed to parse chain_workflow JSON:", e);
+      }
+    } else {
+      executeIndividualAction(actionName, args);
     }
   }
 
@@ -15809,6 +16370,92 @@ Or save your OpenRouter key in my settings configurations at the top right!`;
     }
   };
 
+  function appendStreamingMessage(role) {
+    const isUser = role === "user";
+    const time = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const wrap = document.createElement("div");
+    wrap.className = `ai-msg ${role}`;
+
+    // Avatar
+    const avatar = document.createElement("div");
+    avatar.className = "ai-msg-avatar";
+    if (isUser) {
+      avatar.textContent = "U";
+    } else {
+      avatar.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" /></svg>`;
+    }
+
+    // Bubble
+    const bubble = document.createElement("div");
+    bubble.className = "ai-msg-bubble";
+    bubble.innerHTML = `<div class="ai-typing-bubble"><div class="ai-typing-dot"></div><div class="ai-typing-dot"></div><div class="ai-typing-dot"></div></div>`;
+
+    // Timestamp
+    const ts = document.createElement("div");
+    ts.className = "ai-msg-time";
+    ts.textContent = time;
+
+    // Assembly
+    const inner = document.createElement("div");
+    inner.style.cssText = "display:flex;flex-direction:column;flex-grow:1;min-width:0;";
+    inner.style.alignItems = isUser ? "flex-end" : "flex-start";
+    inner.appendChild(bubble);
+    inner.appendChild(ts);
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(inner);
+
+    messagesEl.appendChild(wrap);
+    scrollToBottom();
+
+    return {
+      element: wrap,
+      update(text) {
+        bubble.innerHTML = formatMessage(text, isUser);
+        scrollToBottom();
+      },
+      finish(text) {
+        bubble.innerHTML = formatMessage(text, isUser);
+        if (!isUser) {
+          const actionBar = document.createElement("div");
+          actionBar.className = "ai-action-bar";
+          
+          const copyBtn = document.createElement("button");
+          copyBtn.className = "ai-action-btn";
+          copyBtn.type = "button";
+          copyBtn.innerHTML = `<span class="material-symbols-outlined">content_copy</span> Copy`;
+          copyBtn.addEventListener("click", () => {
+            navigator.clipboard.writeText(bubble.innerText.trim());
+            const orig = copyBtn.innerHTML;
+            copyBtn.innerHTML = `<span class="material-symbols-outlined" style="color:var(--cg-success)">check</span> Copied!`;
+            setTimeout(() => { copyBtn.innerHTML = orig; }, 1500);
+          });
+
+          const regenBtn = document.createElement("button");
+          regenBtn.className = "ai-action-btn";
+          regenBtn.type = "button";
+          regenBtn.innerHTML = `<span class="material-symbols-outlined">refresh</span> Regenerate`;
+          regenBtn.addEventListener("click", () => {
+            const lastUserMsg = conversationHistory.filter(m => m.role === "user").pop();
+            if (lastUserMsg && !isWaiting) {
+              inputEl.value = lastUserMsg.content;
+              handleSend();
+            }
+          });
+
+          actionBar.appendChild(copyBtn);
+          actionBar.appendChild(regenBtn);
+          inner.appendChild(actionBar);
+        }
+        scrollToBottom();
+      }
+    };
+  }
+
   // ─── UI HELPERS ─────────────────────────────────────────────────
   function appendMessage(role, text) {
     const isUser = role === "user";
@@ -15849,6 +16496,38 @@ Or save your OpenRouter key in my settings configurations at the top right!`;
     }
     inner.appendChild(bubble);
     inner.appendChild(ts);
+
+    if (!isUser) {
+      const actionBar = document.createElement("div");
+      actionBar.className = "ai-action-bar";
+      
+      const copyBtn = document.createElement("button");
+      copyBtn.className = "ai-action-btn";
+      copyBtn.type = "button";
+      copyBtn.innerHTML = `<span class="material-symbols-outlined">content_copy</span> Copy`;
+      copyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText(bubble.innerText.trim());
+        const orig = copyBtn.innerHTML;
+        copyBtn.innerHTML = `<span class="material-symbols-outlined" style="color:var(--cg-success)">check</span> Copied!`;
+        setTimeout(() => { copyBtn.innerHTML = orig; }, 1500);
+      });
+
+      const regenBtn = document.createElement("button");
+      regenBtn.className = "ai-action-btn";
+      regenBtn.type = "button";
+      regenBtn.innerHTML = `<span class="material-symbols-outlined">refresh</span> Regenerate`;
+      regenBtn.addEventListener("click", () => {
+        const lastUserMsg = conversationHistory.filter(m => m.role === "user").pop();
+        if (lastUserMsg && !isWaiting) {
+          inputEl.value = lastUserMsg.content;
+          handleSend();
+        }
+      });
+
+      actionBar.appendChild(copyBtn);
+      actionBar.appendChild(regenBtn);
+      inner.appendChild(actionBar);
+    }
 
     wrap.appendChild(avatar);
     wrap.appendChild(inner);

@@ -3981,6 +3981,37 @@ body.authenticated #guest-notice {
   box-shadow: 0 0 16px rgba(59, 130, 246, 0.25) !important;
 }
 
+/* AI Message Action Bar */
+.ai-action-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 0 4px;
+}
+
+.ai-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  font-size: 0.72rem;
+  color: var(--cg-text-3);
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  padding: 2px 6px;
+  border-radius: var(--cg-radius-sm);
+}
+
+.ai-action-btn:hover {
+  color: var(--cg-text-1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ai-action-btn span.material-symbols-outlined {
+  font-size: 13px !important;
+}
+
 
 
 
