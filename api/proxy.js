@@ -32,8 +32,20 @@ export default async function handler(req, res) {
       }
     });
 
+    // Support extra headers passed as JSON via the `headers` query param.
+    // This lets the client inject API-specific auth headers (e.g. AbuseIPDB Key)
+    // server-side, avoiding browser CORS restrictions on custom headers.
+    if (req.query.headers) {
+      try {
+        const extraHeaders = JSON.parse(req.query.headers);
+        Object.assign(headers, extraHeaders);
+      } catch (_) {
+        // Ignore malformed JSON
+      }
+    }
+
     // Ensure User-Agent is present
-    if (!headers['user-agent']) {
+    if (!headers['user-agent'] && !headers['User-Agent']) {
       headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
     }
 

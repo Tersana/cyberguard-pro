@@ -37,7 +37,14 @@ async function fetchWithProxy(targetUrl, fetchOptions = {}) {
       if (response.ok) {
         const data = await response.json();
         const targetStatus = data.status?.http_code || 200;
-        if ((targetStatus >= 200 && targetStatus < 300) || targetStatus === 404) {
+        if (targetStatus >= 200 && targetStatus < 300) {
+          return new Response(data.contents, {
+            status: targetStatus,
+            headers: new Headers(data.headers || {})
+          });
+        }
+        // For non-2xx from upstream, still return the body so callers can parse error details
+        if (targetStatus >= 400) {
           return new Response(data.contents, {
             status: targetStatus,
             headers: new Headers(data.headers || {})
@@ -465,36 +472,53 @@ const APIOrchestrator = {
       // Build endpoint with query parameters
       const params = new URLSearchParams({
         ipAddress: ip,
-        maxAgeInDays: '90'
+        maxAgeInDays: '90',
+        verbose: 'true'
       });
       
       const endpoint = `${ABUSE_BASE_URL}/check?${params.toString()}`;
       
-      // Fetch through CORS proxy fallback chain
-      const response = await fetchWithProxy(endpoint, {
-        method: 'GET',
-        headers: {
-          'Key': apiKey,
-          'Accept': 'application/json'
-        }
-      });
+      // Pass API key via the proxy's server-side `headers` injection param.
+      // This avoids browser CORS restrictions on the `Key` header and ensures
+      // the header is correctly forwarded by the server proxy to AbuseIPDB.
+      const headersParam = encodeURIComponent(JSON.stringify({ 'Key': apiKey, 'Accept': 'application/json' }));
+      const proxyUrl = `/api/proxy?url=${encodeURIComponent(endpoint)}&headers=${headersParam}`;
       
-      // Handle response
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          throw new Error('AbuseIPDB: Invalid API key');
-        } else if (response.status === 429) {
-          throw new Error('AbuseIPDB: Rate limit exceeded');
-        } else if (response.status === 404) {
-          throw new Error('AbuseIPDB: Resource not found');
-        } else {
-          throw new Error(`AbuseIPDB: Request failed with status ${response.status}`);
-        }
+      const proxyResponse = await fetch(proxyUrl, { method: 'GET' });
+      
+      if (!proxyResponse.ok) {
+        throw new Error(`AbuseIPDB: Proxy error ${proxyResponse.status}`);
       }
       
-      // Parse and return response
-      const data = await response.json();
-      return data;
+      const proxyData = await proxyResponse.json();
+      const targetStatus = proxyData.status?.http_code || 200;
+      const body = proxyData.contents || '';
+      
+      // Parse AbuseIPDB response body for detailed error messages
+      let parsed = null;
+      try { parsed = JSON.parse(body); } catch (_) {}
+      
+      if (targetStatus === 401 || targetStatus === 403) {
+        const detail = parsed?.errors?.[0]?.detail || 'Invalid API key';
+        throw new Error(`AbuseIPDB: ${detail}`);
+      } else if (targetStatus === 422) {
+        const detail = parsed?.errors?.[0]?.detail || 'Unprocessable request';
+        throw new Error(`AbuseIPDB: ${detail}`);
+      } else if (targetStatus === 429) {
+        throw new Error('AbuseIPDB: Rate limit exceeded');
+      } else if (targetStatus === 404) {
+        const detail = parsed?.errors?.[0]?.detail || 'Resource not found';
+        throw new Error(`AbuseIPDB: ${detail}`);
+      } else if (targetStatus < 200 || targetStatus >= 300) {
+        const detail = parsed?.errors?.[0]?.detail || `Request failed with status ${targetStatus}`;
+        throw new Error(`AbuseIPDB: ${detail}`);
+      }
+      
+      if (!parsed) {
+        throw new Error('AbuseIPDB: Invalid JSON response');
+      }
+      
+      return parsed;
       
     } catch (error) {
       // Re-throw with AbuseIPDB prefix for error handling
