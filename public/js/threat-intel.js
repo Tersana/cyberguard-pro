@@ -469,56 +469,41 @@ const APIOrchestrator = {
         throw new Error('AbuseIPDB API key not configured');
       }
       
-      // Build endpoint with query parameters
+      // Use dedicated server-side AbuseIPDB endpoint.
+      // This avoids all CORS/proxy header-forwarding issues — the server
+      // makes the call directly to api.abuseipdb.com with the correct headers.
       const params = new URLSearchParams({
-        ipAddress: ip,
-        maxAgeInDays: '90',
-        verbose: 'true'
+        ip: ip,
+        key: apiKey,
+        maxAge: '90'
       });
       
-      const endpoint = `${ABUSE_BASE_URL}/check?${params.toString()}`;
+      const response = await fetch(`/api/abuseipdb?${params.toString()}`);
       
-      // Pass API key via the proxy's server-side `headers` injection param.
-      // This avoids browser CORS restrictions on the `Key` header and ensures
-      // the header is correctly forwarded by the server proxy to AbuseIPDB.
-      const headersParam = encodeURIComponent(JSON.stringify({ 'Key': apiKey, 'Accept': 'application/json' }));
-      const proxyUrl = `/api/proxy?url=${encodeURIComponent(endpoint)}&headers=${headersParam}`;
-      
-      const proxyResponse = await fetch(proxyUrl, { method: 'GET' });
-      
-      if (!proxyResponse.ok) {
-        throw new Error(`AbuseIPDB: Proxy error ${proxyResponse.status}`);
+      // Parse the response body
+      let data;
+      const text = await response.text();
+      try {
+        data = JSON.parse(text);
+      } catch (_) {
+        throw new Error('AbuseIPDB: Invalid JSON response from API');
       }
       
-      const proxyData = await proxyResponse.json();
-      const targetStatus = proxyData.status?.http_code || 200;
-      const body = proxyData.contents || '';
-      
-      // Parse AbuseIPDB response body for detailed error messages
-      let parsed = null;
-      try { parsed = JSON.parse(body); } catch (_) {}
-      
-      if (targetStatus === 401 || targetStatus === 403) {
-        const detail = parsed?.errors?.[0]?.detail || 'Invalid API key';
-        throw new Error(`AbuseIPDB: ${detail}`);
-      } else if (targetStatus === 422) {
-        const detail = parsed?.errors?.[0]?.detail || 'Unprocessable request';
-        throw new Error(`AbuseIPDB: ${detail}`);
-      } else if (targetStatus === 429) {
-        throw new Error('AbuseIPDB: Rate limit exceeded');
-      } else if (targetStatus === 404) {
-        const detail = parsed?.errors?.[0]?.detail || 'Resource not found';
-        throw new Error(`AbuseIPDB: ${detail}`);
-      } else if (targetStatus < 200 || targetStatus >= 300) {
-        const detail = parsed?.errors?.[0]?.detail || `Request failed with status ${targetStatus}`;
-        throw new Error(`AbuseIPDB: ${detail}`);
+      // Handle error status codes with real error detail from AbuseIPDB
+      if (!response.ok) {
+        const detail = data?.errors?.[0]?.detail || '';
+        if (response.status === 401 || response.status === 403) {
+          throw new Error(`AbuseIPDB: ${detail || 'Invalid API key'}`);
+        } else if (response.status === 422) {
+          throw new Error(`AbuseIPDB: ${detail || 'Unprocessable request'}`);
+        } else if (response.status === 429) {
+          throw new Error('AbuseIPDB: Rate limit exceeded');
+        } else {
+          throw new Error(`AbuseIPDB: ${detail || 'Request failed with status ' + response.status}`);
+        }
       }
       
-      if (!parsed) {
-        throw new Error('AbuseIPDB: Invalid JSON response');
-      }
-      
-      return parsed;
+      return data;
       
     } catch (error) {
       // Re-throw with AbuseIPDB prefix for error handling
