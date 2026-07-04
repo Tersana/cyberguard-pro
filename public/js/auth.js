@@ -1859,23 +1859,11 @@ window.isAuthenticated = function() {
 };
 
 /**
- * isTokenExpired() — returns true only for provably expired standard JWTs.
- * Returns FALSE (not expired) for non-JWT / opaque tokens so that valid
- * sessions using non-standard token formats are never accidentally blocked.
+ * isTokenExpired() — Obsolete client-side JWT check. Now returns false,
+ * deferring all session/token validation and expiration handling to the backend API.
  */
 window.isTokenExpired = function(token) {
-  if (!token) return true;
-  try {
-    const parts = token.split('.');
-    // Only treat as JWT if it has exactly 3 parts (header.payload.signature)
-    if (parts.length !== 3) return false; // opaque token — assume valid
-    const payload = JSON.parse(atob(parts[1]));
-    if (!payload.exp) return false; // no expiry claim — assume valid
-    return payload.exp * 1000 < Date.now();
-  } catch {
-    // Parse failure — do NOT assume expired; treat token as valid
-    return false;
-  }
+  return false;
 };
 
 window.clearAuthStorage = function() {
@@ -1900,15 +1888,10 @@ window.showLoginRequiredModal = function() {
 /**
  * runAuthGuard() — the page-level auth gate.
  *
- * BUG FIXED: Previously, a token that failed JWT parsing (opaque/non-standard
- * tokens) caused isTokenExpired() to return true, triggering clearAuthStorage()
- * + modal even for a fully authenticated user.
- *
- * Fix: Two separate guard stages.
- *   1. If no token exists at all → guest, show modal.
- *   2. Only if token IS a parseable JWT with an exp claim AND that exp has
- *      passed → treat as expired session and show modal.
- *   Non-JWT opaque tokens pass stage 2 unconditionally.
+ * Simply checks if a token is present in the storage (guest vs authenticated user).
+ * Defers all validation and expiration checks to the backend API.
+ * If the token is invalid or expired, the APIClient and ErrorHandler will catch the 401
+ * response from the backend and automatically clear the session and redirect to the login page.
  */
 window.runAuthGuard = function() {
   // Stage 1 — Must have a token in storage
@@ -1917,19 +1900,7 @@ window.runAuthGuard = function() {
     return false;
   }
 
-  // Stage 2 — Only enforce expiry on provably expired standard JWTs
-  const currentToken =
-    localStorage.getItem('cyberguard_jwt') ||
-    localStorage.getItem('auth_token') ||
-    sessionStorage.getItem('auth_token');
-
-  if (currentToken && window.isTokenExpired(currentToken)) {
-    // Token is a JWT and provably expired — clear session and prompt login
-    window.clearAuthStorage();
-    window.showLoginRequiredModal();
-    return false;
-  }
-
-  // Authenticated and token is valid (or non-JWT opaque) → allow access
+  // Authenticated and token is present → allow page access. The API client
+  // will validate token integrity during active queries and handle 401s.
   return true;
 };
