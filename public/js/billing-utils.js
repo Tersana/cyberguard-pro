@@ -136,6 +136,113 @@ function getSubscriptionStatusBadgeClass(status) {
   return statusMap[status] || 'cyber-badge-info';
 }
 
+/**
+ * Format payment/transaction failure reason into a user-friendly, professional message
+ * @param {string} reason - Raw failure reason (could be JSON, HTML, or plain text)
+ * @returns {string} Human-readable failure message
+ */
+function formatFailureReason(reason) {
+  if (!reason) return '—';
+
+  // Helper to capitalize words (e.g. "AUTHENTICATION_IN_PROGRESS" -> "Authentication In Progress")
+  const capitalizeWords = (str) => {
+    if (!str) return '';
+    return str
+      .replace(/_/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
+  // Check if the reason is a JSON string (or object)
+  let parsed = null;
+  try {
+    if (typeof reason === 'string') {
+      parsed = JSON.parse(reason);
+    } else if (typeof reason === 'object') {
+      parsed = reason;
+    }
+  } catch (e) {
+    // Check if it's JSON-like but failed to parse (e.g. truncated or bad escaping)
+    if (reason.includes('{"html"') || reason.includes('<div') || reason.includes('<form')) {
+      const gatewayCodeMatch = reason.match(/"gatewayCode"\s*:\s*"([^"]+)"/);
+      const authStatusMatch = reason.match(/"authenticationStatus"\s*:\s*"([^"]+)"/);
+      let details = '';
+      if (gatewayCodeMatch) {
+        details = gatewayCodeMatch[1];
+      } else if (authStatusMatch) {
+        details = authStatusMatch[1];
+      }
+      return '3D Secure Verification Incomplete' + (details ? ` (${capitalizeWords(details)})` : '');
+    }
+  }
+
+  if (parsed && typeof parsed === 'object') {
+    // 3DS redirect HTML check
+    if (parsed.html) {
+      let details = '';
+      if (parsed.gatewayCode) {
+        details = parsed.gatewayCode;
+      } else if (parsed.authenticationStatus) {
+        details = parsed.authenticationStatus;
+      }
+      return '3D Secure Verification Incomplete' + (details ? ` (${capitalizeWords(details)})` : '');
+    }
+
+    // Direct gateway error messages
+    if (parsed.error && typeof parsed.error === 'object') {
+      if (parsed.error.explanation) return parsed.error.explanation;
+      if (parsed.error.message) return parsed.error.message;
+    }
+
+    if (parsed.response && typeof parsed.response === 'object') {
+      if (parsed.response.acquirer && parsed.response.acquirer.message) {
+        return parsed.response.acquirer.message;
+      }
+    }
+
+    if (parsed.message && typeof parsed.message === 'string') {
+      return parsed.message;
+    }
+
+    if (parsed.gatewayCode && typeof parsed.gatewayCode === 'string') {
+      return `Gateway rejected: ${capitalizeWords(parsed.gatewayCode)}`;
+    }
+
+    if (parsed.authenticationStatus && typeof parsed.authenticationStatus === 'string') {
+      return `Authentication failed: ${capitalizeWords(parsed.authenticationStatus)}`;
+    }
+
+    // Check generic fields
+    const commonFields = ['reason', 'error', 'description', 'desc', 'status'];
+    for (const field of commonFields) {
+      if (parsed[field] && typeof parsed[field] === 'string') {
+        return parsed[field];
+      }
+    }
+
+    // Stringify simple keys if nothing else matched
+    const parts = [];
+    for (const [key, val] of Object.entries(parsed)) {
+      if (typeof val === 'string' || typeof val === 'number') {
+        parts.push(`${capitalizeWords(key)}: ${val}`);
+      }
+    }
+    if (parts.length > 0) {
+      return parts.join(', ');
+    }
+  }
+
+  // Handle HTML string directly if not parsed
+  if (typeof reason === 'string') {
+    if (reason.startsWith('<') || reason.includes('href=') || reason.includes('<div')) {
+      return '3D Secure Verification Incomplete';
+    }
+  }
+
+  return reason;
+}
+
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -145,6 +252,7 @@ if (typeof module !== 'undefined' && module.exports) {
     getDaysRemaining,
     formatNumber,
     getStatusBadgeClass,
-    getSubscriptionStatusBadgeClass
+    getSubscriptionStatusBadgeClass,
+    formatFailureReason
   };
 }

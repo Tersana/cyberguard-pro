@@ -4879,10 +4879,17 @@
                 const amount = formatAmount(order.amount_cents);
                 const statusBadge = getStatusBadgeClass(order.status);
                 const transactionId = escapeHtml(order.paymob_transaction_id || "—");
-                const failureReason =
-                    order.status === "failed" && order.failure_reason
-                        ? escapeHtml(order.failure_reason)
-                        : "—";
+                
+                let failureReasonHtml = '<span class="text-slate-500 select-none">—</span>';
+                if (order.status === "failed" && order.failure_reason) {
+                    const formatted = formatFailureReason(order.failure_reason);
+                    failureReasonHtml = `
+                        <div class="flex items-start gap-2 max-w-[280px] text-xs text-red-400/95 leading-relaxed bg-red-500/10 border border-red-500/25 px-3 py-2 rounded-lg" title="${escapeHtml(formatted)}">
+                            <span class="material-symbols-outlined text-red-400 shrink-0 select-none" style="font-size: 15px; margin-top: 1px;">error</span>
+                            <span class="break-words font-medium">${escapeHtml(formatted)}</span>
+                        </div>
+                    `;
+                }
 
                 return `
                     <tr class="hover:bg-white/5 transition-colors">
@@ -4895,7 +4902,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 text-sm text-slate-400 font-mono">${transactionId}</td>
-                        <td class="px-6 py-4 text-sm text-slate-400">${failureReason}</td>
+                        <td class="px-6 py-4">${failureReasonHtml}</td>
                     </tr>
                 `;
             }

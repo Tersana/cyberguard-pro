@@ -668,8 +668,8 @@ class AuthManager {
     } catch (error) {
       console.error("Fetch user profile error:", error);
 
-      if (error.name === "APIError") {
-        throw error; // Re-throw API errors for handling
+      if (error.name === "APIError" || this.isBackendAuthFailure(error)) {
+        throw error; // Re-throw backend auth failures for handling
       }
 
       throw new Error("An error occurred while fetching user profile");
@@ -690,8 +690,8 @@ class AuthManager {
     } catch (error) {
       console.error("Fetch session status error:", error);
 
-      if (error.name === "APIError") {
-        throw error; // Re-throw API errors for handling
+      if (error.name === "APIError" || this.isBackendAuthFailure(error)) {
+        throw error; // Re-throw backend auth failures for handling
       }
 
       throw new Error("An error occurred while fetching session status");
@@ -737,13 +737,36 @@ class AuthManager {
 
       // Check if request succeeded
       if (!profileResult.success) {
-        // Request failed, clear session
-        this.apiClient.clearToken();
-        localStorage.removeItem("cyberguard_user");
-        localStorage.removeItem("cyberguard_session");
-        this.currentUser = null;
-        this.updateUI();
-        return { success: false, message: "Session validation failed" };
+        if (this.isBackendAuthFailure(profileResult.error)) {
+          // Backend explicitly rejected the token, clear session.
+          this.handleSessionExpiration();
+          return { success: false, message: "Session validation failed" };
+        }
+
+        console.warn(
+          "Session restore skipped because backend validation was unreachable.",
+          profileResult.error,
+        );
+        const storedUser = localStorage.getItem("cyberguard_user");
+        if (storedUser) {
+          try {
+            this.currentUser = JSON.parse(storedUser);
+            this.updateUI();
+            return {
+              success: true,
+              user: this.currentUser,
+              pendingValidation: true,
+            };
+          } catch (parseError) {
+            console.warn("Stored user could not be restored:", parseError);
+          }
+        }
+
+        return {
+          success: false,
+          message: "Session validation unavailable",
+          pendingValidation: true,
+        };
       }
 
       // Use the user data from profile (already includes two_factor_enabled)
@@ -1038,7 +1061,7 @@ class AuthManager {
 
   // Check if user is authenticated
   isAuthenticated() {
-    return this.currentUser !== null;
+    return this.currentUser !== null || Boolean(this.apiClient.getToken());
   }
 
   // Get current user
@@ -1300,12 +1323,14 @@ class AuthManager {
       // Validate session with backend (lightweight check)
       const statusResult = await this.fetchSessionStatus().catch((err) => {
         console.error("Session validation failed:", err);
-        return { success: false };
+        return { success: false, error: err };
       });
 
       if (!statusResult.success) {
-        // Session invalid, clear and show guest UI
-        this.handleSessionExpiration();
+        if (this.isBackendAuthFailure(statusResult.error)) {
+          // Backend explicitly rejected the session, clear and show guest UI.
+          this.handleSessionExpiration();
+        }
       }
     } catch (error) {
       console.error("Error validating session on page load:", error);
@@ -1313,6 +1338,9 @@ class AuthManager {
     }
   }
 
+  isBackendAuthFailure(error) {
+    return error && (error.status === 401 || error.status === 403);
+  }
   // Handle session expiration gracefully
   handleSessionExpiration() {
     // Clear session data
