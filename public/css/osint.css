@@ -1410,3 +1410,114 @@
   text-transform: uppercase;
 }
 
+/* ===== EMAIL FORMAT GUESSER RESULTS ===== */
+.osint-email-format-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.osint-email-format-item {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.osint-email-format-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.osint-email-format-item.osint-format-likely {
+  background: rgba(16, 185, 129, 0.03);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.osint-email-format-item.osint-format-likely:hover {
+  background: rgba(16, 185, 129, 0.06);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.osint-email-format-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.osint-email-at {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+  color: #f8fafc;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.osint-item-copy {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.osint-item-copy:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.osint-email-format-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.osint-format-pattern {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.osint-format-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+@media (max-width: 600px) {
+  .osint-email-format-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .osint-email-format-meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

@@ -2248,31 +2248,127 @@ const OSINT = {
       });
       html += `</div>`;
 
-    } else if (toolId === 'wayback' && data.data) {
-      const snapshots = data.data;
-      html += `<div class="osint-results-header"><span class="osint-results-count">Snapshots: <strong>${snapshots.length}</strong></span></div>`;
-      html += `<div class="osint-wayback-list">`;
-      snapshots.slice(0, 50).forEach(snap => {
-        html += `<div class="osint-wayback-item"><span class="osint-wayback-date">${escapeHtml(snap.timestamp || snap.date || '')}</span><a class="osint-wayback-link" href="${escapeHtml(snap.url || '')}" target="_blank" rel="noopener noreferrer">${escapeHtml(snap.url || '')}</a></div>`;
-      });
-      html += `</div>`;
+    } else if (toolId === 'wayback' && (data.snapshots || data.data)) {
+      const snapshots = data.snapshots || data.data || [];
+      const closest = data.closest || (snapshots.length > 0 ? {
+        url: `https://web.archive.org/web/${snapshots[0].timestamp}/${snapshots[0].original}`,
+        timestamp: snapshots[0].timestamp
+      } : null);
+
+      const formatTimestamp = (ts) => {
+        if (!ts || ts.length < 14) return 'Unknown';
+        const year = ts.substring(0, 4);
+        const month = ts.substring(4, 6);
+        const day = ts.substring(6, 8);
+        const hour = ts.substring(8, 10);
+        const min = ts.substring(10, 12);
+        return `${year}-${month}-${day} ${hour}:${min}`;
+      };
+
+      let historyHtml = '';
+      if (snapshots.length > 0) {
+        let itemsHtml = '';
+        const sorted = [...snapshots].sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+        sorted.forEach(s => {
+          const snapshotUrl = `https://web.archive.org/web/${s.timestamp}/${s.original}`;
+          const formattedDate = formatTimestamp(s.timestamp);
+          const sizeKb = s.length ? `${(parseInt(s.length) / 1024).toFixed(1)} KB` : 'N/A';
+          itemsHtml += `
+            <a href="${escapeHtml(snapshotUrl)}" target="_blank" class="osint-wayback-item">
+              <span class="osint-wayback-date">${formattedDate}</span>
+              <span class="osint-wayback-size">${sizeKb}</span>
+              <span class="osint-wayback-arrow"><svg class="w-3 h-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 0.75rem; height: 0.75rem; display: inline-block;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg></span>
+            </a>
+          `;
+        });
+
+        historyHtml = `
+          <div class="osint-wayback-history" style="margin-top: 10px;">
+            <span class="osint-label">Recent History Snapshots</span>
+            <div class="osint-wayback-list">
+              ${itemsHtml}
+            </div>
+            <a href="https://web.archive.org/web/*/${escapeHtml(data.target)}" target="_blank" class="osint-view-all-link" style="display: inline-block; margin-top: 10px; font-size: 0.75rem; color: var(--cg-accent);">
+              View full index on archive.org <svg class="w-3 h-3 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 0.75rem; height: 0.75rem; display: inline-block; vertical-align: middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+            </a>
+          </div>
+        `;
+      }
+
+      let latestHtml = '';
+      if (closest) {
+        latestHtml = `
+          <div class="osint-wayback-latest" style="margin-bottom: 12px;">
+            <span class="osint-label">Latest Snapshot Available</span>
+            <a href="${escapeHtml(closest.url)}" target="_blank" class="osint-wayback-link" style="display: flex; align-items: center; gap: 6px; font-size: 0.9rem; color: var(--cg-success, #10b981); text-decoration: none;">
+              ${formatTimestamp(closest.timestamp)}
+              <span class="material-symbols-outlined" style="font-size: 1.1rem;">open_in_new</span>
+            </a>
+          </div>
+        `;
+      }
+
+      html += `
+        <div class="osint-wayback-results" style="margin-top: 10px;">
+          ${latestHtml}
+          ${historyHtml}
+        </div>
+      `;
 
     } else if (toolId === 'username' && data.data) {
       const platforms = data.data;
       html += `<div class="osint-results-header"><span class="osint-results-count">Platforms checked: <strong>${platforms.length}</strong></span></div>`;
-      html += `<div class="osint-username-grid">`;
+      html += `<div class="osint-username-grid" style="margin-top: 10px;">`;
       platforms.forEach(p => {
-        const cls = p.found ? 'found' : 'not-found';
-        html += `<div class="osint-username-item ${cls}"><span class="osint-username-platform">${escapeHtml(p.platform || p.site || '')}</span></div>`;
+        const pName = p.name || p.platform || p.site || '';
+        const pUrl = p.url || '';
+        if (p.status === 'Active' || p.found === true) {
+          html += `
+            <a href="${escapeHtml(pUrl)}" target="_blank" class="osint-platform-link" style="border-color: rgba(52, 211, 153, 0.2)">
+              <span class="osint-platform-icon"><svg class="w-4 h-4 text-emerald-400 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width: 1rem; height: 1rem;"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg></span>
+              <div class="osint-platform-info">
+                <span class="osint-platform-name" style="color: var(--cg-success)">${escapeHtml(pName)}</span>
+                <span class="osint-platform-url">${escapeHtml(pUrl.replace(/^https?:\/\//, ''))}</span>
+              </div>
+              <span class="osint-platform-open"><svg class="w-3 h-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 0.75rem; height: 0.75rem; display: inline-block;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg></span>
+            </a>
+          `;
+        } else {
+          html += `
+            <a href="${escapeHtml(pUrl)}" target="_blank" class="osint-platform-link" style="border-color: rgba(251, 191, 36, 0.2)">
+              <span class="osint-platform-icon"><svg class="w-4 h-4 text-amber-500 inline-block align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width: 1rem; height: 1rem;"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span>
+              <div class="osint-platform-info">
+                <span class="osint-platform-name" style="color: var(--cg-warning)">${escapeHtml(pName)}</span>
+                <span class="osint-platform-url">${escapeHtml(pUrl.replace(/^https?:\/\//, ''))}</span>
+              </div>
+              <span class="osint-platform-open"><svg class="w-3 h-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 0.75rem; height: 0.75rem; display: inline-block;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg></span>
+            </a>
+          `;
+        }
       });
       html += `</div>`;
 
     } else if (toolId === 'emailformat' && data.data) {
       const patterns = data.data;
       html += `<div class="osint-results-header"><span class="osint-results-count">Patterns generated: <strong>${patterns.length}</strong></span></div>`;
-      html += `<div class="osint-email-list">`;
+      html += `<div class="osint-email-format-list" style="margin-top: 10px;">`;
       patterns.forEach(p => {
-        html += `<div class="osint-email-item"><span class="osint-email-addr">${escapeHtml(p.email || '')}</span><span class="osint-email-pattern">${escapeHtml(p.pattern || '')}</span></div>`;
+        const badgeHtml = p.likely ? '<span class="osint-format-badge">Likely</span>' : '';
+        const cardClass = p.likely ? 'osint-email-format-item osint-format-likely' : 'osint-email-format-item';
+        html += `
+          <div class="${cardClass}">
+            <div class="osint-email-format-value">
+              <span class="osint-email-at">${escapeHtml(p.email || '')}</span>
+              <button class="osint-item-copy" onclick="OSINT.copyToClipboard('${escapeHtml(p.email || '')}')" title="Copy Email">
+                <span class="material-symbols-outlined" style="font-size: 1rem;">content_copy</span>
+              </button>
+            </div>
+            <div class="osint-email-format-meta">
+              <span class="osint-format-pattern">${escapeHtml(p.pattern || '')}</span>
+              ${badgeHtml}
+            </div>
+          </div>
+        `;
       });
       html += `</div>`;
 
