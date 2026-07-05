@@ -1032,15 +1032,20 @@
   appearance: none;
   width: 13px;
   height: 13px;
-  border: 1px solid var(--cg-border-subtle);
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
   border-radius: 3px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.04);
   outline: none;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
+  transition: all 0.2s ease-in-out;
+}
+
+.osint-tool-toggle-checkbox:hover {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .osint-tool-toggle-checkbox:checked {
