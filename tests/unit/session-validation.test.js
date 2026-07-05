@@ -118,12 +118,14 @@ describe('Backend-Driven Session Validation', () => {
     expect(window.authManager.apiClient.get).toHaveBeenCalledWith('auth/me');
   });
 
-  test('should logout and return false if token exists but backend validation fails', async () => {
+  test('should logout and return false if token exists but backend explicitly rejects it', async () => {
     // Setup token in mock storage
     localStorage.setItem('cyberguard_jwt', 'invalid-token');
 
-    // Mock backend failure
-    window.authManager.apiClient.get.mockRejectedValue(new Error('Unauthorized'));
+    // Mock backend auth failure
+    const unauthorizedError = new Error('Unauthorized');
+    unauthorizedError.status = 401;
+    window.authManager.apiClient.get.mockRejectedValue(unauthorizedError);
 
     const result = await window.authManager.loadUserSession();
 
@@ -131,6 +133,20 @@ describe('Backend-Driven Session Validation', () => {
     expect(window.authManager.currentUser).toBeNull();
     // Verify token was cleared
     expect(localStorage.getItem('cyberguard_jwt')).toBeNull();
+  });
+
+  test('should keep token if backend validation is temporarily unreachable', async () => {
+    localStorage.setItem('cyberguard_jwt', 'valid-token');
+    const cachedUser = { id: 1, email: 'cached@test.com', fullName: 'Cached User' };
+    localStorage.setItem('cyberguard_user', JSON.stringify(cachedUser));
+
+    window.authManager.apiClient.get.mockRejectedValue(new Error('Network unavailable'));
+
+    const result = await window.authManager.loadUserSession();
+
+    expect(result).toBe(true);
+    expect(window.authManager.currentUser.email).toBe('cached@test.com');
+    expect(localStorage.getItem('cyberguard_jwt')).toBe('valid-token');
   });
 
   test('should restore session from legacy storage without client inactivity checks', async () => {
@@ -171,21 +187,39 @@ describe('Backend-Driven Session Validation', () => {
     expect(window.authManager.currentUser).not.toBeNull();
   });
 
-  test('validateSessionOnPageLoad() should handle session expiration if backend status returns failure', async () => {
+  test('validateSessionOnPageLoad() should handle session expiration if backend returns 401', async () => {
     // Setup session and active user
     localStorage.setItem('cyberguard_jwt', 'invalid-token');
     const user = { id: 1, email: 'user@test.com', fullName: 'Test User' };
     window.authManager.currentUser = user;
 
-    // Mock backend failure (e.g. token expired on backend)
-    window.authManager.apiClient.get.mockRejectedValue(new Error('Session invalid'));
+    // Mock backend auth failure (e.g. token expired on backend)
+    const sessionInvalidError = new Error('Session invalid');
+    sessionInvalidError.status = 401;
+    window.authManager.apiClient.get.mockRejectedValue(sessionInvalidError);
 
     const handleSessionExpirationSpy = vi.spyOn(window.authManager, 'handleSessionExpiration');
 
     await window.authManager.validateSessionOnPageLoad();
 
-    // Verify expiration was handled because backend reported failure
+    // Verify expiration was handled because backend explicitly rejected the session
     expect(handleSessionExpirationSpy).toHaveBeenCalled();
     expect(window.authManager.currentUser).toBeNull();
+  });
+
+  test('validateSessionOnPageLoad() should keep session on non-auth validation errors', async () => {
+    localStorage.setItem('cyberguard_jwt', 'valid-token');
+    const user = { id: 1, email: 'user@test.com', fullName: 'Test User' };
+    window.authManager.currentUser = user;
+
+    window.authManager.apiClient.get.mockRejectedValue(new Error('Network unavailable'));
+
+    const handleSessionExpirationSpy = vi.spyOn(window.authManager, 'handleSessionExpiration');
+
+    await window.authManager.validateSessionOnPageLoad();
+
+    expect(handleSessionExpirationSpy).not.toHaveBeenCalled();
+    expect(window.authManager.currentUser).toBe(user);
+    expect(localStorage.getItem('cyberguard_jwt')).toBe('valid-token');
   });
 });
