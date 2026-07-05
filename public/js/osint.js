@@ -1115,17 +1115,28 @@ const OSINT = {
 
       if (abuseKey) {
         try {
-          const abuseUrl = `https://api.abuseipdb.com/api/v2/check?ipAddress=${target}&maxAgeInDays=90&verbose=true`;
-          const abuseResp = await fetchWithProxy(abuseUrl, {
-            headers: {
-              'Key': abuseKey,
-              'Accept': 'application/json'
-            }
+          const params = new URLSearchParams({
+            ip: target,
+            key: abuseKey,
+            maxAge: '90'
           });
+          const abuseResp = await fetch(`/api/abuseipdb?${params.toString()}`, {
+            ...(OSINT.activeAbortController ? { signal: OSINT.activeAbortController.signal } : {})
+          });
+          
+          let payload;
+          try {
+            payload = await abuseResp.json();
+          } catch (_) {
+            throw new Error('Invalid JSON response from API');
+          }
+
           if (abuseResp.ok) {
-            const payload = await abuseResp.json();
             abuseData = payload.data;
             this.log(`AbuseIPDB reputation query completed. Abuse confidence score: ${abuseData.abuseConfidenceScore || 0}%`, (abuseData.abuseConfidenceScore || 0) > 0 ? 'warning' : 'success');
+          } else {
+            const detail = payload?.errors?.[0]?.detail || '';
+            throw new Error(detail || `Request failed with status ${abuseResp.status}`);
           }
         } catch (e) {
           if (e.name === 'AbortError') throw e;
