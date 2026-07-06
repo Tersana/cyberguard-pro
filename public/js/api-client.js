@@ -1257,7 +1257,9 @@ function withLoading(asyncFn, options = {}) {
 
     window.onFrontendToolResult = function ({ timestamp, feature, message, status, details }) {
       let badge = "[INFO]";
-      if (status === "danger" || status === "threat") badge = "[ERROR]";
+      if (status === "danger" || status === "threat") {
+        badge = message.includes("[SCAN COMPLETE]") ? "[LIVE]" : "[ERROR]";
+      }
       else if (status === "warning") badge = "[WARN]";
       else if (status === "success" || status === "safe") badge = "[LIVE]";
 
