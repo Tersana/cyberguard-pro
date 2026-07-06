@@ -77,6 +77,59 @@
   }
 
   /**
+   * Fetches real findings from all active projects and injects them into the metrics payload.
+   */
+  async function populateRealRecentFindings(metricsPayload, projects) {
+    if (!metricsPayload || !Array.isArray(projects) || projects.length === 0) {
+      return;
+    }
+
+    try {
+      const findingsResponses = await Promise.all(
+        projects.map(p =>
+          window.apiClient.get(`/projects/${p.id}/findings`)
+            .catch((err) => {
+              console.warn(`[SecurityDashboard] Failed to fetch findings for project ${p.id}:`, err);
+              return { findings: { data: [] } };
+            })
+        )
+      );
+
+      let allRealFindings = [];
+      findingsResponses.forEach((res, idx) => {
+        const project = projects[idx];
+        let arr = [];
+        if (Array.isArray(res)) {
+          arr = res;
+        } else if (res && res.findings) {
+          const findingsObj = res.findings;
+          if (Array.isArray(findingsObj.data)) {
+            arr = findingsObj.data;
+          } else if (Array.isArray(findingsObj)) {
+            arr = findingsObj;
+          }
+        } else if (res && res.data) {
+          arr = Array.isArray(res.data) ? res.data : [];
+        }
+
+        arr.forEach(f => {
+          // Add project and target metadata to the finding if missing
+          f.project_name = project.name;
+          f.project_id = project.id;
+          if (!f.target_name && !f.target) {
+            f.target_name = project.name; // Fallback to project name
+          }
+          allRealFindings.push(f);
+        });
+      });
+
+      metricsPayload.recent_findings = { findings: allRealFindings };
+    } catch (err) {
+      console.error("[SecurityDashboard] Failed to populate real recent findings:", err);
+    }
+  }
+
+  /**
    * Main loader: Called when tab is activated or refreshed
    */
   async function loadSecurityDashboard() {
@@ -110,6 +163,8 @@
       if (metricsRes.status !== "success" || !metricsRes.data) {
         throw new Error(metricsRes.message || "Failed to retrieve dashboard metrics");
       }
+
+      await populateRealRecentFindings(metricsRes.data, projects);
 
       dashboardState.metrics = metricsRes.data;
       mergeLocalActiveScans(dashboardState.metrics);
@@ -802,6 +857,7 @@
         try {
           const metricsRes = await window.apiClient.get("/dashboard/metrics");
           if (metricsRes.status === "success" && metricsRes.data) {
+            await populateRealRecentFindings(metricsRes.data, dashboardState.projects);
             dashboardState.metrics = metricsRes.data;
             mergeLocalActiveScans(dashboardState.metrics);
             renderActiveScans(metricsRes.data.active_scans);

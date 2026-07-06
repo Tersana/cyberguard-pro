@@ -141,6 +141,14 @@ describe('Frontend Scans Dashboard Integration', () => {
           if (url === '/targets') {
             return Promise.resolve({ status: 'success', targets: [] });
           }
+          if (url === '/projects/p1/findings') {
+            return Promise.resolve({
+              status: 'success',
+              findings: {
+                data: []
+              }
+            });
+          }
           return Promise.reject(new Error('not found'));
         }),
         getToken: () => 'mock-jwt-token'
