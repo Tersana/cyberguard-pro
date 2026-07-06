@@ -365,7 +365,7 @@
 
             /* Custom styled switch toggles inside scanner cards */
             .scan-cb:checked + .switch-bg {
-                background-color: #8b5cf6 !important;
+                background-color: var(--cg-accent-dark, #3b82f6) !important;
             }
             .scan-cb:checked + .switch-bg .switch-dot {
                 transform: translateX(16px);
@@ -377,16 +377,16 @@
                 transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
             }
             .scanner-interactive-card.selected {
-                border-color: rgba(167, 139, 250, 0.5) !important;
-                background-color: rgba(167, 139, 250, 0.06) !important;
-                box-shadow: 0 0 15px rgba(167, 139, 250, 0.08);
+                border-color: rgba(59, 130, 246, 0.5) !important;
+                background-color: rgba(59, 130, 246, 0.06) !important;
+                box-shadow: 0 0 15px rgba(59, 130, 246, 0.08);
             }
             .scanner-interactive-card.selected .switch-dot {
                 transform: translateX(16px);
                 background-color: #fff !important;
             }
             .scanner-interactive-card.selected .switch-bg {
-                background-color: #8b5cf6 !important;
+                background-color: var(--cg-accent-dark, #3b82f6) !important;
             }
 
             /* ── Finding Details Modal Transitions ── */
@@ -3996,7 +3996,7 @@
                     updateRiskScorePolling(_currentTab);
 
                     // 5. Use all project findings (for the whole project)
-                    const findings = _projectFindings || [];
+                    const findings = mergeFindingRecords(_projectFindings || [], getCachedProjectFindings());
 
                     // Count open findings
                     let openCritical = 0;
@@ -4156,7 +4156,9 @@
                     }
 
                     if (latestScanIdVal) {
-                        const shortId = latestScanIdVal.substring(0, 8).toUpperCase();
+                        const shortId = window.scannerAPI && typeof window.scannerAPI.formatScanShortId === "function"
+                            ? window.scannerAPI.formatScanShortId(latestScanObj)
+                            : latestScanIdVal.substring(0, 8).toUpperCase();
                         const lastScanId = document.getElementById("stat-last-scan-id");
                         if (lastScanId) {
                             lastScanId.textContent = shortId;
@@ -5227,6 +5229,7 @@
                         listEl.innerHTML = targets
                             .map((t) => renderTargetRow(t))
                             .join("");
+                        targets.forEach((t) => refreshTargetRiskFromCache(String(t.id || "")));
                     }
 
                     updateTargetsBtnState();
@@ -5273,6 +5276,73 @@
                 }
             }
 
+            function mergeFindingRecords(...groups) {
+                const map = new Map();
+                groups.flat().filter(Boolean).forEach((finding) => {
+                    const key = String(finding.id || `${finding.scan_job_id || ''}:${finding.title || ''}:${finding.affected_url || finding.url || ''}`);
+                    if (!map.has(key)) map.set(key, finding);
+                });
+                return Array.from(map.values());
+            }
+
+            function calculateRiskFromFindings(findings) {
+                const open = { critical: 0, high: 0, medium: 0, low: 0 };
+                findings.forEach((f) => {
+                    if ((f.status || "open").toLowerCase() !== "open") return;
+                    const sev = (f.severity || "info").toLowerCase();
+                    if (open[sev] !== undefined) open[sev]++;
+                });
+                const score = (open.critical * 10 + open.high * 7 + open.medium * 4 + open.low * 1) / 10;
+                return Math.max(0, Math.min(100, score));
+            }
+
+            function getCachedProjectFindings() {
+                if (!window.scannerAPI || typeof window.scannerAPI.getRecentFindingsForProject !== "function") return [];
+                return window.scannerAPI.getRecentFindingsForProject(_projectId);
+            }
+
+            function getCachedTargetFindings(targetId) {
+                if (!window.scannerAPI || typeof window.scannerAPI.getRecentFindingsForTarget !== "function") return [];
+                return window.scannerAPI.getRecentFindingsForTarget(targetId);
+            }
+
+            function refreshTargetRiskFromCache(targetId) {
+                const cached = getCachedTargetFindings(targetId);
+                if (cached.length === 0) return;
+                updateTargetRiskBadge(targetId, calculateRiskFromFindings(cached));
+            }
+
+            let _scanRefreshDebounce = null;
+            function handleProjectScanDataChanged(event) {
+                const detail = event.detail || {};
+                const scan = detail.scan || {};
+                const projectId = detail.projectId || scan.project_id || scan.project?.id;
+                const targetId = detail.targetId || scan.target_id || scan.target?.id;
+                if (projectId && String(projectId) !== String(_projectId)) return;
+
+                if (_scanRefreshDebounce) clearTimeout(_scanRefreshDebounce);
+                _scanRefreshDebounce = setTimeout(async () => {
+                    _projectFindings = mergeFindingRecords(_projectFindings, getCachedProjectFindings());
+                    if (typeof _renderHealthScore === "function") _renderHealthScore();
+                    if (_currentTab === "overview") loadProjectRiskScore(true);
+                    if (_currentTab === "scans") loadProjectScans(true);
+                    if (targetId) {
+                        refreshTargetRiskFromCache(targetId);
+                        const drawer = document.getElementById(`target-history-drawer-${targetId}`);
+                        if (drawer && drawer.classList.contains("open")) {
+                            toggleTargetScanHistory(targetId, true);
+                        }
+                    }
+                    if (_currentTab === "findings") {
+                        loadFindings(_currentFindingTargetId || "all", _findingsCurrentPage || 1, true);
+                    }
+                }, 300);
+            }
+
+            ["cyberguard:scanStarted", "cyberguard:scanUpdated", "cyberguard:scanFindingsUpdated", "cyberguard:scanCompleted"].forEach((name) => {
+                document.addEventListener(name, handleProjectScanDataChanged);
+            });
+
             function getBaseDomain(hostname) {
                 if (!hostname) return "";
                 const host = hostname.split(':')[0];
@@ -5291,7 +5361,7 @@
                 <div class="mt-4 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 backdrop-blur-sm space-y-3 relative overflow-hidden" id="dns-verify-panel-${id}">
                     <!-- Decorative glow -->
                     <div class="absolute -right-10 -bottom-10 w-24 h-24 bg-amber-500/10 rounded-full blur-xl pointer-events-none"></div>
-                    
+
                     <div class="flex items-center justify-between flex-wrap gap-2">
                         <div class="flex items-center gap-2 text-xs font-bold text-amber-400">
                             <svg class="w-4 h-4 text-amber-400 animate-pulse" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -5401,7 +5471,7 @@
                     network: "text-[#38BDF8] bg-[rgba(56,189,248,0.12)] border-[rgba(56,189,248,0.25)]",
                 };
                 const typeBadgeCls = TYPE_BADGE[type] || TYPE_BADGE.domain;
-                
+
                 const initials = type === "domain" ? "D" : type === "ip" ? "I" : "N";
 
                 const editDeleteBtns = canEdit
@@ -5509,7 +5579,7 @@
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <h3 class="text-sm font-extrabold text-white truncate max-w-[200px]" title="${label}">${label}</h3>
                                         <span class="text-[8px] px-1.5 py-0.5 rounded border font-black uppercase tracking-wider flex-shrink-0 ${typeBadgeCls}">${cap(type)}</span>
-                                        
+
                                     </div>
                                     <div class="flex items-center gap-2 text-[11px] text-slate-400 font-mono bg-black/40 px-2.5 py-1 rounded-lg border border-white/5 max-w-fit shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] min-w-0">
                                         <span class="text-[8px] font-black text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20 uppercase tracking-widest select-none flex-shrink-0">${valTypeLabel}</span>
@@ -6180,13 +6250,15 @@
 
             let _scansLoaded = false;
 
-            async function loadProjectScans() {
+            async function loadProjectScans(silent = false) {
                 const tbody = document.getElementById("scans-table-body");
                 if (!tbody) return;
 
-                tbody.innerHTML = `<tr><td colspan="6" class="scans-empty">
-                    <span class="cyber-spinner-sm"></span> Loading scans…
-                </td></tr>`;
+                if (!silent) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="scans-empty">
+                        <span class="cyber-spinner-sm"></span> Loading scans…
+                    </td></tr>`;
+                }
 
                 try {
                     if (!window.scannerAPI) throw new Error("scannerAPI not available");
@@ -6221,39 +6293,9 @@
                 const s         = item.scan || item;
                 const meta      = item.metadata || {};
                 const scanId    = esc(String(s.id || ""));
-                let shortId;
-                if (scanId.startsWith("frontend_")) {
-                    const randPart = scanId.replace("frontend_", "").substring(0, 6).toUpperCase();
-                    let prefix = "SCAN";
-                    const tools = s.selected_frontend_tools || [];
-                    const drivers = Array.isArray(s.driver_id) ? s.driver_id : (s.driver_id ? [s.driver_id] : []);
-                    
-                    if (tools.length === 1) {
-                        const tId = tools[0];
-                        if (tId === "net-port-scanner") prefix = "PORT";
-                        else if (tId === "net-tcp-connectivity") prefix = "TCP";
-                        else if (tId === "net-udp-services") prefix = "UDP";
-                        else if (tId === "net-ip-geolocation") prefix = "GEO";
-                        else if (tId === "net-reverse-dns") prefix = "RDNS";
-                        else if (tId === "net-whois-lookup") prefix = "WHOIS";
-                    } else if (tools.length > 1) {
-                        prefix = "NET";
-                    } else if (drivers.length === 1) {
-                        const drv = drivers[0];
-                        if (drv === "Port Scanner") prefix = "PORT";
-                        else if (drv === "TCP Connectivity") prefix = "TCP";
-                        else if (drv === "UDP Services") prefix = "UDP";
-                        else if (drv === "IP Geolocation") prefix = "GEO";
-                        else if (drv === "Reverse DNS") prefix = "RDNS";
-                        else if (drv === "WHOIS Lookup") prefix = "WHOIS";
-                        else if (drv === "NETWORK_ANALYSIS") prefix = "NET";
-                    } else if (drivers.length > 1) {
-                        prefix = "NET";
-                    }
-                    shortId = `${prefix}-${randPart}`;
-                } else {
-                    shortId = scanId.substring(0, 8).toUpperCase();
-                }
+                const shortId = window.scannerAPI && typeof window.scannerAPI.formatScanShortId === "function"
+                    ? window.scannerAPI.formatScanShortId(s)
+                    : scanId.substring(0, 8).toUpperCase();
                 const status    = (s.status || "unknown").toLowerCase();
                 const targetVal = esc(meta.target_name || s.target?.value || s.target_id || "—");
                 const triggeredBy = esc(meta.triggered_by || s.triggered_by || s.user?.name || "—");
@@ -6328,9 +6370,11 @@
 
                     tbody.innerHTML = scans.map(item => {
                         const s        = item.scan || item;
-                        const scanId   = esc(String(s.id || ""));
-                        const shortId  = scanId.substring(0, 8).toUpperCase();
-                        const status   = (s.status || "unknown").toLowerCase();
+                        const scanId    = esc(String(s.id || ""));
+                const shortId = window.scannerAPI && typeof window.scannerAPI.formatScanShortId === "function"
+                    ? window.scannerAPI.formatScanShortId(s)
+                    : scanId.substring(0, 8).toUpperCase();
+                const status   = (s.status || "unknown").toLowerCase();
                         
                         let started = "—";
                         const dateVal = s.started_at || s.created_at;
@@ -6603,7 +6647,7 @@
                 populateTargetFilterDropdown(targets);
             }
 
-            async function loadFindings(targetId, pageNum = 1) {
+            async function loadFindings(targetId, pageNum = 1, silent = false) {
                 _findingsCurrentPage = pageNum;
                 if (targetId !== undefined) {
                     _currentFindingTargetId = targetId;
@@ -6631,7 +6675,7 @@
                 // Update target action button states (Add Finding visibility)
                 updateTargetsBtnState();
                 
-                showFindingsLoading();
+                if (!silent) showFindingsLoading();
                 
                 const params = new URLSearchParams();
                 if (_currentSeverityFilter && _currentSeverityFilter !== 'all') {
@@ -6776,26 +6820,41 @@
                         });
                     }
 
-                    // Merge the filtered local findings
-                    findingsList = [...findingsList, ...localFindingsList];
-                    total += localFindingsList.length;
-                    
+                    let cachedFindingsList = isProjectWide
+                        ? getCachedProjectFindings()
+                        : getCachedTargetFindings(_currentFindingTargetId);
+                    if (isProjectWide && _currentTargetFilter && _currentTargetFilter !== 'all') {
+                        cachedFindingsList = cachedFindingsList.filter(f => String(f.target_id) === String(_currentTargetFilter));
+                    }
+                    if (_currentSeverityFilter && _currentSeverityFilter !== 'all') {
+                        cachedFindingsList = cachedFindingsList.filter(f => (f.severity || '').toLowerCase() === _currentSeverityFilter.toLowerCase());
+                    }
+                    if (_currentStatusFilter && _currentStatusFilter !== 'all') {
+                        cachedFindingsList = cachedFindingsList.filter(f => (f.status || '').toLowerCase() === _currentStatusFilter.toLowerCase());
+                    }
+                    if (_currentToolFilter && _currentToolFilter !== 'all') {
+                        cachedFindingsList = cachedFindingsList.filter(f => matchToolFilter(f.tool || f.driver_id || '', _currentToolFilter));
+                    }
+
+                    // Merge backend, frontend-only, and recent backend cached findings.
+                    findingsList = mergeFindingRecords(findingsList, localFindingsList, cachedFindingsList);
+                    total = findingsList.length;
                     _allFindings = findingsList;
                     _findingsCurrentPage = currentPage;
                     _findingsLastPage = lastPage;
-                    
+
                     // Sort findings ordered by severity: critical -> high -> medium -> low -> info
                     const w = { critical:0, high:1, medium:2, low:3, info:4 };
                     const sorted = [..._allFindings].sort((a,b) =>
                         (w[(a.severity||'').toLowerCase()] ?? 5) - (w[(b.severity||'').toLowerCase()] ?? 5)
                     );
-                    
+
                     renderFindings(sorted, isProjectWide);
                     updateFindingsStats(sorted);
                     updateFindingsTabBadge(total || sorted.length);
                     renderPaginationContainer(currentPage, lastPage);
                     populateToolsFilter(sorted);
-                    
+
                 } catch (err) {
                     showFindingsError(err);
                 }
@@ -6812,11 +6871,11 @@
             async function handleInlineStatusChange(findingId, newStatus, selectEl) {
                 const finding = _allFindings.find(f => String(f.id) === String(findingId));
                 const oldStatus = finding ? (finding.status || 'open') : 'open';
-                
+
                 // Optimistic UI update
                 if (finding) finding.status = newStatus;
                 selectEl.className = `status-badge-select status-${newStatus}`;
-                
+
                 try {
                     const res = await apiFetch(`/findings/${findingId}/status`, {
                         method: 'PATCH',
@@ -6851,7 +6910,7 @@
             async function handleInlineSeverityChange(findingId, newSeverity, selectEl) {
                 const finding = _allFindings.find(f => String(f.id) === String(findingId));
                 const oldSeverity = finding ? (finding.severity || 'info') : 'info';
-                
+
                 // Optimistic UI update
                 if (finding) finding.severity = newSeverity;
                 selectEl.className = `severity-badge-select sev-${newSeverity}`;
@@ -6859,7 +6918,7 @@
                 if (cardEl) {
                     cardEl.className = cardEl.className.replace(/severity-border-\w+/, `severity-border-${newSeverity}`);
                 }
-                
+
                 try {
                     const res = await apiFetch(`/findings/${findingId}/severity`, {
                         method: 'PATCH',
@@ -6910,7 +6969,7 @@
                     : '';
                 const fid      = escapeHtml(String(finding.id || ''));
                 const toolName = escapeHtml(finding.tool || finding.driver_id || '');
-                
+
                 // Show Target label context if viewing all findings project-wide
                 let targetContextLabel = "";
                 if (isProjectWide && finding.target_id) {
@@ -6970,7 +7029,7 @@
             function renderPaginationContainer(currentPage, lastPage) {
                 const container = document.getElementById('findings-pagination-container');
                 if (!container) return;
-                
+
                 if (lastPage <= 1) {
                     container.innerHTML = "";
                     container.classList.add('hidden');
@@ -6982,7 +7041,7 @@
                 const nextDisabled = currentPage === lastPage;
 
                 let html = `
-                    <button class="bg-[rgba(15,23,42,0.6)] border border-white/10 text-slate-300 font-semibold px-3 py-1.5 rounded-lg text-xs transition-all hover:bg-[rgba(15,23,42,0.8)] flex items-center gap-1 ${prevDisabled ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''}" 
+                    <button class="bg-[rgba(15,23,42,0.6)] border border-white/10 text-slate-300 font-semibold px-3 py-1.5 rounded-lg text-xs transition-all hover:bg-[rgba(15,23,42,0.8)] flex items-center gap-1 ${prevDisabled ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''}"
                             onclick="handlePageChange(${currentPage - 1})">
                         &lsaquo; Previous
                     </button>
@@ -7006,7 +7065,7 @@
                         html += `<span class="text-slate-500 px-2 py-1 font-mono text-xs select-none">···</span>`;
                     } else {
                         const active = p === currentPage;
-                        const cls = active 
+                        const cls = active
                             ? "bg-white border border-white text-slate-900 font-bold px-3 py-1.5 rounded-lg text-xs"
                             : "bg-[rgba(15,23,42,0.6)] border border-white/10 text-slate-300 font-semibold px-3 py-1.5 rounded-lg text-xs transition-all hover:border-white/20 hover:bg-[rgba(15,23,42,0.8)]";
                         html += `<button class="${cls}" onclick="handlePageChange(${p})">${p}</button>`;
@@ -7014,7 +7073,7 @@
                 });
 
                 html += `
-                    <button class="bg-[rgba(15,23,42,0.6)] border border-white/10 text-slate-300 font-semibold px-3 py-1.5 rounded-lg text-xs transition-all hover:bg-[rgba(15,23,42,0.8)] flex items-center gap-1 ${nextDisabled ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''}" 
+                    <button class="bg-[rgba(15,23,42,0.6)] border border-white/10 text-slate-300 font-semibold px-3 py-1.5 rounded-lg text-xs transition-all hover:bg-[rgba(15,23,42,0.8)] flex items-center gap-1 ${nextDisabled ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''}"
                             onclick="handlePageChange(${currentPage + 1})">
                         Next &rsaquo;
                     </button>
@@ -7032,7 +7091,7 @@
                 const section = document.getElementById('findings-collapsible-section');
                 const chevron = document.getElementById('toggle-all-findings-chevron');
                 if (!section || !chevron) return;
-                
+
                 const isCollapsed = section.classList.contains('collapsed');
                 if (isCollapsed) {
                     section.classList.remove('collapsed');
@@ -7045,25 +7104,25 @@
 
             function formatIPGeolocationHtml(text) {
                 if (!text) return '';
-                
+
                 // Parse sections
                 const lines = text.split('\n');
                 let html = '<div class="ip-geo-container mt-4 space-y-6">';
-                
+
                 let currentSection = null;
                 let currentItems = [];
-                
+
                 const sections = [];
-                
+
                 lines.forEach(line => {
                     const trimmed = line.trim();
                     if (!trimmed) return;
-                    
+
                     if (trimmed.includes('Location Details') || trimmed.includes('Network Information') || trimmed.includes('Regional Details') || trimmed.includes('Security Information')) {
                         if (currentSection) {
                             sections.push({ name: currentSection, items: currentItems });
                         }
-                        currentSection = trimmed.replace(/[📍🌐🕐🔒]/g, '').replace(/:$/, '').trim();
+                        currentSection = trimmed.replace(/[ðŸ“ðŸŒðŸ•ðŸ”’]/g, '').replace(/:$/, '').trim();
                         currentItems = [];
                     } else if (trimmed.includes(':') && currentSection) {
                         const colonIdx = trimmed.indexOf(':');

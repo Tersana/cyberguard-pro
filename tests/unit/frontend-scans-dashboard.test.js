@@ -192,5 +192,86 @@ describe('Frontend Scans Dashboard Integration', () => {
       row.click();
       expect(window.dashboardNavigateToScan).toHaveBeenCalledWith('frontend_abc');
     });
+
+    it('should silently refresh dashboard sections from recent scanner cache', async () => {
+      let cachedScans = [];
+      let cachedProjectFindings = [];
+      let cachedTargetFindings = [];
+      const baseMetrics = () => ({
+        findings_summary: { total: 0, critical: 0, high: 0, medium: 0, low: 0, info: 0, resolved: 0 },
+        infrastructure: { total_targets: 1, total_scans: 0 },
+        active_scans: { count: 0, scans: [] },
+        recent_findings: { findings: [] },
+        findings_by_severity: {},
+        risk_score: { global_score: 0, risk_level: 'low' }
+      });
+
+      window.apiClient.get.mockImplementation((url) => {
+        if (url === '/dashboard/metrics') {
+          return Promise.resolve({ status: 'success', data: baseMetrics() });
+        }
+        if (url === '/targets') {
+          return Promise.resolve({
+            status: 'success',
+            targets: [{ id: 't1', name: 'google.com', value: 'google.com', risk_score: 0 }]
+          });
+        }
+        if (url === '/projects/p1/findings') {
+          return Promise.resolve({ status: 'success', findings: { data: [] } });
+        }
+        return Promise.reject(new Error('not found'));
+      });
+      window.scannerAPI.getRecentScansForProject = vi.fn(() => cachedScans);
+      window.scannerAPI.getRecentFindingsForProject = vi.fn(() => cachedProjectFindings);
+      window.scannerAPI.getRecentFindingsForTarget = vi.fn(() => cachedTargetFindings);
+
+      await window.loadSecurityDashboard();
+      expect(document.querySelector('.dashboard-skeleton')).toBeNull();
+      expect(document.getElementById('total-findings-value').textContent).toBe('0');
+
+      cachedScans = [
+        {
+          id: 'FUZZ123',
+          status: 'running',
+          progress: 64,
+          project_id: 'p1',
+          target_id: 't1',
+          driver_id: ['WEB_ENDPOINT_FUZZER'],
+          target: { value: 'google.com' },
+          started_at: '2026-07-06T05:37:00Z'
+        }
+      ];
+      cachedProjectFindings = [
+        {
+          id: 'finding-1',
+          scan_job_id: 'FUZZ123',
+          project_id: 'p1',
+          target_id: 't1',
+          title: '/admin',
+          target_name: 'google.com',
+          severity: 'critical',
+          status: 'open',
+          created_at: '2026-07-06T05:38:00Z'
+        }
+      ];
+      cachedTargetFindings = cachedProjectFindings;
+
+      await window.loadSecurityDashboard({ silent: true });
+
+      expect(document.querySelector('.dashboard-skeleton')).toBeNull();
+      expect(document.getElementById('critical-findings-value').textContent).toBe('1');
+      expect(document.getElementById('total-findings-value').textContent).toBe('1');
+      expect(document.getElementById('donut-total-findings-count').textContent).toBe('1');
+      expect(document.getElementById('overall-risk-score').textContent).toBe('1.0');
+      expect(document.querySelector('.risk-target-row .risk-score-value').textContent).toBe('1');
+
+      const activeRow = document.querySelector('#active-scans-container .active-scan-row');
+      expect(activeRow.getAttribute('data-scan-id')).toBe('FUZZ123');
+      expect(activeRow.querySelector('.scan-type').textContent).toContain('WEB_ENDPOINT_FUZZER');
+      expect(activeRow.querySelector('.scan-progress-text').textContent).toBe('64%');
+
+      expect(document.querySelector('#recent-findings-container .finding-title').textContent).toContain('/admin');
+      expect(document.querySelector('#severity-bar-list .severity-count').textContent).toBe('1');
+    });
   });
 });

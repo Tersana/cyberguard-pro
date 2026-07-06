@@ -13,7 +13,7 @@
   /* ─── Config ──────────────────────────────────────────────────────────── */
   const STATUS_POLL_MS      = 5_000;   // poll every 5 s (fallback)
   const STATUS_POLL_WS_MS   = 30_000;  // poll every 30 s when WS active
-  const FINDINGS_POLL_MS    = 15_000;  // poll findings every 15 s while running
+  const FINDINGS_POLL_MS    = 5_000;   // poll findings every 5 s while running
   const TERMINAL_MAX_LINES  = 2000;    // keep terminal trim
 
   /* ─── State ───────────────────────────────────────────────────────────── */
@@ -31,6 +31,56 @@
   // WebSocket
   let echoChannel    = null;
   let wsConnected    = false;
+
+  function getPendingScanContext() {
+    try {
+      const pendingRaw = sessionStorage.getItem("cg_pending_scan");
+      const pending = pendingRaw ? JSON.parse(pendingRaw) : null;
+      return pending && pending.sessionId === scanJobId ? pending : {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function getCurrentScanContext(extra = {}) {
+    const pending = getPendingScanContext();
+    const session = scanSession || {};
+    return {
+      ...session,
+      ...extra,
+      id: session.id || scanJobId,
+      target_id: session.target_id || session.target?.id || pending.targetId,
+      project_id: session.project_id || session.project?.id || pending.projectId,
+      target_value: session.target?.value || pending.targetValue,
+      driver_ids: session.driver_id || pending.selectedBackendDrivers,
+      started_at: session.started_at || pending.startedAt,
+    };
+  }
+
+  function publishScanEvent(name, detail = {}) {
+    const scan = getCurrentScanContext(detail.scan || {});
+    if (window.scannerAPI && typeof window.scannerAPI.rememberScanSession === "function") {
+      window.scannerAPI.rememberScanSession(scan, { source: scan.source || "api" });
+    }
+    document.dispatchEvent(new CustomEvent(`cyberguard:${name}`, {
+      detail: {
+        scanId: scanJobId,
+        scan,
+        projectId: scan.project_id,
+        targetId: scan.target_id,
+        findings: allFindings,
+        ...detail,
+      }
+    }));
+  }
+
+  function rememberAndPublishFindings(findings) {
+    const scan = getCurrentScanContext();
+    if (window.scannerAPI && typeof window.scannerAPI.rememberScanFindings === "function") {
+      window.scannerAPI.rememberScanFindings(scanJobId, findings, scan);
+    }
+    publishScanEvent("scanFindingsUpdated", { scan, findings });
+  }
 
   /* ─── Boot ────────────────────────────────────────────────────────────── */
   document.addEventListener("DOMContentLoaded", async function () {
@@ -59,6 +109,7 @@
       // Load initial status
       scanSession = await window.scannerAPI.getScanStatus(scanJobId);
       currentStatus = scanSession.status;
+      publishScanEvent("scanUpdated", { scan: scanSession });
 
       renderHeader(scanSession);
       renderControlButtons(currentStatus);
@@ -103,6 +154,9 @@
 
       // Load initial findings
       await loadFindings();
+      if (currentStatus === "completed" || currentStatus === "cancelled") {
+        publishScanEvent("scanCompleted", { scan: scanSession, status: currentStatus });
+      }
 
       // Load historical logs if any exist
       if (scanSession && Array.isArray(scanSession.logs) && scanSession.logs.length > 0) {
@@ -359,40 +413,10 @@
 
     _set("sp-target-name", target.value || "Unknown Target");
     
-    let displayId = s.id || "";
-    let shortId;
-    if (displayId.startsWith("frontend_")) {
-      const randPart = displayId.replace("frontend_", "").substring(0, 6).toUpperCase();
-      let prefix = "SCAN";
-      const tools = s.selected_frontend_tools || [];
-      const drivers = Array.isArray(s.driver_id) ? s.driver_id : (s.driver_id ? [s.driver_id] : []);
-      
-      if (tools.length === 1) {
-        const tId = tools[0];
-        if (tId === "net-port-scanner") prefix = "PORT";
-        else if (tId === "net-tcp-connectivity") prefix = "TCP";
-        else if (tId === "net-udp-services") prefix = "UDP";
-        else if (tId === "net-ip-geolocation") prefix = "GEO";
-        else if (tId === "net-reverse-dns") prefix = "RDNS";
-        else if (tId === "net-whois-lookup") prefix = "WHOIS";
-      } else if (tools.length > 1) {
-        prefix = "NET";
-      } else if (drivers.length === 1) {
-        const drv = drivers[0];
-        if (drv === "Port Scanner") prefix = "PORT";
-        else if (drv === "TCP Connectivity") prefix = "TCP";
-        else if (drv === "UDP Services") prefix = "UDP";
-        else if (drv === "IP Geolocation") prefix = "GEO";
-        else if (drv === "Reverse DNS") prefix = "RDNS";
-        else if (drv === "WHOIS Lookup") prefix = "WHOIS";
-        else if (drv === "NETWORK_ANALYSIS") prefix = "NET";
-      } else if (drivers.length > 1) {
-        prefix = "NET";
-      }
-      shortId = `${prefix}-${randPart}`;
-    } else {
-      shortId = displayId.substring(0, 8).toUpperCase();
-    }
+    const displayId = s.id || scanJobId || "";
+    const shortId = window.scannerAPI && typeof window.scannerAPI.formatScanShortId === "function"
+      ? window.scannerAPI.formatScanShortId(s)
+      : displayId.substring(0, 8).toUpperCase();
     _set("sp-scan-id-short", shortId);
 
     // Started at
@@ -576,6 +600,8 @@
     }
     try {
       const session = await window.scannerAPI.getScanStatus(scanJobId);
+      scanSession = session;
+      publishScanEvent("scanUpdated", { scan: session });
       if (session.status !== currentStatus) {
         // Status changed
         renderControlButtons(session.status);
@@ -583,11 +609,11 @@
           stopAllPolling();
           teardownWebSocket();
           appendTerminalSystem(`Scan session ended (${session.status}).`);
-          // Refresh findings one last time
           await loadFindings();
+          publishScanEvent("scanCompleted", { scan: session, status: session.status });
         }
       }
-      scanSession = session;
+      currentStatus = session.status;
     } catch (err) {
       console.warn("[ScanProgress] Status poll error:", err.message);
     }
@@ -617,6 +643,7 @@
         seenFindingIds.add(id);
       });
       renderFindingsTable(findings);
+      rememberAndPublishFindings(findings);
       if (countEl) {
         countEl.textContent = `${findings.length} finding${findings.length !== 1 ? "s" : ""} discovered`;
       }
@@ -866,13 +893,15 @@
     });
   }
 
-  function onScanComplete(data) {
+  async function onScanComplete(data) {
     const status = data?.status || data?.scan_session?.status || "completed";
+    scanSession = data?.scan_session || { ...(scanSession || {}), status };
     renderControlButtons(status);
     stopAllPolling();
     teardownWebSocket();
     appendTerminalSystem("Scan session ended.");
-    loadFindings();
+    publishScanEvent("scanCompleted", { scan: scanSession, status });
+    await loadFindings();
     notify(
       status === "completed"
         ? `Scan completed — ${allFindings.length} finding(s) found.`
@@ -894,7 +923,11 @@
     if (seenFindingIds.has(id)) return;
     seenFindingIds.add(id);
     allFindings.push(finding);
+    if (window.scannerAPI && typeof window.scannerAPI.rememberScanFindings === "function") {
+      allFindings = window.scannerAPI.rememberScanFindings(scanJobId, allFindings, getCurrentScanContext());
+    }
     renderFindingsTable(allFindings);
+    rememberAndPublishFindings(allFindings);
     const countEl = document.getElementById("sp-findings-count");
     if (countEl) {
       countEl.textContent = `${allFindings.length} finding${allFindings.length !== 1 ? "s" : ""} discovered`;
@@ -1097,7 +1130,7 @@
         if (currentSection) {
           sections.push({ name: currentSection, items: currentItems });
         }
-        currentSection = trimmed.replace(/[📍🌐🕐🔒]/g, '').replace(/:$/, '').trim();
+        currentSection = trimmed.replace(/[ðŸ“ðŸŒðŸ•ðŸ”’]/g, '').replace(/:$/, '').trim();
         currentItems = [];
       } else if (trimmed.includes(':') && currentSection) {
         const colonIdx = trimmed.indexOf(':');
