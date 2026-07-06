@@ -130,10 +130,18 @@
     metrics.active_scans.count = metrics.active_scans.scans.length;
 
     const allFindings = uniqueById([...recentFindings, ...metrics.recent_findings.findings], "finding");
-    metrics.recent_findings.findings = allFindings;
 
-    const summary = { critical: 0, high: 0, medium: 0, low: 0, info: 0, resolved: 0, total: allFindings.length };
-    allFindings.forEach((finding) => {
+    // Web Endpoint Fuzzer / discovery findings are inventory, not vulnerabilities — exclude
+    // them from summary counts, severity breakdown, and risk score unless the user opts in.
+    const includeDisc = typeof window.scannerAPI.getIncludeDiscovery === "function"
+      ? window.scannerAPI.getIncludeDiscovery() : false;
+    const isDisc = (f) => typeof window.scannerAPI.isDiscoveryFinding === "function"
+      ? window.scannerAPI.isDiscoveryFinding(f) : false;
+    const scoredFindings = includeDisc ? allFindings : allFindings.filter(f => !isDisc(f));
+    metrics.recent_findings.findings = scoredFindings;
+
+    const summary = { critical: 0, high: 0, medium: 0, low: 0, info: 0, resolved: 0, total: scoredFindings.length };
+    scoredFindings.forEach((finding) => {
       const status = (finding.status || "open").toLowerCase();
       if (status === "resolved" || status === "fixed" || status === "closed") {
         summary.resolved++;
@@ -152,12 +160,13 @@
       info: { count: summary.info }
     };
 
-    const globalScore = calculateRiskScoreFromFindings(allFindings);
+    const globalScore = calculateRiskScoreFromFindings(scoredFindings);
     metrics.risk_score = { ...(metrics.risk_score || {}), global_score: globalScore, risk_level: riskLevelFromScore(globalScore) };
 
     (targets || []).forEach((target) => {
       if (typeof window.scannerAPI.getRecentFindingsForTarget !== "function") return;
-      const targetFindings = window.scannerAPI.getRecentFindingsForTarget(target.id);
+      let targetFindings = window.scannerAPI.getRecentFindingsForTarget(target.id);
+      if (!includeDisc) targetFindings = targetFindings.filter(f => !isDisc(f));
       if (targetFindings.length > 0) {
         target.risk_score = calculateRiskScoreFromFindings(targetFindings);
       }

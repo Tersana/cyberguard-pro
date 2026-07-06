@@ -736,14 +736,22 @@ class ProjectManager {
         }
       }
 
+      // Web Endpoint Fuzzer / discovery findings are inventory, not vulnerabilities — exclude
+      // them from the card's finding count and risk score unless the user opted to include them.
+      const includeDisc = window.scannerAPI && typeof window.scannerAPI.getIncludeDiscovery === "function"
+        ? window.scannerAPI.getIncludeDiscovery() : false;
+      const isDisc = (f) => window.scannerAPI && typeof window.scannerAPI.isDiscoveryFinding === "function"
+        ? window.scannerAPI.isDiscoveryFinding(f) : false;
+      const scoredFindings = includeDisc ? allFindings : allFindings.filter(f => !isDisc(f));
+
       const findingsEls = document.querySelectorAll(`.project-findings-count-val[data-project-id="${projectId}"]`);
-      console.log(`[ProjectManager] Found ${findingsEls.length} findingsEls for ${projectId}. Updating to: ${allFindings.length}`);
+      console.log(`[ProjectManager] Found ${findingsEls.length} findingsEls for ${projectId}. Updating to: ${scoredFindings.length}`);
       findingsEls.forEach(el => {
         const txt = el.textContent || "";
         if (txt.includes("finding")) {
-          el.textContent = `${allFindings.length} ${allFindings.length === 1 ? 'finding' : 'findings'}`;
+          el.textContent = `${scoredFindings.length} ${scoredFindings.length === 1 ? 'finding' : 'findings'}`;
         } else {
-          el.textContent = `${allFindings.length}`;
+          el.textContent = `${scoredFindings.length}`;
         }
       });
 
@@ -754,7 +762,7 @@ class ProjectManager {
       let openLow = 0;
       let totalOpen = 0;
 
-      allFindings.forEach(f => {
+      scoredFindings.forEach(f => {
         if ((f.status || "open").toLowerCase() === "open") {
           totalOpen++;
           const sev = (f.severity || "info").toLowerCase();
@@ -804,7 +812,7 @@ class ProjectManager {
 
       this.projectMetricCache.set(String(projectId), {
         targets: targets.length,
-        findings: allFindings.length,
+        findings: scoredFindings.length,
         scans: scans.length,
       });
       this._updateProjectsWorkspaceSummary(this.projects.length);

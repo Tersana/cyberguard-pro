@@ -2388,6 +2388,7 @@
                             <button id="subtab-endpoints-btn" class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider py-2 px-4 rounded-lg transition-all duration-300 text-slate-400 hover:text-slate-200 border border-transparent hover:bg-white/[0.01] hidden" onclick="switchFindingsSubtab('endpoints')">
                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                                 Discovered Endpoints
+                                <span id="subtab-endpoints-badge" class="ml-1 px-1.5 py-0.5 rounded-full bg-white/10 text-[9px] text-slate-300 font-bold" style="display:none">0</span>
                             </button>
                         </div>
                     </div>
@@ -2436,6 +2437,10 @@
                                     <button class="filter-btn" data-filter="low" onclick="filterFindings('low')">Low</button>
                                     <button class="filter-btn" data-filter="info" onclick="filterFindings('info')">Info</button>
                                 </div>
+                                <label class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 cursor-pointer select-none px-2 py-1.5 rounded-lg border border-slate-700/50 bg-slate-900 hover:text-slate-200" title="Include Web Endpoint Fuzzer / discovery findings in counts, severity cards, and risk score">
+                                    <input id="toggle-include-discovery" type="checkbox" class="accent-[var(--cg-accent)] w-3.5 h-3.5" onchange="handleIncludeDiscoveryToggle(this.checked)" />
+                                    Include discovery findings
+                                </label>
                                 <button id="btn-add-finding" class="cyber-btn-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 hidden" onclick="showAddFindingModal()">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -3246,7 +3251,9 @@
             let _currentTab = "overview";
             let _currentUserRole = "viewer"; // updated by loadTeam()
             let _editTargetType = ""; // type stored when Edit Target modal opens
-            let _projectFindings = []; // cache of all findings across targets
+            let _projectFindings = []; // cache of all findings across targets (vulns + discovery)
+            let _projectDiscoveryFindings = []; // discovery/inventory findings (e.g. web endpoint fuzzer)
+            let _projectFindingsLoaded = false; // true once loadProjectFindings has run at least once
             let _riskScorePollInterval = null;
             let _latestScanIsRunning = false;
 
@@ -3735,9 +3742,16 @@
                         }
                     }
 
+                    _projectFindings = all;
+                    _projectFindingsLoaded = true;
+                    _projectDiscoveryFindings = all.filter(f => isDiscovery(f));
+
+                    // Counts, badges, and risk exclude discovery findings unless the user opts in.
+                    const scored = excludeDiscoveryUnlessIncluded(all);
+
                     // 3. Update dynamic risk score for each target in the DOM by filtering the aggregated findings
                     targets.forEach((target) => {
-                        const arr = all.filter(f => String(f.target_id) === String(target.id));
+                        const arr = scored.filter(f => String(f.target_id) === String(target.id));
 
                         // Calculate target's dynamic risk score (0-100 scale: Critical - 10, High - 7, Medium - 4, Low - 1)
                         let openCritical = 0, openHigh = 0, openMedium = 0, openLow = 0;
@@ -3757,19 +3771,20 @@
                         updateTargetRiskBadge(target.id, targetRisk);
                     });
 
-                    _projectFindings = all;
-
                     // 4. Update the quick stats "ov-stat-findings" count in the Overview tab
-                    _set("ov-stat-findings", String(_projectFindings.length));
+                    _set("ov-stat-findings", String(scored.length));
 
                     // 5. Update findings tab badge count
                     const badge = document.getElementById("findings-tab-badge");
                     if (badge) {
-                        badge.textContent = _projectFindings.length;
-                        badge.style.display = _projectFindings.length > 0 ? "inline-flex" : "none";
+                        badge.textContent = scored.length;
+                        badge.style.display = scored.length > 0 ? "inline-flex" : "none";
                     }
 
-                    // 6. Recalculate health score and render ring
+                    // 6. Reflect discovery inventory count on the Discovered Endpoints subtab
+                    updateDiscoveryTabBadge(_projectDiscoveryFindings.length);
+
+                    // 7. Recalculate health score and render ring
                     _renderHealthScore();
                     loadProjectRiskScore();
                 } catch (err) {
@@ -3996,7 +4011,9 @@
                     updateRiskScorePolling(_currentTab);
 
                     // 5. Use all project findings (for the whole project)
-                    const findings = mergeFindingRecords(_projectFindings || [], getCachedProjectFindings());
+                    const findings = excludeDiscoveryUnlessIncluded(
+                        mergeFindingRecords(_projectFindings || [], getCachedProjectFindings())
+                    );
 
                     // Count open findings
                     let openCritical = 0;
@@ -5276,6 +5293,22 @@
                 }
             }
 
+            // ── Discovery finding helpers ────────────────────────────────────────────
+            // Web Endpoint Fuzzer / classifier output is inventory, not vulnerabilities.
+            // Delegates to scannerAPI with safe no-op fallbacks if it hasn't loaded yet.
+            function isDiscovery(finding) {
+                return !!(window.scannerAPI && typeof window.scannerAPI.isDiscoveryFinding === "function"
+                    && window.scannerAPI.isDiscoveryFinding(finding));
+            }
+            function includeDiscovery() {
+                return !!(window.scannerAPI && typeof window.scannerAPI.getIncludeDiscovery === "function"
+                    && window.scannerAPI.getIncludeDiscovery());
+            }
+            // Drop discovery findings unless the user opted to include them.
+            function excludeDiscoveryUnlessIncluded(list) {
+                return includeDiscovery() ? list : list.filter(f => !isDiscovery(f));
+            }
+
             function mergeFindingRecords(...groups) {
                 const map = new Map();
                 groups.flat().filter(Boolean).forEach((finding) => {
@@ -6525,6 +6558,16 @@
                 loadFindings(value, 1);
             }
 
+            // Toggle whether discovery (fuzzer) findings count toward vuln metrics.
+            function handleIncludeDiscoveryToggle(checked) {
+                if (window.scannerAPI && typeof window.scannerAPI.setIncludeDiscovery === "function") {
+                    window.scannerAPI.setIncludeDiscovery(checked);
+                }
+                _findingsCurrentPage = 1;
+                loadProjectFindings();                      // overview count, target badges, risk gauge, tab badge
+                loadFindings(_currentFindingTargetId, 1);   // vulns list + severity cards (+ endpoints if visible)
+            }
+
             // Handle general dropdown filter changes (status, tool, target)
             function handleFilterChange() {
                 _currentStatusFilter = document.getElementById('filter-status')?.value || 'all';
@@ -6647,214 +6690,144 @@
                 populateTargetFilterDropdown(targets);
             }
 
+            // Page size for the client-paginated vulnerabilities list.
+            const FINDINGS_PAGE_SIZE = 20;
+
+            // Normalized tool-name matching with a few backend equivalence groups.
+            function matchToolFilter(findingTool, filterVal) {
+                if (!findingTool || !filterVal || filterVal === 'all') return true;
+                const normTool = String(findingTool).toUpperCase().replace(/[_-]/g, '_');
+                const normFilter = String(filterVal).toUpperCase().replace(/[_-]/g, '_');
+                if (normTool === normFilter) return true;
+                const equivalents = {
+                    'PORT_SCANNER': ['PORT_SCANNER', 'SHODAN_SCANNER'],
+                    'TCP_CONNECTIVITY': ['TCP_CONNECTIVITY', 'TCP_PORT_SCAN'],
+                    'UDP_SERVICES': ['UDP_SERVICES', 'UDP_PORT_SCAN']
+                };
+                if (equivalents[normFilter]) return equivalents[normFilter].includes(normTool);
+                return false;
+            }
+
+            // Findings from locally-run (frontend) scans in cg_frontend_scans, scoped to the
+            // current target/project selection.
+            function readLocalScanFindings(isProjectWide) {
+                let localScans = [];
+                try {
+                    const raw = localStorage.getItem("cg_frontend_scans");
+                    if (raw) localScans = JSON.parse(raw);
+                } catch (_) {}
+
+                let matchingScans;
+                if (isProjectWide) {
+                    matchingScans = localScans.filter(s => s.project_id === _projectId);
+                    if (_currentTargetFilter && _currentTargetFilter !== 'all') {
+                        matchingScans = matchingScans.filter(s => String(s.target_id) === String(_currentTargetFilter));
+                    }
+                } else {
+                    matchingScans = localScans.filter(s => String(s.target_id) === String(_currentFindingTargetId));
+                }
+
+                const out = [];
+                matchingScans.forEach(scan => {
+                    if (Array.isArray(scan.findings)) {
+                        scan.findings.forEach(f => {
+                            if (!out.some(existing => existing.id === f.id)) out.push(f);
+                        });
+                    }
+                });
+                return out;
+            }
+
+            // Build the vulnerabilities view from the full in-memory dataset for the current
+            // scope: merge backend project findings + local frontend scans + recent cache, drop
+            // discovery findings (unless opted in), apply the active filters, then severity-sort.
+            function collectVulnFindingsForView() {
+                const isProjectWide = (_currentFindingTargetId === 'all');
+                const cached = isProjectWide
+                    ? getCachedProjectFindings()
+                    : getCachedTargetFindings(_currentFindingTargetId);
+                let list = mergeFindingRecords(_projectFindings || [], readLocalScanFindings(isProjectWide), cached);
+
+                // Scope by target selection
+                if (!isProjectWide) {
+                    list = list.filter(f => String(f.target_id) === String(_currentFindingTargetId));
+                } else if (_currentTargetFilter && _currentTargetFilter !== 'all') {
+                    list = list.filter(f => String(f.target_id) === String(_currentTargetFilter));
+                }
+
+                // Discovery findings live in the Discovered Endpoints tab unless opted in
+                list = excludeDiscoveryUnlessIncluded(list);
+
+                // Active severity / status / tool filters
+                if (_currentSeverityFilter && _currentSeverityFilter !== 'all') {
+                    list = list.filter(f => (f.severity || '').toLowerCase() === _currentSeverityFilter.toLowerCase());
+                }
+                if (_currentStatusFilter && _currentStatusFilter !== 'all') {
+                    list = list.filter(f => (f.status || '').toLowerCase() === _currentStatusFilter.toLowerCase());
+                }
+                if (_currentToolFilter && _currentToolFilter !== 'all') {
+                    list = list.filter(f => matchToolFilter(f.tool || f.driver_id || '', _currentToolFilter));
+                }
+
+                // Sort by severity: critical -> high -> medium -> low -> info
+                const w = { critical:0, high:1, medium:2, low:3, info:4 };
+                list.sort((a,b) => (w[(a.severity||'').toLowerCase()] ?? 5) - (w[(b.severity||'').toLowerCase()] ?? 5));
+                return list;
+            }
+
             async function loadFindings(targetId, pageNum = 1, silent = false) {
                 _findingsCurrentPage = pageNum;
                 if (targetId !== undefined) {
                     _currentFindingTargetId = targetId;
                 }
-                
+
                 if (!_currentFindingTargetId) {
-                    const defaultId = getCurrentSelectedTargetId();
-                    _currentFindingTargetId = defaultId || 'all';
+                    _currentFindingTargetId = getCurrentSelectedTargetId() || 'all';
                 }
-                
+
                 const selector = document.getElementById('findings-target-selector');
                 if (selector && selector.value !== _currentFindingTargetId) {
                     selector.value = _currentFindingTargetId;
                 }
-                
-                // Double check sub-tab endpoint logic
+
+                const inclToggle = document.getElementById('toggle-include-discovery');
+                if (inclToggle) inclToggle.checked = includeDiscovery();
+
+                if (!silent) showFindingsLoading();
+
+                // The full project dataset backs the risk score, this list, and the discovery
+                // tab; load it once before anything reads _projectFindings / discovery counts.
+                if (!_projectFindingsLoaded) {
+                    try { await loadProjectFindings(); } catch (_) {}
+                }
+
+                // Keep the endpoints subtab visibility/state in sync
                 await updateEndpointsTabState();
-                
-                // If endpoints subtab is active, reload endpoints as well
                 const endpointsView = document.getElementById('subtab-endpoints-view');
                 if (endpointsView && !endpointsView.classList.contains('hidden')) {
                     loadEndpoints();
                 }
-                
+
                 // Update target action button states (Add Finding visibility)
                 updateTargetsBtnState();
-                
-                if (!silent) showFindingsLoading();
-                
-                const params = new URLSearchParams();
-                if (_currentSeverityFilter && _currentSeverityFilter !== 'all') {
-                    params.append('severity', _currentSeverityFilter);
-                }
-                if (_currentStatusFilter && _currentStatusFilter !== 'all') {
-                    params.append('status', _currentStatusFilter);
-                }
-                if (_currentToolFilter && _currentToolFilter !== 'all') {
-                    params.append('tool', _currentToolFilter);
-                }
-                params.append('page', _findingsCurrentPage);
-                
-                let endpoint = '';
-                const isProjectWide = (_currentFindingTargetId === 'all');
-                if (isProjectWide) {
-                    endpoint = `/projects/${_projectId}/findings`;
-                    if (_currentTargetFilter && _currentTargetFilter !== 'all') {
-                        params.append('target', _currentTargetFilter);
-                    }
-                } else {
-                    endpoint = `/targets/${_currentFindingTargetId}/findings`;
-                }
-                
-                const queryStr = params.toString();
-                const url = endpoint + (queryStr ? `?${queryStr}` : '');
-                
+
                 try {
-                    const res = await apiFetch(url);
-                    if (res.status === 403) {
-                        const c = document.getElementById('findings-list-container');
-                        if (c) {
-                            c.innerHTML = `
-                                <div class="findings-error-state">
-                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-                                    </svg>
-                                    <p class="text-sm font-bold text-white">Access Denied</p>
-                                    <span>You do not have access to this project</span>
-                                </div>
-                            `;
-                        }
-                        updateFindingsStats([]);
-                        updateFindingsTabBadge(0);
-                        renderPaginationContainer(1, 1);
-                        return;
-                    }
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    
-                    const data = await res.json();
-                    
-                    let findingsList = [];
-                    let currentPage = 1;
-                    let lastPage = 1;
-                    let total = 0;
-                    
-                    if (Array.isArray(data)) {
-                        findingsList = data;
-                        currentPage = 1;
-                        lastPage = 1;
-                        total = data.length;
-                    } else if (data && data.findings) {
-                        const findingsObj = data.findings;
-                        if (Array.isArray(findingsObj.data)) {
-                            findingsList = findingsObj.data;
-                            currentPage = findingsObj.current_page || 1;
-                            lastPage = findingsObj.last_page || 1;
-                            total = findingsObj.total || 0;
-                        } else if (Array.isArray(findingsObj)) {
-                            findingsList = findingsObj;
-                            currentPage = 1;
-                            lastPage = 1;
-                            total = findingsObj.length;
-                        }
-                    } else if (data && data.data) {
-                        findingsList = Array.isArray(data.data) ? data.data : [];
-                        currentPage = data.current_page || 1;
-                        lastPage = data.last_page || 1;
-                        total = data.total || 0;
-                    }
+                    const isProjectWide = (_currentFindingTargetId === 'all');
+                    const list = collectVulnFindingsForView();
+                    _allFindings = list;
 
-                    // Retrieve local scans and extract their findings to merge
-                    let localScans = [];
-                    try {
-                        const storedScansRaw = localStorage.getItem("cg_frontend_scans");
-                        if (storedScansRaw) {
-                            localScans = JSON.parse(storedScansRaw);
-                        }
-                    } catch (_) {}
-
-                    let matchingScans = [];
-                    if (isProjectWide) {
-                        matchingScans = localScans.filter(s => s.project_id === _projectId);
-                        if (_currentTargetFilter && _currentTargetFilter !== 'all') {
-                            matchingScans = matchingScans.filter(s => String(s.target_id) === String(_currentTargetFilter));
-                        }
-                    } else {
-                        matchingScans = localScans.filter(s => String(s.target_id) === String(_currentFindingTargetId));
-                    }
-
-                    let localFindingsList = [];
-                    matchingScans.forEach(scan => {
-                        if (Array.isArray(scan.findings)) {
-                            scan.findings.forEach(f => {
-                                // Prevent duplicate IDs
-                                if (!localFindingsList.some(existing => existing.id === f.id)) {
-                                    localFindingsList.push(f);
-                                }
-                            });
-                        }
-                    });
-
-                    const matchToolFilter = (findingTool, filterVal) => {
-                        if (!findingTool || !filterVal || filterVal === 'all') return true;
-                        const normTool = findingTool.toUpperCase().replace(/[_-]/g, '_');
-                        const normFilter = filterVal.toUpperCase().replace(/[_-]/g, '_');
-                        if (normTool === normFilter) return true;
-
-                        const equivalents = {
-                            'PORT_SCANNER': ['PORT_SCANNER', 'SHODAN_SCANNER'],
-                            'TCP_CONNECTIVITY': ['TCP_CONNECTIVITY', 'TCP_PORT_SCAN'],
-                            'UDP_SERVICES': ['UDP_SERVICES', 'UDP_PORT_SCAN']
-                        };
-
-                        if (equivalents[normFilter]) {
-                            return equivalents[normFilter].includes(normTool);
-                        }
-                        return false;
-                    };
-
-                    // Filter local findings using active severity, status, and tool filters
-                    if (_currentSeverityFilter && _currentSeverityFilter !== 'all') {
-                        localFindingsList = localFindingsList.filter(f => (f.severity || '').toLowerCase() === _currentSeverityFilter.toLowerCase());
-                    }
-                    if (_currentStatusFilter && _currentStatusFilter !== 'all') {
-                        localFindingsList = localFindingsList.filter(f => (f.status || '').toLowerCase() === _currentStatusFilter.toLowerCase());
-                    }
-                    if (_currentToolFilter && _currentToolFilter !== 'all') {
-                        localFindingsList = localFindingsList.filter(f => {
-                            const toolName = f.tool || f.driver_id || '';
-                            return matchToolFilter(toolName, _currentToolFilter);
-                        });
-                    }
-
-                    let cachedFindingsList = isProjectWide
-                        ? getCachedProjectFindings()
-                        : getCachedTargetFindings(_currentFindingTargetId);
-                    if (isProjectWide && _currentTargetFilter && _currentTargetFilter !== 'all') {
-                        cachedFindingsList = cachedFindingsList.filter(f => String(f.target_id) === String(_currentTargetFilter));
-                    }
-                    if (_currentSeverityFilter && _currentSeverityFilter !== 'all') {
-                        cachedFindingsList = cachedFindingsList.filter(f => (f.severity || '').toLowerCase() === _currentSeverityFilter.toLowerCase());
-                    }
-                    if (_currentStatusFilter && _currentStatusFilter !== 'all') {
-                        cachedFindingsList = cachedFindingsList.filter(f => (f.status || '').toLowerCase() === _currentStatusFilter.toLowerCase());
-                    }
-                    if (_currentToolFilter && _currentToolFilter !== 'all') {
-                        cachedFindingsList = cachedFindingsList.filter(f => matchToolFilter(f.tool || f.driver_id || '', _currentToolFilter));
-                    }
-
-                    // Merge backend, frontend-only, and recent backend cached findings.
-                    findingsList = mergeFindingRecords(findingsList, localFindingsList, cachedFindingsList);
-                    total = findingsList.length;
-                    _allFindings = findingsList;
+                    const pageSize = FINDINGS_PAGE_SIZE;
+                    const lastPage = Math.max(1, Math.ceil(list.length / pageSize));
+                    const currentPage = Math.min(Math.max(1, _findingsCurrentPage), lastPage);
                     _findingsCurrentPage = currentPage;
                     _findingsLastPage = lastPage;
+                    const pageSlice = list.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-                    // Sort findings ordered by severity: critical -> high -> medium -> low -> info
-                    const w = { critical:0, high:1, medium:2, low:3, info:4 };
-                    const sorted = [..._allFindings].sort((a,b) =>
-                        (w[(a.severity||'').toLowerCase()] ?? 5) - (w[(b.severity||'').toLowerCase()] ?? 5)
-                    );
-
-                    renderFindings(sorted, isProjectWide);
-                    updateFindingsStats(sorted);
-                    updateFindingsTabBadge(total || sorted.length);
+                    renderFindings(pageSlice, isProjectWide);
+                    updateFindingsStats(list);
+                    updateFindingsTabBadge(list.length);
                     renderPaginationContainer(currentPage, lastPage);
-                    populateToolsFilter(sorted);
-
+                    populateToolsFilter(list);
                 } catch (err) {
                     showFindingsError(err);
                 }
@@ -8705,6 +8678,71 @@
             }
 
             // ─── Endpoints Discovery ──────────────────────────────────────────────────
+            // Normalize a URL for grouping duplicate endpoints (delegates to scannerAPI).
+            function normEndpoint(url) {
+                return window.scannerAPI && typeof window.scannerAPI.normalizeEndpointUrl === "function"
+                    ? window.scannerAPI.normalizeEndpointUrl(url)
+                    : String(url || "").toLowerCase();
+            }
+
+            // Best-effort URL for a discovery finding: prefer affected_url, else strip the
+            // fuzzer title prefix (e.g. "High Risk Endpoint: /path").
+            function discoveryFindingUrl(f) {
+                if (f.affected_url) return f.affected_url;
+                if (f.url) return f.url;
+                return String(f.title || "").replace(/^.*?endpoint:\s*/i, "").trim() || String(f.title || "");
+            }
+
+            // Discovery findings for the current target/project scope, as endpoint entries.
+            function buildDiscoveryEndpointEntries() {
+                const isProjectWide = (_currentFindingTargetId === 'all');
+                let discovery = _projectDiscoveryFindings || [];
+                if (!isProjectWide) {
+                    discovery = discovery.filter(f => String(f.target_id) === String(_currentFindingTargetId));
+                } else if (_currentTargetFilter && _currentTargetFilter !== 'all') {
+                    discovery = discovery.filter(f => String(f.target_id) === String(_currentTargetFilter));
+                }
+                return discovery.map(f => ({
+                    url: discoveryFindingUrl(f),
+                    method: (f.metadata && f.metadata.method) || 'GET',
+                    status: (f.metadata && (f.metadata.status_code || f.metadata.status)) || '—',
+                    severity: (f.severity || 'info').toLowerCase(),
+                    findingId: f.id,
+                    isDiscovery: true,
+                    targetLabel: isProjectWide ? (_targetLabelMap[f.target_id] || '') : ''
+                }));
+            }
+
+            // Normalize an /endpoints inventory item into the shared entry shape.
+            function inventoryToEntry(ep) {
+                if (typeof ep === 'string') {
+                    return { url: ep, method: 'GET', status: '—', isDiscovery: false, targetLabel: '' };
+                }
+                return {
+                    url: ep.url || ep.path || ep.endpoint || '',
+                    method: ep.method || 'GET',
+                    status: ep.status_code || ep.status || '—',
+                    isDiscovery: false,
+                    targetLabel: ep.targetLabel || ''
+                };
+            }
+
+            // Group entries by normalized URL + method, collapsing duplicates into a count.
+            function dedupeEndpointEntries(entries) {
+                const map = new Map();
+                entries.forEach(e => {
+                    const key = normEndpoint(e.url) + '|' + String(e.method || 'GET').toUpperCase();
+                    if (!map.has(key)) map.set(key, { ...e, count: 1 });
+                    else map.get(key).count++;
+                });
+                return Array.from(map.values());
+            }
+
+            // Count of discovery findings in the current scope (for tab visibility gating).
+            function scopedDiscoveryCount() {
+                return buildDiscoveryEndpointEntries().length;
+            }
+
             async function loadEndpoints() {
                 const container = document.getElementById('endpoints-list-container');
                 if (!container || !_currentFindingTargetId) return;
@@ -8768,7 +8806,14 @@
                               : [];
                     }
 
-                    if (endpoints.length === 0) {
+                    // Merge the /endpoints inventory with Web Endpoint Fuzzer discovery findings,
+                    // then dedupe/group by normalized URL so noisy fuzzer output stays manageable.
+                    const entries = dedupeEndpointEntries([
+                        ...endpoints.map(inventoryToEntry),
+                        ...buildDiscoveryEndpointEntries()
+                    ]);
+
+                    if (entries.length === 0) {
                         const noEndpointsMsg = _currentFindingTargetId === 'all'
                             ? "No endpoints discovered yet across any target. Run a scan to discover endpoints."
                             : "No endpoints discovered yet. Run a scan to discover endpoints.";
@@ -8785,10 +8830,19 @@
                         return;
                     }
 
+                    const discoveryTotal = entries.reduce((n, e) => n + (e.isDiscovery ? e.count : 0), 0);
+                    const summaryBar = discoveryTotal > 0
+                        ? `<div class="flex items-center justify-between px-3 py-2 mb-2 text-[11px] text-slate-400">
+                               <span><strong class="text-slate-200">${entries.length}</strong> unique endpoint${entries.length !== 1 ? 's' : ''}</span>
+                               <span class="text-amber-400/80">${discoveryTotal} discovery finding${discoveryTotal !== 1 ? 's' : ''} grouped</span>
+                           </div>`
+                        : "";
+
                     container.innerHTML = `
+                        ${summaryBar}
                         <div class="cyber-card p-2 overflow-hidden border border-white/5 bg-black/20 rounded-2xl">
                             <div class="space-y-1.5">
-                                ${endpoints.map((ep, idx) => renderEndpointRow(ep, idx)).join('')}
+                                ${entries.map((ep, idx) => renderEndpointRow(ep, idx)).join('')}
                             </div>
                         </div>
                     `;
@@ -8804,10 +8858,9 @@
             }
 
             function renderEndpointRow(ep, idx) {
-                let url = "";
-                let method = "GET";
-                let status = "—";
-                let targetLabel = "";
+                // ep may be a raw string, a raw /endpoints object, or a normalized entry.
+                let url = "", method = "GET", status = "—", targetLabel = "";
+                let severity = "", isDiscoveryRow = false, findingId = "", count = 1;
 
                 if (typeof ep === "string") {
                     url = ep;
@@ -8816,12 +8869,16 @@
                     method = ep.method || "GET";
                     status = ep.status_code || ep.status || "—";
                     targetLabel = ep.targetLabel || "";
+                    severity = (ep.severity || "").toLowerCase();
+                    isDiscoveryRow = !!ep.isDiscovery;
+                    findingId = ep.findingId != null ? String(ep.findingId) : "";
+                    count = ep.count || 1;
                 }
 
                 url = esc(url);
-                method = esc(method.toUpperCase());
+                method = esc(String(method).toUpperCase());
                 status = esc(status);
-                
+
                 const METHOD_CLS = {
                     GET: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
                     POST: "text-blue-400 bg-blue-500/10 border-blue-500/20",
@@ -8829,36 +8886,47 @@
                     DELETE: "text-red-400 bg-red-500/10 border-red-500/20",
                 };
                 const methodCls = METHOD_CLS[method] || "text-slate-400 bg-slate-500/10 border-slate-500/20";
-                
-                const targetBadge = targetLabel 
-                    ? `
-                        <div class="flex items-center gap-1.5 text-[10px] text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1 rounded-md select-none font-semibold">
-                            <span class="text-[9px] text-indigo-500 font-bold uppercase">Target</span>
-                            <span>${esc(targetLabel)}</span>
-                        </div>
-                    ` 
+
+                const severityBadge = severity
+                    ? `<span class="severity-badge sev-${esc(severity)} !text-[9px] !py-0.5 !px-1.5">${esc(severity.toUpperCase())}</span>`
                     : "";
 
-                const statusBadge = status !== "—" 
-                    ? `
-                        <div class="flex items-center gap-1.5 text-[10px] text-slate-500 bg-black/30 border border-white/5 px-2 py-1 rounded-md select-none">
+                const countBadge = count > 1
+                    ? `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/10 text-slate-300 select-none" title="${count} occurrences grouped">×${count}</span>`
+                    : "";
+
+                const targetBadge = targetLabel
+                    ? `<div class="flex items-center gap-1.5 text-[10px] text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1 rounded-md select-none font-semibold">
+                            <span class="text-[9px] text-indigo-500 font-bold uppercase">Target</span>
+                            <span>${esc(targetLabel)}</span>
+                        </div>`
+                    : "";
+
+                const statusBadge = status !== "—"
+                    ? `<div class="flex items-center gap-1.5 text-[10px] text-slate-500 bg-black/30 border border-white/5 px-2 py-1 rounded-md select-none">
                             <span class="text-[9px] text-slate-600 font-bold uppercase">Status</span>
                             <span class="text-slate-300 font-extrabold">${status}</span>
-                        </div>
-                    ` 
+                        </div>`
+                    : "";
+
+                const promoteEnabled = window.scannerAPI && typeof window.scannerAPI.isPromoteEnabled === "function"
+                    && window.scannerAPI.isPromoteEnabled();
+                const promoteBtn = (isDiscoveryRow && findingId && promoteEnabled)
+                    ? `<button onclick="handlePromoteFinding('${esc(findingId)}')" class="opacity-0 group-hover:opacity-100 px-2 py-1 bg-[var(--cg-accent)]/10 hover:bg-[var(--cg-accent)]/20 border border-[var(--cg-accent)]/30 rounded-lg text-[10px] font-bold text-[var(--cg-accent)] transition-all duration-200 whitespace-nowrap" title="Promote to security finding">Promote</button>`
                     : "";
 
                 return `
                     <div class="group relative py-3 px-4 flex items-center justify-between gap-4 font-mono text-xs hover:bg-white/[0.025] rounded-xl border border-transparent hover:border-white/5 transition-all duration-200">
                         <div class="flex items-center gap-3 min-w-0">
                             <span class="text-[9px] font-bold px-2 py-0.5 rounded border tracking-wide uppercase ${methodCls} select-none">${method}</span>
+                            ${severityBadge}
                             <span id="ep-url-${idx}" class="text-slate-300 truncate select-all hover:text-white transition-colors" title="${url}">${url}</span>
+                            ${countBadge}
                         </div>
                         <div class="flex items-center gap-3 flex-shrink-0">
                             ${targetBadge}
                             ${statusBadge}
-                            
-                            <!-- Premium Copy Button -->
+                            ${promoteBtn}
                             <button onclick="copyToClipboard('ep-url-${idx}', this)" class="opacity-0 group-hover:opacity-100 p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-slate-400 hover:text-white transition-all duration-200" title="Copy Endpoint">
                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
@@ -8901,21 +8969,30 @@
                 }
             }
 
+            // Reflect the discovery inventory count on the Discovered Endpoints subtab button.
+            function updateDiscoveryTabBadge(count) {
+                const badge = document.getElementById('subtab-endpoints-badge');
+                if (!badge) return;
+                badge.textContent = count > 99 ? '99+' : String(count);
+                badge.style.display = count > 0 ? 'inline-flex' : 'none';
+            }
+
             async function updateEndpointsTabState() {
                 const endpointsBtn = document.getElementById('subtab-endpoints-btn');
                 if (!endpointsBtn) return;
-                
+
                 if (!_currentFindingTargetId) {
                     endpointsBtn.classList.add('hidden');
                     switchFindingsSubtab('vulns');
                     return;
                 }
 
-                if (_currentFindingTargetId === 'all') {
+                // Always show when project-wide, or when there are discovery findings in scope.
+                if (_currentFindingTargetId === 'all' || scopedDiscoveryCount() > 0) {
                     endpointsBtn.classList.remove('hidden');
                     return;
                 }
-                
+
                 try {
                     const res = await apiFetch(`/targets/${_currentFindingTargetId}`);
                     if (res.ok) {
@@ -8935,6 +9012,27 @@
                 } catch (_) {
                     endpointsBtn.classList.add('hidden');
                     switchFindingsSubtab('vulns');
+                }
+            }
+
+            // Promote a discovery endpoint into a real security finding (backend-persisted).
+            // Gated by the PROMOTE_ENABLED feature flag in api-client.js.
+            async function handlePromoteFinding(findingId) {
+                if (!window.scannerAPI || typeof window.scannerAPI.promoteFinding !== "function") return;
+                if (typeof window.scannerAPI.isPromoteEnabled === "function" && !window.scannerAPI.isPromoteEnabled()) return;
+                try {
+                    await window.scannerAPI.promoteFinding(findingId);
+                    // Mark the local record so it moves out of discovery immediately.
+                    const rec = (_projectFindings || []).find(f => String(f.id) === String(findingId));
+                    if (rec) { rec.promoted = true; rec.is_discovery = false; }
+                    _projectDiscoveryFindings = (_projectFindings || []).filter(f => isDiscovery(f));
+                    notify("Endpoint promoted to a security finding", "success");
+                    await loadProjectFindings();
+                    loadFindings(_currentFindingTargetId, _findingsCurrentPage);
+                    loadEndpoints();
+                    updateDiscoveryTabBadge(_projectDiscoveryFindings.length);
+                } catch (err) {
+                    notify(err && err.message ? err.message : "Failed to promote endpoint", "error");
                 }
             }
 
