@@ -1328,8 +1328,8 @@ class PhishingManager {
     return `
       <div class="phishing-reports-container">
         <div class="phishing-reports-header-section">
-          ${this._sectionHeader("Reports & Analytics", "Organization-wide phishing posture.", `<button class="cyber-btn-secondary px-4 py-2 text-sm" data-phishing-action="report-refresh">Refresh</button>`)}
-          <div class="phishing-stat-grid">
+          ${this._sectionHeader("Reports & Analytics", "Organization-wide phishing posture and simulation response trends.", `<button class="cyber-btn-secondary phishing-refresh-btn" data-phishing-action="report-refresh"><span class="material-symbols-outlined" aria-hidden="true">refresh</span><span>Refresh</span></button>`)}
+          <div class="phishing-stat-grid phishing-report-stat-grid">
             ${this._statTile("Campaigns", ov.total_campaigns)}
             ${this._statTile("Targets", ov.total_targets)}
             ${this._statTile("Click rate", `${this._pct(ov.click_rate)}%`)}
@@ -1339,11 +1339,11 @@ class PhishingManager {
           </div>
         </div>
         <div class="phishing-report-charts">
-          <div class="cyber-card p-4"><h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Risk distribution</h5><div id="phishing-risk-chart" class="phishing-chart">${this._chartEmpty()}</div></div>
-          <div class="cyber-card p-4"><h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Department click rate</h5><div id="phishing-dept-chart" class="phishing-chart">${this._chartEmpty()}</div></div>
+          <div class="cyber-card phishing-report-card phishing-chart-card"><h5>Risk distribution</h5><div id="phishing-risk-chart" class="phishing-chart">${this._chartEmpty()}</div></div>
+          <div class="cyber-card phishing-report-card phishing-chart-card"><h5>Department click rate</h5><div id="phishing-dept-chart" class="phishing-chart">${this._chartEmpty()}</div></div>
         </div>
-        <div class="cyber-card p-4">
-          <h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Highest-risk employees</h5>
+        <div class="cyber-card phishing-report-card">
+          <h5>Highest-risk employees</h5>
           <div class="phishing-table-wrap">
             <table class="phishing-table">
               <thead><tr><th>Name</th><th>Department</th><th>Risk</th><th>Last interaction</th></tr></thead>
@@ -1351,8 +1351,8 @@ class PhishingManager {
             </table>
           </div>
         </div>
-        <div class="cyber-card p-4">
-          <h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Department vulnerability</h5>
+        <div class="cyber-card phishing-report-card">
+          <h5>Department vulnerability</h5>
           <div class="phishing-table-wrap">
             <table class="phishing-table">
               <thead><tr><th>Department</th><th>Employees</th><th>Targets</th><th>Click rate</th><th>Submission rate</th><th>Avg risk</th></tr></thead>
