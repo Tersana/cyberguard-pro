@@ -310,7 +310,7 @@ class PhishingManager {
 
   _debounceEmployees() {
     clearTimeout(this._empTimer);
-    this._empTimer = setTimeout(() => this.renderEmployees(), 300);
+    this._empTimer = setTimeout(() => this._reloadEmployeesResults(), 300);
   }
 
   /** Hide the Owner-only Permissions sub-nav item for non-owners. */
@@ -401,21 +401,35 @@ class PhishingManager {
     return `<div class="phishing-loading text-center py-8 text-sm" style="color: var(--cg-text-3);">${this.escapeHtml(label)}</div>`;
   }
 
+  /** Wrap a sub-view's content in a themed panel so it sits on a surface. */
+  _panel(innerHtml, extraClass = "") {
+    return `<div class="cyber-card phishing-panel ${extraClass}">${innerHtml}</div>`;
+  }
+
   _emptyHtml(title, subtitle, actionHtml = "") {
     return `
-      <div class="phishing-empty text-center py-10">
-        <p class="text-sm font-medium" style="color: var(--cg-text-2);">${this.escapeHtml(title)}</p>
-        ${subtitle ? `<p class="text-xs mt-1" style="color: var(--cg-text-3);">${this.escapeHtml(subtitle)}</p>` : ""}
-        ${actionHtml ? `<div class="mt-4">${actionHtml}</div>` : ""}
+      <div class="phishing-empty">
+        <div class="phishing-empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/>
+          </svg>
+        </div>
+        <p class="phishing-empty-title">${this.escapeHtml(title)}</p>
+        ${subtitle ? `<p class="phishing-empty-sub">${this.escapeHtml(subtitle)}</p>` : ""}
+        ${actionHtml ? `<div class="phishing-empty-action">${actionHtml}</div>` : ""}
       </div>`;
   }
 
   _errorHtml(message, retryAction) {
     return `
-      <div class="phishing-error text-center py-10">
-        <p class="text-sm font-medium" style="color: var(--cg-danger);">${this.escapeHtml(message)}</p>
-        ${retryAction ? `<button class="cyber-btn-secondary mt-4 px-4 py-2 text-sm" data-phishing-action="${retryAction}">Retry</button>` : ""}
+      <div class="phishing-empty">
+        <p class="phishing-empty-title" style="color: var(--cg-danger);">${this.escapeHtml(message)}</p>
+        ${retryAction ? `<div class="phishing-empty-action"><button class="cyber-btn-secondary px-4 py-2 text-sm" data-phishing-action="${retryAction}">Retry</button></div>` : ""}
       </div>`;
+  }
+
+  _chartEmpty(label = "No data to display yet") {
+    return `<div class="phishing-chart-empty">${this.escapeHtml(label)}</div>`;
   }
 
   _sectionHeader(title, subtitle, actionsHtml = "") {
@@ -462,16 +476,18 @@ class PhishingManager {
       const res = await this.listCampaigns();
       this.campaigns = (res && res.campaigns) || [];
       const actions = `<button class="cyber-btn-primary px-4 py-2 text-sm" data-phishing-action="campaign-new">+ New Campaign</button>`;
-      let body = this._sectionHeader("Campaigns", "Create, launch, and track phishing simulations.", actions);
+      let inner = this._sectionHeader("Campaigns", "Create, launch, and track phishing simulations.", actions);
       if (this.campaigns.length === 0) {
-        body += this._emptyHtml("No campaigns yet", "Create your first simulation to get started.");
+        inner += this._emptyHtml("No campaigns yet", "Create your first simulation to get started.",
+          `<button class="cyber-btn-primary px-4 py-2 text-sm" data-phishing-action="campaign-new">+ New Campaign</button>`);
       } else {
-        body += `<div class="phishing-list space-y-3">${this.campaigns.map((c) => this._campaignCard(c)).join("")}</div>`;
+        inner += `<div class="phishing-list">${this.campaigns.map((c) => this._campaignCard(c)).join("")}</div>`;
       }
-      host.innerHTML = body;
+      host.innerHTML = this._panel(inner);
     } catch (error) {
-      host.innerHTML = this._sectionHeader("Campaigns", "", "") +
-        this._errorHtml(this._errorMessage(error, "Failed to load campaigns."), "campaign-refresh");
+      host.innerHTML = this._panel(
+        this._sectionHeader("Campaigns", "", "") +
+        this._errorHtml(this._errorMessage(error, "Failed to load campaigns."), "campaign-refresh"));
     }
   }
 
@@ -488,23 +504,21 @@ class PhishingManager {
       ? `Dept: ${this.escapeHtml(c.target_department || "—")}`
       : (c.target_type || "all");
     return `
-      <div class="phishing-card cyber-card p-4">
-        <div class="flex items-start justify-between gap-3 flex-wrap">
-          <div class="min-w-0">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-sm font-semibold" style="color: var(--cg-text-1);">${this.escapeHtml(c.name || "Untitled")}</span>
-              ${this._statusBadge(status)}
-            </div>
-            <p class="text-xs mt-1" style="color: var(--cg-text-3);">
-              ${this.escapeHtml(tpl.name || "No template")} · ${this.escapeHtml(targetLabel)} · Targets: ${this.escapeHtml(targets)} · Clicks: ${this.escapeHtml(clicks)}
-            </p>
+      <div class="phishing-row">
+        <div class="phishing-row-main">
+          <div class="phishing-row-title">
+            <span class="phishing-row-name">${this.escapeHtml(c.name || "Untitled")}</span>
+            ${this._statusBadge(status)}
           </div>
-          <div class="flex items-center gap-1.5 flex-wrap">
-            ${canEdit ? `<button class="cyber-btn-secondary px-2.5 py-1 text-xs" data-phishing-action="campaign-edit" data-id="${this.escapeHtml(c.id)}">Edit</button>` : ""}
-            ${canLaunch ? `<button class="cyber-btn-primary px-2.5 py-1 text-xs" data-phishing-action="campaign-launch" data-id="${this.escapeHtml(c.id)}" data-name="${this.escapeHtml(c.name)}">Launch</button>` : ""}
-            ${canReport ? `<button class="cyber-btn-secondary px-2.5 py-1 text-xs" data-phishing-action="campaign-report" data-id="${this.escapeHtml(c.id)}">Report</button>` : ""}
-            ${canCancel ? `<button class="phishing-btn-danger px-2.5 py-1 text-xs" data-phishing-action="campaign-cancel" data-id="${this.escapeHtml(c.id)}" data-name="${this.escapeHtml(c.name)}">Cancel</button>` : ""}
-          </div>
+          <p class="phishing-row-meta">
+            ${this.escapeHtml(tpl.name || "No template")} · ${this.escapeHtml(targetLabel)} · Targets: ${this.escapeHtml(targets)} · Clicks: ${this.escapeHtml(clicks)}
+          </p>
+        </div>
+        <div class="phishing-row-actions">
+          ${canEdit ? `<button class="cyber-btn-secondary px-2.5 py-1 text-xs" data-phishing-action="campaign-edit" data-id="${this.escapeHtml(c.id)}">Edit</button>` : ""}
+          ${canLaunch ? `<button class="cyber-btn-primary px-2.5 py-1 text-xs" data-phishing-action="campaign-launch" data-id="${this.escapeHtml(c.id)}" data-name="${this.escapeHtml(c.name)}">Launch</button>` : ""}
+          ${canReport ? `<button class="cyber-btn-secondary px-2.5 py-1 text-xs" data-phishing-action="campaign-report" data-id="${this.escapeHtml(c.id)}">Report</button>` : ""}
+          ${canCancel ? `<button class="phishing-btn-danger px-2.5 py-1 text-xs" data-phishing-action="campaign-cancel" data-id="${this.escapeHtml(c.id)}" data-name="${this.escapeHtml(c.name)}">Cancel</button>` : ""}
         </div>
       </div>`;
   }
@@ -749,16 +763,18 @@ class PhishingManager {
       const res = await this.listTemplates("email");
       this.templates = (res && res.templates) || [];
       const actions = `<button class="cyber-btn-primary px-4 py-2 text-sm" data-phishing-action="template-new">+ New Template</button>`;
-      let body = this._sectionHeader("Templates", "Global templates are read-only; create your own custom ones.", actions);
+      let inner = this._sectionHeader("Templates", "Global templates are read-only; create your own custom ones.", actions);
       if (this.templates.length === 0) {
-        body += this._emptyHtml("No templates available", "Create a custom email template to run a campaign.");
+        inner += this._emptyHtml("No templates available", "Create a custom email template to run a campaign.",
+          `<button class="cyber-btn-primary px-4 py-2 text-sm" data-phishing-action="template-new">+ New Template</button>`);
       } else {
-        body += `<div class="phishing-list space-y-3">${this.templates.map((t) => this._templateCard(t)).join("")}</div>`;
+        inner += `<div class="phishing-list">${this.templates.map((t) => this._templateCard(t)).join("")}</div>`;
       }
-      host.innerHTML = body;
+      host.innerHTML = this._panel(inner);
     } catch (error) {
-      host.innerHTML = this._sectionHeader("Templates", "", "") +
-        this._errorHtml(this._errorMessage(error, "Failed to load templates."), "template-refresh");
+      host.innerHTML = this._panel(
+        this._sectionHeader("Templates", "", "") +
+        this._errorHtml(this._errorMessage(error, "Failed to load templates."), "template-refresh"));
     }
   }
 
@@ -766,24 +782,22 @@ class PhishingManager {
     const isGlobal = !t.organization_id;
     const domain = t.domain || {};
     return `
-      <div class="phishing-card cyber-card p-4">
-        <div class="flex items-start justify-between gap-3 flex-wrap">
-          <div class="min-w-0">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-sm font-semibold" style="color: var(--cg-text-1);">${this.escapeHtml(t.name || "Untitled")}</span>
-              <span class="phishing-badge inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${isGlobal ? "text-purple-400 bg-purple-500/10 border-purple-500/20" : "text-blue-400 bg-blue-500/10 border-blue-500/20"}">${isGlobal ? "Global" : "Custom"}</span>
-              ${t.difficulty ? `<span class="phishing-badge text-xs" style="color: var(--cg-text-3);">${this.escapeHtml(t.difficulty)}</span>` : ""}
-            </div>
-            <p class="text-xs mt-1" style="color: var(--cg-text-3);">
-              ${this.escapeHtml(t.category || "Uncategorized")} · ${this.escapeHtml(t.sender_email || "")} ${domain.domain ? `· ${this.escapeHtml(domain.domain)}` : ""}
-            </p>
-            <p class="text-xs mt-0.5" style="color: var(--cg-text-3);">${this.escapeHtml(t.subject || "")}</p>
+      <div class="phishing-row">
+        <div class="phishing-row-main">
+          <div class="phishing-row-title">
+            <span class="phishing-row-name">${this.escapeHtml(t.name || "Untitled")}</span>
+            <span class="phishing-badge inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${isGlobal ? "text-purple-400 bg-purple-500/10 border-purple-500/20" : "text-blue-400 bg-blue-500/10 border-blue-500/20"}">${isGlobal ? "Global" : "Custom"}</span>
+            ${t.difficulty ? `<span class="phishing-badge text-xs" style="color: var(--cg-text-3);">${this.escapeHtml(t.difficulty)}</span>` : ""}
           </div>
-          <div class="flex items-center gap-1.5">
-            ${isGlobal ? `<span class="text-xs" style="color: var(--cg-text-3);">Read-only</span>` : `
-              <button class="cyber-btn-secondary px-2.5 py-1 text-xs" data-phishing-action="template-edit" data-id="${this.escapeHtml(t.id)}">Edit</button>
-              <button class="phishing-btn-danger px-2.5 py-1 text-xs" data-phishing-action="template-delete" data-id="${this.escapeHtml(t.id)}" data-name="${this.escapeHtml(t.name)}">Delete</button>`}
-          </div>
+          <p class="phishing-row-meta">
+            ${this.escapeHtml(t.category || "Uncategorized")} · ${this.escapeHtml(t.sender_email || "")} ${domain.domain ? `· ${this.escapeHtml(domain.domain)}` : ""}
+          </p>
+          <p class="phishing-row-meta">${this.escapeHtml(t.subject || "")}</p>
+        </div>
+        <div class="phishing-row-actions">
+          ${isGlobal ? `<span class="text-xs" style="color: var(--cg-text-3);">Read-only</span>` : `
+            <button class="cyber-btn-secondary px-2.5 py-1 text-xs" data-phishing-action="template-edit" data-id="${this.escapeHtml(t.id)}">Edit</button>
+            <button class="phishing-btn-danger px-2.5 py-1 text-xs" data-phishing-action="template-delete" data-id="${this.escapeHtml(t.id)}" data-name="${this.escapeHtml(t.name)}">Delete</button>`}
         </div>
       </div>`;
   }
@@ -917,23 +931,44 @@ class PhishingManager {
   async renderEmployees() {
     const host = this._qs("phishing-view-employees");
     if (!host) return;
-    const isFirst = !host.querySelector("#phishing-employee-search");
-    if (isFirst) host.innerHTML = this._loadingHtml("Loading employees…");
+    if (!host.querySelector("#phishing-employee-search")) {
+      host.innerHTML = this._panel(
+        this._sectionHeader("Employees", "The people your simulations target.", "") +
+        this._loadingHtml("Loading employees…"));
+    }
     try {
-      const res = await this.listEmployees(this.employeeFilters);
-      const paged = (res && res.employees) || {};
-      const data = paged.data || (Array.isArray(paged) ? paged : []) || [];
-      this.employees = data;
-      this.employeePagination = {
-        current_page: paged.current_page || 1,
-        last_page: paged.last_page || 1,
-        total: paged.total != null ? paged.total : data.length,
-        per_page: paged.per_page || this.employeeFilters.per_page,
-      };
+      const data = await this._fetchEmployees();
       host.innerHTML = this._employeesHtml(data);
     } catch (error) {
-      host.innerHTML = this._sectionHeader("Employees", "", "") +
-        this._errorHtml(this._errorMessage(error, "Failed to load employees."), "employee-refresh");
+      host.innerHTML = this._panel(
+        this._sectionHeader("Employees", "", "") +
+        this._errorHtml(this._errorMessage(error, "Failed to load employees."), "employee-refresh"));
+    }
+  }
+
+  async _fetchEmployees() {
+    const res = await this.listEmployees(this.employeeFilters);
+    const paged = (res && res.employees) || {};
+    const data = paged.data || (Array.isArray(paged) ? paged : []) || [];
+    this.employees = data;
+    this.employeePagination = {
+      current_page: paged.current_page || 1,
+      last_page: paged.last_page || 1,
+      total: paged.total != null ? paged.total : data.length,
+      per_page: paged.per_page || this.employeeFilters.per_page,
+    };
+    return data;
+  }
+
+  /** Refresh only the results area so the search box keeps focus while typing. */
+  async _reloadEmployeesResults() {
+    try {
+      const data = await this._fetchEmployees();
+      const container = this._qs("phishing-employees-results");
+      if (container) container.innerHTML = this._employeesResultsHtml(data);
+    } catch (error) {
+      const container = this._qs("phishing-employees-results");
+      if (container) container.innerHTML = this._errorHtml(this._errorMessage(error, "Failed to load employees."), "employee-refresh");
     }
   }
 
@@ -944,10 +979,14 @@ class PhishingManager {
       <button class="cyber-btn-secondary px-3 py-2 text-sm" data-phishing-action="employee-import">Import CSV</button>
       <button class="cyber-btn-primary px-3 py-2 text-sm" data-phishing-action="employee-new">+ Add</button>
       <input type="file" id="phishing-employee-file" accept=".csv" class="hidden" />`;
-    let body = this._sectionHeader("Employees", "The people your simulations target.", actions);
+    const header = this._sectionHeader("Employees", "The people your simulations target.", actions);
+    return this._panel(header + `<div id="phishing-employees-results">${this._employeesResultsHtml(data)}</div>`);
+  }
+
+  _employeesResultsHtml(data) {
     if (!data.length) {
-      body += this._emptyHtml("No employees found", "Add employees individually or import a CSV.");
-      return body;
+      return this._emptyHtml("No employees found", "Add employees individually or import a CSV.",
+        `<button class="cyber-btn-primary px-4 py-2 text-sm" data-phishing-action="employee-new">+ Add Employee</button>`);
     }
     const rows = data.map((e) => {
       const level = e.risk_level || this.riskLevelFromScore(e.risk_score);
@@ -963,7 +1002,7 @@ class PhishingManager {
           </td>
         </tr>`;
     }).join("");
-    body += `
+    return `
       <div class="phishing-table-wrap">
         <table class="phishing-table">
           <thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Risk</th><th></th></tr></thead>
@@ -971,7 +1010,6 @@ class PhishingManager {
         </table>
       </div>
       ${this._paginationHtml()}`;
-    return body;
   }
 
   _paginationHtml() {
@@ -1110,37 +1148,37 @@ class PhishingManager {
       const res = await this.listDomains();
       this.domains = (res && res.domains) || [];
       const actions = `<button class="cyber-btn-primary px-4 py-2 text-sm" data-phishing-action="domain-new">+ Add Domain</button>`;
-      let body = this._sectionHeader("Custom Domains", "Send simulations from your own verified domain.", actions);
-      body += `<div class="phishing-notice">Domain verification depends on the Brevo integration, which is under optimization. DNS propagation can take 24–48 hours.</div>`;
+      let inner = this._sectionHeader("Custom Domains", "Send simulations from your own verified domain.", actions);
+      inner += `<div class="phishing-notice">Domain verification depends on the Brevo integration, which is under optimization. DNS propagation can take 24–48 hours.</div>`;
       if (this.domains.length === 0) {
-        body += this._emptyHtml("No custom domains", "Add a domain and configure its DNS records to send from your brand.");
+        inner += this._emptyHtml("No custom domains", "Add a domain and configure its DNS records to send from your brand.",
+          `<button class="cyber-btn-primary px-4 py-2 text-sm" data-phishing-action="domain-new">+ Add Domain</button>`);
       } else {
-        body += `<div class="phishing-list space-y-3">${this.domains.map((d) => this._domainCard(d)).join("")}</div>`;
+        inner += `<div class="phishing-list">${this.domains.map((d) => this._domainCard(d)).join("")}</div>`;
       }
-      host.innerHTML = body;
+      host.innerHTML = this._panel(inner);
     } catch (error) {
-      host.innerHTML = this._sectionHeader("Custom Domains", "", "") +
-        this._errorHtml(this._errorMessage(error, "Failed to load domains."), "domain-refresh");
+      host.innerHTML = this._panel(
+        this._sectionHeader("Custom Domains", "", "") +
+        this._errorHtml(this._errorMessage(error, "Failed to load domains."), "domain-refresh"));
     }
   }
 
   _domainCard(d) {
     const verified = d.is_verified;
     return `
-      <div class="phishing-card cyber-card p-4">
-        <div class="flex items-start justify-between gap-3 flex-wrap">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="text-sm font-semibold" style="color: var(--cg-text-1);">${this.escapeHtml(d.domain)}</span>
-              <span class="phishing-badge inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${verified ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : "text-amber-400 bg-amber-500/10 border-amber-500/20"}">${verified ? "Verified" : "Pending"}</span>
-            </div>
-            <p class="text-xs mt-1" style="color: var(--cg-text-3);">SPF: ${d.spf_configured ? "✓" : "✗"} · DKIM: ${d.dkim_configured ? "✓" : "✗"}</p>
+      <div class="phishing-row">
+        <div class="phishing-row-main">
+          <div class="phishing-row-title">
+            <span class="phishing-row-name">${this.escapeHtml(d.domain)}</span>
+            <span class="phishing-badge inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${verified ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : "text-amber-400 bg-amber-500/10 border-amber-500/20"}">${verified ? "Verified" : "Pending"}</span>
           </div>
-          <div class="flex items-center gap-1.5">
-            <button class="cyber-btn-secondary px-2.5 py-1 text-xs" data-phishing-action="domain-dns" data-id="${this.escapeHtml(d.id)}">DNS records</button>
-            ${!verified ? `<button class="cyber-btn-primary px-2.5 py-1 text-xs" data-phishing-action="domain-verify" data-id="${this.escapeHtml(d.id)}">Verify</button>` : ""}
-            <button class="phishing-btn-danger px-2.5 py-1 text-xs" data-phishing-action="domain-delete" data-id="${this.escapeHtml(d.id)}" data-name="${this.escapeHtml(d.domain)}">Delete</button>
-          </div>
+          <p class="phishing-row-meta">SPF: ${d.spf_configured ? "✓" : "✗"} · DKIM: ${d.dkim_configured ? "✓" : "✗"}</p>
+        </div>
+        <div class="phishing-row-actions">
+          <button class="cyber-btn-secondary px-2.5 py-1 text-xs" data-phishing-action="domain-dns" data-id="${this.escapeHtml(d.id)}">DNS records</button>
+          ${!verified ? `<button class="cyber-btn-primary px-2.5 py-1 text-xs" data-phishing-action="domain-verify" data-id="${this.escapeHtml(d.id)}">Verify</button>` : ""}
+          <button class="phishing-btn-danger px-2.5 py-1 text-xs" data-phishing-action="domain-delete" data-id="${this.escapeHtml(d.id)}" data-name="${this.escapeHtml(d.domain)}">Delete</button>
         </div>
       </div>`;
   }
@@ -1258,8 +1296,9 @@ class PhishingManager {
       host.innerHTML = this._reportsHtml(ov, risky, depts);
       this._renderOverviewCharts(ov, depts);
     } catch (error) {
-      host.innerHTML = this._sectionHeader("Reports & Analytics", "", "") +
-        this._errorHtml(this._errorMessage(error, "Failed to load analytics."), "report-refresh");
+      host.innerHTML = this._panel(
+        this._sectionHeader("Reports & Analytics", "", "") +
+        this._errorHtml(this._errorMessage(error, "Failed to load analytics."), "report-refresh"));
     }
   }
 
@@ -1284,18 +1323,19 @@ class PhishingManager {
         <td>${this.escapeHtml(d.average_risk_score != null ? d.average_risk_score : "—")}</td>
       </tr>`).join("");
     return `
-      ${this._sectionHeader("Reports & Analytics", "Organization-wide phishing posture.", `<button class="cyber-btn-secondary px-4 py-2 text-sm" data-phishing-action="report-refresh">Refresh</button>`)}
-      <div class="phishing-stat-grid">
-        ${this._statTile("Campaigns", ov.total_campaigns)}
-        ${this._statTile("Targets", ov.total_targets)}
-        ${this._statTile("Click rate", `${this._pct(ov.click_rate)}%`)}
-        ${this._statTile("Submission rate", `${this._pct(ov.submission_rate)}%`)}
-        ${this._statTile("Report rate", `${this._pct(ov.report_rate)}%`)}
-        ${this._statTile("Susceptibility", `${this._pct(ov.susceptibility_rate)}%`)}
-      </div>
+      ${this._panel(
+        this._sectionHeader("Reports & Analytics", "Organization-wide phishing posture.", `<button class="cyber-btn-secondary px-4 py-2 text-sm" data-phishing-action="report-refresh">Refresh</button>`) +
+        `<div class="phishing-stat-grid">
+          ${this._statTile("Campaigns", ov.total_campaigns)}
+          ${this._statTile("Targets", ov.total_targets)}
+          ${this._statTile("Click rate", `${this._pct(ov.click_rate)}%`)}
+          ${this._statTile("Submission rate", `${this._pct(ov.submission_rate)}%`)}
+          ${this._statTile("Report rate", `${this._pct(ov.report_rate)}%`)}
+          ${this._statTile("Susceptibility", `${this._pct(ov.susceptibility_rate)}%`)}
+        </div>`)}
       <div class="phishing-report-charts">
-        <div class="cyber-card p-4"><h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Risk distribution</h5><div id="phishing-risk-chart" class="phishing-chart"></div></div>
-        <div class="cyber-card p-4"><h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Department click rate</h5><div id="phishing-dept-chart" class="phishing-chart"></div></div>
+        <div class="cyber-card p-4"><h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Risk distribution</h5><div id="phishing-risk-chart" class="phishing-chart">${this._chartEmpty()}</div></div>
+        <div class="cyber-card p-4"><h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Department click rate</h5><div id="phishing-dept-chart" class="phishing-chart">${this._chartEmpty()}</div></div>
       </div>
       <div class="cyber-card p-4">
         <h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Highest-risk employees</h5>
@@ -1323,7 +1363,9 @@ class PhishingManager {
     try {
       const el = document.querySelector("#phishing-risk-chart");
       const dist = ov.risk_distribution || {};
-      if (el) {
+      const total = (Number(dist.safe) || 0) + (Number(dist.low) || 0) + (Number(dist.medium) || 0) + (Number(dist.high) || 0);
+      if (el && total > 0) {
+        el.innerHTML = "";
         if (this._charts.risk) { this._charts.risk.destroy(); }
         this._charts.risk = new ApexCharts(el, {
           chart: { type: "donut", height: 240 },
@@ -1339,6 +1381,7 @@ class PhishingManager {
     try {
       const el = document.querySelector("#phishing-dept-chart");
       if (el && Array.isArray(depts) && depts.length) {
+        el.innerHTML = "";
         if (this._charts.dept) { this._charts.dept.destroy(); }
         this._charts.dept = new ApexCharts(el, {
           chart: { type: "bar", height: 240, toolbar: { show: false } },
@@ -1362,16 +1405,17 @@ class PhishingManager {
     try {
       const res = await this.listPermissions();
       const admins = (res && res.permissions) || [];
-      let body = this._sectionHeader("Permission Delegation", "Grant admins granular phishing permissions.", `<button class="cyber-btn-secondary px-4 py-2 text-sm" data-phishing-action="perm-refresh">Refresh</button>`);
+      let inner = this._sectionHeader("Permission Delegation", "Grant admins granular phishing permissions.", `<button class="cyber-btn-secondary px-4 py-2 text-sm" data-phishing-action="perm-refresh">Refresh</button>`);
       if (!admins.length) {
-        body += this._emptyHtml("No admins to manage", "Invite admins to your organization to delegate phishing permissions.");
+        inner += this._emptyHtml("No admins to manage", "Invite admins to your organization to delegate phishing permissions.");
       } else {
-        body += `<div class="phishing-list space-y-3">${admins.map((a) => this._permissionCard(a)).join("")}</div>`;
+        inner += `<div class="phishing-list">${admins.map((a) => this._permissionCard(a)).join("")}</div>`;
       }
-      host.innerHTML = body;
+      host.innerHTML = this._panel(inner);
     } catch (error) {
-      host.innerHTML = this._sectionHeader("Permission Delegation", "", "") +
-        this._errorHtml(this._errorMessage(error, "Failed to load permissions."), "perm-refresh");
+      host.innerHTML = this._panel(
+        this._sectionHeader("Permission Delegation", "", "") +
+        this._errorHtml(this._errorMessage(error, "Failed to load permissions."), "perm-refresh"));
     }
   }
 
@@ -1385,13 +1429,13 @@ class PhishingManager {
           </span>`).join("")
       : `<span class="text-xs" style="color: var(--cg-text-3);">No permissions granted</span>`;
     return `
-      <div class="phishing-card cyber-card p-4">
-        <div class="flex items-start justify-between gap-3 flex-wrap">
-          <div>
-            <p class="text-sm font-semibold" style="color: var(--cg-text-1);">${this.escapeHtml(user.full_name || user.name || "Admin")}</p>
-            <p class="text-xs" style="color: var(--cg-text-3);">${this.escapeHtml(user.email || "")}</p>
-            <div class="phishing-perm-chips mt-2">${chips}</div>
-          </div>
+      <div class="phishing-row">
+        <div class="phishing-row-main">
+          <p class="phishing-row-name">${this.escapeHtml(user.full_name || user.name || "Admin")}</p>
+          <p class="phishing-row-meta">${this.escapeHtml(user.email || "")}</p>
+          <div class="phishing-perm-chips mt-2">${chips}</div>
+        </div>
+        <div class="phishing-row-actions">
           <button class="cyber-btn-secondary px-2.5 py-1 text-xs" data-phishing-action="perm-grant" data-user-id="${this.escapeHtml(user.id)}" data-name="${this.escapeHtml(user.full_name || user.name)}">Grant</button>
         </div>
       </div>`;
@@ -1444,24 +1488,38 @@ class PhishingManager {
     const host = this._qs("phishing-modal-host");
     if (!host) return;
     const wide = options.wide ? "phishing-modal-wide" : "";
+    // type="button" on every control so the global submit-prevention handler in
+    // cyber-notify.js (which targets `button:not([type])`) never intercepts them.
     const footer = onSubmit
-      ? `<button class="cyber-btn-secondary px-4 py-2 text-sm" data-phishing-action="modal-close">Cancel</button>
-         <button class="cyber-btn-primary px-4 py-2 text-sm" id="phishing-modal-submit">Save</button>`
-      : `<button class="cyber-btn-secondary px-4 py-2 text-sm" data-phishing-action="modal-close">Close</button>`;
+      ? `<button type="button" class="cyber-btn-secondary px-4 py-2 text-sm" data-phishing-action="modal-close">Cancel</button>
+         <button type="button" class="cyber-btn-primary px-4 py-2 text-sm" id="phishing-modal-submit">Save</button>`
+      : `<button type="button" class="cyber-btn-secondary px-4 py-2 text-sm" data-phishing-action="modal-close">Close</button>`;
     host.innerHTML = `
-      <div class="phishing-modal-overlay" data-phishing-action="modal-close">
+      <div class="phishing-modal-overlay">
         <div class="phishing-modal ${wide}" role="dialog" aria-modal="true">
           <div class="phishing-modal-header">
             <h3 class="text-sm font-semibold" style="color: var(--cg-text-1);">${this.escapeHtml(title)}</h3>
-            <button class="phishing-modal-x" data-phishing-action="modal-close" aria-label="Close">×</button>
+            <button type="button" class="phishing-modal-x" data-phishing-action="modal-close" aria-label="Close">×</button>
           </div>
           <div class="phishing-modal-body" id="phishing-modal-body">${bodyHtml}</div>
           <div class="phishing-modal-footer">${footer}</div>
         </div>
       </div>`;
-    // Prevent overlay-close clicks inside the dialog from bubbling to the overlay
-    const dialog = host.querySelector(".phishing-modal");
-    if (dialog) dialog.addEventListener("click", (e) => e.stopPropagation());
+
+    // Self-contained wiring — do NOT rely on the delegated #phishing listener,
+    // which the modal's fixed overlay/dialog can sit above.
+    const overlay = host.querySelector(".phishing-modal-overlay");
+    if (overlay) {
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) this.closeModal(); // click outside the dialog
+      });
+    }
+    host.querySelectorAll('[data-phishing-action="modal-close"]').forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.closeModal();
+      });
+    });
     const submitBtn = this._qs("phishing-modal-submit");
     if (submitBtn && typeof onSubmit === "function") {
       submitBtn.addEventListener("click", (e) => {

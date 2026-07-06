@@ -353,6 +353,55 @@ describe("PhishingManager", () => {
     });
   });
 
+  // ─── Modal wiring (regression: modal buttons were dead) ─────────────────────
+
+  describe("modal button wiring", () => {
+    beforeEach(() => {
+      document.body.innerHTML = `<div id="phishing-modal-host"></div>`;
+    });
+
+    it("renders a modal with type=button controls (never intercepted by submit-prevention)", () => {
+      pm.openModal("Test", `<form id="f"></form>`, () => {});
+      const host = document.getElementById("phishing-modal-host");
+      expect(host.querySelector(".phishing-modal")).toBeTruthy();
+      host.querySelectorAll("button").forEach((b) => {
+        expect(b.getAttribute("type")).toBe("button");
+      });
+    });
+
+    it("Save button invokes the onSubmit callback", () => {
+      const onSubmit = vi.fn();
+      pm.openModal("Test", `<form id="f"></form>`, onSubmit);
+      document.getElementById("phishing-modal-submit").click();
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+
+    it("Cancel button closes the modal", () => {
+      pm.openModal("Test", `<form id="f"></form>`, () => {});
+      const host = document.getElementById("phishing-modal-host");
+      const cancel = host.querySelector('[data-phishing-action="modal-close"]');
+      cancel.click();
+      expect(host.innerHTML).toBe("");
+    });
+
+    it("clicking the overlay backdrop closes the modal, clicking the dialog does not", () => {
+      pm.openModal("Test", `<form id="f"></form>`, () => {});
+      const host = document.getElementById("phishing-modal-host");
+      // Click inside the dialog — should NOT close
+      host.querySelector(".phishing-modal").click();
+      expect(host.querySelector(".phishing-modal")).toBeTruthy();
+      // Click the overlay itself — should close
+      host.querySelector(".phishing-modal-overlay").click();
+      expect(host.innerHTML).toBe("");
+    });
+
+    it("closeModal empties the host", () => {
+      pm.openModal("Test", `<div></div>`, null);
+      pm.closeModal();
+      expect(document.getElementById("phishing-modal-host").innerHTML).toBe("");
+    });
+  });
+
   describe("template read-only guard", () => {
     beforeEach(() => {
       document.body.innerHTML = `<div id="phishing-view-templates"></div>`;
