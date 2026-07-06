@@ -15,7 +15,8 @@ const DashboardTabManager = {
     'threat-intel': false,
     'billing-history': false,
     'jwt-debugger': false,
-    'osint': false
+    'osint': false,
+    'phishing': false
   },
   
   // Current active tab
@@ -64,7 +65,7 @@ const DashboardTabManager = {
       console.log("DashboardTabManager: org context changed, refreshing workspace tabs");
       
       // Invalidate initialization status of other workspace-scoped tabs so they reload when clicked
-      const workspaceTabs = ['projects', 'billing-history'];
+      const workspaceTabs = ['projects', 'billing-history', 'phishing'];
       workspaceTabs.forEach(tabId => {
         if (this.currentTab !== tabId) {
           this.tabInitialized[tabId] = false;
@@ -83,6 +84,11 @@ const DashboardTabManager = {
       } else if (this.currentTab === 'billing-history') {
         if (typeof window.loadBillingHistory === 'function') {
           window.loadBillingHistory();
+        }
+      } else if (this.currentTab === 'phishing') {
+        if (window.phishingManager && typeof window.phishingManager.refreshActive === 'function') {
+          window.phishingManager._applyRoleVisibility();
+          window.phishingManager.refreshActive();
         }
       }
       
@@ -272,6 +278,9 @@ const DashboardTabManager = {
       case 'threat-intel':
         this.initializeThreatIntel();
         break;
+      case 'phishing':
+        this.initializePhishing();
+        break;
       case 'billing-history':
         this.initializeBillingHistory();
         break;
@@ -418,7 +427,33 @@ const DashboardTabManager = {
       console.warn('DashboardTabManager: ThreatIntelHub not found');
     }
   },
-  
+
+  /**
+   * Initialize Phishing Simulation tab
+   * Boots the PhishingManager module the first time the tab is activated
+   */
+  initializePhishing() {
+    console.log('DashboardTabManager: Initializing Phishing Simulation tab');
+
+    if (window.phishingManager && typeof window.phishingManager.init === 'function') {
+      try {
+        window.phishingManager.init();
+        console.log('DashboardTabManager: Phishing Simulation initialized');
+      } catch (error) {
+        console.error('DashboardTabManager: Error initializing Phishing Simulation:', error);
+      }
+    } else if (typeof PhishingManager !== 'undefined' && window.apiClient) {
+      try {
+        window.phishingManager = new PhishingManager(window.apiClient);
+        window.phishingManager.init();
+      } catch (error) {
+        console.error('DashboardTabManager: Error creating PhishingManager:', error);
+      }
+    } else {
+      console.warn('DashboardTabManager: PhishingManager not found');
+    }
+  },
+
   /**
    * Initialize Billing History tab
    * Loads billing history when the tab is first activated

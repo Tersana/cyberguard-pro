@@ -47,6 +47,7 @@
         <link rel="stylesheet" href="css/settings-panel.css" />
         <link rel="stylesheet" href="css/security-dashboard.css?v=dashboard-redesign" />
         <link rel="stylesheet" href="css/osint.css" />
+        <link rel="stylesheet" href="css/phishing.css" />
         <link rel="stylesheet" href="css/cyber-datepicker.css" />
         <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css" />
         <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/translucent.css" />
@@ -448,6 +449,31 @@
                                 />
                             </svg>
                             <span class="text-sm font-medium">Projects</span>
+                            <span class="cyber-active-dot"></span>
+                        </a>
+                        <a
+                            href="#"
+                            class="cyber-nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                            onclick="
+                                switchToTab('phishing');
+                                return false;
+                            "
+                        >
+                            <svg
+                                class="w-4 h-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke-width="1.5"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
+                                />
+                            </svg>
+                            <span class="text-sm font-medium">Phishing</span>
                             <span class="cyber-active-dot"></span>
                         </a>
 
@@ -3800,6 +3826,36 @@
                                 <!-- End Results Section -->
                             </div>
                             <!-- END THREAT INTEL TAB -->
+
+                            <!-- PHISHING SIMULATION TAB -->
+                            <div
+                                id="phishing"
+                                class="tab-pane hidden space-y-6"
+                            >
+                                <!-- Sub-navigation strip -->
+                                <div class="cyber-card p-2">
+                                    <div id="phishing-subnav" class="phishing-subnav">
+                                        <button class="phishing-subnav-btn active" data-subview="campaigns">Campaigns</button>
+                                        <button class="phishing-subnav-btn" data-subview="templates">Templates</button>
+                                        <button class="phishing-subnav-btn" data-subview="employees">Employees</button>
+                                        <button class="phishing-subnav-btn" data-subview="domains">Domains</button>
+                                        <button class="phishing-subnav-btn" data-subview="reports">Reports</button>
+                                        <button class="phishing-subnav-btn" id="phishing-subnav-permissions" data-subview="permissions" style="display:none">Permissions</button>
+                                    </div>
+                                </div>
+
+                                <!-- Sub-view panes (rendered by phishing.js) -->
+                                <div id="phishing-view-campaigns" class="phishing-subview"></div>
+                                <div id="phishing-view-templates" class="phishing-subview hidden"></div>
+                                <div id="phishing-view-employees" class="phishing-subview hidden"></div>
+                                <div id="phishing-view-domains" class="phishing-subview hidden"></div>
+                                <div id="phishing-view-reports" class="phishing-subview hidden"></div>
+                                <div id="phishing-view-permissions" class="phishing-subview hidden"></div>
+
+                                <!-- Modal host -->
+                                <div id="phishing-modal-host"></div>
+                            </div>
+                            <!-- END PHISHING SIMULATION TAB -->
                         </div>
                         <!-- end #tab-content -->
 
@@ -4833,6 +4889,8 @@
         <script src="js/security-dashboard.js"></script>
         <!-- OSINT Passive Reconnaissance Tab -->
         <script src="js/osint.js"></script>
+        <!-- Phishing Simulation Module -->
+        <script src="js/phishing.js"></script>
         <!-- Dashboard Tab Manager - Loads after main.js to avoid conflicts -->
         <script src="js/dashboard-tab-manager.js?v=1.0.1"></script>
         <!-- JWT Debugger Module -->
