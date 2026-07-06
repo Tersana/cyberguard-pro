@@ -391,7 +391,7 @@
                 border-bottom: 1px solid var(--cg-border);
                 vertical-align: middle;
             }
-            .sp-td--title { font-weight: 500; color: var(--cg-text-1); }
+            .sp-td--title { font-weight: 500; color: var(--cg-text-1); word-break: break-all; overflow-wrap: break-word; white-space: normal; }
             .sp-td--mono  { font-family: var(--cg-font-mono); font-size: 11px; }
             .sp-table-empty {
                 padding: 32px; text-align: center;
@@ -918,10 +918,10 @@
                         <table class="sp-findings-table" aria-label="Scan findings">
                             <thead>
                                 <tr>
-                                    <th class="sp-th">Title</th>
-                                    <th class="sp-th">Severity</th>
-                                    <th class="sp-th">Status</th>
-                                    <th class="sp-th">Discovered</th>
+                                    <th class="sp-th" style="width: 55%;">Title</th>
+                                    <th class="sp-th" style="width: 15%;">Severity</th>
+                                    <th class="sp-th" style="width: 13%;">Status</th>
+                                    <th class="sp-th" style="width: 17%;">Discovered</th>
                                 </tr>
                             </thead>
                             <tbody id="sp-findings-body">
