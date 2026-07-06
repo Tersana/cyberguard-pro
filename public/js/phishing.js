@@ -185,6 +185,9 @@ class PhishingManager {
 
   /** Extract the most useful human-readable message from an API error. */
   _errorMessage(error, fallback = "Something went wrong. Please try again.") {
+    if (window.organizationManager && typeof window.organizationManager.isOrgContext === "function" && !window.organizationManager.isOrgContext()) {
+      return "Phishing Simulation is only available within an Organization Workspace. Please switch to an Organization Workspace or create one to get started.";
+    }
     if (!error) return fallback;
     if (error.data && error.data.message) return error.data.message;
     if (Array.isArray(error.errors) && error.errors.length && error.errors[0].message) {
