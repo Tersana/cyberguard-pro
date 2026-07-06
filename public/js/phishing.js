@@ -1326,36 +1326,39 @@ class PhishingManager {
         <td>${this.escapeHtml(d.average_risk_score != null ? d.average_risk_score : "—")}</td>
       </tr>`).join("");
     return `
-      ${this._panel(
-        this._sectionHeader("Reports & Analytics", "Organization-wide phishing posture.", `<button class="cyber-btn-secondary px-4 py-2 text-sm" data-phishing-action="report-refresh">Refresh</button>`) +
-        `<div class="phishing-stat-grid">
-          ${this._statTile("Campaigns", ov.total_campaigns)}
-          ${this._statTile("Targets", ov.total_targets)}
-          ${this._statTile("Click rate", `${this._pct(ov.click_rate)}%`)}
-          ${this._statTile("Submission rate", `${this._pct(ov.submission_rate)}%`)}
-          ${this._statTile("Report rate", `${this._pct(ov.report_rate)}%`)}
-          ${this._statTile("Susceptibility", `${this._pct(ov.susceptibility_rate)}%`)}
-        </div>`)}
-      <div class="phishing-report-charts">
-        <div class="cyber-card p-4"><h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Risk distribution</h5><div id="phishing-risk-chart" class="phishing-chart">${this._chartEmpty()}</div></div>
-        <div class="cyber-card p-4"><h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Department click rate</h5><div id="phishing-dept-chart" class="phishing-chart">${this._chartEmpty()}</div></div>
-      </div>
-      <div class="cyber-card p-4">
-        <h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Highest-risk employees</h5>
-        <div class="phishing-table-wrap">
-          <table class="phishing-table">
-            <thead><tr><th>Name</th><th>Department</th><th>Risk</th><th>Last interaction</th></tr></thead>
-            <tbody>${riskRows || '<tr><td colspan="4" style="text-align:center;color:var(--cg-text-3);">No data</td></tr>'}</tbody>
-          </table>
+      <div class="phishing-reports-container">
+        <div class="phishing-reports-header-section">
+          ${this._sectionHeader("Reports & Analytics", "Organization-wide phishing posture.", `<button class="cyber-btn-secondary px-4 py-2 text-sm" data-phishing-action="report-refresh">Refresh</button>`)}
+          <div class="phishing-stat-grid">
+            ${this._statTile("Campaigns", ov.total_campaigns)}
+            ${this._statTile("Targets", ov.total_targets)}
+            ${this._statTile("Click rate", `${this._pct(ov.click_rate)}%`)}
+            ${this._statTile("Submission rate", `${this._pct(ov.submission_rate)}%`)}
+            ${this._statTile("Report rate", `${this._pct(ov.report_rate)}%`)}
+            ${this._statTile("Susceptibility", `${this._pct(ov.susceptibility_rate)}%`)}
+          </div>
         </div>
-      </div>
-      <div class="cyber-card p-4">
-        <h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Department vulnerability</h5>
-        <div class="phishing-table-wrap">
-          <table class="phishing-table">
-            <thead><tr><th>Department</th><th>Employees</th><th>Targets</th><th>Click rate</th><th>Submission rate</th><th>Avg risk</th></tr></thead>
-            <tbody>${deptRows || '<tr><td colspan="6" style="text-align:center;color:var(--cg-text-3);">No data</td></tr>'}</tbody>
-          </table>
+        <div class="phishing-report-charts">
+          <div class="cyber-card p-4"><h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Risk distribution</h5><div id="phishing-risk-chart" class="phishing-chart">${this._chartEmpty()}</div></div>
+          <div class="cyber-card p-4"><h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Department click rate</h5><div id="phishing-dept-chart" class="phishing-chart">${this._chartEmpty()}</div></div>
+        </div>
+        <div class="cyber-card p-4">
+          <h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Highest-risk employees</h5>
+          <div class="phishing-table-wrap">
+            <table class="phishing-table">
+              <thead><tr><th>Name</th><th>Department</th><th>Risk</th><th>Last interaction</th></tr></thead>
+              <tbody>${riskRows || '<tr><td colspan="4" style="text-align:center;color:var(--cg-text-3);">No data</td></tr>'}</tbody>
+            </table>
+          </div>
+        </div>
+        <div class="cyber-card p-4">
+          <h5 class="text-xs font-semibold mb-2" style="color: var(--cg-text-2);">Department vulnerability</h5>
+          <div class="phishing-table-wrap">
+            <table class="phishing-table">
+              <thead><tr><th>Department</th><th>Employees</th><th>Targets</th><th>Click rate</th><th>Submission rate</th><th>Avg risk</th></tr></thead>
+              <tbody>${deptRows || '<tr><td colspan="6" style="text-align:center;color:var(--cg-text-3);">No data</td></tr>'}</tbody>
+            </table>
+          </div>
         </div>
       </div>`;
   }
