@@ -5268,184 +5268,36 @@ document.addEventListener("DOMContentLoaded", () => {
       this.lastRequestTime = Date.now();
     }
 
-    // Make authenticated API request to Shodan with reliable CORS proxy
+    // Make authenticated API request to Shodan with reliable backend proxy
     async makeShodanRequest(endpoint, params = {}) {
       await this.rateLimit();
-
-      const targetUrl = new URL(`${this.baseUrl}${endpoint}`);
-      targetUrl.searchParams.append("key", this.apiKey);
-
-      // Add additional parameters
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
-          targetUrl.searchParams.append(key, value);
-        }
-      });
-
-      // Use a more reliable CORS proxy approach with multiple options
-      const proxyOptions = [
-        "https://api.allorigins.win/raw?url=",
-        "https://cors.lol/?url=",
-        "https://corsproxy.io/?url=",
-      ];
-
-      const proxyUrl = proxyOptions[0]; // Start with the most reliable
-      const encodedUrl = encodeURIComponent(targetUrl.toString());
+      const parts = endpoint.split("/");
+      const target = parts[parts.length - 1];
+      
+      const targetUrl = `/api/shodan?host=${encodeURIComponent(target)}&key=${encodeURIComponent(this.apiKey)}`;
 
       try {
-        const response = await fetch(`${proxyUrl}${encodedUrl}`, {
+        const response = await fetch(targetUrl, {
           method: "GET",
           headers: {
             "User-Agent": "CyberGuard-Pro/1.0",
             Accept: "application/json",
-            "Content-Type": "application/json",
           },
-          mode: "cors",
         });
 
         if (!response.ok) {
-          throw new Error(
-            `Proxy Error: ${response.status} - ${response.statusText}`,
-          );
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Proxy Error: ${response.status} - ${response.statusText}`);
         }
 
         const data = await response.json();
-
-        // Check if Shodan returned an error
         if (data.error) {
           throw new Error(`Shodan API Error: ${data.error}`);
         }
-
         return data;
       } catch (error) {
-        // If the primary proxy fails, try alternative approach
-        if (
-          error.message.includes("Failed to fetch") ||
-          error.message.includes("NetworkError")
-        ) {
-          return await this.makeShodanRequestAlternative(targetUrl);
-        }
         throw error;
       }
-    }
-
-    // Alternative CORS proxy method with multiple retries
-    async makeShodanRequestAlternative(targetUrl) {
-      const proxyOptions = [
-        "https://api.allorigins.win/raw?url=",
-        "https://cors.lol/?url=",
-        "https://corsproxy.io/?url=",
-      ];
-
-      for (let i = 0; i < proxyOptions.length; i++) {
-        try {
-          const proxyUrl = proxyOptions[i];
-          const encodedUrl = encodeURIComponent(targetUrl.toString());
-
-          logResult(
-            new Date(),
-            "Shodan Scanner",
-            `🔄 Trying CORS proxy ${i + 1}/${proxyOptions.length}...`,
-            "info",
-          );
-
-          const response = await fetch(`${proxyUrl}${encodedUrl}`, {
-            method: "GET",
-            headers: {
-              "User-Agent": "CyberGuard-Pro/1.0",
-              Accept: "application/json",
-            },
-          });
-
-          if (!response.ok) {
-            if (i === proxyOptions.length - 1) {
-              throw new Error(
-                `All proxies failed. Last error: ${response.status} - ${response.statusText}`,
-              );
-            }
-            continue; // Try next proxy
-          }
-
-          const data = await response.json();
-
-          if (data.error) {
-            throw new Error(`Shodan API Error: ${data.error}`);
-          }
-
-          logResult(
-            new Date(),
-            "Shodan Scanner",
-            `✅ Successfully connected via CORS proxy ${i + 1}`,
-            "success",
-          );
-
-          return data;
-        } catch (error) {
-          if (i === proxyOptions.length - 1) {
-            // All proxies failed, try JSONP
-            logResult(
-              new Date(),
-              "Shodan Scanner",
-              `⚠️ All CORS proxies failed, trying JSONP approach...`,
-              "warning",
-            );
-            return await this.makeShodanRequestJSONP(targetUrl);
-          }
-          // Try next proxy
-          continue;
-        }
-      }
-    }
-
-    // JSONP-style request as final fallback
-    async makeShodanRequestJSONP(targetUrl) {
-      return new Promise((resolve, reject) => {
-        // Create a unique callback name
-        const callbackName = `shodanCallback_${Date.now()}_${Math.random()
-          .toString(36)
-          .substr(2, 9)}`;
-
-        // Add callback parameter to URL
-        const jsonpUrl = new URL(targetUrl);
-        jsonpUrl.searchParams.append("callback", callbackName);
-
-        // Create script element
-        const script = document.createElement("script");
-        script.src = jsonpUrl.toString();
-        script.async = true;
-
-        // Set up global callback
-        window[callbackName] = (data) => {
-          // Clean up
-          document.head.removeChild(script);
-          delete window[callbackName];
-
-          if (data.error) {
-            reject(new Error(`Shodan API Error: ${data.error}`));
-          } else {
-            resolve(data);
-          }
-        };
-
-        // Handle script load error
-        script.onerror = () => {
-          document.head.removeChild(script);
-          delete window[callbackName];
-          reject(new Error("JSONP request failed"));
-        };
-
-        // Add script to document
-        document.head.appendChild(script);
-
-        // Timeout after 10 seconds
-        setTimeout(() => {
-          if (window[callbackName]) {
-            document.head.removeChild(script);
-            delete window[callbackName];
-            reject(new Error("JSONP request timeout"));
-          }
-        }, 10000);
-      });
     }
 
     // Get comprehensive host information from Shodan
