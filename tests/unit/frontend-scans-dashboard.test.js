@@ -273,5 +273,47 @@ describe('Frontend Scans Dashboard Integration', () => {
       expect(document.querySelector('#recent-findings-container .finding-title').textContent).toContain('/admin');
       expect(document.querySelector('#severity-bar-list .severity-count').textContent).toBe('1');
     });
+
+    it('does not show completed scans under Active Scans (reconciles against known status)', async () => {
+      const metrics = () => ({
+        findings_summary: { total: 0, critical: 0, high: 0, medium: 0, low: 0, info: 0, resolved: 0 },
+        infrastructure: { total_targets: 1, total_scans: 3 },
+        active_scans: {
+          count: 3,
+          scans: [
+            // Backend still lists it running, but the recent-scan cache knows it finished.
+            { id: 'SUB123', status: 'running', project_id: 'p1', driver_id: ['subdomain-scan'], target: { value: 'google.com' } },
+            // Backend entry that already reports a terminal status.
+            { id: 'SUB456', status: 'completed', project_id: 'p1', driver_id: ['subdomain-scan'], target: { value: 'x.com' } },
+            // Genuinely still running, unknown to the cache — must remain.
+            { id: 'SUB789', status: 'running', project_id: 'p1', driver_id: ['subdomain-scan'], target: { value: 'y.com' } }
+          ]
+        },
+        recent_findings: { findings: [] },
+        findings_by_severity: {},
+        risk_score: { global_score: 0, risk_level: 'low' }
+      });
+
+      window.apiClient.get.mockImplementation((url) => {
+        if (url === '/dashboard/metrics') return Promise.resolve({ status: 'success', data: metrics() });
+        if (url === '/targets') return Promise.resolve({ status: 'success', targets: [] });
+        if (url.startsWith('/projects/p1/findings')) return Promise.resolve({ status: 'success', findings: { data: [] } });
+        return Promise.reject(new Error('not found: ' + url));
+      });
+      // The cache knows SUB123 completed (e.g. persisted by getScanStatus polling on the progress page).
+      window.scannerAPI.getRecentScansForProject = vi.fn(() => [
+        { id: 'SUB123', status: 'completed', project_id: 'p1' }
+      ]);
+      window.scannerAPI.getRecentFindingsForProject = vi.fn(() => []);
+      window.scannerAPI.getRecentFindingsForTarget = vi.fn(() => []);
+
+      await window.loadSecurityDashboard();
+
+      const rows = document.querySelectorAll('#active-scans-container .active-scan-row');
+      const renderedIds = Array.from(rows).map(r => r.getAttribute('data-scan-id'));
+      expect(renderedIds).toEqual(['SUB789']);
+      expect(renderedIds).not.toContain('SUB123');
+      expect(renderedIds).not.toContain('SUB456');
+    });
   });
 });

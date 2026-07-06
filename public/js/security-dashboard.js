@@ -35,6 +35,36 @@
     info:     { color: "#38bdf8", label: "Info" }
   };
 
+  // Scan statuses that mean the scan is finished and should NOT appear under Active Scans.
+  const TERMINAL_SCAN_STATUSES = new Set([
+    "completed", "complete", "done", "finished", "success", "succeeded",
+    "failed", "error", "errored", "cancelled", "canceled", "stopped", "aborted"
+  ]);
+
+  function isTerminalScanStatus(status) {
+    return TERMINAL_SCAN_STATUSES.has(String(status || "").toLowerCase());
+  }
+
+  /**
+   * Map of scan id -> latest status from the local frontend-scan store (all statuses),
+   * used to reconcile the Active Scans list so completed scans stop showing as running.
+   */
+  function getLocalScanStatuses() {
+    const map = new Map();
+    try {
+      const raw = localStorage.getItem("cg_frontend_scans");
+      if (raw) {
+        const scans = JSON.parse(raw);
+        (Array.isArray(scans) ? scans : []).forEach(s => {
+          if (s && s.id != null) map.set(String(s.id), (s.status || "").toLowerCase());
+        });
+      }
+    } catch (e) {
+      console.warn("[SecurityDashboard] Failed to read local scan statuses:", e);
+    }
+    return map;
+  }
+
   /**
    * Retrieve active scans stored locally from frontend-only runs
    */
@@ -125,8 +155,23 @@
       }
     });
 
+    // Freshest known status per scan id, from the recent-scan cache + local frontend-scan store.
+    // A scan the caches already know is finished must not keep showing as "Running" just because
+    // a stale backend active-scans entry (or an older cache copy) still lists it.
+    const statusById = new Map();
+    recentScans.forEach(s => {
+      if (s && s.id != null) statusById.set(String(s.id), (s.status || "").toLowerCase());
+    });
+    getLocalScanStatuses().forEach((status, id) => statusById.set(id, status));
+
+    const isScanFinished = (scan) => {
+      const known = statusById.get(String(scan.id));
+      return isTerminalScanStatus(known) || isTerminalScanStatus(scan.status);
+    };
+
     const activeRecentScans = recentScans.filter(scan => ["running", "pending"].includes((scan.status || "").toLowerCase()));
-    metrics.active_scans.scans = uniqueById([...activeRecentScans, ...metrics.active_scans.scans], "scan");
+    metrics.active_scans.scans = uniqueById([...activeRecentScans, ...metrics.active_scans.scans], "scan")
+      .filter(scan => !isScanFinished(scan));
     metrics.active_scans.count = metrics.active_scans.scans.length;
 
     const allFindings = uniqueById([...recentFindings, ...metrics.recent_findings.findings], "finding");
@@ -686,7 +731,9 @@
     const container = document.getElementById("active-scans-container");
     if (!container) return;
 
-    const activeScans = activeScansPayload?.scans || [];
+    // Never render a scan that reports a finished status (defense in depth: the data layer
+    // reconciles against cached statuses, this drops any that still carry a terminal status).
+    const activeScans = (activeScansPayload?.scans || []).filter(s => !isTerminalScanStatus(s.status));
 
     // Sync WebSocket subscriptions
     const newActiveScanIds = new Set(activeScans.map(s => String(s.id)));
