@@ -3,46 +3,70 @@
  * All colors/spacing/radii come from theme-tokens.css (--cg-*) — no hard-coded hex.
  */
 
-/* ── Sub-navigation strip ─────────────────────────────────────────────────── */
+/* -- Sub-navigation strip -------------------------------------------------- */
+.phishing-subnav-card {
+  padding: var(--cg-space-2);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012)),
+    var(--cg-bg-surface);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
 .phishing-subnav {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
   gap: var(--cg-space-2);
 }
 
 .phishing-subnav-btn {
   appearance: none;
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  background: rgba(255, 255, 255, 0.02);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cg-space-2);
+  min-height: 40px;
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--cg-text-2);
   font-size: 0.8125rem;
-  font-weight: 600;
-  padding: var(--cg-space-2) var(--cg-space-5);
+  font-weight: 700;
+  padding: 0 var(--cg-space-4);
   border-radius: var(--cg-radius-md);
   cursor: pointer;
-  transition: all var(--cg-transition-fast);
+  white-space: nowrap;
+  transition:
+    background var(--cg-transition-fast),
+    border-color var(--cg-transition-fast),
+    color var(--cg-transition-fast),
+    box-shadow var(--cg-transition-fast),
+    transform var(--cg-transition-fast);
+}
+
+.phishing-subnav-btn .material-symbols-outlined {
+  font-size: 1rem;
+  color: currentColor;
+  opacity: 0.86;
 }
 
 .phishing-subnav-btn:hover {
-  background: var(--cg-bg-elevated);
+  background: rgba(255, 255, 255, 0.045);
   color: var(--cg-text-1);
-  border-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-0.5px);
+  border-color: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
 }
 
 .phishing-subnav-btn.active {
-  background: rgba(59, 130, 246, 0.2) !important;
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.24), rgba(59, 130, 246, 0.12)) !important;
   color: var(--cg-text-1) !important;
-  border-color: rgba(59, 130, 246, 0.5) !important;
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.15) !important;
+  border-color: rgba(59, 130, 246, 0.46) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 10px 24px rgba(59, 130, 246, 0.12) !important;
 }
 
 .phishing-subnav-btn:focus,
 .phishing-subnav-btn:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
+  outline: 2px solid rgba(59, 130, 246, 0.45) !important;
+  outline-offset: 2px;
 }
-
 /* ── Panel (surface wrapper for each sub-view) ───────────────────────────── */
 .phishing-panel {
   padding: var(--cg-space-6);
@@ -536,50 +560,122 @@ select.cyber-input[multiple],
   background: #0d0d0f;
 }
 
-/* ── Reports & Analytics Overrides ────────────────────────────────────────── */
+/* -- Reports & Analytics Overrides ---------------------------------------- */
 .phishing-reports-container {
   display: flex;
   flex-direction: column;
   gap: var(--cg-space-6);
 }
 
-.phishing-reports-header-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--cg-space-4);
-  padding: var(--cg-space-6);
-  background: var(--cg-bg-surface);
-  border: 1px solid var(--cg-border);
-  border-radius: var(--cg-radius-lg);
-}
-
-.phishing-reports-container > .cyber-card,
-.phishing-report-charts > .cyber-card {
-  background: var(--cg-bg-surface) !important;
+.phishing-reports-header-section,
+.phishing-report-card {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.008)),
+    var(--cg-bg-surface) !important;
   border: 1px solid var(--cg-border) !important;
   border-radius: var(--cg-radius-lg) !important;
   box-shadow: var(--cg-shadow-sm) !important;
-  padding: var(--cg-space-6) !important;
-  transition: all var(--cg-transition-fast);
 }
 
-.phishing-reports-container > .cyber-card:hover,
-.phishing-report-charts > .cyber-card:hover {
-  border-color: rgba(255, 255, 255, 0.12) !important;
+.phishing-reports-header-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cg-space-5);
+  padding: var(--cg-space-6);
+}
+
+.phishing-reports-header-section::before,
+.phishing-report-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.45), transparent);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.phishing-report-card {
+  padding: var(--cg-space-6) !important;
+  transition: border-color var(--cg-transition-fast), box-shadow var(--cg-transition-fast), transform var(--cg-transition-fast);
+}
+
+.phishing-report-card:hover,
+.phishing-reports-header-section:hover {
+  border-color: rgba(255, 255, 255, 0.14) !important;
   box-shadow: var(--cg-shadow-md) !important;
 }
 
-.phishing-reports-container > .cyber-card h5,
-.phishing-report-charts > .cyber-card h5 {
-  font-size: 0.75rem !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.06em !important;
+.phishing-report-card h5 {
   color: var(--cg-text-2) !important;
-  margin-bottom: var(--cg-space-4) !important;
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.07em !important;
+  line-height: 1.2;
+  margin: 0 0 var(--cg-space-4) !important;
+  text-transform: uppercase !important;
+}
+
+.phishing-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cg-space-2);
+  min-height: 36px;
+  padding: 0 var(--cg-space-4) !important;
+  font-size: 0.8125rem !important;
   font-weight: 700 !important;
 }
 
+.phishing-refresh-btn .material-symbols-outlined {
+  font-size: 1rem;
+}
+
+.phishing-report-stat-grid {
+  grid-template-columns: repeat(6, minmax(120px, 1fr));
+}
+
+.phishing-report-stat-grid .phishing-stat {
+  min-height: 78px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01)),
+    rgba(0, 0, 0, 0.16);
+}
+
+.phishing-report-charts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.phishing-chart-card {
+  min-height: 322px;
+}
+
+.phishing-chart {
+  min-height: 240px;
+}
+
+.phishing-chart-empty {
+  min-height: 240px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.018), rgba(59, 130, 246, 0.018)),
+    rgba(0, 0, 0, 0.12);
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+.phishing-reports-container .phishing-table-wrap {
+  background: rgba(0, 0, 0, 0.12);
+}
 /* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 980px) {
+  .phishing-report-stat-grid,
+  .phishing-report-charts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 @media (max-width: 640px) {
   .phishing-field-row {
     grid-template-columns: 1fr;
@@ -587,5 +683,16 @@ select.cyber-input[multiple],
   .phishing-search {
     max-width: 100%;
     flex: 1 1 100%;
+  }
+  .phishing-subnav {
+    grid-template-columns: 1fr 1fr;
+  }
+  .phishing-report-stat-grid,
+  .phishing-report-charts {
+    grid-template-columns: 1fr;
+  }
+  .phishing-reports-header-section,
+  .phishing-report-card {
+    padding: var(--cg-space-4) !important;
   }
 }
