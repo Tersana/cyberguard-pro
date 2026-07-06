@@ -673,55 +673,33 @@ class ProjectManager {
         }
       });
 
-      // 3. Fetch correct findings count for the project in a paginated loop
-      let allFindings = [];
-      let page = 1;
-      let lastPage = 1;
-
-      while (page <= lastPage) {
+      // 3. Fetch findings pages in parallel: page 1 reveals last_page, then fetch the rest at once.
+      const fetchFindingsPage = async (pageNum) => {
         try {
-          console.log(`[ProjectManager] Fetching findings for project ${projectId} page ${page}`);
-          const res = await this.apiClient.get(`/projects/${projectId}/findings?page=${page}`);
-          console.log(`[ProjectManager] Fetch findings success for project ${projectId} page ${page}:`, res);
-          let arr = [];
-          let currentPageVal = page;
-          let lastPageVal = page;
-
-          if (Array.isArray(res)) {
-            arr = res;
-            currentPageVal = 1;
-            lastPageVal = 1;
-          } else if (res && res.findings) {
-            const findingsObj = res.findings;
-            if (Array.isArray(findingsObj.data)) {
-              arr = findingsObj.data;
-              currentPageVal = findingsObj.current_page || page;
-              lastPageVal = findingsObj.last_page || page;
-            } else if (Array.isArray(findingsObj)) {
-              arr = findingsObj;
-              currentPageVal = 1;
-              lastPageVal = 1;
-            }
-          } else if (res && res.data) {
-            arr = Array.isArray(res.data) ? res.data : [];
-            currentPageVal = res.current_page || page;
-            lastPageVal = res.last_page || page;
+          const res = await this.apiClient.get(`/projects/${projectId}/findings?page=${pageNum}&per_page=100`);
+          if (Array.isArray(res)) return { arr: res, lastPage: 1 };
+          if (res && res.findings) {
+            const fo = res.findings;
+            if (Array.isArray(fo.data)) return { arr: fo.data, lastPage: fo.last_page || pageNum };
+            if (Array.isArray(fo)) return { arr: fo, lastPage: 1 };
           }
-
-          allFindings = allFindings.concat(arr);
-
-          if (lastPageVal > lastPage) {
-            lastPage = lastPageVal;
+          if (res && res.data) {
+            return { arr: Array.isArray(res.data) ? res.data : [], lastPage: res.last_page || pageNum };
           }
-
-          if (page >= lastPage) {
-            break;
-          }
-          page++;
+          return { arr: [], lastPage: pageNum };
         } catch (err) {
-          console.error(`[ProjectManager] Fetch findings failed for project ${projectId} page ${page}:`, err);
-          break;
+          console.error(`[ProjectManager] Fetch findings failed for project ${projectId} page ${pageNum}:`, err);
+          return { arr: [], lastPage: pageNum };
         }
+      };
+
+      const firstPage = await fetchFindingsPage(1);
+      let allFindings = firstPage.arr;
+      if (firstPage.lastPage > 1) {
+        const restPages = await Promise.all(
+          Array.from({ length: firstPage.lastPage - 1 }, (_, i) => fetchFindingsPage(i + 2))
+        );
+        restPages.forEach(p => { allFindings = allFindings.concat(p.arr); });
       }
 
       if (window.scannerAPI && typeof window.scannerAPI.getRecentFindingsForProject === "function") {

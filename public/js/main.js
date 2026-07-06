@@ -15360,40 +15360,34 @@ Always align dashboard actions with what the user requests! Explain briefly what
     if (window.projectManager && window.projectManager.projects && window.projectManager.projects.length > 0) {
       try {
         const projects = window.projectManager.projects;
-        const fetchPromises = projects.map(async (proj) => {
-          let allProjFindings = [];
-          let page = 1;
-          let lastPage = 1;
-
-          while (page <= lastPage) {
-            try {
-              const res = await window.apiClient.get(`/projects/${proj.id}/findings?page=${page}`);
-              let arr = [];
-              let lastPageVal = page;
-
-              if (Array.isArray(res)) {
-                arr = res;
-              } else if (res && res.findings) {
-                const findingsObj = res.findings;
-                if (Array.isArray(findingsObj.data)) {
-                  arr = findingsObj.data;
-                  lastPageVal = findingsObj.last_page || page;
-                } else if (Array.isArray(findingsObj)) {
-                  arr = findingsObj;
-                }
-              } else if (res && res.data) {
-                arr = Array.isArray(res.data) ? res.data : [];
-                lastPageVal = res.last_page || page;
-              }
-
-              allProjFindings = allProjFindings.concat(arr);
-              if (lastPageVal > lastPage) lastPage = lastPageVal;
-              if (page >= lastPage) break;
-              page++;
-            } catch (err) {
-              console.error(`[PDF Generator] Fetch findings failed for project ${proj.id} page ${page}:`, err);
-              break;
+        const fetchProjFindingsPage = async (projId, pageNum) => {
+          try {
+            const res = await window.apiClient.get(`/projects/${projId}/findings?page=${pageNum}&per_page=100`);
+            if (Array.isArray(res)) return { arr: res, lastPage: 1 };
+            if (res && res.findings) {
+              const fo = res.findings;
+              if (Array.isArray(fo.data)) return { arr: fo.data, lastPage: fo.last_page || pageNum };
+              if (Array.isArray(fo)) return { arr: fo, lastPage: 1 };
             }
+            if (res && res.data) {
+              return { arr: Array.isArray(res.data) ? res.data : [], lastPage: res.last_page || pageNum };
+            }
+            return { arr: [], lastPage: pageNum };
+          } catch (err) {
+            console.error(`[PDF Generator] Fetch findings failed for project ${projId} page ${pageNum}:`, err);
+            return { arr: [], lastPage: pageNum };
+          }
+        };
+
+        const fetchPromises = projects.map(async (proj) => {
+          // Fetch findings pages in parallel: page 1 reveals last_page, then fetch the rest at once.
+          const first = await fetchProjFindingsPage(proj.id, 1);
+          let allProjFindings = first.arr;
+          if (first.lastPage > 1) {
+            const restPages = await Promise.all(
+              Array.from({ length: first.lastPage - 1 }, (_, i) => fetchProjFindingsPage(proj.id, i + 2))
+            );
+            restPages.forEach(p => { allProjFindings = allProjFindings.concat(p.arr); });
           }
           return allProjFindings.map(f => ({ ...f, projectName: proj.name }));
         });
