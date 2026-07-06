@@ -278,12 +278,14 @@ class PhishingManager {
       const navBtn = e.target.closest(".phishing-subnav-btn[data-subview]");
       if (navBtn) {
         e.preventDefault();
+        this._markActionFeedback(navBtn);
         this.switchSubview(navBtn.dataset.subview);
         return;
       }
       const actionEl = e.target.closest("[data-phishing-action]");
       if (actionEl) {
         e.preventDefault();
+        this._markActionFeedback(actionEl);
         this._handleAction(actionEl.dataset.phishingAction, actionEl.dataset);
       }
     });
@@ -345,7 +347,20 @@ class PhishingManager {
       if (pane) pane.classList.toggle("hidden", view !== name);
     });
 
-    this._renderSubview(name);
+    setTimeout(() => {
+      if (this.currentSubview === name) this._renderSubview(name);
+    }, 0);
+  }
+
+  _markActionFeedback(el) {
+    if (!el || !el.classList) return;
+    el.classList.add("phishing-action-active");
+    el.setAttribute("aria-busy", "true");
+    setTimeout(() => {
+      if (!el.isConnected) return;
+      el.classList.remove("phishing-action-active");
+      el.removeAttribute("aria-busy");
+    }, 360);
   }
 
   _renderSubview(name) {
@@ -433,6 +448,23 @@ class PhishingManager {
 
   _chartEmpty(label = "No data to display yet") {
     return `<div class="phishing-chart-empty">${this.escapeHtml(label)}</div>`;
+  }
+
+  _reportEmptyHtml(icon, title, subtitle) {
+    return `
+      <div class="phishing-report-empty">
+        <span class="material-symbols-outlined phishing-report-empty-icon" aria-hidden="true">${this.escapeHtml(icon)}</span>
+        <div>
+          <p class="phishing-report-empty-title">${this.escapeHtml(title)}</p>
+          <p class="phishing-report-empty-sub">${this.escapeHtml(subtitle)}</p>
+        </div>
+      </div>`;
+  }
+
+  _showModalError(message, requestToken = null) {
+    if (requestToken && this._modalRequestToken !== requestToken) return;
+    const body = document.querySelector("#phishing-modal-body");
+    if (body) body.innerHTML = this._errorHtml(message);
   }
 
   _sectionHeader(title, subtitle, actionsHtml = "") {
@@ -527,6 +559,11 @@ class PhishingManager {
   }
 
   async openCampaignModal(id = null) {
+    const modalTitle = id ? "Edit Campaign" : "New Campaign";
+    const requestToken = Symbol("campaign-modal");
+    this._modalRequestToken = requestToken;
+    this.openModal(modalTitle, this._loadingHtml("Preparing campaign form..."), null);
+
     // Load templates + employees for the pickers
     let templates = this.templates;
     let employees = this.employees;
@@ -540,7 +577,7 @@ class PhishingManager {
       const edata = er && er.employees;
       employees = (edata && edata.data) || (Array.isArray(edata) ? edata : []) || [];
     } catch (error) {
-      this._handleError(error, "Failed to load campaign form data.");
+      this._showModalError(this._errorMessage(error, "Failed to load campaign form data."), requestToken);
       return;
     }
 
@@ -550,7 +587,7 @@ class PhishingManager {
         const res = await this.getCampaign(id);
         existing = (res && res.campaign) || null;
       } catch (error) {
-        this._handleError(error, "Failed to load campaign.");
+        this._showModalError(this._errorMessage(error, "Failed to load campaign."), requestToken);
         return;
       }
     }
@@ -595,7 +632,8 @@ class PhishingManager {
         </label>
       </form>`;
 
-    this.openModal(id ? "Edit Campaign" : "New Campaign", body, () => this._submitCampaign(id));
+    if (this._modalRequestToken !== requestToken) return;
+    this.openModal(modalTitle, body, () => this._submitCampaign(id));
 
     // Toggle conditional fields
     const typeSel = this._qs("phishing-target-type");
@@ -806,6 +844,11 @@ class PhishingManager {
   }
 
   async openTemplateModal(id = null) {
+    const modalTitle = id ? "Edit Template" : "New Template";
+    const requestToken = Symbol("template-modal");
+    this._modalRequestToken = requestToken;
+    this.openModal(modalTitle, this._loadingHtml("Preparing template form..."), null, { wide: true });
+
     // Load domains for the sender-domain picker
     let domains = this.domains;
     try {
@@ -824,7 +867,7 @@ class PhishingManager {
         const res = await this.getTemplate(id);
         existing = (res && res.template) || null;
       } catch (error) {
-        this._handleError(error, "Failed to load template.");
+        this._showModalError(this._errorMessage(error, "Failed to load template."), requestToken);
         return;
       }
     }
@@ -871,7 +914,8 @@ class PhishingManager {
           <textarea name="awareness_content" class="cyber-input" rows="3">${this.escapeHtml(cur.awareness_content || "")}</textarea></label>
       </form>`;
 
-    this.openModal(id ? "Edit Template" : "New Template", body, () => this._submitTemplate(id), { wide: true });
+    if (this._modalRequestToken !== requestToken) return;
+    this.openModal(modalTitle, body, () => this._submitTemplate(id), { wide: true });
   }
 
   _readTemplateForm() {
@@ -1308,23 +1352,31 @@ class PhishingManager {
   _reportsHtml(ov, risky, depts) {
     const riskRows = risky.map((e) => {
       const level = e.risk_level || this.riskLevelFromScore(e.risk_score);
+      const name = e.name || "Employee";
+      const initial = String(name).trim().slice(0, 1).toUpperCase() || "E";
       return `
         <tr>
-          <td>${this.escapeHtml(e.name)}</td>
+          <td><div class="phishing-person-cell"><span class="phishing-person-avatar">${this.escapeHtml(initial)}</span><span>${this.escapeHtml(name)}</span></div></td>
           <td>${this.escapeHtml(e.department || "—")}</td>
-          <td>${this.escapeHtml(e.risk_score != null ? e.risk_score : 0)} ${this._riskBadge(level)}</td>
-          <td>${this.escapeHtml(e.last_interaction || "—")}</td>
+          <td><span class="phishing-risk-score">${this.escapeHtml(e.risk_score != null ? e.risk_score : 0)}</span>${this._riskBadge(level)}</td>
+          <td><span class="phishing-muted-pill">${this.escapeHtml(e.last_interaction || "No interaction yet")}</span></td>
         </tr>`;
     }).join("");
     const deptRows = depts.map((d) => `
       <tr>
-        <td>${this.escapeHtml(d.department || d.name || "—")}</td>
+        <td><span class="phishing-dept-name">${this.escapeHtml(d.department || d.name || "—")}</span></td>
         <td>${this.escapeHtml(d.total_employees != null ? d.total_employees : "—")}</td>
         <td>${this.escapeHtml(d.total_targets != null ? d.total_targets : "—")}</td>
-        <td>${this._pct(d.click_rate)}%</td>
-        <td>${this._pct(d.submission_rate)}%</td>
-        <td>${this.escapeHtml(d.average_risk_score != null ? d.average_risk_score : "—")}</td>
+        <td><span class="phishing-rate-pill">${this._pct(d.click_rate)}%</span></td>
+        <td><span class="phishing-rate-pill phishing-rate-pill-muted">${this._pct(d.submission_rate)}%</span></td>
+        <td><span class="phishing-risk-score">${this.escapeHtml(d.average_risk_score != null ? d.average_risk_score : "—")}</span></td>
       </tr>`).join("");
+    const riskPanel = riskRows
+      ? `<div class="phishing-report-table-wrap"><table class="phishing-table phishing-data-table"><thead><tr><th>Name</th><th>Department</th><th>Risk</th><th>Last interaction</th></tr></thead><tbody>${riskRows}</tbody></table></div>`
+      : this._reportEmptyHtml("person_alert", "No high-risk employees yet", "Employee risk signals will appear here after campaign interactions are recorded.");
+    const deptPanel = deptRows
+      ? `<div class="phishing-report-table-wrap"><table class="phishing-table phishing-data-table"><thead><tr><th>Department</th><th>Employees</th><th>Targets</th><th>Click rate</th><th>Submission rate</th><th>Avg risk</th></tr></thead><tbody>${deptRows}</tbody></table></div>`
+      : this._reportEmptyHtml("domain_verification", "No department vulnerability data", "Department comparisons will populate once employees are targeted by simulations.");
     return `
       <div class="phishing-reports-container">
         <div class="phishing-reports-header-section">
@@ -1342,23 +1394,25 @@ class PhishingManager {
           <div class="cyber-card phishing-report-card phishing-chart-card"><h5>Risk distribution</h5><div id="phishing-risk-chart" class="phishing-chart">${this._chartEmpty()}</div></div>
           <div class="cyber-card phishing-report-card phishing-chart-card"><h5>Department click rate</h5><div id="phishing-dept-chart" class="phishing-chart">${this._chartEmpty()}</div></div>
         </div>
-        <div class="cyber-card phishing-report-card">
-          <h5>Highest-risk employees</h5>
-          <div class="phishing-table-wrap">
-            <table class="phishing-table">
-              <thead><tr><th>Name</th><th>Department</th><th>Risk</th><th>Last interaction</th></tr></thead>
-              <tbody>${riskRows || '<tr><td colspan="4" style="text-align:center;color:var(--cg-text-3);">No data</td></tr>'}</tbody>
-            </table>
+        <div class="cyber-card phishing-report-card phishing-data-card">
+          <div class="phishing-data-card-header">
+            <div class="phishing-data-title-wrap">
+              <span class="material-symbols-outlined phishing-data-icon" aria-hidden="true">person_alert</span>
+              <div class="phishing-data-title"><h5>Highest-risk employees</h5><p>Employees ranked by risk score and latest simulation interaction.</p></div>
+            </div>
+            <span class="phishing-data-count">${this.escapeHtml(risky.length)} records</span>
           </div>
+          ${riskPanel}
         </div>
-        <div class="cyber-card phishing-report-card">
-          <h5>Department vulnerability</h5>
-          <div class="phishing-table-wrap">
-            <table class="phishing-table">
-              <thead><tr><th>Department</th><th>Employees</th><th>Targets</th><th>Click rate</th><th>Submission rate</th><th>Avg risk</th></tr></thead>
-              <tbody>${deptRows || '<tr><td colspan="6" style="text-align:center;color:var(--cg-text-3);">No data</td></tr>'}</tbody>
-            </table>
+        <div class="cyber-card phishing-report-card phishing-data-card">
+          <div class="phishing-data-card-header">
+            <div class="phishing-data-title-wrap">
+              <span class="material-symbols-outlined phishing-data-icon" aria-hidden="true">analytics</span>
+              <div class="phishing-data-title"><h5>Department vulnerability</h5><p>Compare targeting coverage, click behavior, and residual risk by team.</p></div>
+            </div>
+            <span class="phishing-data-count">${this.escapeHtml(depts.length)} departments</span>
           </div>
+          ${deptPanel}
         </div>
       </div>`;
   }
@@ -1536,6 +1590,7 @@ class PhishingManager {
   }
 
   closeModal() {
+    this._modalRequestToken = null;
     const host = this._qs("phishing-modal-host");
     if (host) host.innerHTML = "";
   }
