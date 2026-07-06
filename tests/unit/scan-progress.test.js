@@ -76,6 +76,9 @@ describe('Scan Progress Findings Clickable Modal Integration', () => {
           created_at: new Date().toISOString()
         }
       ]),
+      rememberScanSession: vi.fn(scan => scan),
+      rememberScanFindings: vi.fn((_scanId, findings) => findings),
+      formatScanShortId: vi.fn(scan => String(scan.id || '').slice(0, 8)),
       addFrontendFinding: vi.fn(),
       updateFrontendScanProgress: vi.fn()
     };
@@ -156,5 +159,42 @@ describe('Scan Progress Findings Clickable Modal Integration', () => {
     const backBtn = document.getElementById('sp-back-btn');
     expect(backBtn).not.toBeNull();
     expect(backBtn.getAttribute('href')).toBe('/project-detail?id=p1&tab=targets');
+  });
+  it('should cache loaded findings and dispatch finding and completion events', async () => {
+    const receivedEvents = [];
+    document.addEventListener('cyberguard:scanFindingsUpdated', (event) => {
+      receivedEvents.push({ name: 'findings', detail: event.detail });
+    });
+    document.addEventListener('cyberguard:scanCompleted', (event) => {
+      receivedEvents.push({ name: 'completed', detail: event.detail });
+    });
+
+    const spScript = document.createElement('script');
+    spScript.textContent = scanProgressCode;
+    document.body.appendChild(spScript);
+
+    document.dispatchEvent(new window.Event('DOMContentLoaded'));
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(window.scannerAPI.rememberScanFindings).toHaveBeenCalledWith(
+      'scan_12345',
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'finding_whois_123' })
+      ]),
+      expect.objectContaining({
+        id: 'scan_12345',
+        project_id: 'p1',
+        target_id: 't1'
+      })
+    );
+
+    expect(receivedEvents.map(event => event.name)).toEqual(expect.arrayContaining(['findings', 'completed']));
+    expect(receivedEvents.find(event => event.name === 'findings').detail).toMatchObject({
+      scanId: 'scan_12345',
+      projectId: 'p1',
+      targetId: 't1'
+    });
+    expect(receivedEvents.find(event => event.name === 'completed').detail.status).toBe('completed');
   });
 });

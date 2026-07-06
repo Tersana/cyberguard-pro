@@ -512,11 +512,11 @@
 
     const btn = document.getElementById("scan-start-btn");
     _btnLoading(btn, "Starting…");
+    const activeProjectId = typeof _projectId !== "undefined" ? _projectId : null;
 
     // Frontend-only scan bypass logic
     if (_selected.size === 0 && selectedFrontendTools.size > 0) {
       try {
-        const activeProjectId = typeof _projectId !== "undefined" ? _projectId : null;
         let triggerUser = "Local Scanner";
         try {
           const userRaw = localStorage.getItem("cyberguard_user");
@@ -575,6 +575,13 @@
         } catch (e) {
           console.error("[ScanManager] Failed to save frontend scan to history:", e);
         }
+
+        const rememberedScan = window.scannerAPI && typeof window.scannerAPI.rememberScanSession === "function"
+          ? window.scannerAPI.rememberScanSession(newScanRecord, { source: "frontend" })
+          : newScanRecord;
+        document.dispatchEvent(new CustomEvent("cyberguard:scanStarted", {
+          detail: { scan: rememberedScan, projectId: activeProjectId, targetId: scanState.targetId }
+        }));
 
         // Store session info so scan-progress.js can read it
         try {
@@ -670,10 +677,29 @@
           sessionId,
           targetValue : scanState.targetValue,
           targetId    : scanState.targetId,
+          projectId   : activeProjectId,
           startedAt   : scanState.startedAt,
-          selectedFrontendTools: Array.from(selectedFrontendTools)
+          selectedFrontendTools: Array.from(selectedFrontendTools),
+          selectedBackendDrivers: selectedArray
         }));
       } catch (_) {}
+
+      const backendScanRecord = data.scan_job || data.scan_session || { id: sessionId };
+      const rememberedScan = window.scannerAPI && typeof window.scannerAPI.rememberScanSession === "function"
+        ? window.scannerAPI.rememberScanSession(backendScanRecord, {
+            id: sessionId,
+            target_id: scanState.targetId,
+            project_id: activeProjectId,
+            target_value: scanState.targetValue,
+            driver_ids: selectedArray,
+            status: "running",
+            started_at: scanState.startedAt,
+            source: "api"
+          })
+        : backendScanRecord;
+      document.dispatchEvent(new CustomEvent("cyberguard:scanStarted", {
+        detail: { scan: rememberedScan, projectId: activeProjectId, targetId: scanState.targetId }
+      }));
 
       notify("Scan started — opening progress view…", "success");
 

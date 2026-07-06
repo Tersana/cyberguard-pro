@@ -665,6 +665,360 @@ function withLoading(asyncFn, options = {}) {
   // Local cache/store for mock frontend scans and findings
   const mockFrontendScans = {};
   const mockFrontendFindings = {};
+  const RECENT_SCAN_KEY = "cg_recent_scan_sessions";
+  const RECENT_FINDINGS_KEY = "cg_recent_scan_findings";
+  const RECENT_SCAN_LIMIT = 100;
+  const RECENT_FINDINGS_PER_SCAN_LIMIT = 500;
+
+  function safeJsonParse(raw, fallback) {
+    if (!raw) return fallback;
+    try {
+      return JSON.parse(raw);
+    } catch (_) {
+      return fallback;
+    }
+  }
+
+  function sameId(a, b) {
+    return a !== undefined && a !== null && b !== undefined && b !== null && String(a) === String(b);
+  }
+
+  function firstValue(...values) {
+    for (const value of values) {
+      if (value !== undefined && value !== null && value !== "") return value;
+    }
+    return null;
+  }
+
+  function asArray(value) {
+    if (Array.isArray(value)) return value;
+    if (value === undefined || value === null || value === "") return [];
+    return [value];
+  }
+
+  function getRawScan(item) {
+    if (!item || typeof item !== "object") return {};
+    return item.scan_session || item.scan_job || item.scan || item.session || item;
+  }
+
+  function normalizeDriverIds(raw, metadata = {}) {
+    const candidates = [
+      raw.driver_ids,
+      raw.driver_id,
+      raw.scanner_ids,
+      raw.scanner_id,
+      raw.tool,
+      raw.tool_id,
+      raw.type,
+      raw.name,
+      metadata.driver_id,
+      metadata.driver_ids,
+      metadata.scanner,
+      metadata.scanner_name,
+      metadata.tool,
+    ];
+    const flattened = [];
+    candidates.forEach(value => {
+      asArray(value).forEach(item => {
+        if (item && typeof item === "object") {
+          flattened.push(item.id || item.name || item.slug || item.driver_id || "");
+        } else {
+          flattened.push(item);
+        }
+      });
+    });
+    return Array.from(new Set(flattened.map(v => String(v || "").trim()).filter(Boolean)));
+  }
+
+  function normalizeScanRecord(item, fallback = {}) {
+    const raw = getRawScan(item);
+    const rawMetadata = raw.metadata && typeof raw.metadata === "object" ? raw.metadata : {};
+    const itemMetadata = item && item.metadata && typeof item.metadata === "object" ? item.metadata : {};
+    const fallbackMetadata = fallback.metadata && typeof fallback.metadata === "object" ? fallback.metadata : {};
+    const metadata = { ...itemMetadata, ...rawMetadata, ...fallbackMetadata };
+
+    const id = firstValue(
+      raw.id,
+      raw.scan_id,
+      raw.scan_job_id,
+      raw.scan_session_id,
+      raw.job_id,
+      fallback.id,
+      fallback.scanJobId,
+    );
+    if (!id) return null;
+
+    const targetObj = raw.target && typeof raw.target === "object" ? raw.target : {};
+    const projectObj = raw.project && typeof raw.project === "object" ? raw.project : {};
+    const targetId = firstValue(
+      raw.target_id,
+      targetObj.id,
+      targetObj.target_id,
+      metadata.target_id,
+      fallback.target_id,
+      fallback.targetId,
+    );
+    const projectId = firstValue(
+      raw.project_id,
+      projectObj.id,
+      targetObj.project_id,
+      metadata.project_id,
+      fallback.project_id,
+      fallback.projectId,
+    );
+    const targetValue = firstValue(
+      targetObj.value,
+      targetObj.url,
+      targetObj.host,
+      targetObj.name,
+      raw.target_value,
+      raw.target_name,
+      metadata.target_name,
+      metadata.target_value,
+      fallback.target_value,
+      fallback.targetValue,
+    );
+    const triggerUser = firstValue(
+      raw.triggered_by,
+      raw.user && (raw.user.name || raw.user.full_name || raw.user.email),
+      metadata.triggered_by,
+      fallback.triggered_by,
+      fallback.triggeredBy,
+    );
+    const startedAt = firstValue(raw.started_at, raw.created_at, raw.timestamp, fallback.started_at, fallback.startedAt);
+    const createdAt = firstValue(raw.created_at, startedAt, fallback.created_at, fallback.startedAt);
+    const finishedAt = firstValue(raw.finished_at, raw.completed_at, raw.ended_at, fallback.finished_at, fallback.finishedAt);
+    const normalizedMetadata = {
+      ...metadata,
+      ...(targetValue && !metadata.target_name ? { target_name: targetValue } : {}),
+      ...(triggerUser && !metadata.triggered_by ? { triggered_by: triggerUser } : {}),
+      ...(projectId && !metadata.project_id ? { project_id: projectId } : {}),
+      ...(targetId && !metadata.target_id ? { target_id: targetId } : {}),
+    };
+
+    return {
+      ...raw,
+      id: String(id),
+      scan_job_id: String(id),
+      status: String(firstValue(raw.status, fallback.status, "unknown")).toLowerCase(),
+      project_id: projectId !== null ? String(projectId) : null,
+      target_id: targetId !== null ? String(targetId) : null,
+      target: {
+        ...targetObj,
+        ...(targetId !== null ? { id: String(targetId) } : {}),
+        ...(targetValue ? { value: targetValue, name: targetObj.name || targetValue } : {}),
+      },
+      project: {
+        ...projectObj,
+        ...(projectId !== null ? { id: String(projectId) } : {}),
+      },
+      driver_id: normalizeDriverIds(raw, normalizedMetadata),
+      metadata: normalizedMetadata,
+      started_at: startedAt || null,
+      created_at: createdAt || null,
+      finished_at: finishedAt || null,
+      completed_at: raw.completed_at || finishedAt || null,
+      progress: raw.progress ?? fallback.progress ?? null,
+      source: fallback.source || raw.source || (String(id).startsWith("frontend_") ? "frontend" : "api"),
+      remembered_at: raw.remembered_at || new Date().toISOString(),
+    };
+  }
+
+  function normalizeFindingRecord(item, scanContext = {}) {
+    const raw = item && (item.finding || item.vulnerability || item) || {};
+    const scan = normalizeScanRecord(scanContext, {}) || scanContext || {};
+    const metadata = raw.metadata && typeof raw.metadata === "object" ? raw.metadata : {};
+    const scanId = firstValue(raw.scan_job_id, raw.scan_id, raw.scan_session_id, raw.scanJobId, scan.id, scan.scan_job_id);
+    const projectId = firstValue(raw.project_id, metadata.project_id, scan.project_id);
+    const targetId = firstValue(raw.target_id, raw.target && raw.target.id, metadata.target_id, scan.target_id);
+    const title = firstValue(raw.title, raw.name, raw.path, raw.url, raw.affected_url, raw.endpoint, "Finding");
+    const affectedUrl = firstValue(raw.affected_url, raw.url, raw.endpoint, raw.path, metadata.affected_url);
+    const id = firstValue(raw.id, raw.finding_id, raw.uuid, scanId ? `${scanId}:${title}:${affectedUrl || ""}:${raw.severity || ""}` : null);
+
+    return {
+      ...raw,
+      id: String(id || `${title}:${Date.now()}`),
+      scan_job_id: scanId ? String(scanId) : null,
+      project_id: projectId !== null ? String(projectId) : null,
+      target_id: targetId !== null ? String(targetId) : null,
+      title,
+      severity: String(firstValue(raw.severity, metadata.severity, "info")).toLowerCase(),
+      status: String(firstValue(raw.status, metadata.status, "open")).toLowerCase(),
+      driver_id: firstValue(raw.driver_id, raw.tool, raw.scanner_id, raw.scanner, scan.driver_id && scan.driver_id[0], null),
+      affected_url: affectedUrl || null,
+      target: raw.target || scan.target || null,
+      target_name: firstValue(raw.target_name, raw.target && (raw.target.value || raw.target.name), scan.metadata && scan.metadata.target_name),
+      project_name: firstValue(raw.project_name, scan.project && scan.project.name, null),
+      created_at: firstValue(raw.created_at, raw.timestamp, new Date().toISOString()),
+      metadata,
+    };
+  }
+
+  function getStoredFrontendScans() {
+    const stored = safeJsonParse(localStorage.getItem("cg_frontend_scans"), []);
+    return Array.isArray(stored) ? stored : [];
+  }
+
+  function readRecentScans() {
+    const stored = safeJsonParse(localStorage.getItem(RECENT_SCAN_KEY), []);
+    return (Array.isArray(stored) ? stored : []).map(scan => normalizeScanRecord(scan)).filter(Boolean);
+  }
+
+  function writeRecentScans(scans) {
+    try {
+      localStorage.setItem(RECENT_SCAN_KEY, JSON.stringify(scans.slice(0, RECENT_SCAN_LIMIT)));
+    } catch (err) {
+      console.warn("[ScannerAPI] Failed to write recent scan cache:", err);
+    }
+  }
+
+  function readRecentFindingsMap() {
+    const stored = safeJsonParse(localStorage.getItem(RECENT_FINDINGS_KEY), {});
+    return stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
+  }
+
+  function writeRecentFindingsMap(map) {
+    try {
+      localStorage.setItem(RECENT_FINDINGS_KEY, JSON.stringify(map));
+    } catch (err) {
+      console.warn("[ScannerAPI] Failed to write recent finding cache:", err);
+    }
+  }
+
+  function getScanSortTime(scan) {
+    const t = Date.parse(scan.started_at || scan.created_at || scan.finished_at || scan.remembered_at || 0);
+    return Number.isNaN(t) ? 0 : t;
+  }
+
+  function dedupeScans(scans) {
+    const map = new Map();
+    scans.filter(Boolean).forEach(scan => {
+      const normalized = normalizeScanRecord(scan);
+      if (!normalized) return;
+      const prev = map.get(normalized.id);
+      map.set(normalized.id, prev ? { ...prev, ...normalized, metadata: { ...(prev.metadata || {}), ...(normalized.metadata || {}) } } : normalized);
+    });
+    return Array.from(map.values()).sort((a, b) => getScanSortTime(b) - getScanSortTime(a));
+  }
+
+  function dedupeFindings(findings) {
+    const map = new Map();
+    findings.filter(Boolean).forEach(finding => {
+      const key = String(finding.id || `${finding.scan_job_id || ""}:${finding.title || ""}:${finding.affected_url || ""}`);
+      if (!map.has(key)) map.set(key, finding);
+    });
+    return Array.from(map.values()).sort((a, b) => {
+      const bTime = Date.parse(b.created_at || b.timestamp || 0);
+      const aTime = Date.parse(a.created_at || a.timestamp || 0);
+      return (Number.isNaN(bTime) ? 0 : bTime) - (Number.isNaN(aTime) ? 0 : aTime);
+    });
+  }
+
+  function rememberScanSession(session, context = {}) {
+    const normalized = normalizeScanRecord(session, context);
+    if (!normalized) return null;
+    const scans = dedupeScans([normalized, ...readRecentScans()]).slice(0, RECENT_SCAN_LIMIT);
+    writeRecentScans(scans);
+    return normalized;
+  }
+
+  function findCachedScan(scanJobId) {
+    const id = String(scanJobId || "");
+    return readRecentScans().find(scan => scan.id === id || scan.scan_job_id === id) || null;
+  }
+
+  function rememberScanFindings(scanJobId, findings, scanContext = {}) {
+    let resolvedScanJobId = scanJobId;
+    let resolvedFindings = findings;
+    let resolvedContext = scanContext;
+    if (Array.isArray(scanJobId)) {
+      resolvedFindings = scanJobId;
+      resolvedContext = findings || {};
+      resolvedScanJobId = resolvedContext.id || resolvedContext.scan_job_id;
+    }
+    const cachedScan = findCachedScan(resolvedScanJobId) || normalizeScanRecord(resolvedContext, { id: resolvedScanJobId });
+    const scanId = String(resolvedScanJobId || cachedScan?.id || "");
+    if (!scanId || !Array.isArray(resolvedFindings)) return [];
+
+    const normalizedFindings = dedupeFindings(
+      resolvedFindings.map(f => normalizeFindingRecord(f, cachedScan || { id: scanId })),
+    ).slice(0, RECENT_FINDINGS_PER_SCAN_LIMIT);
+
+    const map = readRecentFindingsMap();
+    map[scanId] = { updated_at: new Date().toISOString(), scan: cachedScan || { id: scanId }, findings: normalizedFindings };
+    writeRecentFindingsMap(map);
+    return normalizedFindings;
+  }
+
+  function getRecentFindingsForProject(projectId) {
+    const map = readRecentFindingsMap();
+    const scansById = new Map(readRecentScans().map(scan => [scan.id, scan]));
+    const findings = [];
+    Object.entries(map).forEach(([scanId, entry]) => {
+      const scan = normalizeScanRecord(entry.scan || scansById.get(scanId) || { id: scanId });
+      if (!scan || !sameId(scan.project_id, projectId)) return;
+      asArray(entry.findings).forEach(f => findings.push(normalizeFindingRecord(f, scan)));
+    });
+    return dedupeFindings(findings);
+  }
+
+  function getRecentFindingsForTarget(targetId) {
+    const map = readRecentFindingsMap();
+    const scansById = new Map(readRecentScans().map(scan => [scan.id, scan]));
+    const findings = [];
+    Object.entries(map).forEach(([scanId, entry]) => {
+      const scan = normalizeScanRecord(entry.scan || scansById.get(scanId) || { id: scanId });
+      if (!scan || !sameId(scan.target_id, targetId)) return;
+      asArray(entry.findings).forEach(f => findings.push(normalizeFindingRecord(f, scan)));
+    });
+    return dedupeFindings(findings);
+  }
+
+  function getRecentScansForProject(projectId) {
+    return readRecentScans().filter(scan => sameId(scan.project_id, projectId));
+  }
+
+  function getRecentScansForTarget(targetId) {
+    return readRecentScans().filter(scan => sameId(scan.target_id, targetId));
+  }
+
+  function isFuzzerScan(scan) {
+    const normalized = normalizeScanRecord(scan) || {};
+    const haystack = [
+      normalized.id,
+      normalized.driver_id,
+      normalized.selected_frontend_tools,
+      normalized.metadata && Object.values(normalized.metadata),
+      normalized.logs,
+    ].flat(3).map(v => String(v || "").toLowerCase()).join(" ");
+    return /endpoint[-_\s]?fuzzer|web_endpoint_fuzzer|waybackurls|classifier|url[-_\s]?fuzz/.test(haystack);
+  }
+
+  function getScanDisplayPrefix(scan) {
+    const normalized = normalizeScanRecord(scan) || {};
+    if (isFuzzerScan(normalized)) return "FUZZ";
+    const tools = normalized.selected_frontend_tools || [];
+    const drivers = normalizeDriverIds(normalized, normalized.metadata || {});
+    const values = [...tools, ...drivers].map(v => String(v || "").toLowerCase());
+    if (values.some(v => v.includes("port-scanner") || v.includes("port scanner"))) return "PORT";
+    if (values.some(v => v.includes("tcp-connectivity") || v.includes("tcp connectivity"))) return "TCP";
+    if (values.some(v => v.includes("udp-services") || v.includes("udp services"))) return "UDP";
+    if (values.some(v => v.includes("ip-geolocation") || v.includes("ip geolocation"))) return "GEO";
+    if (values.some(v => v.includes("reverse-dns") || v.includes("reverse dns"))) return "RDNS";
+    if (values.some(v => v.includes("whois-lookup") || v.includes("whois lookup") || v.includes("whois"))) return "WHOIS";
+    if (values.some(v => v.includes("network_analysis"))) return "NET";
+    return "SCAN";
+  }
+
+  function formatScanShortId(scan) {
+    const normalized = normalizeScanRecord(scan) || {};
+    const scanId = String(normalized.id || "");
+    const prefix = getScanDisplayPrefix(normalized);
+    if (!scanId) return "SCAN";
+    if (scanId.startsWith("frontend_")) return `${prefix}-${scanId.replace("frontend_", "").substring(0, 6).toUpperCase()}`;
+    if (prefix !== "SCAN") return `${prefix}-${scanId.substring(0, 6).toUpperCase()}`;
+    return scanId.substring(0, 8).toUpperCase();
+  }
 
   /**
    * Internal helper — performs an authenticated fetch using the same
@@ -746,7 +1100,14 @@ function withLoading(asyncFn, options = {}) {
     if (data.status !== "success") {
       throw new APIError(data.message || "Failed to start scan", 0, data);
     }
-    return data.scan_job;
+    const scanJob = data.scan_job || data.scan_session || { id: data.scan_session_id || data.session_id || data.id };
+    return rememberScanSession(scanJob, {
+      target_id,
+      driver_ids,
+      status: "running",
+      source: "api",
+      started_at: new Date().toISOString(),
+    }) || scanJob;
   }
 
   /**
@@ -771,7 +1132,7 @@ function withLoading(asyncFn, options = {}) {
       if (storedScan) {
         // Keep in-memory cache in sync for callers that reference it directly
         mockFrontendScans[scanJobId] = storedScan;
-        return storedScan;
+        return rememberScanSession(storedScan, { source: "frontend" }) || storedScan;
       }
 
       // Not in localStorage yet — fall back to in-memory or create a stub
@@ -803,13 +1164,14 @@ function withLoading(asyncFn, options = {}) {
           finished_at: null
         };
       }
-      return mockFrontendScans[scanJobId];
+      return rememberScanSession(mockFrontendScans[scanJobId], { source: "frontend" }) || mockFrontendScans[scanJobId];
     }
     const data = await _apiFetch("GET", `scan/${scanJobId}/status`);
     if (data.status !== "success") {
       throw new APIError(data.message || "Failed to get scan status", 0, data);
     }
-    return data.scan_session;
+    const session = data.scan_session || data.scan_job || { id: scanJobId };
+    return rememberScanSession(session, { id: scanJobId, source: "api" }) || session;
   }
 
   /**
@@ -834,13 +1196,14 @@ function withLoading(asyncFn, options = {}) {
         } catch (_) {}
         mockFrontendFindings[scanJobId] = localFindings;
       }
-      return mockFrontendFindings[scanJobId];
+      return rememberScanFindings(scanJobId, mockFrontendFindings[scanJobId], findCachedScan(scanJobId) || { id: scanJobId, source: "frontend" });
     }
     const data = await _apiFetch("GET", `scan/${scanJobId}/findings`);
     if (data.status !== "success") {
       throw new APIError(data.message || "Failed to get scan findings", 0, data);
     }
-    return Array.isArray(data.findings) ? data.findings : [];
+    const findings = Array.isArray(data.findings) ? data.findings : [];
+    return rememberScanFindings(scanJobId, findings, findCachedScan(scanJobId) || { id: scanJobId, source: "api" });
   }
 
   /**
@@ -849,22 +1212,26 @@ function withLoading(asyncFn, options = {}) {
    */
   async function getProjectScans(projectId) {
     if (!projectId) throw new Error("projectId is required");
-    const data = await _apiFetch("GET", `projects/${projectId}/scans`);
-    if (data.status !== "success") {
-      throw new APIError(data.message || "Failed to get project scans", 0, data);
-    }
-    const apiScans = Array.isArray(data.scans) ? data.scans : [];
+    let apiScans = [];
+    let apiError = null;
 
-    // Fetch and merge local frontend scans for this project
-    let localScans = [];
     try {
-      const storedScansRaw = localStorage.getItem("cg_frontend_scans");
-      if (storedScansRaw) {
-        localScans = JSON.parse(storedScansRaw).filter(s => s.project_id === projectId);
+      const data = await _apiFetch("GET", `projects/${projectId}/scans`);
+      if (data.status !== "success") {
+        throw new APIError(data.message || "Failed to get project scans", 0, data);
       }
-    } catch (_) {}
+      apiScans = Array.isArray(data.scans) ? data.scans : [];
+      apiScans.forEach(scan => rememberScanSession(scan, { project_id: projectId, source: "api" }));
+    } catch (err) {
+      apiError = err;
+      console.warn("[ScannerAPI] Project scans API unavailable; using recent cache fallback:", err.message || err);
+    }
 
-    return [...localScans, ...apiScans];
+    const localScans = getStoredFrontendScans().filter(scan => sameId(scan.project_id, projectId));
+    const recentScans = getRecentScansForProject(projectId);
+    const merged = dedupeScans([...localScans, ...recentScans, ...apiScans]);
+    if (merged.length === 0 && apiError) throw apiError;
+    return merged;
   }
 
   /**
@@ -873,22 +1240,26 @@ function withLoading(asyncFn, options = {}) {
    */
   async function getTargetScans(targetId) {
     if (!targetId) throw new Error("targetId is required");
-    const data = await _apiFetch("GET", `targets/${targetId}/scans`);
-    if (data.status !== "success") {
-      throw new APIError(data.message || "Failed to get target scans", 0, data);
-    }
-    const apiScans = Array.isArray(data.scans) ? data.scans : [];
+    let apiScans = [];
+    let apiError = null;
 
-    // Fetch and merge local frontend scans for this target
-    let localScans = [];
     try {
-      const storedScansRaw = localStorage.getItem("cg_frontend_scans");
-      if (storedScansRaw) {
-        localScans = JSON.parse(storedScansRaw).filter(s => s.target_id === targetId);
+      const data = await _apiFetch("GET", `targets/${targetId}/scans`);
+      if (data.status !== "success") {
+        throw new APIError(data.message || "Failed to get target scans", 0, data);
       }
-    } catch (_) {}
+      apiScans = Array.isArray(data.scans) ? data.scans : [];
+      apiScans.forEach(scan => rememberScanSession(scan, { target_id: targetId, source: "api" }));
+    } catch (err) {
+      apiError = err;
+      console.warn("[ScannerAPI] Target scans API unavailable; using recent cache fallback:", err.message || err);
+    }
 
-    return [...localScans, ...apiScans];
+    const localScans = getStoredFrontendScans().filter(scan => sameId(scan.target_id, targetId));
+    const recentScans = getRecentScansForTarget(targetId);
+    const merged = dedupeScans([...localScans, ...recentScans, ...apiScans]);
+    if (merged.length === 0 && apiError) throw apiError;
+    return merged;
   }
 
   // Local helper to update status and timestamps in localStorage persistence
@@ -925,7 +1296,7 @@ function withLoading(asyncFn, options = {}) {
         mockFrontendScans[scanJobId].status = "pending";
         updateFrontendScanInLocalStorage(scanJobId, "pending");
       }
-      return mockFrontendScans[scanJobId];
+      return rememberScanSession(mockFrontendScans[scanJobId], { source: "frontend" }) || mockFrontendScans[scanJobId];
     }
     const data = await _apiFetch("POST", `scan/${scanJobId}/pause`);
     if (data.status !== "success") {
@@ -945,7 +1316,7 @@ function withLoading(asyncFn, options = {}) {
         mockFrontendScans[scanJobId].status = "running";
         updateFrontendScanInLocalStorage(scanJobId, "running");
       }
-      return mockFrontendScans[scanJobId];
+      return rememberScanSession(mockFrontendScans[scanJobId], { source: "frontend" }) || mockFrontendScans[scanJobId];
     }
     const data = await _apiFetch("POST", `scan/${scanJobId}/continue`);
     if (data.status !== "success") {
@@ -966,7 +1337,7 @@ function withLoading(asyncFn, options = {}) {
         mockFrontendScans[scanJobId].finished_at = new Date().toISOString();
         updateFrontendScanInLocalStorage(scanJobId, "cancelled", mockFrontendScans[scanJobId].finished_at);
       }
-      return mockFrontendScans[scanJobId];
+      return rememberScanSession(mockFrontendScans[scanJobId], { source: "frontend" }) || mockFrontendScans[scanJobId];
     }
     const data = await _apiFetch("POST", `scan/${scanJobId}/cancel`);
     if (data.status !== "success") {
@@ -1358,6 +1729,16 @@ function withLoading(asyncFn, options = {}) {
     getScanFindings,
     getProjectScans,
     getTargetScans,
+    rememberScanSession,
+    rememberScanFindings,
+    getRecentScansForProject,
+    getRecentScansForTarget,
+    getRecentFindingsForProject,
+    getRecentFindingsForTarget,
+    normalizeScanRecord,
+    normalizeFindingRecord,
+    formatScanShortId,
+    getScanDisplayPrefix,
     pauseScan,
     continueScan,
     cancelScan,

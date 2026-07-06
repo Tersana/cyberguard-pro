@@ -649,17 +649,18 @@ class ProjectManager {
         }
       });
 
-      // 2. Fetch correct scans count
-      const scansRes = await this.apiClient.get(`/projects/${projectId}/scans`)
-        .then(res => {
-          console.log(`[ProjectManager] Fetch scans success for ${projectId}:`, res);
-          return res;
-        })
-        .catch((err) => {
-          console.error(`[ProjectManager] Fetch scans failed for ${projectId}:`, err);
-          return { scans: [] };
-        });
-      const scans = Array.isArray(scansRes.scans) ? scansRes.scans : (Array.isArray(scansRes) ? scansRes : []);
+      // 2. Fetch correct scans count through scannerAPI so recent backend scans are included.
+      const scans = window.scannerAPI && typeof window.scannerAPI.getProjectScans === "function"
+        ? await window.scannerAPI.getProjectScans(projectId).catch((err) => {
+            console.error(`[ProjectManager] Fetch normalized scans failed for ${projectId}:`, err);
+            return [];
+          })
+        : await this.apiClient.get(`/projects/${projectId}/scans`)
+            .then(res => Array.isArray(res.scans) ? res.scans : (Array.isArray(res) ? res : []))
+            .catch((err) => {
+              console.error(`[ProjectManager] Fetch scans failed for ${projectId}:`, err);
+              return [];
+            });
       
       const scansEls = document.querySelectorAll(`.project-scans-count-val[data-project-id="${projectId}"]`);
       console.log(`[ProjectManager] Found ${scansEls.length} scansEls for ${projectId}. Updating to: ${scans.length}`);
@@ -723,6 +724,18 @@ class ProjectManager {
         }
       }
 
+      if (window.scannerAPI && typeof window.scannerAPI.getRecentFindingsForProject === "function") {
+        const cachedFindings = window.scannerAPI.getRecentFindingsForProject(projectId);
+        if (cachedFindings.length > 0) {
+          const byId = new Map();
+          [...allFindings, ...cachedFindings].forEach((finding) => {
+            const key = String(finding.id || `${finding.scan_job_id || ""}:${finding.title || ""}:${finding.affected_url || finding.url || ""}`);
+            if (!byId.has(key)) byId.set(key, finding);
+          });
+          allFindings = Array.from(byId.values());
+        }
+      }
+
       const findingsEls = document.querySelectorAll(`.project-findings-count-val[data-project-id="${projectId}"]`);
       console.log(`[ProjectManager] Found ${findingsEls.length} findingsEls for ${projectId}. Updating to: ${allFindings.length}`);
       findingsEls.forEach(el => {
@@ -778,11 +791,15 @@ class ProjectManager {
         el.style.borderColor = `${scoreColor}30`;
       });
 
-      // Update progress fill width and background in DOM
+      // Update progress fill width, background, and risk level label in DOM
       const fillEls = document.querySelectorAll(`.project-progress-fill[data-progress-project-id="${projectId}"]`);
       fillEls.forEach(el => {
         el.style.width = `${fillWidth}%`;
         el.style.background = scoreColor;
+      });
+      const riskLevelLabel = riskScore > 70.0 ? "Critical" : riskScore > 30.0 ? "Elevated" : "Controlled";
+      document.querySelectorAll(`.project-card-item[data-project-id="${projectId}"] .project-risk-level`).forEach(el => {
+        el.textContent = riskLevelLabel;
       });
 
       this.projectMetricCache.set(String(projectId), {
@@ -1983,6 +2000,18 @@ if (typeof window !== "undefined") {
         );
         if (confirmBtn) confirmBtn.disabled = this.value !== hint;
       });
+
+    let scanMetricsRefreshTimer = null;
+    ["cyberguard:scanStarted", "cyberguard:scanUpdated", "cyberguard:scanFindingsUpdated", "cyberguard:scanCompleted"].forEach((eventName) => {
+      document.addEventListener(eventName, (event) => {
+        const detail = event.detail || {};
+        const scan = detail.scan || {};
+        const projectId = detail.projectId || scan.project_id || scan.project?.id;
+        if (!projectId) return;
+        if (scanMetricsRefreshTimer) clearTimeout(scanMetricsRefreshTimer);
+        scanMetricsRefreshTimer = setTimeout(() => pm.lazyLoadProjectMetrics(projectId), 300);
+      });
+    });
 
     // ── Tab switching events ────────────────────────────────────────────────
     // Load projects when the Projects tab becomes active

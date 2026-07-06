@@ -76,6 +76,98 @@
     metrics.active_scans.count = metrics.active_scans.scans.length;
   }
 
+  function uniqueById(items, fallbackPrefix = "item") {
+    const map = new Map();
+    items.filter(Boolean).forEach((item, idx) => {
+      const key = String(item.id || `${fallbackPrefix}:${item.scan_job_id || ""}:${item.title || ""}:${item.affected_url || item.url || idx}`);
+      if (!map.has(key)) map.set(key, item);
+    });
+    return Array.from(map.values());
+  }
+
+  function calculateRiskScoreFromFindings(findings) {
+    const counts = { critical: 0, high: 0, medium: 0, low: 0 };
+    findings.forEach((finding) => {
+      if ((finding.status || "open").toLowerCase() !== "open") return;
+      const sev = (finding.severity || "info").toLowerCase();
+      if (counts[sev] !== undefined) counts[sev]++;
+    });
+    return Math.max(0, Math.min(100, (counts.critical * 10 + counts.high * 7 + counts.medium * 4 + counts.low) / 10));
+  }
+
+  function riskLevelFromScore(score) {
+    if (score >= 80) return "critical";
+    if (score >= 60) return "high";
+    if (score >= 30) return "medium";
+    return "low";
+  }
+
+  function isDashboardVisible() {
+    const panel = document.getElementById("security-dashboard");
+    return !!panel && !panel.classList.contains("hidden");
+  }
+
+  function applyRecentScanCacheToMetrics(metrics, projects, targets) {
+    if (!metrics || !window.scannerAPI) return;
+    if (!metrics.active_scans) metrics.active_scans = { count: 0, scans: [] };
+    if (!Array.isArray(metrics.active_scans.scans)) metrics.active_scans.scans = [];
+    if (!metrics.recent_findings) metrics.recent_findings = { findings: [] };
+    if (!Array.isArray(metrics.recent_findings.findings)) metrics.recent_findings.findings = [];
+
+    const recentScans = [];
+    const recentFindings = [];
+    (projects || []).forEach((project) => {
+      if (typeof window.scannerAPI.getRecentScansForProject === "function") {
+        recentScans.push(...window.scannerAPI.getRecentScansForProject(project.id));
+      }
+      if (typeof window.scannerAPI.getRecentFindingsForProject === "function") {
+        recentFindings.push(...window.scannerAPI.getRecentFindingsForProject(project.id));
+      }
+    });
+
+    const activeRecentScans = recentScans.filter(scan => ["running", "pending"].includes((scan.status || "").toLowerCase()));
+    metrics.active_scans.scans = uniqueById([...activeRecentScans, ...metrics.active_scans.scans], "scan");
+    metrics.active_scans.count = metrics.active_scans.scans.length;
+
+    const allFindings = uniqueById([...recentFindings, ...metrics.recent_findings.findings], "finding");
+    metrics.recent_findings.findings = allFindings;
+
+    const summary = { critical: 0, high: 0, medium: 0, low: 0, info: 0, resolved: 0, total: allFindings.length };
+    allFindings.forEach((finding) => {
+      const status = (finding.status || "open").toLowerCase();
+      if (status === "resolved" || status === "fixed" || status === "closed") {
+        summary.resolved++;
+        return;
+      }
+      const sev = (finding.severity || "info").toLowerCase();
+      if (summary[sev] !== undefined) summary[sev]++;
+      else summary.info++;
+    });
+    metrics.findings_summary = { ...(metrics.findings_summary || {}), ...summary };
+    metrics.findings_by_severity = {
+      critical: { count: summary.critical },
+      high: { count: summary.high },
+      medium: { count: summary.medium },
+      low: { count: summary.low },
+      info: { count: summary.info }
+    };
+
+    const globalScore = calculateRiskScoreFromFindings(allFindings);
+    metrics.risk_score = { ...(metrics.risk_score || {}), global_score: globalScore, risk_level: riskLevelFromScore(globalScore) };
+
+    (targets || []).forEach((target) => {
+      if (typeof window.scannerAPI.getRecentFindingsForTarget !== "function") return;
+      const targetFindings = window.scannerAPI.getRecentFindingsForTarget(target.id);
+      if (targetFindings.length > 0) {
+        target.risk_score = calculateRiskScoreFromFindings(targetFindings);
+      }
+    });
+
+    if (metrics.infrastructure) {
+      metrics.infrastructure.total_scans = Math.max(Number(metrics.infrastructure.total_scans || 0), uniqueById(recentScans, "scan").length);
+    }
+  }
+
   /**
    * Fetches real findings from all active projects and injects them into the metrics payload.
    */
@@ -132,11 +224,12 @@
   /**
    * Main loader: Called when tab is activated or refreshed
    */
-  async function loadSecurityDashboard() {
+  async function loadSecurityDashboard(options = {}) {
     if (dashboardState.isLoading) return;
+    const silent = options && options.silent === true;
     dashboardState.isLoading = true;
 
-    showDashboardSkeleton();
+    if (!silent || !dashboardState.metrics) showDashboardSkeleton();
 
     try {
       // 1. Fetch all projects first to populate projects state & header metadata
@@ -169,6 +262,7 @@
       dashboardState.metrics = metricsRes.data;
       mergeLocalActiveScans(dashboardState.metrics);
       dashboardState.targets = targetsRes?.targets || [];
+      applyRecentScanCacheToMetrics(dashboardState.metrics, projects, dashboardState.targets);
 
       // 3. Render all dashboard views
       renderDashboardViews();
@@ -181,7 +275,7 @@
       showDashboardError(error.message);
     } finally {
       dashboardState.isLoading = false;
-      hideDashboardSkeleton();
+      if (!silent || !dashboardState.metrics) hideDashboardSkeleton();
     }
   }
 
@@ -825,7 +919,7 @@
     
     // Trigger dynamic reload of the entire security dashboard metrics
     if (typeof loadSecurityDashboard === "function") {
-      loadSecurityDashboard();
+      loadSecurityDashboard({ silent: true });
     }
   }
 
@@ -847,28 +941,26 @@
 
   /* ── Auto-refresh / polling logic ────────────────────────────────────── */
 
+  function hasActiveScans(metrics = dashboardState.metrics) {
+    const scans = metrics?.active_scans?.scans || [];
+    return scans.some(scan => ["running", "pending"].includes((scan.status || "").toLowerCase()));
+  }
+
   function startActiveScansPolling() {
     stopActiveScansPolling();
 
-    // Poll every 30 seconds
+    const intervalMs = hasActiveScans() ? 5000 : 30000;
     dashboardState.refreshInterval = setInterval(async () => {
-      // Check if current tab is still Security Dashboard
-      if (typeof switchToTab === "function" && document.querySelector(".cyber-nav-item.cyber-nav-active")?.textContent.includes("Security Dashboard")) {
-        try {
-          const metricsRes = await window.apiClient.get("/dashboard/metrics");
-          if (metricsRes.status === "success" && metricsRes.data) {
-            await populateRealRecentFindings(metricsRes.data, dashboardState.projects);
-            dashboardState.metrics = metricsRes.data;
-            mergeLocalActiveScans(dashboardState.metrics);
-            renderActiveScans(metricsRes.data.active_scans);
-          }
-        } catch (e) {
-          console.warn("[SecurityDashboard] Auto-refresh metrics query failed:", e);
-        }
-      } else {
+      if (!isDashboardVisible()) {
         stopActiveScansPolling();
+        return;
       }
-    }, 30000);
+      try {
+        await loadSecurityDashboard({ silent: true });
+      } catch (e) {
+        console.warn("[SecurityDashboard] Auto-refresh metrics query failed:", e);
+      }
+    }, intervalMs);
   }
 
   function stopActiveScansPolling() {
@@ -878,6 +970,15 @@
     }
     unsubscribeAllScanWS();
   }
+
+  let dashboardEventRefreshTimer = null;
+  ["cyberguard:scanStarted", "cyberguard:scanUpdated", "cyberguard:scanFindingsUpdated", "cyberguard:scanCompleted"].forEach((eventName) => {
+    document.addEventListener(eventName, () => {
+      if (!isDashboardVisible()) return;
+      if (dashboardEventRefreshTimer) clearTimeout(dashboardEventRefreshTimer);
+      dashboardEventRefreshTimer = setTimeout(() => loadSecurityDashboard({ silent: true }), 300);
+    });
+  });
 
   /* ── Skeleton Loading States ─────────────────────────────────────────── */
 
