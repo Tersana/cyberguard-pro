@@ -218,7 +218,9 @@
 
     window.onFrontendToolResult = function ({ timestamp, feature, message, status, details }) {
       let badge = "[INFO]";
-      if (status === "danger" || status === "threat") badge = "[ERROR]";
+      if (status === "danger" || status === "threat") {
+        badge = message.includes("[SCAN COMPLETE]") ? "[LIVE]" : "[ERROR]";
+      }
       else if (status === "warning") badge = "[WARN]";
       else if (status === "success" || status === "safe") badge = "[LIVE]";
 
@@ -660,7 +662,20 @@
       // Remove repetitive "Severity Risk Endpoint: " or "Severity Risk Parameter: " prefixes to make it clean & organized
       const cleanRegex = /^(critical|high|medium|low|info)\s+risk\s+(endpoint|parameter|vulnerability):\s*/i;
       if (cleanRegex.test(title)) {
-        title = title.replace(cleanRegex, "");
+        const cleaned = title.replace(cleanRegex, "").trim();
+        if (cleaned !== "") {
+          title = cleaned;
+        } else {
+          // If the cleaned title is empty, try to extract the URL or description to avoid a blank title
+          if (f.affected_url && f.affected_url.trim() !== "") {
+            title = f.affected_url.trim();
+          } else if (f.description && f.description.trim() !== "") {
+            const descLine = f.description.split("\n")[0].trim();
+            title = descLine !== "" ? descLine : f.title;
+          } else {
+            title = f.title;
+          }
+        }
       }
 
       return `<tr class="sp-table-row cursor-pointer" onclick="window.showFindingDetailModal('${escapedFId}')">
