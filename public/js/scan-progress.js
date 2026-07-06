@@ -655,8 +655,16 @@
         : "—";
       const fId = f.id || `${f.title}::${f.severity}`;
       const escapedFId = fId.replace(/'/g, "\\'");
+
+      let title = f.title || "Untitled Finding";
+      // Remove repetitive "Severity Risk Endpoint: " or "Severity Risk Parameter: " prefixes to make it clean & organized
+      const cleanRegex = /^(critical|high|medium|low|info)\s+risk\s+(endpoint|parameter|vulnerability):\s*/i;
+      if (cleanRegex.test(title)) {
+        title = title.replace(cleanRegex, "");
+      }
+
       return `<tr class="sp-table-row cursor-pointer" onclick="window.showFindingDetailModal('${escapedFId}')">
-        <td class="sp-td sp-td--title">${escHtml(f.title || "Untitled Finding")}</td>
+        <td class="sp-td sp-td--title">${escHtml(title)}</td>
         <td class="sp-td"><span class="sp-sev-badge sp-sev-${sev}">${escHtml(sev.toUpperCase())}</span></td>
         <td class="sp-td"><span class="sp-status-pill sp-status-${escHtml(f.status || "open")}">${escHtml((f.status || "open").toUpperCase())}</span></td>
         <td class="sp-td sp-td--mono">${escHtml(date)}</td>
