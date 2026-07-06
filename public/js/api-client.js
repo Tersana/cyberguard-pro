@@ -670,6 +670,16 @@ function withLoading(asyncFn, options = {}) {
   const RECENT_SCAN_LIMIT = 100;
   const RECENT_FINDINGS_PER_SCAN_LIMIT = 500;
 
+  // Findings produced by discovery-style scanners (web endpoint fuzzer / classifier /
+  // wayback / url-fuzz) are inventory, not vulnerabilities. Matched against a finding's
+  // driver_id / tool / title.
+  const DISCOVERY_RE = /endpoint[-_\s]?fuzzer|web_endpoint_fuzzer|waybackurls|classifier|url[-_\s]?fuzz|high risk endpoint/;
+  // User preference: fold discovery findings back into vuln counts/cards/risk.
+  const INCLUDE_DISCOVERY_KEY = "cyberguard_include_discovery";
+  // Promotion (discovery endpoint -> real finding) depends on a backend endpoint that is
+  // not live yet. Keep the UI + wiring off until it ships, then flip to true.
+  const PROMOTE_ENABLED = false;
+
   function safeJsonParse(raw, fallback) {
     if (!raw) return fallback;
     try {
@@ -991,7 +1001,81 @@ function withLoading(asyncFn, options = {}) {
       normalized.metadata && Object.values(normalized.metadata),
       normalized.logs,
     ].flat(3).map(v => String(v || "").toLowerCase()).join(" ");
-    return /endpoint[-_\s]?fuzzer|web_endpoint_fuzzer|waybackurls|classifier|url[-_\s]?fuzz/.test(haystack);
+    return DISCOVERY_RE.test(haystack);
+  }
+
+  /**
+   * True when a finding is discovery/inventory output (e.g. web endpoint fuzzer) rather
+   * than a real vulnerability. An explicit backend flag wins over the heuristic so that a
+   * promoted finding, or a backend that tags discovery findings, is always honored.
+   */
+  function isDiscoveryFinding(finding) {
+    if (!finding || typeof finding !== "object") return false;
+    if (finding.promoted === true || finding.is_discovery === false) return false;
+    if (finding.is_discovery === true || finding.category === "discovery") return true;
+    const haystack = [finding.driver_id, finding.tool, finding.title]
+      .map(v => String(v || "").toLowerCase()).join(" ");
+    return DISCOVERY_RE.test(haystack);
+  }
+
+  /**
+   * Normalize a URL/path for grouping duplicate discovered endpoints. Drops scheme, lowercases
+   * the host, and collapses a trailing slash. Falls back to the raw lowercased string when the
+   * value is not a parseable URL (e.g. a bare path).
+   */
+  function normalizeEndpointUrl(url) {
+    const raw = String(url || "").trim();
+    if (!raw) return "";
+    // Bare path (no scheme, starts with "/"): normalize without URL parsing.
+    if (!raw.includes("://") && raw.startsWith("/")) {
+      return raw.toLowerCase().replace(/\/+$/, "") || "/";
+    }
+    try {
+      const u = new URL(raw.includes("://") ? raw : `http://${raw}`);
+      const path = u.pathname.replace(/\/+$/, "") || "/";
+      return `${u.host.toLowerCase()}${path}${u.search}`;
+    } catch (_) {
+      return raw.toLowerCase().replace(/\/+$/, "");
+    }
+  }
+
+  /** Split findings into { vulnerabilities, discovery } using isDiscoveryFinding. */
+  function partitionFindings(findings) {
+    const vulnerabilities = [];
+    const discovery = [];
+    (Array.isArray(findings) ? findings : []).forEach(f => {
+      (isDiscoveryFinding(f) ? discovery : vulnerabilities).push(f);
+    });
+    return { vulnerabilities, discovery };
+  }
+
+  /** Whether discovery findings should be folded back into vuln counts/cards/risk. */
+  function getIncludeDiscovery() {
+    return localStorage.getItem(INCLUDE_DISCOVERY_KEY) === "true";
+  }
+
+  function setIncludeDiscovery(value) {
+    try {
+      localStorage.setItem(INCLUDE_DISCOVERY_KEY, value ? "true" : "false");
+    } catch (err) {
+      console.warn("[ScannerAPI] Failed to persist include-discovery preference:", err);
+    }
+  }
+
+  /** Feature flag: is the promote-to-finding flow wired to a live backend endpoint? */
+  function isPromoteEnabled() {
+    return PROMOTE_ENABLED;
+  }
+
+  /**
+   * PATCH /api/findings/{id}/promote — reclassify a discovery finding as a real vulnerability.
+   * Backend dependency: endpoint returns the updated finding (with promoted: true /
+   * is_discovery: false). Gated by PROMOTE_ENABLED until the backend ships it.
+   */
+  async function promoteFinding(findingId) {
+    if (!findingId) throw new Error("findingId is required");
+    const data = await _apiFetch("PATCH", `findings/${findingId}/promote`);
+    return data.finding || data;
   }
 
   function getScanDisplayPrefix(scan) {
@@ -1739,6 +1823,14 @@ function withLoading(asyncFn, options = {}) {
     normalizeFindingRecord,
     formatScanShortId,
     getScanDisplayPrefix,
+    isFuzzerScan,
+    isDiscoveryFinding,
+    normalizeEndpointUrl,
+    partitionFindings,
+    getIncludeDiscovery,
+    setIncludeDiscovery,
+    isPromoteEnabled,
+    promoteFinding,
     pauseScan,
     continueScan,
     cancelScan,
