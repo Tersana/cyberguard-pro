@@ -3254,6 +3254,7 @@
             let _projectFindings = []; // cache of all findings across targets (vulns + discovery)
             let _projectDiscoveryFindings = []; // discovery/inventory findings (e.g. web endpoint fuzzer)
             let _projectFindingsLoaded = false; // true once loadProjectFindings has run at least once
+            let _projectFindingsPromise = null; // in-flight load, shared to dedup concurrent callers
             let _riskScorePollInterval = null;
             let _latestScanIsRunning = false;
 
@@ -3673,10 +3674,47 @@
 
             // ─── Overview Tab Helpers ──────────────────────────────────────────────────
 
+            // Fetch a single page of project findings; returns { arr, lastPage }.
+            async function fetchProjectFindingsPage(page) {
+                try {
+                    const fRes = await apiFetch(`/projects/${_projectId}/findings?page=${page}&per_page=100`);
+                    if (!fRes.ok) {
+                        console.error(`Error loading project findings page ${page}:`, fRes.status);
+                        return { arr: [], lastPage: page };
+                    }
+                    const list = await fRes.json();
+                    if (Array.isArray(list)) return { arr: list, lastPage: 1 };
+                    if (list && list.findings) {
+                        const fo = list.findings;
+                        if (Array.isArray(fo.data)) return { arr: fo.data, lastPage: fo.last_page || page };
+                        if (Array.isArray(fo)) return { arr: fo, lastPage: 1 };
+                    }
+                    if (list && list.data) {
+                        return { arr: Array.isArray(list.data) ? list.data : [], lastPage: list.last_page || page };
+                    }
+                    return { arr: [], lastPage: page };
+                } catch (e) {
+                    console.error(`Error fetching project findings page ${page}:`, e);
+                    return { arr: [], lastPage: page };
+                }
+            }
+
             /**
              * Asynchronously load findings for all project targets and trigger score rendering.
+             * Concurrent callers share one in-flight load so the page-init call and the findings-tab
+             * call don't each kick off a full fetch.
              */
             async function loadProjectFindings() {
+                if (_projectFindingsPromise) return _projectFindingsPromise;
+                _projectFindingsPromise = _loadProjectFindingsInternal();
+                try {
+                    return await _projectFindingsPromise;
+                } finally {
+                    _projectFindingsPromise = null;
+                }
+            }
+
+            async function _loadProjectFindingsInternal() {
                 try {
                     // 1. Fetch all targets of the project
                     const res = await apiFetch(`/projects/${_projectId}/targets`);
@@ -3688,58 +3726,14 @@
                           ? data
                           : [];
 
-                    // 2. Fetch findings for the project in a paginated loop
-                    let all = [];
-                    let page = 1;
-                    let lastPage = 1;
-
-                    while (page <= lastPage) {
-                        try {
-                            const fRes = await apiFetch(`/projects/${_projectId}/findings?page=${page}`);
-                            if (!fRes.ok) {
-                                console.error(`Error loading project findings page ${page}:`, fRes.status);
-                                break;
-                            }
-                            const list = await fRes.json();
-                            let arr = [];
-                            let currentPageVal = page;
-                            let lastPageVal = page;
-
-                            if (Array.isArray(list)) {
-                                arr = list;
-                                currentPageVal = 1;
-                                lastPageVal = 1;
-                            } else if (list && list.findings) {
-                                const findingsObj = list.findings;
-                                if (Array.isArray(findingsObj.data)) {
-                                    arr = findingsObj.data;
-                                    currentPageVal = findingsObj.current_page || page;
-                                    lastPageVal = findingsObj.last_page || page;
-                                } else if (Array.isArray(findingsObj)) {
-                                    arr = findingsObj;
-                                    currentPageVal = 1;
-                                    lastPageVal = 1;
-                                }
-                            } else if (list && list.data) {
-                                arr = Array.isArray(list.data) ? list.data : [];
-                                currentPageVal = list.current_page || page;
-                                lastPageVal = list.last_page || page;
-                            }
-
-                            all = all.concat(arr);
-
-                            if (lastPageVal > lastPage) {
-                                lastPage = lastPageVal;
-                            }
-
-                            if (page >= lastPage) {
-                                break;
-                            }
-                            page++;
-                        } catch (e) {
-                            console.error(`Error fetching project findings page ${page}:`, e);
-                            break;
-                        }
+                    // 2. Fetch findings pages in parallel: page 1 reveals last_page, then fetch the rest at once.
+                    const first = await fetchProjectFindingsPage(1);
+                    let all = first.arr;
+                    if (first.lastPage > 1) {
+                        const restPages = await Promise.all(
+                            Array.from({ length: first.lastPage - 1 }, (_, i) => fetchProjectFindingsPage(i + 2))
+                        );
+                        restPages.forEach(p => { all = all.concat(p.arr); });
                     }
 
                     _projectFindings = all;

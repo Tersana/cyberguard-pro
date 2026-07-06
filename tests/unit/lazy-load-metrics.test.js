@@ -43,7 +43,7 @@ describe('ProjectManager - lazyLoadProjectMetrics', () => {
             scans: [{ id: 'scan_1', status: 'completed' }]
           });
         }
-        if (url === '/projects/123/findings?page=1') {
+        if (url.startsWith('/projects/123/findings')) {
           return Promise.resolve({
             status: 'success',
             findings: {
@@ -102,7 +102,7 @@ describe('ProjectManager - lazyLoadProjectMetrics', () => {
         if (url === '/projects/123/targets') {
           return Promise.resolve({ status: 'success', targets: [{ id: 'target_1' }] });
         }
-        if (url === '/projects/123/findings?page=1') {
+        if (url.startsWith('/projects/123/findings')) {
           return Promise.resolve({
             status: 'success',
             findings: { current_page: 1, last_page: 1, data: [] }
@@ -127,5 +127,41 @@ describe('ProjectManager - lazyLoadProjectMetrics', () => {
     expect(document.querySelector('.project-findings-count-val[data-project-id="123"]').textContent).toBe('1 finding');
     expect(document.querySelector('.project-risk-score-value[data-project-id="123"]').textContent).toBe('0.4 / 100');
     expect(document.querySelector('.project-card-item[data-project-id="123"] .project-risk-level').textContent).toBe('Controlled');
+  });
+
+  it('fetches all findings pages (parallel) and merges them when last_page > 1', async () => {
+    const pageFor = (p) => ({
+      status: 'success',
+      findings: {
+        current_page: p,
+        last_page: 3,
+        data: [{ id: `f-${p}`, severity: 'high', status: 'open' }]
+      }
+    });
+
+    const mockApiClient = {
+      get: vi.fn().mockImplementation((url) => {
+        if (url === '/projects/123/targets') {
+          return Promise.resolve({ status: 'success', targets: [{ id: 't1' }] });
+        }
+        if (url === '/projects/123/scans') {
+          return Promise.resolve({ status: 'success', scans: [] });
+        }
+        const m = /\/projects\/123\/findings\?page=(\d+)/.exec(url);
+        if (m) return Promise.resolve(pageFor(Number(m[1])));
+        return Promise.reject(new Error('Unknown url: ' + url));
+      })
+    };
+
+    const { ProjectManager } = await import('../../public/js/project-manager.js');
+    const pm = new ProjectManager(mockApiClient);
+    await pm.lazyLoadProjectMetrics('123');
+
+    // All 3 pages requested and merged into the count.
+    const findingsPageCalls = mockApiClient.get.mock.calls
+      .map(c => c[0])
+      .filter(u => /\/projects\/123\/findings\?page=/.test(u));
+    expect(findingsPageCalls.length).toBe(3);
+    expect(document.querySelector('.project-findings-count-val[data-project-id="123"]').textContent).toBe('3 findings');
   });
 });
