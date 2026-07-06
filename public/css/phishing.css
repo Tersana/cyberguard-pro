@@ -34,13 +34,86 @@
   border-color: var(--cg-info);
 }
 
-/* ── Cards & lists ───────────────────────────────────────────────────────── */
-.phishing-card {
-  transition: border-color 0.15s ease;
+/* ── Panel (surface wrapper for each sub-view) ───────────────────────────── */
+.phishing-panel {
+  padding: var(--cg-space-6);
 }
 
-.phishing-card:hover {
-  border-color: var(--cg-border);
+/* ── Section header ──────────────────────────────────────────────────────── */
+.phishing-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--cg-space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--cg-space-5, 1.25rem);
+}
+
+.phishing-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--cg-space-2);
+  flex-wrap: wrap;
+}
+
+/* ── List of rows ────────────────────────────────────────────────────────── */
+.phishing-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--cg-border-subtle);
+  border-radius: var(--cg-radius-lg);
+  overflow: hidden;
+}
+
+.phishing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cg-space-4);
+  padding: var(--cg-space-4);
+  border-bottom: 1px solid var(--cg-border-subtle);
+  transition: background 0.12s ease;
+  flex-wrap: wrap;
+}
+
+.phishing-row:last-child {
+  border-bottom: none;
+}
+
+.phishing-row:hover {
+  background: var(--cg-bg-elevated);
+}
+
+.phishing-row-main {
+  min-width: 0;
+  flex: 1 1 260px;
+}
+
+.phishing-row-title {
+  display: flex;
+  align-items: center;
+  gap: var(--cg-space-2);
+  flex-wrap: wrap;
+}
+
+.phishing-row-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cg-text-1);
+}
+
+.phishing-row-meta {
+  font-size: 0.75rem;
+  color: var(--cg-text-3);
+  margin-top: var(--cg-space-1);
+  word-break: break-word;
+}
+
+.phishing-row .phishing-row-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--cg-space-2);
+  flex-wrap: wrap;
 }
 
 /* ── Buttons ─────────────────────────────────────────────────────────────── */
@@ -73,6 +146,19 @@
   margin-bottom: var(--cg-space-1);
 }
 
+.phishing-field > input,
+.phishing-field > select,
+.phishing-field > textarea,
+.phishing-field > .cyber-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.phishing-field > textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
 .phishing-field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -83,6 +169,60 @@
   min-width: 0;
   width: auto;
   max-width: 200px;
+  height: 38px;
+  padding-top: var(--cg-space-2);
+  padding-bottom: var(--cg-space-2);
+}
+
+/* ── Empty / placeholder states ──────────────────────────────────────────── */
+.phishing-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--cg-space-12) var(--cg-space-4);
+  border: 1px dashed var(--cg-border-subtle);
+  border-radius: var(--cg-radius-lg);
+}
+
+.phishing-empty-icon {
+  width: 44px;
+  height: 44px;
+  color: var(--cg-text-3);
+  margin-bottom: var(--cg-space-3);
+  opacity: 0.7;
+}
+
+.phishing-empty-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.phishing-empty-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cg-text-2);
+}
+
+.phishing-empty-sub {
+  font-size: 0.75rem;
+  color: var(--cg-text-3);
+  margin-top: var(--cg-space-1);
+  max-width: 360px;
+}
+
+.phishing-empty-action {
+  margin-top: var(--cg-space-4);
+}
+
+.phishing-chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  font-size: 0.8125rem;
+  color: var(--cg-text-3);
 }
 
 .phishing-check {
